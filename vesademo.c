@@ -20,9 +20,9 @@
 #define CHR_MAX     250 // max of character in font table
 #define CHR_START   0   // start of character
 
-#define LIMITX 640
-#define LIMITY 400
-#define SIGNED(x) (((x) > 0) ? 1 : ((x) < 0) ? -1 : 0)
+#define LIMITX      640
+#define LIMITY      400
+#define SIGNED(x)   (((x) > 0) ? 1 : ((x) < 0) ? -1 : 0)
 
 // Font buffer
 typedef uint8_t FNT_TBL[CHR_WIDTH][CHR_HEIGHT];
@@ -1668,13 +1668,13 @@ int main(int argc, const char* argv[])
 
     makeFont(strLoading);
     writeString(centerX - (getFontWidth(strLoading) >> 1), centerY - getFontHeight(strLoading), strLoading, fromRGB(255, 255, 64), 0);
-    
-    //showPNG("caibang.png");
+
+    showPNG("caibang.png");
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen33.png");
     delay(3000);
     fadeCircle(2, 0);
 
-    /*showBitmap("1lan32.bmp");
+    showBitmap("1lan32.bmp");
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen34.bmp");
     delay(3000);
     fadeCircle(3, 0);
@@ -2074,7 +2074,7 @@ int main(int argc, const char* argv[])
     clearScreen(0);
 
     displayPlasma();
-    if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen32.bmp");*/
+    if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen32.bmp");
 
     closeVesaMode();
     printf("+-----------------------------------------------------+\n");

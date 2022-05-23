@@ -22322,10 +22322,10 @@ int32_t loadImage(const char *fname, GFX_IMAGE *im)
 // Render PNG file (24/32 bits colors)
 void showPNG(const char *file)
 {
-    GFX_IMAGE img;
+    GFX_IMAGE img = {0};
     uint32_t error = 0;
-    uint8_t *pngData;
-    uint32_t pngWidth, pngHeight;
+    uint8_t *pngData = NULL;
+    uint32_t pngWidth = 0, pngHeight = 0;
 
     // try to load png file
     error = loadPNG(file, &img);
@@ -22468,8 +22468,6 @@ void showPNG(const char *file)
         }
         break;
     }
-
-    freeImage(&img);
 }
 
 // Capture display screen and save to file
@@ -22494,19 +22492,18 @@ void saveScreen(const char *fname)
     // Save PNG file
     else if (!strcmpi(pos, ".png"))
     {
-        int32_t x, y;
         GFX_IMAGE img = {0};
         uint32_t error = 0;
         uint8_t *pngData = NULL;
         uint32_t pngWidth = 0, pngHeight = 0;
 
         // init bitmap data
-        img.mWidth      = 800;
-        img.mHeight     = 600;
-        img.mPixels     = 4;
-        img.mRowBytes   = 4 * 800;
-        img.mSize       = 800 * 600 * 4;
-        img.mData       = (uint8_t*)malloc(img.mSize);
+        img.mWidth      = lfbWidth;
+        img.mHeight     = lfbHeight;
+        img.mPixels     = bytesPerPixel;
+        img.mRowBytes   = bytesPerScanline;
+        img.mSize       = lfbSize;
+        img.mData       = (uint8_t*)malloc(lfbSize);
         if (!img.mData) fatalError("saveScreen: cannot alloc PNG buffer.\n");
 
         // make local to use asm
