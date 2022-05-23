@@ -22033,9 +22033,9 @@ uint32_t savePNG(const char* fname, GFX_IMAGE *img)
     PNGColorType colorType = (img->mPixels == 4) ?  LCT_RGBA : LCT_RGB;
 
     PNGStateInit(&state);
-    state.rawInfo.colorType = LCT_RGBA;
+    state.rawInfo.colorType = colorType;
     state.rawInfo.bitDepth = 8;
-    state.pngInfo.colorMode.colorType = LCT_RGBA;
+    state.pngInfo.colorMode.colorType = colorType;
     state.pngInfo.colorMode.bitDepth = 8;
     PNGEncode(&buffer, &size, img->mData, img->mWidth, img->mHeight, &state);
     error = state.error;
@@ -22499,7 +22499,6 @@ void saveScreen(const char *fname)
         uint32_t error = 0;
         uint8_t *pngData = NULL;
         uint32_t pngWidth = 0, pngHeight = 0;
-        uint32_t *data = (uint32_t*)lfbPtr;
 
         // init bitmap data
         img.mWidth      = 800;
@@ -22509,19 +22508,6 @@ void saveScreen(const char *fname)
         img.mSize       = 800 * 600 * 4;
         img.mData       = (uint8_t*)malloc(img.mSize);
         if (!img.mData) fatalError("saveScreen: cannot alloc PNG buffer.\n");
-
-        /*for (y = 0; y < img.mHeight; y++)
-        {
-            for (x = 0; x < img.mWidth; x++)
-            {
-                pngData = (uint8_t*)data;
-                img.mData[4 * img.mWidth * y + 4 * x + 0] = pngData[2];
-                img.mData[4 * img.mWidth * y + 4 * x + 1] = pngData[1];
-                img.mData[4 * img.mWidth * y + 4 * x + 2] = pngData[0];
-                img.mData[4 * img.mWidth * y + 4 * x + 3] = 255;
-                data++;
-            }
-        }*/
 
         // make local to use asm
         pngData   = img.mData;
@@ -22542,14 +22528,11 @@ void saveScreen(const char *fname)
                 mov     ecx, pngWidth
             next:
                 lodsd
-                mov     ebx, eax
-                mov     edx, eax
+                mov     [edi + 3], 255  // a
+                mov     [edi + 2], al   // b
+                mov     [edi + 1], ah   // g
                 shr     eax, 16
-                shr     ebx, 8
-                mov     [edi]    , al  // r
-                mov     [edi + 1], bl  // g
-                mov     [edi + 2], dl  // b
-                mov     [edi + 3], 255 // a
+                mov     [edi], al       // r
                 add     edi, 4
                 dec     ecx
                 jnz     next

@@ -54,3 +54,4 @@ dkms.conf
 # Compile output files
 *.ERR
 *.OBJ
+.vscode
