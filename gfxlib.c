@@ -23560,7 +23560,7 @@ void closeMouseButton(GFX_MOUSE_IMAGE *mi, MOUSE_BITMAP *mbm, GFX_BUTTON_IMAGE *
 }
 
 // automatic mouse event handler
-void handleMouse(char *fname)
+void handleMouse(const char *fname)
 {
     GFX_MOUSE_IMAGE mi;
 
