@@ -200,14 +200,13 @@ void drawHexagon(POINT *pt, int32_t num, int32_t xc, int32_t yc, int32_t n, int3
 
 void graphDemo0(int32_t xc, int32_t yc, int32_t xr, int32_t yr)
 {
-    int32_t i;
+    int32_t i = 0;
     float x0, y0, x1, y1;
     float x = xr * 0.4;
     float y = yr * 0.4;
     float a = 0.0, m;
 
-    while(kbhit()) getch();
-    for (i = 0; i < 800 && !kbhit(); i++)
+    for (i = 0; i < 800 && !checkQuit(27); i++)
     {
         x0 = xc + xr * cos(a);
         y0 = yc + yr * sin(5 * a) * cos(a / 1.5);
@@ -224,12 +223,11 @@ void graphDemo0(int32_t xc, int32_t yc, int32_t xr, int32_t yr)
 
 void graphDemo1(int32_t xc, int32_t yc, int32_t xr, int32_t yr)
 {
-    int32_t i;
+    int32_t i = 0;
     float x1, y1, x2, y2;
     float a = 0.0, m, n;
 
-    while(kbhit()) getch();
-    for (i = 0; i < 500 && !kbhit(); i++)
+    for (i = 0; i < 500 && !checkQuit(27); i++)
     {
         m = sin(a);
         n = cos(a);
@@ -246,12 +244,11 @@ void graphDemo1(int32_t xc, int32_t yc, int32_t xr, int32_t yr)
 
 void graphDemo2(int32_t xc, int32_t yc, int32_t r)
 {
-    int32_t i;
+    int32_t i = 0;
     float x1, y1, x2, y2;
     float a = 0.0, f;
 
-    while(kbhit()) getch();
-    for (i = 0; i < 1600 && !kbhit(); i++)
+    for (i = 0; i < 1600 && !checkQuit(27); i++)
     {
         f = r * (1 + 0.25 * cos(20 * a)) * (1 + sin(4 * a));
 
@@ -267,12 +264,11 @@ void graphDemo2(int32_t xc, int32_t yc, int32_t r)
 
 void graphDemo3(int32_t xc, int32_t yc, int32_t r)
 {
-    int32_t i;
+    int32_t i = 0;
     float x1, y1, x2, y2;
     float a = 0.0, f;
     
-    while(kbhit()) getch();
-    for (i = 0; i < 1600 && !kbhit(); i++)
+    for (i = 0; i < 1600 && !checkQuit(27); i++)
     {
         f = r * (1 + 0.25 * cos(4 * a)) * (1 + sin(8 * a));
 
@@ -288,12 +284,11 @@ void graphDemo3(int32_t xc, int32_t yc, int32_t r)
 
 void graphDemo4(int32_t xc, int32_t yc, int32_t r)
 {
-    int32_t i;
+    int32_t i = 0;
     float x1, y1, x2, y2;
     float a = 0.0, e;
 
-    while(kbhit()) getch();
-    for (i = 0; i < 800 && !kbhit(); i++)
+    for (i = 0; i < 800 && !checkQuit(27); i++)
     {
         e = r * (1 + 0.5 * sin(2.5 * a));
 
@@ -309,19 +304,18 @@ void graphDemo4(int32_t xc, int32_t yc, int32_t r)
 
 void graphDemo5(int32_t xi, int32_t yi, int32_t r, int32_t xr, int32_t yr)
 {
-    float x, y, sx, sy;
     float a, e;
+    float x, y, sx, sy;
     int32_t n, phi, i, k;
 
-    while(kbhit()) getch();
-    for (n = 2; n <= 7 && !kbhit(); n++)
+    for (n = 2; n <= 7; n++)
     {
-        for (phi = 1; phi <= 6 && !kbhit(); phi++)
+        for (phi = 1; phi <= 6; phi++)
         {
             k = !(n % 2) ? 2 : 1;
             a = 0;
 
-            for (i = 0; i <= 15 * n * k && !kbhit(); i++)
+            for (i = 0; i <= 15 * n * k && !checkQuit(27); i++)
             {
                 e = r / 5.0 * sin(n * phi * a) + r * sin(n * a);
                 x = xr * (n - 2) + xi + e * cos(a);
@@ -350,10 +344,10 @@ void graphDemo6(int32_t xc, int32_t yc, int32_t r)
     float x = 4 * r;
     float sx, sy, x1, y1, x2, y2;
     float theta, a = 0.0;
+
     int32_t px, py, i;
 
-    while(kbhit()) getch();
-    for (i = 0; i < 120 && !kbhit(); i++)
+    for (i = 0; i < 120 && !checkQuit(27); i++)
     {
         theta = 66 * sqrt(fabs(cos(3 * a))) + 12 * sqrt(fabs(cos(9 * a)));
         xx[i] = theta * cos(a) * 1.2 / 320.0 * r;
@@ -361,11 +355,11 @@ void graphDemo6(int32_t xc, int32_t yc, int32_t r)
         a += M_PI / 60;
     }
 
-    for (py = 1; py <= 2 && !kbhit(); py++)
+    for (py = 1; py <= 2; py++)
     {
-        for (px = 1; px <= 8 && !kbhit(); px++)
+        for (px = 1; px <= 8; px++)
         {
-            for (i = 0; i < 120 && !kbhit(); i++)
+            for (i = 0; i < 120 && !checkQuit(27); i++)
             {
                 x1 = xx[i] + (px * r >> 1) - (r >> 2);
                 y1 = yy[i] + (py * r >> 1) - (r >> 2);
@@ -391,12 +385,12 @@ void graphDemo7(int32_t xc, int32_t yc, int32_t r)
     int32_t xx[120] = {0};
     int32_t yy[120] = {0};
 
-    float x = 4 * r, sx, sy, x1, y1, x2, y2;
     float theta, a = 0.0, m, n;
+    float x = 4 * r, sx, sy, x1, y1, x2, y2;
+    
     int32_t px, py, i;
 
-    while(kbhit()) getch();
-    for (i = 0; i < 120 && !kbhit(); i++)
+    for (i = 0; i < 120 && !checkQuit(27); i++)
     {
         theta = 40 * sin(4 * (a + M_PI / 8));
         
@@ -409,11 +403,11 @@ void graphDemo7(int32_t xc, int32_t yc, int32_t r)
         a += M_PI / 60;
     }
 
-    for (py = 1; py <= 2 && !kbhit(); py++)
+    for (py = 1; py <= 2; py++)
     {
-        for (px = 1; px <= 8 && !kbhit(); px++)
+        for (px = 1; px <= 8; px++)
         {
-            for (i = 0; i < 120 && !kbhit(); i++)
+            for (i = 0; i < 120 && !checkQuit(27); i++)
             {
                 x1 = xx[i] + (px * r >> 1) - (r >> 2);
                 y1 = yy[i] + (py * r >> 1) - (r >> 2);
@@ -438,12 +432,12 @@ void graphDemo7(int32_t xc, int32_t yc, int32_t r)
 
 void graphDemo8(int32_t xc, int32_t yc, int32_t d, int32_t r)
 {
+    int32_t i = 0;
     int32_t xx[120] = {0};
     int32_t yy[120] = {0};
-
-    float dd, un, uv, k, s, x, y, px, py, sx, sy, sq;
+        
     float theta, sc, a, m;
-    int32_t i;
+    float dd, un, uv, k, s, x, y, px, py, sx, sy, sq;
 
     a = 0.0;
     un = 12.0;
@@ -452,8 +446,7 @@ void graphDemo8(int32_t xc, int32_t yc, int32_t d, int32_t r)
     sc = uv / 100.0;
     dd = d / 2.0;
 
-    while(kbhit()) getch();
-    for (i = 0; i < 120 && !kbhit(); i++)
+    for (i = 0; i < 120 && !checkQuit(27); i++)
     {
         theta = 90 * (0.8 + 0.2 * sin(12 * a)) * (0.5 + 0.5 * sin(4 * a));
         xx[i] = theta * cos(a);
@@ -461,11 +454,11 @@ void graphDemo8(int32_t xc, int32_t yc, int32_t d, int32_t r)
         a += M_PI / 60;
     }
 
-    for (px = 1; px <= un && !kbhit(); px++)
+    for (px = 1; px <= un; px++)
     {
-        for (py = 1; py <= un && !kbhit(); py++)
+        for (py = 1; py <= un; py++)
         {
-            for (i = 0; i < 120 && !kbhit(); i++)
+            for (i = 0; i < 120 && !checkQuit(27); i++)
             {
                 x = xx[i] * sc + px * uv - dd - k;
                 y = yy[i] * sc + py * uv - dd - k;
@@ -498,10 +491,10 @@ void graphDemo8(int32_t xc, int32_t yc, int32_t d, int32_t r)
 
 void graphDemo9(int32_t xc, int32_t yc, float rd)
 {
-    int32_t data[] = {7, 436, 245, 17, 775, 180, 31, 1020, 130};
     float a, aa, ls, di, r;
-    int32_t ste, re, x, y, px, py;
+    const int32_t data[] = {7, 436, 245, 17, 775, 180, 31, 1020, 130};
     int32_t i, k, s;
+    int32_t ste, re, x, y, px, py;
     
     srand(time(NULL));
 
@@ -512,8 +505,7 @@ void graphDemo9(int32_t xc, int32_t yc, float rd)
     k = !(s % 2) ? 2 : 1;
     a = 0.0;
 
-    while(kbhit()) getch();
-    while (!kbhit() && a <= k * M_PI + M_PI / 10.0 / s * 1.0)
+    while (!checkQuit(27) && a <= k * M_PI + M_PI / 10.0 / s * 1.0)
     {
         x = (r / 4 * sin(3 * s * a) + r * sin(s * a)) * cos(a) + px;
         y = (r / 4 * sin(3 * s * a) + r * sin(s * a)) * sin(a) + py;
@@ -523,7 +515,7 @@ void graphDemo9(int32_t xc, int32_t yc, float rd)
     }
 
     i = 0;
-    for (re = 0; re < 3 && !kbhit(); re++)
+    for (re = 0; re < 3; re++)
     {
         ste = data[3 * re];
         di = data[3 * re + 1] / 6.0 * rd;
@@ -534,7 +526,7 @@ void graphDemo9(int32_t xc, int32_t yc, float rd)
 
         aa = 0.0;
 
-        while (!kbhit() && aa <= 2 * M_PI - ls)
+        while (aa <= 2 * M_PI - ls)
         {
             px = xc + di * cos(aa);
             py = yc + di * sin(aa);
@@ -542,7 +534,7 @@ void graphDemo9(int32_t xc, int32_t yc, float rd)
             k = !(s % 2) ? 2 : 1;
             a = 0.0;
 
-            while (!kbhit() && a <= k * M_PI + M_PI / 10.0 / s)
+            while (!checkQuit(27) && a <= k * M_PI + M_PI / 10.0 / s)
             {
 
                 x = (r / 4 * sin(3 * s * a) + r * sin(s * a)) * cos(a) + px;
@@ -562,7 +554,7 @@ void graphDemo9(int32_t xc, int32_t yc, float rd)
     a = 0.0;
     i = 0;
 
-    while (a <= 14 * M_PI && !kbhit())
+    while (a <= 14 * M_PI && !checkQuit(27))
     {
         x = xc + 250 * rd * (1 + 1.0 / 5 * sin(9.06 * a)) * cos(a);
         y = yc + 250 * rd * (1 + 1.0 / 5 * sin(9.06 * a)) * sin(a);
@@ -578,11 +570,10 @@ void initDemo10(int32_t num, int32_t n)
     int32_t i;
     float a = 0.0, r;
 
-    while(kbhit()) getch();
     switch (num)
     {
     case 1:
-        for (i = 0; i < 120 && !kbhit(); i++)
+        for (i = 0; i < 120; i++)
         {
             r = 100 * (0.5 + 0.5 * sin(n * a));
             grData[i][0] = r * cos(a);
@@ -592,7 +583,7 @@ void initDemo10(int32_t num, int32_t n)
         break;
 
     case 2:
-        for (i = 0; i < 120 && !kbhit(); i++)
+        for (i = 0; i < 120; i++)
         {
             r = 100 * (0.82 + 0.18 * sin(3 * n * a)) * (0.5 + 0.5 * sin(n * a));
             grData[i][0] = r * cos(a);
@@ -602,7 +593,7 @@ void initDemo10(int32_t num, int32_t n)
         break;
 
     case 3:
-        for (i = 0; i < 120 && !kbhit(); i++)
+        for (i = 0; i < 120; i++)
         {
             r = 100 * (0.33 * sin(0.5 * n * a) + sin(n * a));
             grData[i][0] = r * cos(2 * a);
@@ -612,7 +603,7 @@ void initDemo10(int32_t num, int32_t n)
         break;
 
     case 4:
-        for (i = 0; i < 120 && !kbhit(); i++)
+        for (i = 0; i < 120; i++)
         {
             grData[i][0] = 100 * sin(n * a) * cos(a);
             grData[i][1] = 100 * sin(n * a + a) * sin(a);
@@ -624,17 +615,16 @@ void initDemo10(int32_t num, int32_t n)
 
 void graphDemo10(int32_t xc, int32_t yc, int32_t rx, int32_t ry, int32_t col)
 {
-    int32_t i;
+    int32_t i = 0;
     int32_t data[120][2] = {0};
 
-    while(kbhit()) getch();
-    for (i = 0; i < 120 && !kbhit(); i++)
+    for (i = 0; i < 120 && !checkQuit(27); i++)
     {
         data[i][0] = grData[i][0] * rx / 100 + xc;
         data[i][1] = grData[i][1] * ry / 100 + yc;
     }
 
-    for (i = 0; i < 119 && !kbhit(); i++) drawLine(data[i][0], data[i][1], data[i + 1][0], data[i + 1][1], col);
+    for (i = 0; i < 119 && !checkQuit(27); i++) drawLine(data[i][0], data[i][1], data[i + 1][0], data[i + 1][1], col);
     drawLine(data[119][0], data[119][1], data[0][0], data[0][1], col);
 }
 
@@ -664,8 +654,7 @@ void graphDemo11()
     makePal(128, 16, 16, 63);
     makePal(128 + 64, 63, 16, 16);
 
-    while(kbhit()) getch();
-    while (!kbhit() && frames < 420)
+    while (!checkQuit(27) && frames < 420)
     {
         x = rand() % cmaxX;
         y = rand() % cmaxY;
@@ -769,8 +758,7 @@ void lineBob()
     dy1 = 1;
     dy2 = -1;
     
-    while(kbhit()) getch();
-    while (!kbhit() && frames < 4000)
+    while (!checkQuit(27) && frames < 4000)
     {
         x1 += dx1;
         x2 += dx2;
@@ -822,8 +810,7 @@ void graphDemo13()
     rotatePalette(16, 207, 192);
     clearScreen(0);
 
-    while (kbhit()) getch();
-    while (!kbhit() && frames++ < 20)
+    while (!checkQuit(27) && frames++ < 20)
     {
         randomPolygon(centerX, centerY, 150, 0.7, 0.4, 20, randPoints);
         fillPolygon(randPoints, 20, 50);
@@ -1235,11 +1222,11 @@ void inter(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t *taux, int32_
 void dessinefonction()
 {
     float x, y, z;
+
     int32_t xi, yi, i, j;
     int32_t xprec, yprec, xcour, ycour;
     
-    while(kbhit()) getch();
-    for (i = 0; i < lines && !kbhit(); i++)
+    for (i = 0; i < lines; i++)
     {
         x = gx1;
         y = gy2 - i * incy;
@@ -1252,7 +1239,7 @@ void dessinefonction()
 
         visibilite(xprec, yprec, &visiPrec);
         
-        for (j = 0; j < points && !kbhit(); j++)
+        for (j = 0; j < points && !checkQuit(27); j++)
         {
             x = gx1 + j * incx;
             z = FX(x, y);
@@ -1380,10 +1367,10 @@ void setPixelChar()
     for (i = 32; i < CHR_MAX; i++)
     {
         sprintf(buff, "%c", i);
-        writeString(0, 0, buff, 31, 0);
+        writeString(0, 0, buff, 1, 0);
         for (j = 0; j < font->info.width; j++)
         {
-            for (k = 0; k < font->info.height; k++) if (getPixel(j, k) == 31) chrPixels[i][j][k] = 1;
+            for (k = 0; k < font->info.height; k++) if (getPixel(j, k) == 1) chrPixels[i][j][k] = 1;
         }
         fillRect(0, 0, font->info.width, font->info.height, 0);
     }
@@ -1391,15 +1378,14 @@ void setPixelChar()
 
 void scrollLed(const char *msg)
 {
-    uint8_t chr;
+    uint8_t chr = 0;
     int32_t i, j, k, m = 0;
     const int32_t zx = 5, zy = 3, sy = 50;
     GFX_FONT *font = getFont(fontType);
 
     drawRectEx(0, sy, cmaxX - 1, sy + (font->info.height << 2), 50, 10);
     
-    while(kbhit()) getch();
-    while (!kbhit())
+    while (!checkQuit(27))
     {
         chr = msg[m];
         for (k = 0; k < font->info.width; k++)
@@ -1461,8 +1447,7 @@ void displaySprite(const char *fname)
     copyPage(0, 1);
     setActivePage(1);
 
-    while (kbhit()) getch();
-    while (!kbhit() && frames < 220)
+    while (!checkQuit(27) && frames < 220)
     {
         // display on 1st page
         setActivePage(0);
@@ -1578,8 +1563,7 @@ void displayPlasma()
     initPlasma(sint, cost);
 
     // display plasma
-    while (kbhit()) getch();
-    while (!kbhit() && frames < 880)
+    while (!checkQuit(27) && frames < 880)
     {
         // create plasma buffer and display on screen
         createPlasma(&dx, &dy, sint, cost, &src);
@@ -1602,7 +1586,6 @@ void displayPlasma()
     ypos = lfbHeight;
 
     // display scale image and scroll text
-    while (kbhit()) getch();
     do {
         createPlasma(&dx, &dy, sint, cost, &src);
         scaleImage(&dst, &src, 0);
@@ -1612,7 +1595,7 @@ void displayPlasma()
         if (endpos <= 98) fadeDown(pal);
         setVisualPage(page);
         page = !page;
-    } while (ypos > -32767 && endpos > -30 && !kbhit());
+    } while (ypos > -32767 && endpos > -30 && !checkQuit(27));
 
     // cleanup...
     freeImage(&src);

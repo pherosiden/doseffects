@@ -1597,18 +1597,24 @@ void fatalError(const char *fmt, ...)
 }
 
 // Check for break program execution
-void checkQuit(int32_t keyQuit)
+int32_t checkQuit(int32_t keyQuit)
 {
     int32_t key = 0;
+
+    // Check for pressed key
     if (kbhit())
     {
-        key = getch();
+        // Read pressed key input
+        while (kbhit()) key = getch();
         if (key == keyQuit)
         {
+            // Cleanup and exit program
             closeVesaMode();
             exit(1);
         }
     }
+
+    return key;
 }
 
 // VESA 3.0, calculate CRTC timing using GTF formular
@@ -10990,7 +10996,8 @@ void rotatePalette(int32_t from, int32_t to, int32_t loop)
 
     if (loop > 0)
     {
-        while(loop--)
+        // Check for key pressed
+        while (!checkQuit(27) && loop--)
         {
             memcpy(&tmp, &pal[from], sizeof(tmp));
             memcpy(&pal[from], &pal[from + 1], count);
@@ -11001,9 +11008,8 @@ void rotatePalette(int32_t from, int32_t to, int32_t loop)
     }
     else
     {
-        // remove keyboard buffer
-        while(kbhit()) getch();
-        while(!kbhit())
+        // Check for key pressed
+        while (!checkQuit(27))
         {
             memcpy(&tmp, &pal[from], sizeof(tmp));
             memcpy(&pal[from], &pal[from + 1], count);
@@ -11018,12 +11024,11 @@ void rotatePalette(int32_t from, int32_t to, int32_t loop)
 // Fade from black palette to current palette
 void fadeIn(RGB *dest)
 {
-    int32_t key = 0;
     int32_t i, j, k;
     RGB src[256] = {0};
 
     getPalette(src);
-    for (i = 63; i >= 0; i--)
+    for (i = 63; i >= 0 && !checkQuit(27); i--)
     {
         for (j = 0; j < 256; j++)
         {
@@ -11034,15 +11039,6 @@ void fadeIn(RGB *dest)
         }
         waitRetrace();
         setPalette(src);
-        if (kbhit())
-        {
-            key = getch();
-            if (key == 27)
-            {
-                closeVesaMode();
-                exit(1);
-            }
-        }
     }
 }
 
@@ -11053,7 +11049,7 @@ void fadeOut(RGB *dest)
     RGB src[256] = {0};
 
     getPalette(src);
-    for (i = 63; i >= 0; i--)
+    for (i = 63; i >= 0 && !checkQuit(27); i--)
     {
         for (j = 0; j < 256; j++)
         {
@@ -11074,7 +11070,7 @@ void fadeMax()
     RGB src[256] = {0};
 
     getPalette(src);
-    for (i = 0; i < 64; i++)
+    for (i = 0; i < 64 && !checkQuit(27); i++)
     {
         for (j = 0; j < 256; j++)
         {
@@ -11094,7 +11090,7 @@ void fadeMin()
     RGB src[256] = {0};
 
     getPalette(src);
-    for (i = 0; i < 64; i++)
+    for (i = 0; i < 64 && !checkQuit(27); i++)
     {
         for (j = 0; j < 256; j++)
         {
@@ -11411,7 +11407,7 @@ void fadeCircle(int32_t dir, uint32_t col)
     switch (dir)
     {
     case 0:
-        for (i = 0; i < 29; i++)
+        for (i = 0; i < 29 && !checkQuit(27); i++)
         {
             waitRetrace();
             for (y = 0; y <= cmaxY / 40; y++)
@@ -11420,7 +11416,7 @@ void fadeCircle(int32_t dir, uint32_t col)
         break;
 
     case 1:
-        for (i = -cmaxY / 40; i < 29; i++)
+        for (i = -cmaxY / 40; i < 29 && !checkQuit(27); i++)
         {
             waitRetrace();
             for (y = 0; y <= cmaxY / 40; y++)
@@ -11430,7 +11426,7 @@ void fadeCircle(int32_t dir, uint32_t col)
         break;
 
     case 2:
-        for (i = -cmaxX / 40; i < 29; i++)
+        for (i = -cmaxX / 40; i < 29 && !checkQuit(27); i++)
         {
             waitRetrace();
             for (y = 0; y <= cmaxY / 40; y++)
@@ -11440,7 +11436,7 @@ void fadeCircle(int32_t dir, uint32_t col)
         break;
 
     case 3:
-        for (i = -cmaxX / 40; i < 60; i++)
+        for (i = -cmaxX / 40; i < 60 && !checkQuit(27); i++)
         {
             waitRetrace();
             for (y = 0; y <= cmaxY / 40; y++)
@@ -11458,7 +11454,7 @@ void fadeRollo(int32_t dir, uint32_t col)
     switch (dir)
     {
     case 0:
-        for (i = 0; i < 20; i++)
+        for (i = 0; i < 20 && !checkQuit(27); i++)
         {
             waitRetrace();
             for (j = 0; j <= cmaxY / 10; j++) horizLine(0, j * 20 + i, cmaxX, col);
@@ -11466,7 +11462,7 @@ void fadeRollo(int32_t dir, uint32_t col)
         break;
 
     case 1:
-        for (i = 0; i < 20; i++)
+        for (i = 0; i < 20 && !checkQuit(27); i++)
         {
             waitRetrace();
             for (j = 0; j <= cmaxX / 10; j++) vertLine(j * 20 + i, 0, cmaxY, col);
@@ -11474,7 +11470,7 @@ void fadeRollo(int32_t dir, uint32_t col)
         break;
 
     case 2:
-        for (i = 0; i < 20; i++)
+        for (i = 0; i < 20 && !checkQuit(27); i++)
         {
             waitRetrace();
             for (j = 0; j <= cmaxX / 10; j++)
