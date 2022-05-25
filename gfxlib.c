@@ -1596,6 +1596,21 @@ void fatalError(const char *fmt, ...)
     exit(1);
 }
 
+// Check for break program execution
+void checkQuit(int32_t keyQuit)
+{
+    int32_t key = 0;
+    if (kbhit())
+    {
+        key = getch();
+        if (key == keyQuit)
+        {
+            closeVesaMode();
+            exit(1);
+        }
+    }
+}
+
 // VESA 3.0, calculate CRTC timing using GTF formular
 void calcCrtcTimingGTF(VBE_CRTC_INFO_BLOCK *crtc, int32_t hpixels, int32_t vlines, int32_t freq, int32_t interlaced, int32_t margins)
 {
@@ -11003,6 +11018,7 @@ void rotatePalette(int32_t from, int32_t to, int32_t loop)
 // Fade from black palette to current palette
 void fadeIn(RGB *dest)
 {
+    int32_t key = 0;
     int32_t i, j, k;
     RGB src[256] = {0};
 
@@ -11018,6 +11034,15 @@ void fadeIn(RGB *dest)
         }
         waitRetrace();
         setPalette(src);
+        if (kbhit())
+        {
+            key = getch();
+            if (key == 27)
+            {
+                closeVesaMode();
+                exit(1);
+            }
+        }
     }
 }
 
