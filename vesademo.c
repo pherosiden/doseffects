@@ -186,10 +186,13 @@ void drawHexagon(POINT *pt, int32_t num, int32_t xc, int32_t yc, int32_t n, int3
                 pt[0].y = pt[0].y + (pt[2].y - pt[0].y) / odre;
 
             }
-            else for (m = 0; m < 3; m++)
+            else
             {
-                pt[m].x = pt[m].x + (pt[(m + 1) % 3].x - pt[m].x) / odre;
-                pt[m].y = pt[m].y + (pt[(m + 1) % 3].y - pt[m].y) / odre;
+                for (m = 0; m < 3; m++)
+                {
+                    pt[m].x = pt[m].x + (pt[(m + 1) % 3].x - pt[m].x) / odre;
+                    pt[m].y = pt[m].y + (pt[(m + 1) % 3].y - pt[m].y) / odre;
+                }
             }
         }
     }
@@ -377,7 +380,6 @@ void graphDemo6(int32_t xc, int32_t yc, int32_t r)
                     sy = y2;
                 }
                 lineTo(x2, y2, (120 * (2 * py + px) + i) / 22 + 32);
-
             }
             lineTo(sx, sy, (120 * (2 * py + px) + i) / 22 + 32);
         }
@@ -695,7 +697,6 @@ void diagonalLine(int32_t x1, int32_t y1, int32_t x2, int32_t y2)
         jge    keepY
         neg    edx
         neg    edi
-
     keepY:
         mov    dyInc, edx
         mov    esi, x2
@@ -703,19 +704,16 @@ void diagonalLine(int32_t x1, int32_t y1, int32_t x2, int32_t y2)
         jge    keepX
         neg    ecx
         neg    esi
-
     keepX:
         mov    dxInc, ecx
         cmp    esi, edi
         jge    horzSeg
         xor    ecx, ecx
         xchg   esi, edi
-        jmp    saveValues
-
+        jmp    saveVal
     horzSeg:
         xor    edx, edx
-
-    saveValues:
+    saveVal:
         mov    dst, edi
         mov    sxInc, ecx
         mov    syInc, edx
@@ -728,7 +726,6 @@ void diagonalLine(int32_t x1, int32_t y1, int32_t x2, int32_t y2)
         mov    dc, eax
         mov    ecx, x1
         mov    edx, y1
-
     mainLoop:
         dec    esi
         jz     finish
@@ -745,13 +742,11 @@ void diagonalLine(int32_t x1, int32_t y1, int32_t x2, int32_t y2)
         add    edx, syInc
         add    ebx, sc
         jmp    mainLoop
-
     dline:
         add    ecx, dxInc
         add    edx, dyInc
         add    ebx, dc
         jmp    mainLoop
-
     finish:
     }
 }
@@ -762,6 +757,8 @@ void lineBob()
     int32_t x1, y1, x2, y2;
     int32_t dx1, dx2, dy1, dy2;
     
+    srand(time(NULL));
+
     x1 = rand() % lfbWidth;
     x2 = rand() % lfbWidth;
     y1 = rand() % lfbHeight;
@@ -798,7 +795,6 @@ void lineBob()
 
 void graphDemo12()
 {
-    srand(time(NULL));
     makeFunkyPalette();
     lineBob();
 }
@@ -1138,7 +1134,6 @@ void initDiverses()
     c4 = 145;
     
     memset(maxh, 0, sizeof(maxh));
-    
     for (i = 0; i < LIMITX; i++) minh[i] = LIMITY;
     
     if (theta < 0 || theta > 180)
@@ -1174,7 +1169,11 @@ void calculeEchelles()
 {
     echx = (c2 - c1) / (f2 - f1);
     echy = (c4 - c3) / (f4 - f3);
-    if (vue == 'r') if (echx < echy) echy = echx; else echx = echy;
+    if (vue == 'r')
+    {
+        if (echx < echy) echy = echx;
+        else echx = echy;
+    }
 }
 
 void horizon(int32_t x1, int32_t y1, int32_t x2, int32_t y2)
