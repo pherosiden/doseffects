@@ -1620,16 +1620,16 @@ int32_t checkQuit(int32_t keyQuit)
 // VESA 3.0, calculate CRTC timing using GTF formular
 void calcCrtcTimingGTF(VBE_CRTC_INFO_BLOCK *crtc, int32_t hpixels, int32_t vlines, int32_t freq, int32_t interlaced, int32_t margins)
 {
-    uint8_t doubleScan = 0;
-    uint32_t marginLeftRight = 0;
-    uint32_t marginTopBottom = 0;
-    uint32_t horizPeriodEst;
-    uint32_t vertSyncPlusBP;
-    uint32_t vertLinesTotal;
-    uint32_t horizPixelsTotal;
-    uint32_t idealDutyCycle;
-    uint32_t horizBlank;
-    uint32_t pixelClock;
+    uint8_t     doubleScan = 0;
+    uint32_t    marginLeftRight = 0;
+    uint32_t    marginTopBottom = 0;
+    uint32_t    horizPeriodEst;
+    uint32_t    vertSyncPlusBP;
+    uint32_t    vertLinesTotal;
+    uint32_t    horizPixelsTotal;
+    uint32_t    idealDutyCycle;
+    uint32_t    horizBlank;
+    uint32_t    pixelClock;
 
     // Re-calculate horizontial pixels
     hpixels = hpixels / CELL_GRAN * CELL_GRAN;
