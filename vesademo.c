@@ -206,7 +206,7 @@ void graphDemo0(int32_t xc, int32_t yc, int32_t xr, int32_t yr)
     float y = yr * 0.4;
     float a = 0.0, m;
 
-    for (i = 0; i < 800 && !checkQuit(27); i++)
+    for (i = 0; i < 800 && !keyPressed(27); i++)
     {
         x0 = xc + xr * cos(a);
         y0 = yc + yr * sin(5 * a) * cos(a / 1.5);
@@ -227,7 +227,7 @@ void graphDemo1(int32_t xc, int32_t yc, int32_t xr, int32_t yr)
     float x1, y1, x2, y2;
     float a = 0.0, m, n;
 
-    for (i = 0; i < 500 && !checkQuit(27); i++)
+    for (i = 0; i < 500 && !keyPressed(27); i++)
     {
         m = sin(a);
         n = cos(a);
@@ -248,7 +248,7 @@ void graphDemo2(int32_t xc, int32_t yc, int32_t r)
     float x1, y1, x2, y2;
     float a = 0.0, f;
 
-    for (i = 0; i < 1600 && !checkQuit(27); i++)
+    for (i = 0; i < 1600 && !keyPressed(27); i++)
     {
         f = r * (1 + 0.25 * cos(20 * a)) * (1 + sin(4 * a));
 
@@ -268,7 +268,7 @@ void graphDemo3(int32_t xc, int32_t yc, int32_t r)
     float x1, y1, x2, y2;
     float a = 0.0, f;
     
-    for (i = 0; i < 1600 && !checkQuit(27); i++)
+    for (i = 0; i < 1600 && !keyPressed(27); i++)
     {
         f = r * (1 + 0.25 * cos(4 * a)) * (1 + sin(8 * a));
 
@@ -288,7 +288,7 @@ void graphDemo4(int32_t xc, int32_t yc, int32_t r)
     float x1, y1, x2, y2;
     float a = 0.0, e;
 
-    for (i = 0; i < 800 && !checkQuit(27); i++)
+    for (i = 0; i < 800 && !keyPressed(27); i++)
     {
         e = r * (1 + 0.5 * sin(2.5 * a));
 
@@ -315,7 +315,7 @@ void graphDemo5(int32_t xi, int32_t yi, int32_t r, int32_t xr, int32_t yr)
             k = !(n % 2) ? 2 : 1;
             a = 0;
 
-            for (i = 0; i <= 15 * n * k && !checkQuit(27); i++)
+            for (i = 0; i <= 15 * n * k && !keyPressed(27); i++)
             {
                 e = r / 5.0 * sin(n * phi * a) + r * sin(n * a);
                 x = xr * (n - 2) + xi + e * cos(a);
@@ -347,7 +347,7 @@ void graphDemo6(int32_t xc, int32_t yc, int32_t r)
 
     int32_t px, py, i;
 
-    for (i = 0; i < 120 && !checkQuit(27); i++)
+    for (i = 0; i < 120 && !keyPressed(27); i++)
     {
         theta = 66 * sqrt(fabs(cos(3 * a))) + 12 * sqrt(fabs(cos(9 * a)));
         xx[i] = theta * cos(a) * 1.2 / 320.0 * r;
@@ -359,7 +359,7 @@ void graphDemo6(int32_t xc, int32_t yc, int32_t r)
     {
         for (px = 1; px <= 8; px++)
         {
-            for (i = 0; i < 120 && !checkQuit(27); i++)
+            for (i = 0; i < 120 && !keyPressed(27); i++)
             {
                 x1 = xx[i] + (px * r >> 1) - (r >> 2);
                 y1 = yy[i] + (py * r >> 1) - (r >> 2);
@@ -390,7 +390,7 @@ void graphDemo7(int32_t xc, int32_t yc, int32_t r)
     
     int32_t px, py, i;
 
-    for (i = 0; i < 120 && !checkQuit(27); i++)
+    for (i = 0; i < 120 && !keyPressed(27); i++)
     {
         theta = 40 * sin(4 * (a + M_PI / 8));
         
@@ -407,7 +407,7 @@ void graphDemo7(int32_t xc, int32_t yc, int32_t r)
     {
         for (px = 1; px <= 8; px++)
         {
-            for (i = 0; i < 120 && !checkQuit(27); i++)
+            for (i = 0; i < 120 && !keyPressed(27); i++)
             {
                 x1 = xx[i] + (px * r >> 1) - (r >> 2);
                 y1 = yy[i] + (py * r >> 1) - (r >> 2);
@@ -446,7 +446,7 @@ void graphDemo8(int32_t xc, int32_t yc, int32_t d, int32_t r)
     sc = uv / 100.0;
     dd = d / 2.0;
 
-    for (i = 0; i < 120 && !checkQuit(27); i++)
+    for (i = 0; i < 120 && !keyPressed(27); i++)
     {
         theta = 90 * (0.8 + 0.2 * sin(12 * a)) * (0.5 + 0.5 * sin(4 * a));
         xx[i] = theta * cos(a);
@@ -458,7 +458,7 @@ void graphDemo8(int32_t xc, int32_t yc, int32_t d, int32_t r)
     {
         for (py = 1; py <= un; py++)
         {
-            for (i = 0; i < 120 && !checkQuit(27); i++)
+            for (i = 0; i < 120 && !keyPressed(27); i++)
             {
                 x = xx[i] * sc + px * uv - dd - k;
                 y = yy[i] * sc + py * uv - dd - k;
@@ -505,7 +505,7 @@ void graphDemo9(int32_t xc, int32_t yc, float rd)
     k = !(s % 2) ? 2 : 1;
     a = 0.0;
 
-    while (!checkQuit(27) && a <= k * M_PI + M_PI / 10.0 / s * 1.0)
+    while (!keyPressed(27) && a <= k * M_PI + M_PI / 10.0 / s * 1.0)
     {
         x = (r / 4 * sin(3 * s * a) + r * sin(s * a)) * cos(a) + px;
         y = (r / 4 * sin(3 * s * a) + r * sin(s * a)) * sin(a) + py;
@@ -534,7 +534,7 @@ void graphDemo9(int32_t xc, int32_t yc, float rd)
             k = !(s % 2) ? 2 : 1;
             a = 0.0;
 
-            while (!checkQuit(27) && a <= k * M_PI + M_PI / 10.0 / s)
+            while (!keyPressed(27) && a <= k * M_PI + M_PI / 10.0 / s)
             {
 
                 x = (r / 4 * sin(3 * s * a) + r * sin(s * a)) * cos(a) + px;
@@ -554,7 +554,7 @@ void graphDemo9(int32_t xc, int32_t yc, float rd)
     a = 0.0;
     i = 0;
 
-    while (a <= 14 * M_PI && !checkQuit(27))
+    while (a <= 14 * M_PI && !keyPressed(27))
     {
         x = xc + 250 * rd * (1 + 1.0 / 5 * sin(9.06 * a)) * cos(a);
         y = yc + 250 * rd * (1 + 1.0 / 5 * sin(9.06 * a)) * sin(a);
@@ -618,17 +618,17 @@ void graphDemo10(int32_t xc, int32_t yc, int32_t rx, int32_t ry, int32_t col)
     int32_t i = 0;
     int32_t data[120][2] = {0};
 
-    for (i = 0; i < 120 && !checkQuit(27); i++)
+    for (i = 0; i < 120 && !keyPressed(27); i++)
     {
         data[i][0] = grData[i][0] * rx / 100 + xc;
         data[i][1] = grData[i][1] * ry / 100 + yc;
     }
 
-    for (i = 0; i < 119 && !checkQuit(27); i++) drawLine(data[i][0], data[i][1], data[i + 1][0], data[i + 1][1], col);
+    for (i = 0; i < 119 && !keyPressed(27); i++) drawLine(data[i][0], data[i][1], data[i + 1][0], data[i + 1][1], col);
     drawLine(data[119][0], data[119][1], data[0][0], data[0][1], col);
 }
 
-void makePal(uint8_t n, uint8_t r, uint8_t g, uint8_t b)
+void makePalette(uint8_t n, uint8_t r, uint8_t g, uint8_t b)
 {
     int32_t i;
     int32_t white = 10;
@@ -649,12 +649,7 @@ void graphDemo11()
     int32_t x, y, i, col, frames = 0;
     
     srand(time(NULL));
-    makePal(0, 63, 32, 16);
-    makePal(64, 32, 63, 16);
-    makePal(128, 16, 16, 63);
-    makePal(128 + 64, 63, 16, 16);
-
-    while (!checkQuit(27) && frames < 420)
+    while (!keyPressed(27) && frames < 420)
     {
         x = rand() % cmaxX;
         y = rand() % cmaxY;
@@ -740,7 +735,7 @@ void diagonalLine(int32_t x1, int32_t y1, int32_t x2, int32_t y2)
     }
 }
 
-void lineBob()
+void graphDemo12()
 {
     int32_t frames = 0;
     int32_t x1, y1, x2, y2;
@@ -758,7 +753,7 @@ void lineBob()
     dy1 = 1;
     dy2 = -1;
     
-    while (!checkQuit(27) && frames < 4000)
+    while (!keyPressed(27) && frames < 4000)
     {
         x1 += dx1;
         x2 += dx2;
@@ -781,16 +776,9 @@ void lineBob()
     }
 }
 
-void graphDemo12()
-{
-    makeFunkyPalette();
-    lineBob();
-}
-
 void graphDemo13()
 {
     int32_t i, j;
-    
     POINT points[] = { {659, 336}, {452, 374}, {602, 128}, {509, 90}, {433, 164}, {300, 71}, {113, 166}, {205, 185}, {113, 279}, {169, 278}, {206, 334}, {263, 279}, {355, 129}, {301, 335}, {432, 204}, {433, 297}, {245, 467}, {414, 392}, {547, 523} };
     
     fillPolygon(points, sizeof(points) / sizeof(points[0]), 50);
@@ -807,10 +795,9 @@ void graphDemo13()
 void graphDemo14()
 {
     int32_t i, j;
-    POINT randPoints[30] = {0};
+    POINT randPoints[20] = {0};
 
     srand(time(NULL));
-
     randomPolygon(centerX, centerY, 150, 0.7, 0.4, 20, randPoints);
     fillPolygon(randPoints, 20, 50);
 
@@ -1236,7 +1223,7 @@ void dessinefonction()
 
         visibilite(xprec, yprec, &visiPrec);
         
-        for (j = 0; j < points && !checkQuit(27); j++)
+        for (j = 0; j < points && !keyPressed(27); j++)
         {
             x = gx1 + j * incx;
             z = FX(x, y);
@@ -1382,7 +1369,7 @@ void scrollLed(const char *msg)
 
     drawRectEx(0, sy, cmaxX - 1, sy + (font->info.height << 2), 50, 10);
     
-    while (!checkQuit(27))
+    while (!keyPressed(27))
     {
         chr = msg[m];
         for (k = 0; k < font->info.width; k++)
@@ -1444,7 +1431,7 @@ void displaySprite(const char *fname)
     copyPage(0, 1);
     setActivePage(1);
 
-    while (!checkQuit(27) && frames < 220)
+    while (!keyPressed(27) && frames < 220)
     {
         // display on 1st page
         setActivePage(0);
@@ -1560,7 +1547,7 @@ void displayPlasma()
     initPlasma(sint, cost);
 
     // display plasma
-    while (!checkQuit(27) && frames < 880)
+    while (!keyPressed(27) && frames < 880)
     {
         // create plasma buffer and display on screen
         createPlasma(&dx, &dy, sint, cost, &src);
@@ -1592,12 +1579,28 @@ void displayPlasma()
         if (endpos <= 98) fadeDown(pal);
         setVisualPage(page);
         page = !page;
-    } while (ypos > -32767 && endpos > -30 && !checkQuit(27));
+    } while (ypos > -32767 && endpos > -30 && !keyPressed(27));
 
     // cleanup...
     freeImage(&src);
     freeImage(&dst);
     closeFont(0);
+}
+
+void quitMessage()
+{
+    closeVesaMode();
+    printf("+-----------------------------------------------------+\n");
+    printf("|    GFXLIB demo (c) 1998 - 2002 by Nguyen Ngoc Van   |\n");
+    printf("|        Full support 8/15/16/24/32 bits color        |\n");
+    printf("|          Support load/save BMP & PNG files          |\n");
+    printf("|    Using Linear Frame Buffer for best performance   |\n");
+    printf("|           Optimize code by using assembly           |\n");
+    printf("|           Code by: Nguyen Ngoc Van                  |\n");
+    printf("|             Email: pherosiden@gmail.com             |\n");
+    printf("|           Website: http://codedemo.net              |\n");
+    printf("|         Reference: http://crossfire-designs.de      |\n");
+    printf("+-----------------------------------------------------+\n");
 }
 
 int main(int argc, const char* argv[])
@@ -1641,7 +1644,7 @@ int main(int argc, const char* argv[])
     printf("GFXLIB initializing....\n");
 
     // init clock time and random number generation
-    initGfxLib(1);
+    initGfxLib(1, quitMessage);
     if (!loadFont("FONTVN.XFN", 0)) fatalError("Cannot load font!\n");
     if (!setVesaMode(800, 600, 32, 85)) fatalError("Cannot init video mode.\n");
 
@@ -1859,11 +1862,16 @@ int main(int argc, const char* argv[])
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen18.bmp");
 
     clearScreen(0);
+    makePalette(0, 63, 32, 16);
+    makePalette(64, 32, 63, 16);
+    makePalette(128, 16, 16, 63);
+    makePalette(128 + 64, 63, 16, 16);
     graphDemo11();
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen19.bmp");
     fadeRollo(2, 0);
     
     clearScreen(0);
+    makeFunkyPalette();
     graphDemo12();
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen20.bmp");
     fadeRollo(1, 0);
@@ -2081,23 +2089,12 @@ int main(int argc, const char* argv[])
     makeFont(strScroll);
     scrollLed(strScroll);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen34.bmp");
+
     closeFont(0);
     clearScreen(0);
-
     displayPlasma();
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen35.bmp");
 
-    closeVesaMode();
-    printf("+-----------------------------------------------------+\n");
-    printf("|    GFXLIB demo (c) 1998 - 2002 by Nguyen Ngoc Van   |\n");
-    printf("|        Full support 8/15/16/24/32 bits color        |\n");
-    printf("|          Support load/save BMP & PNG files          |\n");
-    printf("|    Using Linear Frame Buffer for best performance   |\n");
-    printf("|           Optimize code by using assembly           |\n");
-    printf("|           Code by: Nguyen Ngoc Van                  |\n");
-    printf("|             Email: pherosiden@gmail.com             |\n");
-    printf("|           Website: http://codedemo.net              |\n");
-    printf("|         Reference: http://crossfire-designs.de      |\n");
-    printf("+-----------------------------------------------------+\n");
+    quitMessage();
     return 0;
 }

@@ -18,8 +18,10 @@ typedef char STRBUFF[80];
 // Show text intro message
 int32_t fullSpeed = 0;
 STRBUFF texts[17] = {0};
+
 GFX_IMAGE fade1, fade2, flare;
 GFX_IMAGE bump1, bump2, logo, sky;
+GFX_IMAGE bg, tx, scr, old, im;
 GFX_IMAGE flares[16] = {0};
 
 // inline optimize for multiple call
@@ -29,7 +31,7 @@ inline int32_t sqr(int32_t x)
 }
 
 // check and exit program
-void runExit(int32_t halt)
+void runExit()
 {
     int32_t i;
     GFX_IMAGE im;
@@ -39,7 +41,7 @@ void runExit(int32_t halt)
     getImage(0, 0, lfbWidth, lfbHeight, &im);
 
     // decrease rgb and push back to screen
-    for (i = 0; i != 32; i++)
+    for (i = 0; i < 32; i++)
     {
         fadeOutImage(&im, 8);
         waitRetrace();
@@ -55,40 +57,25 @@ void runExit(int32_t halt)
     freeImage(&bump2);
     freeImage(&logo);
     freeImage(&sky);
-    for (i = 0; i != 16; i++) freeImage(&flares[i]);
-
-    // check for exit program
-    if (halt)
-    {
-        closeVesaMode();
-        printf("+-----------------------------------------------------+\n");
-        printf("|    GFXLIB demo (c) 1998 - 2002 by Nguyen Ngoc Van   |\n");
-        printf("|        Full support 8/15/16/24/32 bits color        |\n");
-        printf("|          Support load/save BMP & PNG files          |\n");
-        printf("|    Using Linear Frame Buffer for best performance   |\n");
-        printf("|           Optimize code by using assember           |\n");
-        printf("|      Use double buffering to performance render     |\n");
-        printf("|           Code by: Nguyen Ngoc Van                  |\n");
-        printf("|             Email: pherosiden@gmail.com             |\n");
-        printf("|           Website: http://codedemo.net              |\n");
-        printf("|         Reference: http://crossfire-designs.de      |\n");
-        printf("+-----------------------------------------------------+\n");
-        exit(1);
-    }
-}
-
-// check for input key
-int32_t checkKeyPressed()
-{
-    // empty keyboard buffer
-    while(kbhit())
-    {
-        // read key pressed
-        char key = getch();
-        if (key == 27) runExit(1);	// <ESC> for exit program
-        if (key == 13) return 1;	// <ENTER> for skip to next state
-    }
-    return 0;
+    freeImage(&bg);
+    freeImage(&tx);
+    freeImage(&scr);
+    freeImage(&old);
+    freeImage(&im);
+    for (i = 0; i < 16; i++) freeImage(&flares[i]);
+    closeVesaMode();
+    printf("+-----------------------------------------------------+\n");
+    printf("|    GFXLIB demo (c) 1998 - 2002 by Nguyen Ngoc Van   |\n");
+    printf("|        Full support 8/15/16/24/32 bits color        |\n");
+    printf("|          Support load/save BMP & PNG files          |\n");
+    printf("|    Using Linear Frame Buffer for best performance   |\n");
+    printf("|           Optimize code by using assember           |\n");
+    printf("|      Use double buffering to performance render     |\n");
+    printf("|           Code by: Nguyen Ngoc Van                  |\n");
+    printf("|             Email: pherosiden@gmail.com             |\n");
+    printf("|           Website: http://codedemo.net              |\n");
+    printf("|         Reference: http://crossfire-designs.de      |\n");
+    printf("+-----------------------------------------------------+\n");
 }
 
 // Show intro message text string
@@ -108,8 +95,8 @@ void showText(int32_t sx, int32_t sy, GFX_IMAGE *img, char *str)
     {
         waitRetrace();
         putImage(sx, sy, img);
-        for (i = 0; i != 17; i++) writeString(sx + 10, sy + 10 + i * 10, texts[i], col, 2);
-        checkKeyPressed();
+        for (i = 0; i < 17; i++) writeString(sx + 10, sy + 10 + i * 10, texts[i], col, 2);
+        keyPressed(27);
     }
     else
     {
@@ -119,7 +106,7 @@ void showText(int32_t sx, int32_t sy, GFX_IMAGE *img, char *str)
             // fill original background
             waitRetrace();
             putImage(sx, sy, img);
-            for (i = 0; i != 16; i++) writeString(sx + 10, sy + 10 + i * 10 + y, texts[i], col, 2);
+            for (i = 0; i < 16; i++) writeString(sx + 10, sy + 10 + i * 10 + y, texts[i], col, 2);
         }
 
         x = 0;
@@ -127,7 +114,7 @@ void showText(int32_t sx, int32_t sy, GFX_IMAGE *img, char *str)
         col = fromRGB(255, 255, 255);
 
         // show current text with delay each character
-        for (i = 0; i != len; i++)
+        for (i = 0; i < len; i++)
         {
             msg[0] = str[i];
             writeString(sx + 10 + x, sy + 10 + 160, msg, col, 2);
@@ -135,7 +122,7 @@ void showText(int32_t sx, int32_t sy, GFX_IMAGE *img, char *str)
 
             // check for delay and skip
             if (!fullSpeed) delay(45);
-            if (checkKeyPressed()) fullSpeed = 1;
+            if (keyPressed(27)) fullSpeed = 1;
         }
     }
 }
@@ -241,7 +228,7 @@ void runIntro()
         waitRetrace();
         putImage(0, 0, &scr);
         waitFor(tmwait, 50);
-    } while (!checkKeyPressed() && getElapsedTime(tmstart) / timeRes < ts);
+    } while (!keyPressed(27) && getElapsedTime(tmstart) / timeRes < ts);
 
     // cleanup...
     freeImage(&map);
@@ -272,7 +259,7 @@ void runBlocking(int32_t sx, int32_t sy)
         brightnessImage(&im2, &im2, 255.0 - 1.0 * dec / (fade1.mWidth >> 2) * 255.0);
         waitRetrace();
         putImage(sx, sy, &im2);
-    } while (dec > 0 && !checkKeyPressed());
+    } while (dec > 0 && !keyPressed(27));
 
     // save current background
     width  = fade1.mWidth;
@@ -302,7 +289,7 @@ void runBlocking(int32_t sx, int32_t sy)
         waitRetrace();
         putImage(sx + posx, sy + posy, &im3);
         putImageAlpha(sx + posx, sy + posy, &im2);
-    } while (dec > 0 && !checkKeyPressed());
+    } while (dec > 0 && !keyPressed(27));
 
     // cleanup...
     freeImage(&im1);
@@ -329,7 +316,7 @@ void runScaleUpImage(int32_t sx, int32_t sy)
         changeDrawBuffer(im1.mData, im1.mWidth, im1.mHeight);
 
         // put some random pixel and GFX message
-        for (i = 0; i != 200; i++) putPixel(random(im1.mWidth - 4) + 2, random(im1.mHeight - 4) + 2, fromRGB(0, 255, 200));
+        for (i = 0; i < 200; i++) putPixel(random(im1.mWidth - 4) + 2, random(im1.mHeight - 4) + 2, fromRGB(0, 255, 200));
         if (random(128) == 64) putImageAlpha((im1.mWidth - im3.mWidth) >> 1, (im1.mHeight - im3.mHeight) >> 1, &im3);
 
         // blur & scale buffer
@@ -341,7 +328,7 @@ void runScaleUpImage(int32_t sx, int32_t sy)
         waitRetrace();
         putImage(sx, sy, &im2);
         copyData(im1.mData, im2.mData, im2.mSize);
-    } while (!checkKeyPressed());
+    } while (!keyPressed(27));
 
     // cleanup...
     freeImage(&im1);
@@ -373,7 +360,7 @@ void runCrossFade(int32_t sx, int32_t sy)
         // check for change direction
         if (up) i++; else i--;
         if (i == 0 || i == 64) up = !up;
-    } while (!checkKeyPressed());
+    } while (!keyPressed(27));
 
     // cleanup...
     freeImage(&im);
@@ -403,7 +390,7 @@ void runAddImage(int32_t sx, int32_t sy)
         restoreDrawBuffer();
         waitRetrace();
         putImage(sx, sy, &img);
-    } while (pos != 0 && !checkKeyPressed());
+    } while (pos != 0 && !keyPressed(27));
 }
 
 void runRotateImage(int32_t sx, int32_t sy)
@@ -430,7 +417,7 @@ void runRotateImage(int32_t sx, int32_t sy)
         waitRetrace();
         putImage(sx, sy, &im);
         degree++;
-    } while (!checkKeyPressed());
+    } while (!keyPressed(27));
 
     // cleanup...
     freeImage(&im);
@@ -456,7 +443,7 @@ void runBilinearRotateImage(int32_t sx, int32_t sy)
         waitRetrace();
         putImage(sx, sy, &im);
         degree++;
-    } while (!checkKeyPressed());
+    } while (!keyPressed(27));
 
     // cleanup...
     freeImage(&im);
@@ -476,7 +463,7 @@ void runAntialias(int32_t sx, int32_t sy)
         changeDrawBuffer(dst.mData, dst.mWidth, dst.mHeight);
 
         // draw antialias (smooth pixel) circle, line, ellipse
-        for (i = 0; i != 3; i++)
+        for (i = 0; i < 3; i++)
         {
             // choose random color
             col = fromRGB(random(255) + 1, random(255) + 1, random(255) + 1);
@@ -497,7 +484,7 @@ void runAntialias(int32_t sx, int32_t sy)
 
         // fade-out current buffer
         fadeOutImage(&dst, 4);
-    } while (!checkKeyPressed());
+    } while (!keyPressed(27));
 
     // cleanup...
     freeImage(&img);
@@ -537,7 +524,7 @@ void runLens()
         fillRectSub(0, 0, cmaxX, cmaxY, fromRGB(0, (1.0 * mcd.mdx / cmaxY) * 64.0, (1.0 * mcd.mdx / cmaxY) * 64.0));
 
         // put all flare image to render buffer
-        for (i = 0; i != 16; i++)
+        for (i = 0; i < 16; i++)
         {
             // is show?
             if (flareput[i])
@@ -557,7 +544,7 @@ void runLens()
         restoreDrawBuffer();
         waitRetrace();
         putImage(0, 0, &scr);
-    } while (!checkKeyPressed() && !mcd.mbx);
+    } while (!keyPressed(27) && !mcd.mbx);
 
     // cleanup...
     freeImage(&scr);
@@ -585,7 +572,7 @@ void runBumpImage()
         putImage(0, 0, &dst);
         clearImage(&dst);
         cnt++;
-    } while (!checkKeyPressed());
+    } while (!keyPressed(27));
 
     // cleanup...
     freeImage(&dst);
@@ -604,7 +591,7 @@ void runPlasmaScale(int32_t sx, int32_t sy)
     uint32_t edi;
 
     // initialized lookup table and preload image
-    for (y = 0; y != 256; y++) sinx[y] = sin(y * M_PI / 128) * 127 + 128;
+    for (y = 0; y < 256; y++) sinx[y] = sin(y * M_PI / 128) * 127 + 128;
     if (!newImage(160, 120, &plasma)) fatalError("Cannot open image plasma.\n");; 
     if (!newImage(320, 240, &screen)) fatalError("Cannot open image screen.\n");; 
 
@@ -624,7 +611,7 @@ void runPlasmaScale(int32_t sx, int32_t sy)
         y3 = sinx[(tectr / 12 + 64) & 0xFF];
 
         // calculate plasma buffer
-        for (y = 0; y != plasma.mHeight; y++)
+        for (y = 0; y < plasma.mHeight; y++)
         {
             a = sqr(y - y1) + sqr(x1);
             b = sqr(y - y2) + sqr(x2);
@@ -697,7 +684,7 @@ void runPlasmaScale(int32_t sx, int32_t sy)
         waitRetrace();
         putImage(sx, sy, &screen);
         frames++;
-    } while (!checkKeyPressed());
+    } while (!keyPressed(27));
 
     // clean up...
     freeImage(&plasma);
@@ -710,12 +697,11 @@ int main()
     char sbuff[80] = {0};
 
     VBE_DRIVER_INFO	drv;
-    GFX_IMAGE bg, tx, scr, old, im;
     uint32_t gray32, gray64, gray127, redcol;
 
     _clearscreen(0);
     printf("GFXLIB initializing....\n");
-    initGfxLib(1);
+    initGfxLib(1, runExit);
 
     if (!loadFont("sysfont.xfn", 0)) fatalError("Cannot load system font!\n");
     if (!loadImage("gfxbg0.png", &bg)) fatalError("Cannot load image:gfxbg0.png!\n");
@@ -723,7 +709,7 @@ int main()
     if (!loadImage("gfxbump1.png", &bump2)) fatalError("Cannot load image:gfxbump1.png!\n");
     if (!loadImage("gfxlogos.png", &logo)) fatalError("Cannot load image:gfxlogos.png!\n");
     if (!loadImage("gfxsky.png", &sky)) fatalError("Cannot load image:gfxsky.png!\n");
-    for (i = 0; i != 16; i++)
+    for (i = 0; i < 16; i++)
     {
         sprintf(sbuff, "flare-%dx.png", i + 1);
         if (!loadImage(sbuff, &flares[i])) fatalError("Cannot load image: %s!\n", sbuff);
@@ -815,20 +801,19 @@ int main()
     showText(10, yc, &tx, "alphamapped image. You may see: working");
     showText(10, yc, &tx, "with images got very easy in GFXLIB -");
     showText(10, yc, &tx, "no half things anymore! To the next...");
-    showText(10, yc, &tx, "Press enter to continue...");
-    while(!checkKeyPressed());
+    showText(10, yc, &tx, "Press any key to continue...");
+    while(!keyPressed(27));
     runAddImage(20, 20);
     fullSpeed = 0;
     showText(10, yc, &tx, "----");
-    showText(10, yc, &tx, "This was simply another flag of a");
-    showText(10, yc, &tx, "draw-operation. It was used here to");
-    showText(10, yc, &tx, "force draw to add the content of the");
-    showText(10, yc, &tx, "image to the background of the image.");
-    showText(10, yc, &tx, "You are also able to subtract the image");
-    showText(10, yc, &tx, "and to work with an alphamap like PNG-");
-    showText(10, yc, &tx, "images can contain one.");
-    showText(10, yc, &tx, "The next effect - press enter...");
-    while(!checkKeyPressed());
+    showText(10, yc, &tx, "This was simply another flag of a draw");
+    showText(10, yc, &tx, "operation. It was used here to force");
+    showText(10, yc, &tx, "draw to add the content of the image to");
+    showText(10, yc, &tx, "the background of the image. You are also");
+    showText(10, yc, &tx, "able to subtract the image and to work");
+    showText(10, yc, &tx, "with an alphamap like PNG-image can");
+    showText(10, yc, &tx, "contain one. Press any key for the next");
+    while(!keyPressed(27));
     runCrossFade(20, 20);
     fullSpeed = 0;
     showText(10, yc, &tx, "----");
@@ -836,10 +821,10 @@ int main()
     showText(10, yc, &tx, "alpha-blending. In GFXLIB, the");
     showText(10, yc, &tx, "procedure is called 'blendImage'. This");
     showText(10, yc, &tx, "procedure makes of 2 images another,");
-    showText(10, yc, &tx, "where you can decide which image");
+    showText(10, yc, &tx, "where you can decide which image covers");
     showText(10, yc, &tx, "covers more the other.");
-    showText(10, yc, &tx, "Enter...");
-    while(!checkKeyPressed());
+    showText(10, yc, &tx, "Press any key...");
+    while(!keyPressed(27));
     runBilinearRotateImage(20, 20);
     fullSpeed = 0;
     showText(10, yc, &tx, "----");
@@ -854,18 +839,17 @@ int main()
     showText(10, yc, &tx, "version of rotate image is so fast if");
     showText(10, yc, &tx, "only rotate and show image, check my");
     showText(10, yc, &tx, "source code for details.");
-    showText(10, yc, &tx, "Enter...");
-    while(!checkKeyPressed());
+    showText(10, yc, &tx, "Press any key...");
+    while(!keyPressed(27));
     runScaleUpImage(20, 20);
     fullSpeed = 0;
     showText(10, yc, &tx, "----");
     showText(10, yc, &tx, "Much more fancy than the other FX...");
     showText(10, yc, &tx, "Yea, you see two effects combined here.");
     showText(10, yc, &tx, "scaleup and blur image are doing");
-    showText(10, yc, &tx, "their work here. Check the source to");
-    showText(10, yc, &tx, "see the details.");
-    showText(10, yc, &tx, "Enter...");
-    while(!checkKeyPressed());
+    showText(10, yc, &tx, "their work here. Check the source code");
+    showText(10, yc, &tx, "to see the details. Press any key...");
+    while(!keyPressed(27));
     runAntialias(20, 20);
     fullSpeed = 0;
     showText(10, yc, &tx, "----");
@@ -873,8 +857,8 @@ int main()
     showText(10, yc, &tx, "Possible with GFXLIB and also even faster");
     showText(10, yc, &tx, "than seen here (just slow for show).");
     showText(10, yc, &tx, "Perfect for 3D models and similar.");
-    showText(10, yc, &tx, "Enter...");
-    while(!checkKeyPressed());
+    showText(10, yc, &tx, "Press any key...");
+    while(!keyPressed(27));
     runPlasmaScale(20, 20);
     fullSpeed = 0;
     showText(10, yc, &tx, "----");
@@ -883,8 +867,8 @@ int main()
     showText(10, yc, &tx, "interpolation to process hight quality.");
     showText(10, yc, &tx, "This version is optimized using integer");
     showText(10, yc, &tx, "number but not really fast here.");
-    showText(10, yc, &tx, "Enter...");
-    while(!checkKeyPressed());
+    showText(10, yc, &tx, "Press any key...");
+    while(!keyPressed(27));
     fillRect(20, 20, xc - 20, yc - 20, 0);
     newImage(lfbWidth, lfbHeight, &scr);
     getImage(0, 0, lfbWidth, lfbHeight, &scr);
@@ -903,8 +887,8 @@ int main()
     showText(10, yc, &tx, "render buffer. Scale down image using");
     showText(10, yc, &tx, "Bresenham algorithm for faster speed");
     showText(10, yc, &tx, "of image interpolation.");
-    showText(10, yc, &tx, "Enter for next...");
-    while(!checkKeyPressed());
+    showText(10, yc, &tx, "Any key for next...");
+    while(!keyPressed(27));
     runLens();
     getImage(0, 0, lfbWidth, lfbHeight, &old);
     bilinearScaleImage(&im, &old);
@@ -919,8 +903,8 @@ int main()
     showText(10, yc, &tx, "also use bilinear algorithm with hight");
     showText(10, yc, &tx, "quality for scale down image. Use mouse");
     showText(10, yc, &tx, "hardware interrupt to tracking event.");
-    showText(10, yc, &tx, "Enter to continue...");
-    while(!checkKeyPressed());
+    showText(10, yc, &tx, "Any key to continue...");
+    while(!keyPressed(27));
     fullSpeed = 0;
     showText(10, yc, &tx, "----");
     showText(10, yc, &tx, "That's all folks! More to come soon.");
@@ -932,27 +916,9 @@ int main()
     showText(10, yc, &tx, "");
     showText(10, yc, &tx, "Nguyen Ngoc Van -- pherosiden@gmail.com");
     showText(10, yc, &tx, "");
-    showText(10, yc, &tx, "Enter to exit ;-)");
-    while(!checkKeyPressed());
-    runExit(0);
-    freeImage(&bg);
-    freeImage(&tx);
-    freeImage(&scr);
-    freeImage(&old);
-    freeImage(&im);
+    showText(10, yc, &tx, "Any key to exit ;-)");
+    while(!keyPressed(27));
     closeFont(0);
-    closeVesaMode();
-    printf("+-----------------------------------------------------+\n");
-    printf("|    GFXLIB demo (c) 1998 - 2002 by Nguyen Ngoc Van   |\n");
-    printf("|        Full support 8/15/16/24/32 bits color        |\n");
-    printf("|          Support load/save BMP & PNG files          |\n");
-    printf("|    Using Linear Frame Buffer for best performance   |\n");
-    printf("|           Optimize code by using assember           |\n");
-    printf("|      Use double buffering to performance render     |\n");
-    printf("|           Code by: Nguyen Ngoc Van                  |\n");
-    printf("|             Email: pherosiden@gmail.com             |\n");
-    printf("|           Website: http://codedemo.net              |\n");
-    printf("|         Reference: http://crossfire-designs.de      |\n");
-    printf("+-----------------------------------------------------+\n");
+    runExit();
     return 0;
 }

@@ -681,6 +681,7 @@ void        (*putSpriteAdd)(int32_t, int32_t, uint32_t, GFX_IMAGE*) = NULL;
 void        (*putSpriteSub)(int32_t, int32_t, uint32_t, GFX_IMAGE*) = NULL;
 void        (*scaleImage)(GFX_IMAGE*, GFX_IMAGE*, int32_t) = NULL;
 void        (*fadeOutImage)(GFX_IMAGE*, uint8_t) = NULL;
+void        (*quitCallback)() = NULL;
 
 // Linear frame buffer
 uint8_t     *lfbPtr = NULL;                     // address of render buffer
@@ -1160,8 +1161,9 @@ void getMemoryInfo()
 
 // Init the timer to use system time or cpu clock time
 // this is a first function call before init vesa mode
-void initGfxLib(uint8_t type)
+void initGfxLib(uint8_t type, void (*fnQuit)())
 {
+    quitCallback = fnQuit;
     timeType = type;
 
     if (timeType)
@@ -1597,19 +1599,19 @@ void fatalError(const char *fmt, ...)
 }
 
 // Check for break program execution
-int32_t checkQuit(int32_t keyQuit)
+int32_t keyPressed(int32_t keyQuit)
 {
     int32_t key = 0;
 
     // Check for pressed key
-    if (kbhit())
+    while (kbhit())
     {
         // Read pressed key input
-        while (kbhit()) key = getch();
+        key = getch();
         if (key == keyQuit)
         {
-            // Cleanup and exit program
-            closeVesaMode();
+            // Call callback function before exit program
+            if (quitCallback) quitCallback();
             exit(1);
         }
     }
@@ -10997,7 +10999,7 @@ void rotatePalette(int32_t from, int32_t to, int32_t loop)
     if (loop > 0)
     {
         // Check for key pressed
-        while (!checkQuit(27) && loop--)
+        while (!keyPressed(27) && loop--)
         {
             memcpy(&tmp, &pal[from], sizeof(tmp));
             memcpy(&pal[from], &pal[from + 1], count);
@@ -11009,7 +11011,7 @@ void rotatePalette(int32_t from, int32_t to, int32_t loop)
     else
     {
         // Check for key pressed
-        while (!checkQuit(27))
+        while (!keyPressed(27))
         {
             memcpy(&tmp, &pal[from], sizeof(tmp));
             memcpy(&pal[from], &pal[from + 1], count);
@@ -11028,7 +11030,7 @@ void fadeIn(RGB *dest)
     RGB src[256] = {0};
 
     getPalette(src);
-    for (i = 63; i >= 0 && !checkQuit(27); i--)
+    for (i = 63; i >= 0 && !keyPressed(27); i--)
     {
         for (j = 0; j < 256; j++)
         {
@@ -11049,7 +11051,7 @@ void fadeOut(RGB *dest)
     RGB src[256] = {0};
 
     getPalette(src);
-    for (i = 63; i >= 0 && !checkQuit(27); i--)
+    for (i = 63; i >= 0 && !keyPressed(27); i--)
     {
         for (j = 0; j < 256; j++)
         {
@@ -11070,7 +11072,7 @@ void fadeMax()
     RGB src[256] = {0};
 
     getPalette(src);
-    for (i = 0; i < 64 && !checkQuit(27); i++)
+    for (i = 0; i < 64 && !keyPressed(27); i++)
     {
         for (j = 0; j < 256; j++)
         {
@@ -11090,7 +11092,7 @@ void fadeMin()
     RGB src[256] = {0};
 
     getPalette(src);
-    for (i = 0; i < 64 && !checkQuit(27); i++)
+    for (i = 0; i < 64 && !keyPressed(27); i++)
     {
         for (j = 0; j < 256; j++)
         {
@@ -11407,7 +11409,7 @@ void fadeCircle(int32_t dir, uint32_t col)
     switch (dir)
     {
     case 0:
-        for (i = 0; i < 29 && !checkQuit(27); i++)
+        for (i = 0; i < 29 && !keyPressed(27); i++)
         {
             waitRetrace();
             for (y = 0; y <= cmaxY / 40; y++)
@@ -11416,7 +11418,7 @@ void fadeCircle(int32_t dir, uint32_t col)
         break;
 
     case 1:
-        for (i = -cmaxY / 40; i < 29 && !checkQuit(27); i++)
+        for (i = -cmaxY / 40; i < 29 && !keyPressed(27); i++)
         {
             waitRetrace();
             for (y = 0; y <= cmaxY / 40; y++)
@@ -11426,7 +11428,7 @@ void fadeCircle(int32_t dir, uint32_t col)
         break;
 
     case 2:
-        for (i = -cmaxX / 40; i < 29 && !checkQuit(27); i++)
+        for (i = -cmaxX / 40; i < 29 && !keyPressed(27); i++)
         {
             waitRetrace();
             for (y = 0; y <= cmaxY / 40; y++)
@@ -11436,7 +11438,7 @@ void fadeCircle(int32_t dir, uint32_t col)
         break;
 
     case 3:
-        for (i = -cmaxX / 40; i < 60 && !checkQuit(27); i++)
+        for (i = -cmaxX / 40; i < 60 && !keyPressed(27); i++)
         {
             waitRetrace();
             for (y = 0; y <= cmaxY / 40; y++)
@@ -11454,7 +11456,7 @@ void fadeRollo(int32_t dir, uint32_t col)
     switch (dir)
     {
     case 0:
-        for (i = 0; i < 20 && !checkQuit(27); i++)
+        for (i = 0; i < 20 && !keyPressed(27); i++)
         {
             waitRetrace();
             for (j = 0; j <= cmaxY / 10; j++) horizLine(0, j * 20 + i, cmaxX, col);
@@ -11462,7 +11464,7 @@ void fadeRollo(int32_t dir, uint32_t col)
         break;
 
     case 1:
-        for (i = 0; i < 20 && !checkQuit(27); i++)
+        for (i = 0; i < 20 && !keyPressed(27); i++)
         {
             waitRetrace();
             for (j = 0; j <= cmaxX / 10; j++) vertLine(j * 20 + i, 0, cmaxY, col);
@@ -11470,7 +11472,7 @@ void fadeRollo(int32_t dir, uint32_t col)
         break;
 
     case 2:
-        for (i = 0; i < 20 && !checkQuit(27); i++)
+        for (i = 0; i < 20 && !keyPressed(27); i++)
         {
             waitRetrace();
             for (j = 0; j <= cmaxX / 10; j++)
@@ -14802,7 +14804,7 @@ int32_t loadFont(char *fname, uint32_t type)
     if (type >= GFX_MAX_FONT) return 0;
 
     // Read font header
-     fp = fopen(fname, "rb");
+    fp = fopen(fname, "rb");
     if (!fp) return 0;
     fread(&gfxFonts[type], 1, sizeof(GFX_FONT), fp);
 
