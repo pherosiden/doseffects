@@ -15,12 +15,12 @@
 
 void loadFontDir(const char *path, const char *ext)
 {
-    DIR *dirp;
-    struct dirent *dp;
+    DIR *dirp = NULL;
+    struct dirent *dp = NULL;
+    GFX_FONT *font = NULL;
     int16_t i, height, y = 10;
     char buff[256] = {0};
-    GFX_FONT *font = NULL;
-
+    
     // open font directory
     dirp = opendir(path);
     if (!dirp) return;
@@ -38,7 +38,7 @@ void loadFontDir(const char *path, const char *ext)
         sprintf(buff, "%s - The quick brown fox jumps over the lazy dog", dp->d_name);
 
         // indexed current font
-        font = getFont(fontType);
+        font = getFont(0);
 
         // view all size of font
         for (i = 0; i <= font->subFonts; i++)
@@ -49,7 +49,12 @@ void loadFontDir(const char *path, const char *ext)
             // have limit line
             if (y > cmaxY - height)
             {
-                getch();
+                if (getch() == 27)
+                {
+                    closedir(dirp);
+                    closeVesaMode();
+                    exit(1);
+                }
                 clearScreen(0);
                 y = 10;
             }
@@ -62,12 +67,10 @@ void loadFontDir(const char *path, const char *ext)
         closeFont(0);
     }
     closedir(dirp);
-    getch();
 }
 
 int main()
 {
-    initGfxLib(1, NULL);
     if (!setVesaMode(800, 600, 32, 85)) return 0;
     loadFontDir("assets", ".XFN");
     closeVesaMode();

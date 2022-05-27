@@ -128,6 +128,8 @@ void retrace()
 
 void doArt()
 {
+    srand(time(NULL));
+    
     do {
         eraseCurrentLine();
 

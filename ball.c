@@ -14,6 +14,7 @@
 #include "gfxlib.c"
 
 uint32_t frames = 0;
+uint32_t st = 0, et = 0;
 
 void makePal(uint8_t n, uint8_t r, uint8_t g, uint8_t b)
 {
@@ -40,32 +41,33 @@ void ballCircle()
     makePal(64, 32, 63, 16);
     makePal(128, 16, 16, 63);
     makePal(128 + 64, 63, 16, 16);
+    
+    st = GetTicks();
 
-    while (!kbhit())
+    while (!keyPressed(27))
     {
         x = rand() % lfbWidth;
         y = rand() % lfbHeight;
         col = (rand() % 4) * 64;
-        
-        for (i = 0; i < 64; i++)
-        {
-            fillCircle(x + (64 - i) / 2, y + (64 - i) / 2, (64 - i) * 2, i + col);
-        }
-        
+        for (i = 0; i < 64; i++) fillCircle(x + (64 - i) / 2, y + (64 - i) / 2, (64 - i) * 2, i + col);
         frames++;
     }
 }
 
+void runExit()
+{
+    et = GetTicks();
+    fadeCircle(0, 0);
+    closeVesaMode();
+    printf("FPS:%.2f\n", (frames * 18.2) / (et - st));
+}
+
 int main()
 {
-    uint32_t st, et;
+    initGfxLib(1, runExit);
     if (!setVesaMode(800, 600, 8, 85)) return 1;
     srand(time(NULL));
-    st = GetTicks();
     ballCircle();
-    fadeCircle(0, 0);
-    et = GetTicks();
-    closeVesaMode();
-    printf("FPS:%.2f", (frames * 18.2) / (et - st));
+    runExit();
     return 1;
 }
