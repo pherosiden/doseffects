@@ -155,8 +155,8 @@ void runIntro()
     i0 = trn.mWidth * trn.mHeight;
 
     // initialize tunnel buffer
-    buf1 = (uint8_t*)malloc(i0);
-    buf2 = (uint8_t*)malloc(i0);
+    buf1 = (uint8_t*)calloc(i0, 1);
+    buf2 = (uint8_t*)calloc(i0, 1);
     if (!buf1 || !buf2) fatalError("runIntro: cannot alloc memory.\n");
 
     // calculate turnel buffer
@@ -308,7 +308,7 @@ void runScaleUpImage(int32_t sx, int32_t sy)
     if (!loadImage("assets/gfxspr.png", &im3)) fatalError("runScaleUpImage: cannot open PNG file.\n");
 
     // setup lookup table
-    tables = (int32_t*)malloc(im2.mWidth * sizeof(int32_t));
+    tables = (int32_t*)calloc(im2.mWidth, sizeof(int32_t));
     if (!tables) fatalError("scaleUpImage: not enough memory for lookup tables.\n");
         
     do {
@@ -403,7 +403,7 @@ void runRotateImage(int32_t sx, int32_t sy)
     if (!newImage(fade2.mWidth, fade2.mHeight, &im)) fatalError("runRotateImage: cannot open image.\n");
 
     // pre-calculate lookup table
-    tables = (int32_t*)malloc((2 * fade2.mWidth + fade2.mHeight) * sizeof(int32_t) + 2 * sizeof(int32_t));
+    tables = (int32_t*)calloc(2 * fade2.mWidth + fade2.mHeight, sizeof(int32_t) + 2 * sizeof(int32_t));
     if (!tables) fatalError("rotateImage: cannot alloc lookup tables.\n");
 
     do {

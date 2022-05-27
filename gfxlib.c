@@ -1163,8 +1163,8 @@ void getMemoryInfo()
 // this is a first function call before init vesa mode
 void initGfxLib(uint8_t type, void (*fnQuit)())
 {
-    quitCallback = fnQuit;
     timeType = type;
+    quitCallback = fnQuit;
 
     if (timeType)
     {
@@ -1184,13 +1184,12 @@ void initGfxLib(uint8_t type, void (*fnQuit)())
     srand(randSeed);
 
     // Initialize GFXLIB buffer
-    gfxBuff = (uint8_t*)malloc(GFX_BUFF_SIZE);
+    gfxBuff = (uint8_t*)calloc(GFX_BUFF_SIZE, 1);
     if (!gfxBuff)
     {
         printf("initGfxLib: Cannot initialize GFXLIB buffer!\n");
         exit(1);
     }
-    memset(gfxBuff, 0, GFX_BUFF_SIZE);
 
     // Filled cpu and memory info structure
     getCpuInfo();
@@ -1724,7 +1723,7 @@ int32_t getProtectModeFunctions()
     // Have protect mode interface defined?
     if (!pmInfo && regs.ecx > 0)
     {
-        pmInfo = (VBE_PM_INFO*)malloc(regs.ecx & 0x0000FFFF);
+        pmInfo = (VBE_PM_INFO*)calloc(regs.ecx & 0x0000FFFF, 1);
         if (!pmInfo) return 0;
 
         // Copy protect mode info data
@@ -4594,7 +4593,7 @@ int32_t newImage(int32_t width, int32_t height, GFX_IMAGE *img)
     uint32_t size = height * lineBytes;
     if (!size) return 0;
 
-    img->mData = (uint8_t*)malloc(size);
+    img->mData = (uint8_t*)calloc(size, 1);
     if (!img->mData) return 0;
 
     // store image width and height
@@ -14816,7 +14815,7 @@ int32_t loadFont(char *fname, uint32_t type)
     }
 
     // Allocate raw data buffer
-    gfxFonts[type].dataPtr = (uint8_t*)malloc(gfxFonts[type].memSize);
+    gfxFonts[type].dataPtr = (uint8_t*)calloc(gfxFonts[type].memSize, 1);
     if (!gfxFonts[type].dataPtr)
     {
         fclose(fp);
@@ -14838,7 +14837,7 @@ int32_t loadFont(char *fname, uint32_t type)
     if (gfxFonts[type].info.usedColors > 1)
     {
         // BMP8 use up to 128 colors (128 * 4)
-        fontPalette[type] = (uint8_t*)malloc(512);
+        fontPalette[type] = (uint8_t*)calloc(512, 1);
         if (!fontPalette[type])
         {
             free(gfxFonts[type].dataPtr);
@@ -15190,7 +15189,7 @@ int32_t loadBitmap(const char *fname, GFX_BITMAP *bmp)
 
     // Calculate bitmap data size
     bmSize = bf.bfSize - bf.bfOffBits;
-    bmp->bmData = (uint8_t*)malloc(bmSize);
+    bmp->bmData = (uint8_t*)calloc(bmSize, 1);
     if (!bmp->bmData)
     {
         fclose(fp);
@@ -15973,7 +15972,7 @@ void showBitmap(const char *fname)
 void convertBitmap(GFX_BITMAP *bmp, GFX_IMAGE *img)
 {
     uint32_t size = bmp->bmRowBytes * bmp->bmHeight;
-    img->mData = (uint8_t*)malloc(size);
+    img->mData = (uint8_t*)calloc(size, 1);
     if (!img->mData) fatalError("convertBitmap: cannot alloc memory.\n");
     img->mWidth     = bmp->bmWidth;
     img->mHeight    = bmp->bmHeight;
@@ -16259,7 +16258,7 @@ void stringCleanup(char** out)
 
 char* allocStringSized(const char* in, uint32_t insize)
 {
-    char* out = (char*)malloc(insize + 1);
+    char* out = (char*)calloc(insize + 1, 1);
     if (out)
     {
         memcpy(out, in, insize);
@@ -16533,7 +16532,7 @@ uint32_t huffmanTreeMakeTable(HuffmanTree* tree)
     const uint32_t headSize = 1u << FIRSTBITS;
     const uint32_t mask = (1u << FIRSTBITS) - 1u;
     uint32_t i, numPresent, pointer, size;
-    uint32_t* maxLens = (uint32_t*)malloc(headSize * sizeof(uint32_t));
+    uint32_t* maxLens = (uint32_t*)calloc(headSize, sizeof(uint32_t));
 
     if (!maxLens) return 83;
 
@@ -16558,8 +16557,8 @@ uint32_t huffmanTreeMakeTable(HuffmanTree* tree)
         if (l > FIRSTBITS) size += (1u << (l - FIRSTBITS));
     }
 
-    tree->tableLen = (uint8_t*)malloc(size * sizeof(*tree->tableLen));
-    tree->tableValue = (uint16_t*)malloc(size * sizeof(*tree->tableValue));
+    tree->tableLen = (uint8_t*)calloc(size, sizeof(*tree->tableLen));
+    tree->tableValue = (uint16_t*)calloc(size, sizeof(*tree->tableValue));
 
     if (!tree->tableLen || !tree->tableValue)
     {
@@ -16654,9 +16653,9 @@ uint32_t huffmanTreeMakeFromLengths2(HuffmanTree* tree)
     uint32_t error = 0;
     uint32_t bits, n;
 
-    tree->codes = (uint32_t*)malloc(tree->numCodes * sizeof(uint32_t));
-    blcount = (uint32_t*)malloc((tree->maxBitLen + 1) * sizeof(uint32_t));
-    nextCode = (uint32_t*)malloc((tree->maxBitLen + 1) * sizeof(uint32_t));
+    tree->codes = (uint32_t*)calloc(tree->numCodes, sizeof(uint32_t));
+    blcount = (uint32_t*)calloc(tree->maxBitLen + 1, sizeof(uint32_t));
+    nextCode = (uint32_t*)calloc(tree->maxBitLen + 1, sizeof(uint32_t));
 
     if (!tree->codes || !blcount || !nextCode) error = 83;
 
@@ -16689,7 +16688,7 @@ uint32_t huffmanTreeMakeFromLengths2(HuffmanTree* tree)
 uint32_t huffmanTreeMakeFromLengths(HuffmanTree* tree, const uint32_t* bitlen, uint32_t numCodes, uint32_t maxBitLen)
 {
     uint32_t i;
-    tree->lengths = (uint32_t*)malloc(numCodes * sizeof(uint32_t));
+    tree->lengths = (uint32_t*)calloc(numCodes, sizeof(uint32_t));
     if (!tree->lengths) return 83;
 
     for (i = 0; i != numCodes; ++i) tree->lengths[i] = bitlen[i];
@@ -16753,7 +16752,7 @@ BPMNode* BPMNodeCreate(BPMLists* lists, int32_t weight, uint32_t index, BPMNode*
 void BPMNodeSort(BPMNode* leaves, uint32_t num)
 {
     uint32_t p, q, r, i, j, k, width, counter = 0;
-    BPMNode* mem = (BPMNode*)malloc(sizeof(*leaves) * num);
+    BPMNode* mem = (BPMNode*)calloc(num, sizeof(*leaves));
 
     for (width = 1; width < num; width *= 2)
     {
@@ -16818,7 +16817,7 @@ uint32_t PNGHuffmanCodeLengths(uint32_t* lengths, const uint32_t* frequencies, u
     if (numCodes == 0) return 80;
     if ((1u << maxBitLen) < (uint32_t)numCodes) return 80;
 
-    leaves = (BPMNode*)malloc(numCodes * sizeof(*leaves));
+    leaves = (BPMNode*)calloc(numCodes, sizeof(*leaves));
     if (!leaves) return 83;
 
     for (i = 0; i != numCodes; i++)
@@ -16853,10 +16852,10 @@ uint32_t PNGHuffmanCodeLengths(uint32_t* lengths, const uint32_t* frequencies, u
         lists.memsize = 2 * maxBitLen * (maxBitLen + 1);
         lists.nextfree = 0;
         lists.numfree = lists.memsize;
-        lists.memory = (BPMNode*)malloc(lists.memsize * sizeof(*lists.memory));
-        lists.freelist = (BPMNode**)malloc(lists.memsize * sizeof(BPMNode*));
-        lists.chains0 = (BPMNode**)malloc(lists.listsize * sizeof(BPMNode*));
-        lists.chains1 = (BPMNode**)malloc(lists.listsize * sizeof(BPMNode*));
+        lists.memory = (BPMNode*)calloc(lists.memsize, sizeof(*lists.memory));
+        lists.freelist = (BPMNode**)calloc(lists.memsize, sizeof(BPMNode*));
+        lists.chains0 = (BPMNode**)calloc(lists.listsize, sizeof(BPMNode*));
+        lists.chains1 = (BPMNode**)calloc(lists.listsize, sizeof(BPMNode*));
         if (!lists.memory || !lists.freelist || !lists.chains0 || !lists.chains1) error = 83;
 
         if (!error)
@@ -16895,7 +16894,7 @@ uint32_t huffmanTreeMakeFromFrequencies(HuffmanTree* tree, const uint32_t* frequ
     uint32_t error = 0;
     while (!frequencies[numCodes - 1] && numCodes > minCodes) --numCodes;
 
-    tree->lengths = (uint32_t*)malloc(numCodes * sizeof(uint32_t));
+    tree->lengths = (uint32_t*)calloc(numCodes, sizeof(uint32_t));
     if (!tree->lengths) return 83;
 
     tree->maxBitLen = maxBitLen;
@@ -16909,7 +16908,7 @@ uint32_t huffmanTreeMakeFromFrequencies(HuffmanTree* tree, const uint32_t* frequ
 uint32_t generateFixedLitLenTree(HuffmanTree* tree)
 {
     uint32_t i, error = 0;
-    uint32_t* bitlen = (uint32_t*)malloc(NUM_DEFLATE_CODE_SYMBOLS * sizeof(uint32_t));
+    uint32_t* bitlen = (uint32_t*)calloc(NUM_DEFLATE_CODE_SYMBOLS, sizeof(uint32_t));
 
     if (!bitlen) return 83;
 
@@ -16926,7 +16925,7 @@ uint32_t generateFixedLitLenTree(HuffmanTree* tree)
 uint32_t generateFixedDistanceTree(HuffmanTree* tree)
 {
     uint32_t i, error = 0;
-    uint32_t* bitlen = (uint32_t*)malloc(NUM_DISTANCE_SYMBOLS * sizeof(uint32_t));
+    uint32_t* bitlen = (uint32_t*)calloc(NUM_DISTANCE_SYMBOLS, sizeof(uint32_t));
 
     if (!bitlen) return 83;
 
@@ -16983,7 +16982,7 @@ uint32_t getTreeInflateDynamic(HuffmanTree* tree_ll, HuffmanTree* tree_d, PNGBit
     HDIST = readBits(reader, 5) + 1;
     HCLEN = readBits(reader, 4) + 4;
 
-    bitlen_cl = (uint32_t*)malloc(NUM_CODE_LENGTH_CODES * sizeof(uint32_t));
+    bitlen_cl = (uint32_t*)calloc(NUM_CODE_LENGTH_CODES, sizeof(uint32_t));
     if (!bitlen_cl) return 83;
 
     huffmanTreeInit(&tree_cl);
@@ -17009,8 +17008,8 @@ uint32_t getTreeInflateDynamic(HuffmanTree* tree_ll, HuffmanTree* tree_d, PNGBit
         error = huffmanTreeMakeFromLengths(&tree_cl, bitlen_cl, NUM_CODE_LENGTH_CODES, 7);
         if (error) break;
 
-        bitlen_ll = (uint32_t*)malloc(NUM_DEFLATE_CODE_SYMBOLS * sizeof(uint32_t));
-        bitlen_d = (uint32_t*)malloc(NUM_DISTANCE_SYMBOLS * sizeof(uint32_t));
+        bitlen_ll = (uint32_t*)calloc(NUM_DEFLATE_CODE_SYMBOLS, sizeof(uint32_t));
+        bitlen_d = (uint32_t*)calloc(NUM_DISTANCE_SYMBOLS, sizeof(uint32_t));
         if (!bitlen_ll || !bitlen_d) ERROR_BREAK(83);
 
         memset(bitlen_ll, 0, NUM_DEFLATE_CODE_SYMBOLS * sizeof(*bitlen_ll));
@@ -17363,13 +17362,13 @@ typedef struct HASH
 uint32_t hashInit(HASH* hash, uint32_t windowSize)
 {
     uint32_t i;
-    hash->head = (int32_t*)malloc(sizeof(int32_t) * HASH_NUM_VALUES);
-    hash->val = (int32_t*)malloc(sizeof(int32_t) * windowSize);
-    hash->chain = (uint16_t*)malloc(sizeof(uint16_t) * windowSize);
+    hash->head = (int32_t*)calloc(HASH_NUM_VALUES, sizeof(int32_t));
+    hash->val = (int32_t*)calloc(windowSize, sizeof(int32_t));
+    hash->chain = (uint16_t*)calloc(windowSize, sizeof(uint16_t));
 
-    hash->zeros = (uint16_t*)malloc(sizeof(uint16_t) * windowSize);
-    hash->headz = (int32_t*)malloc(sizeof(int32_t) * (MAX_SUPPORTED_DEFLATE_LENGTH + 1));
-    hash->chainz = (uint16_t*)malloc(sizeof(uint16_t) * windowSize);
+    hash->zeros = (uint16_t*)calloc(windowSize, sizeof(uint16_t));
+    hash->headz = (int32_t*)calloc(MAX_SUPPORTED_DEFLATE_LENGTH + 1, sizeof(int32_t));
+    hash->chainz = (uint16_t*)calloc(windowSize, sizeof(uint16_t));
 
     if (!hash->head || !hash->chain || !hash->val  || !hash->headz|| !hash->chainz || !hash->zeros) return 83;
 
@@ -17691,9 +17690,9 @@ uint32_t deflateDynamic(PNGBitWriter* writer, HASH* hash, const uint8_t* data, u
     huffmanTreeInit(&tree_d);
     huffmanTreeInit(&tree_cl);
 
-    frequencies_ll = (uint32_t*)malloc(286 * sizeof(*frequencies_ll));
-    frequencies_d = (uint32_t*)malloc(30 * sizeof(*frequencies_d));
-    frequencies_cl = (uint32_t*)malloc(NUM_CODE_LENGTH_CODES * sizeof(*frequencies_cl));
+    frequencies_ll = (uint32_t*)calloc(286, sizeof(*frequencies_ll));
+    frequencies_d = (uint32_t*)calloc(30, sizeof(*frequencies_d));
+    frequencies_cl = (uint32_t*)calloc(NUM_CODE_LENGTH_CODES, sizeof(*frequencies_cl));
 
     if (!frequencies_ll || !frequencies_d || !frequencies_cl) error = 83;
 
@@ -17737,8 +17736,8 @@ uint32_t deflateDynamic(PNGBitWriter* writer, HASH* hash, const uint8_t* data, u
         numCodes_ll = min(tree_ll.numCodes, 286);
         numCodes_d = min(tree_d.numCodes, 30);
         numCodes_lld = numCodes_ll + numCodes_d;
-        bitlen_lld = (uint32_t*)malloc(numCodes_lld * sizeof(*bitlen_lld));
-        bitlen_lld_e = (uint32_t*)malloc(numCodes_lld * sizeof(*bitlen_lld_e));
+        bitlen_lld = (uint32_t*)calloc(numCodes_lld, sizeof(*bitlen_lld));
+        bitlen_lld_e = (uint32_t*)calloc(numCodes_lld, sizeof(*bitlen_lld_e));
 
         if (!bitlen_lld || !bitlen_lld_e) ERROR_BREAK(83);
         numCodes_lld_e = 0;
@@ -18094,7 +18093,7 @@ uint32_t PNGZlibCompress(uint8_t** out, uint32_t* outSize, const uint8_t* in, ui
     if (!error)
     {
         *outSize = deflateSize + 6;
-        *out = (uint8_t*)malloc(*outSize);
+        *out = (uint8_t*)calloc(*outSize, 1);
         if (!*out) error = 83;
     }
 
@@ -18452,7 +18451,7 @@ void PNGColorModeAllocPalette(PNGColorMode* info)
 {
     uint32_t i;
 
-    if (!info->palette) info->palette = (uint8_t*)malloc(1024);
+    if (!info->palette) info->palette = (uint8_t*)calloc(1024, 1);
     if (!info->palette) return;
 
     for (i = 0; i != 256; ++i)
@@ -18483,7 +18482,7 @@ uint32_t PNGColorModeCopy(PNGColorMode* dest, const PNGColorMode* source)
 
     if (source->palette)
     {
-        dest->palette = (uint8_t*)malloc(1024);
+        dest->palette = (uint8_t*)calloc(1024, 1);
         if (!dest->palette && source->paletteSize) return 83;
         memcpy(dest->palette, source->palette, source->paletteSize * 4);
     }
@@ -18644,7 +18643,7 @@ uint32_t PNGUnknownChunksCopy(PNGInfo* dest, const PNGInfo* src)
     {
         uint32_t j;
         dest->unknownChunksSize[i] = src->unknownChunksSize[i];
-        dest->unknownChunksData[i] = (uint8_t*)malloc(src->unknownChunksSize[i]);
+        dest->unknownChunksData[i] = (uint8_t*)calloc(src->unknownChunksSize[i], 1);
         if (!dest->unknownChunksData[i] && dest->unknownChunksSize[i]) return 83;
         for (j = 0; j != src->unknownChunksSize[i]; j++)
         {
@@ -18807,7 +18806,7 @@ uint32_t PNGAssignICC(PNGInfo* info, const char* name, const uint8_t* profile, u
     if (profileSize == 0) return 100;
 
     info->iccpName = allocString(name);
-    info->iccpProfile = (uint8_t*)malloc(profileSize);
+    info->iccpProfile = (uint8_t*)calloc(profileSize, 1);
 
     if (!info->iccpName || !info->iccpProfile) return 83;
 
@@ -18943,7 +18942,7 @@ uint32_t colorTreeAdd(ColorTree* tree, uint8_t r, uint8_t g, uint8_t b, uint8_t 
 
         if (!tree->children[i])
         {
-            tree->children[i] = (ColorTree*)malloc(sizeof(ColorTree));
+            tree->children[i] = (ColorTree*)calloc(1, sizeof(ColorTree));
             if (!tree->children[i]) return 83;
             colorTreeInit(tree->children[i]);
         }
@@ -20362,7 +20361,7 @@ uint32_t readChunk_tEXt(PNGInfo* info, const uint8_t* data, uint32_t chunkLength
         while (length < chunkLength && data[length] != 0) ++length;
         if (length < 1 || length > 79) CERROR_BREAK(error, 89);
 
-        key = (char*)malloc(length + 1);
+        key = (char*)calloc(length + 1, 1);
         if (!key) CERROR_BREAK(error, 83);
 
         memcpy(key, data, length);
@@ -20370,7 +20369,7 @@ uint32_t readChunk_tEXt(PNGInfo* info, const uint8_t* data, uint32_t chunkLength
 
         string2Begin = length + 1;
         length = (uint32_t)(chunkLength < string2Begin ? 0 : chunkLength - string2Begin);
-        str = (char*)malloc(length + 1);
+        str = (char*)calloc(length + 1, 1);
         if (!str) CERROR_BREAK(error, 83);
         memcpy(str, data + string2Begin, length);
         str[length] = 0;
@@ -20399,7 +20398,7 @@ uint32_t readChunk_zTXt(PNGInfo* info, const PNGDecoderSettings* decoder, const 
         if (length + 2 >= chunkLength) CERROR_BREAK(error, 75);
         if (length < 1 || length > 79) CERROR_BREAK(error, 89);
 
-        key = (char*)malloc(length + 1);
+        key = (char*)calloc(length + 1, 1);
         if (!key) CERROR_BREAK(error, 83);
 
         memcpy(key, data, length);
@@ -20441,7 +20440,7 @@ uint32_t readChunk_iTXt(PNGInfo* info, const PNGDecoderSettings* decoder, const 
         if (length + 3 >= chunkLength) CERROR_BREAK(error, 75);
         if (length < 1 || length > 79) CERROR_BREAK(error, 89);
 
-        key = (char*)malloc(length + 1);
+        key = (char*)calloc(length + 1, 1);
         if (!key) CERROR_BREAK(error, 83);
         memcpy(key, data, length);
         key[length] = 0;
@@ -20453,7 +20452,7 @@ uint32_t readChunk_iTXt(PNGInfo* info, const PNGDecoderSettings* decoder, const 
         length = 0;
         for (i = begin; i < chunkLength && data[i] != 0; ++i) ++length;
 
-        langtag = (char*)malloc(length + 1);
+        langtag = (char*)calloc(length + 1, 1);
         if (!langtag) CERROR_BREAK(error, 83);
 
         memcpy(langtag, data + begin, length);
@@ -20463,7 +20462,7 @@ uint32_t readChunk_iTXt(PNGInfo* info, const PNGDecoderSettings* decoder, const 
         length = 0;
         for (i = begin; i < chunkLength && data[i] != 0; ++i) ++length;
 
-        transkey = (char*)malloc(length + 1);
+        transkey = (char*)calloc(length + 1, 1);
         if (!transkey) CERROR_BREAK(error, 83);
 
         memcpy(transkey, data + begin, length);
@@ -20567,7 +20566,7 @@ uint32_t readChunk_iCCP(PNGInfo* info, const PNGDecoderSettings* decoder, const 
     if (length + 2 >= chunkLength) return 75;
     if (length < 1 || length > 79) return 89;
 
-    info->iccpName = (char*)malloc(length + 1);
+    info->iccpName = (char*)calloc(length + 1, 1);
     if (!info->iccpName) return 83;
 
     info->iccpName[length] = 0;
@@ -20687,7 +20686,7 @@ void decodeGeneric(uint8_t** out, uint32_t* w, uint32_t* h, PNGState* state, con
         CERROR_RETURN(state->error, 92);
     }
 
-    idat = (uint8_t*)malloc(insize);
+    idat = (uint8_t*)calloc(insize, 1);
     if (!idat) CERROR_RETURN(state->error, 83);
 
     chunk = &in[33];
@@ -20857,7 +20856,7 @@ void decodeGeneric(uint8_t** out, uint32_t* w, uint32_t* h, PNGState* state, con
     if (!state->error)
     {
         outSize = PNGGetRawSize(*w, *h, &state->pngInfo.colorMode);
-        *out = (uint8_t*)malloc(outSize);
+        *out = (uint8_t*)calloc(outSize, 1);
         if (!*out) state->error = 83;
     }
 
@@ -20895,7 +20894,7 @@ uint32_t PNGDecode(uint8_t** out, uint32_t* w, uint32_t* h, PNGState* state, con
         }
 
         outSize = PNGGetRawSize(*w, *h, &state->rawInfo);
-        *out = (uint8_t*)malloc(outSize);
+        *out = (uint8_t*)calloc(outSize, 1);
         if (!(*out))
         {
             state->error = 83;
@@ -21342,7 +21341,7 @@ uint32_t filter(uint8_t* out, const uint8_t* in, uint32_t w, uint32_t h, const P
 
         for (type = 0; type != 5; ++type)
         {
-            attempt[type] = (uint8_t*)malloc(lineBytes);
+            attempt[type] = (uint8_t*)calloc(lineBytes, 1);
             if (!attempt[type]) error = 83;
         }
 
@@ -21393,7 +21392,7 @@ uint32_t filter(uint8_t* out, const uint8_t* in, uint32_t w, uint32_t h, const P
 
         for (type = 0; type != 5; ++type)
         {
-            attempt[type] = (uint8_t*)malloc(lineBytes);
+            attempt[type] = (uint8_t*)calloc(lineBytes, 1);
             if (!attempt[type]) error = 83;
         }
 
@@ -21456,7 +21455,7 @@ uint32_t filter(uint8_t* out, const uint8_t* in, uint32_t w, uint32_t h, const P
 
         for (type = 0; type != 5; ++type)
         {
-            attempt[type] = (uint8_t*)malloc(lineBytes);
+            attempt[type] = (uint8_t*)calloc(lineBytes, 1);
             if (!attempt[type]) error = 83;
         }
 
@@ -21569,14 +21568,14 @@ uint32_t preProcessScanlines(uint8_t** out, uint32_t* outSize, const uint8_t* in
     if (pngInfo->interlaceMethod == 0)
     {
         *outSize = h + (h * ((w * bpp + 7u) / 8u));
-        *out = (uint8_t*)malloc(*outSize);
+        *out = (uint8_t*)calloc(*outSize, 1);
         if (!(*out) && (*outSize)) error = 83;
 
         if (!error)
         {
             if (bpp < 8 && w * bpp != ((w * bpp + 7u) / 8u) * 8u)
             {
-                uint8_t* padded = (uint8_t*)malloc(h * ((w * bpp + 7u) / 8u));
+                uint8_t* padded = (uint8_t*)calloc(h * ((w * bpp + 7u) / 8u), 1);
                 if (!padded) error = 83;
                 if (!error)
                 {
@@ -21600,10 +21599,10 @@ uint32_t preProcessScanlines(uint8_t** out, uint32_t* outSize, const uint8_t* in
         adam7GetPassValues(passw, passh, filterPassStart, paddedPassStart, passStart, w, h, bpp);
 
         *outSize = filterPassStart[7];
-        *out = (uint8_t*)malloc(*outSize);
+        *out = (uint8_t*)calloc(*outSize, 1);
         if (!(*out)) error = 83;
 
-        adam7 = (uint8_t*)malloc(passStart[7]);
+        adam7 = (uint8_t*)calloc(passStart[7], 1);
         if (!adam7 && passStart[7]) error = 83;
 
         if (!error)
@@ -21615,7 +21614,7 @@ uint32_t preProcessScanlines(uint8_t** out, uint32_t* outSize, const uint8_t* in
             {
                 if (bpp < 8)
                 {
-                    uint8_t* padded = (uint8_t*)malloc(paddedPassStart[i + 1] - paddedPassStart[i]);
+                    uint8_t* padded = (uint8_t*)calloc(paddedPassStart[i + 1] - paddedPassStart[i], 1);
                     if (!padded) ERROR_BREAK(83);
                     addPaddingBits(padded, &adam7[passStart[i]], ((passw[i] * bpp + 7u) / 8u) * 8u, passw[i] * bpp, passh[i]);
                     error = filter(&(*out)[filterPassStart[i]], padded, passw[i], passh[i], &pngInfo->colorMode, settings);
@@ -21766,7 +21765,7 @@ uint32_t PNGEncode(uint8_t** out, uint32_t* outSize, const uint8_t* image, uint3
         uint8_t* converted;
         uint32_t size = (w * h * PNGGetBpp(&info.colorMode) + 7u) / 8u;
 
-        converted = (uint8_t*)malloc(size);
+        converted = (uint8_t*)calloc(size, 1);
         if (!converted && size) state->error = 83;
 
         if (!state->error)
@@ -22005,7 +22004,7 @@ uint32_t loadPNG(const char *fname, GFX_IMAGE *img)
     size = getFileSize(fp);
     if (!size) return 83;
 
-    buffer = (uint8_t*)malloc(size);
+    buffer = (uint8_t*)calloc(size, 1);
     if (!buffer) return 83;
 
     fread(buffer, 1, size, fp);
@@ -22287,7 +22286,7 @@ void PNGFileInfo(const char* fname)
 
     if (!(fp = fopen(fname, "rb"))) return;
     if (!(inSize = getFileSize(fp))) return;
-    if (!(in = (uint8_t*)malloc(inSize))) return;
+    if (!(in = (uint8_t*)calloc(inSize, 1))) return;
 
     fread(in, inSize, 1, fp);
     fclose(fp);
@@ -22526,7 +22525,7 @@ void saveScreen(const char *fname)
         img.mPixels     = bytesPerPixel;
         img.mRowBytes   = bytesPerScanline;
         img.mSize       = lfbSize;
-        img.mData       = (uint8_t*)malloc(lfbSize);
+        img.mData       = (uint8_t*)calloc(lfbSize, 1);
         if (!img.mData) fatalError("saveScreen: cannot alloc PNG buffer.\n");
 
         // make local to use asm
@@ -23481,7 +23480,7 @@ int32_t loadMouseButton(const char *fname, GFX_MOUSE_IMAGE *mi, MOUSE_BITMAP *mb
     if (!loadBitmap(fname, &bmp)) return 0;
 
     // allocate memory for mouse under background
-    if (!(mi->msUnder = (uint8_t*)malloc(MOUSE_SIZE * bmp.bmPixels))) return 0;
+    if (!(mi->msUnder = (uint8_t*)calloc(MOUSE_SIZE, bmp.bmPixels))) return 0;
 
     // init mouse image width and height
     mi->msWidth  = MOUSE_WIDTH;
@@ -23491,7 +23490,7 @@ int32_t loadMouseButton(const char *fname, GFX_MOUSE_IMAGE *mi, MOUSE_BITMAP *mb
     // copy mouse cursors
     for (i = 0; i != NUM_MOUSE_BITMAPS; i++)
     {
-        mbm[i].mbData = (uint8_t*)malloc(MOUSE_SIZE * bmp.bmPixels);
+        mbm[i].mbData = (uint8_t*)calloc(MOUSE_SIZE, bmp.bmPixels);
         if (!mbm[i].mbData) return 0;
         mbm[i].mbHotX = 12;
         mbm[i].mbHotY = 12;
@@ -23518,7 +23517,7 @@ int32_t loadMouseButton(const char *fname, GFX_MOUSE_IMAGE *mi, MOUSE_BITMAP *mb
         btn[i].btPixels = bmp.bmPixels;
         for (j = 0; j != BUTTON_BITMAPS; j++)
         {
-            btn[i].btData[j] = (uint8_t*)malloc(BUTTON_SIZE * bmp.bmPixels);
+            btn[i].btData[j] = (uint8_t*)calloc(BUTTON_SIZE, bmp.bmPixels);
             if (!btn[i].btData[j]) return 0;
             for (y = 0; y != BUTTON_HEIGHT; y++)
             {
@@ -23771,7 +23770,7 @@ int initVBE()
     uint16_t vbeInfoSel;
 
     // copy ROM BIOS code from physical address 0xC0000 to RAM
-    biosCode = (uint8_t*)malloc(VBE_CODE_SIZE);
+    biosCode = (uint8_t*)calloc(VBE_CODE_SIZE, 1);
     if (!biosCode) return 1;
     memcpy(biosCode, (uint8_t*)0xC0000, VBE_CODE_SIZE);
 
@@ -23796,7 +23795,7 @@ int initVBE()
     }
 
     // setup structure (provide selectors, map video mem, ...)
-    biosData = (uint8_t *)malloc(VBE_DATA_SIZE);
+    biosData = (uint8_t *)calloc(VBE_DATA_SIZE, 1);
     if (!biosData) return 1;
     memset(biosData, 0, VBE_DATA_SIZE);
 
@@ -23849,7 +23848,7 @@ int initVBE()
     if (!setSelectorLimit(biosInitSel, VBE_CODE_SIZE - 1)) return 1;
 
     // alloc stack selector
-    biosStack = (uint8_t *)malloc(VBE_STACK_SIZE);
+    biosStack = (uint8_t *)calloc(VBE_STACK_SIZE, 1);
     if (!biosStack) return 1;
     biosStackSel = allocSelector();
     if (biosStackSel == 0 || biosStackSel == 0xFFFF) return 1;

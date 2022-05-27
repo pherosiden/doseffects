@@ -1652,7 +1652,7 @@ int main(int argc, const char* argv[])
     writeString(centerX - (getFontWidth(strLoading) >> 1), centerY - getFontHeight(strLoading), strLoading, fromRGB(255, 255, 64), 0);
 
     showPNG("assets/caibang.png");
-    if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen36.png");
+    if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen36.bmp");
     delay(3000);
     fadeCircle(2, 0);
 
@@ -1700,72 +1700,72 @@ int main(int argc, const char* argv[])
     setBlackPalette();
     graphDemo0(centerX, centerY, 200 * ratio, 100 * ratio);
     fadeIn(pal2);
-    rotatePalette(32, 103, 72);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen02.bmp");
-
+    rotatePalette(32, 103, 72);
+    
     clearScreen(0);
     setBlackPalette();
     graphDemo1(centerX, centerY, 160 * ratio, 40 * ratio);
     fadeIn(pal2);
-    rotatePalette(32, 103, 72);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen03.bmp");
-    
+    rotatePalette(32, 103, 72);
+        
     clearScreen(0);
     setBlackPalette();
     graphDemo2(centerX, centerY, 80 * ratio);
     fadeIn(pal2);
-    rotatePalette(32, 103, 72);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen04.bmp");
-    
+    rotatePalette(32, 103, 72);
+        
     clearScreen(0);
     setBlackPalette();
     graphDemo3(centerX, centerY, 80 * ratio);
     fadeIn(pal2);
-    rotatePalette(32, 103, 72);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen05.bmp");
-    
+    rotatePalette(32, 103, 72);
+        
     clearScreen(0);
     setBlackPalette();
     graphDemo4(centerX, centerY, 120 * ratio);
     fadeIn(pal2);
-    rotatePalette(32, 103, 72);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen06.bmp");
-    
+    rotatePalette(32, 103, 72);
+        
     clearScreen(0);
     setBlackPalette();
     graphDemo5(cmaxX / 7, cmaxY / 5 - 10, 28 * ratio, 90 * ratio, 62 * ratio);
     fadeIn(pal2);
-    rotatePalette(32, 103, 72);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen07.bmp");
-    
+    rotatePalette(32, 103, 72);
+        
     clearScreen(0);
     setBlackPalette();
     graphDemo6(centerX, centerY, 200 * ratio);
     fadeIn(pal2);
-    rotatePalette(32, 103, 72);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen08.bmp");
-    
+    rotatePalette(32, 103, 72);
+        
     clearScreen(0);
     setBlackPalette();
     graphDemo7(centerX, centerY, 200 * ratio);
     fadeIn(pal2);
-    rotatePalette(32, 103, 72);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen09.bmp");
-    
+    rotatePalette(32, 103, 72);
+        
     clearScreen(0);
     setBlackPalette();
     graphDemo8(centerX, centerY, 245 * ratio, 100 * ratio);
     fadeIn(pal2);
-    rotatePalette(32, 103, 72);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen10.bmp");
-    
+    rotatePalette(32, 103, 72);
+        
     clearScreen(0);
     setBlackPalette();
     graphDemo9(centerX, centerY, 0.6 * ratio);
     fadeIn(pal2);
-    rotatePalette(32, 103, 72);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen11.bmp");
-    
+    rotatePalette(32, 103, 72);
+        
     clearScreen(0);
     setBlackPalette();
     
@@ -1785,18 +1785,18 @@ int main(int argc, const char* argv[])
     for (i = 0; i <= 19; i++)
     graphDemo10(centerX + (centerX >> 1), centerY + (centerY >> 1), 130 - (i << 2), 130 - (i << 2), 64 + i);
     fadeIn(pal2);
-    rotatePalette(64, 103, 40);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen12.bmp");
-
+    rotatePalette(64, 103, 40);
+    
     clearScreen(0);
     makeLinearPalette();
     getPalette(pal1);
     setBlackPalette();
     drawPolygon(centerX, centerY, centerX - 140, 11, 1);
     fadeIn(pal1);
-    rotatePalette(16, 177, 162);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen13.bmp");
-    
+    rotatePalette(16, 177, 162);
+        
     clearScreen(0);
     setBlackPalette();
 
@@ -1844,23 +1844,23 @@ int main(int argc, const char* argv[])
     setBlackPalette();
     rotatePolygon(point, 6, centerX, centerY, centerX - 140, 100, 20, 40);
     fadeIn(pal2);
-    rotatePalette(40, 103, 64);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen16.bmp");
-    
+    rotatePalette(40, 103, 64);
+        
     clearScreen(0);
     setBlackPalette();
     randomPoly(point, 12, cmaxX, cmaxY, 40, 20, 37);
     fadeIn(pal2);
-    rotatePalette(37, 103, 67);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen17.bmp");
-
+    rotatePalette(37, 103, 67);
+    
     clearScreen(0);
     setBlackPalette();
     drawHexagon(point, 12, centerX, centerY, 35, centerX - 140, 20, 40);
     fadeIn(pal2);
-    rotatePalette(40, 103, 64);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen18.bmp");
-
+    rotatePalette(40, 103, 64);
+    
     clearScreen(0);
     makePalette(0, 63, 32, 16);
     makePalette(64, 32, 63, 16);
@@ -1882,27 +1882,27 @@ int main(int argc, const char* argv[])
     setBlackPalette();
     graphDemo13();
     fadeIn(pal1);
-    rotatePalette(16, 207, 192);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen21.bmp");
-
+    rotatePalette(16, 207, 192);
+    
     clearScreen(0);
     makeLinearPalette();
     getPalette(pal1);
     setBlackPalette();
     graphDemo14();
     fadeIn(pal1);
-    rotatePalette(16, 207, 192);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen22.bmp");
-
+    rotatePalette(16, 207, 192);
+    
     clearScreen(0);
     makeRainbowPalette();
     getPalette(pal1);
     setBlackPalette();
     graphDemo15();
     fadeIn(pal1);
-    rotatePalette(1, 255, 255);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen23.bmp");
-
+    rotatePalette(1, 255, 255);
+    
     clearScreen(0);
     setBlackPalette();
 
@@ -1920,8 +1920,8 @@ int main(int argc, const char* argv[])
     affichage(15);
 
     fadeIn(pal2);
-    rotatePalette(32, 103, 45);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen24.bmp");
+    rotatePalette(32, 103, 45);
     fadeMin();
     
     clearScreen(0);
@@ -1938,8 +1938,8 @@ int main(int argc, const char* argv[])
     affichage(15);
 
     fadeIn(pal2);
-    rotatePalette(32, 103, 45);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen25.bmp");
+    rotatePalette(32, 103, 45);
     fadeMin();
 
     clearScreen(0);
@@ -1956,8 +1956,8 @@ int main(int argc, const char* argv[])
     affichage(15);
 
     fadeIn(pal2);
-    rotatePalette(32, 103, 45);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen26.bmp");
+    rotatePalette(32, 103, 45);
     fadeMin();
 
     clearScreen(0);
@@ -1974,8 +1974,8 @@ int main(int argc, const char* argv[])
     affichage(15);
 
     fadeIn(pal2);
-    rotatePalette(32, 103, 45);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen27.bmp");
+    rotatePalette(32, 103, 45);
     fadeMin();
 
     clearScreen(0);
@@ -1992,8 +1992,8 @@ int main(int argc, const char* argv[])
     affichage(15);
 
     fadeIn(pal2);
-    rotatePalette(32, 103, 45);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen28.bmp");
+    rotatePalette(32, 103, 45);
     fadeMin();
     
     FX = FX11;
@@ -2008,8 +2008,8 @@ int main(int argc, const char* argv[])
     affichage(14);
 
     fadeIn(pal2);
-    rotatePalette(32, 103, 72);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen29.bmp");
+    rotatePalette(32, 103, 72);
     fadeMin();
 
     FX = FX21;
@@ -2024,8 +2024,8 @@ int main(int argc, const char* argv[])
     affichage(14);
     
     fadeIn(pal2);
-    rotatePalette(32, 103, 72);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen30.bmp");
+    rotatePalette(32, 103, 72);
     fadeMin();
 
     FX = FX31;
@@ -2040,8 +2040,8 @@ int main(int argc, const char* argv[])
     affichage(14);
     
     fadeIn(pal2);
-    rotatePalette(32, 103, 72);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen31.bmp");
+    rotatePalette(32, 103, 72);
     fadeMin();
 
     FX = FX41;
@@ -2054,10 +2054,9 @@ int main(int argc, const char* argv[])
     familleDesCourbesEnU();
     familleDesCourbesEnV();
     affichage(14);
-    
     fadeIn(pal2);
-    rotatePalette(32, 103, 72);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen32.bmp");
+    rotatePalette(32, 103, 72);
     fadeMin();
 
     closeFont(0);
@@ -2075,12 +2074,11 @@ int main(int argc, const char* argv[])
     
     fillEllipse(centerX, j - introy, a, b, 50);
     writeString(centerX - (getFontWidth(logoGFX) >> 1), j - introy - CHR_WIDTH, logoGFX, 32, 1);
-
     fadeIn(pal2);
+    if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen33.bmp");
     memcpy(&pal1[32], &pal2[32], 72 * sizeof(RGB));
     rotatePalette(32, 103, 250);
-    if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen33.bmp");
-
+    
     clearScreen(0);
     setPalette(pal2);
     setPixelChar();
