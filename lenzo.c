@@ -147,7 +147,7 @@ void preCalc()
     for (i = 0; i < 64; i++) ztab[i] = roundf(sin(v + i * vadd) * 2500);
     calcMatrix();
 
-    if (!(fp = fopen("drunken.cel", "rb"))) return;
+    if (!(fp = fopen("assets/drunken.cel", "rb"))) return;
     fseek(fp, 32, SEEK_SET);
     fread(pal, 768, 1, fp);
     fread(MK_FP(0xA000, 0), 64000, 1, fp);

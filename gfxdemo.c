@@ -140,10 +140,10 @@ void runIntro()
     uint64_t tmstart, tmwait;
 
     // load image
-    if (!loadImage("gfxulti.png", &ult)) fatalError("runIntro: cannot load gfxulti.png file.\n");
-    if (!loadImage("gfxlogo.png", &gfx)) fatalError("runIntro: cannot load gfxlogo.png file.\n");
-    if (!loadImage("gfxwelm.png", &wcb)) fatalError("runIntro: cannot load gfxwelm.png file.\n");
-    if (!loadImage("map03.png", &map)) fatalError("runIntro: cannot load map03.png file.\n");
+    if (!loadImage("assets/gfxulti.png", &ult)) fatalError("runIntro: cannot load gfxulti.png file.\n");
+    if (!loadImage("assets/gfxlogo.png", &gfx)) fatalError("runIntro: cannot load gfxlogo.png file.\n");
+    if (!loadImage("assets/gfxwelm.png", &wcb)) fatalError("runIntro: cannot load gfxwelm.png file.\n");
+    if (!loadImage("assets/map03.png", &map)) fatalError("runIntro: cannot load map03.png file.\n");
 
     // initialize buffer
     if (!newImage(lfbWidth, lfbHeight, &scr)) fatalError("runIntro: cannot open image.\n");
@@ -268,7 +268,7 @@ void runBlocking(int32_t sx, int32_t sy)
     freeImage(&im2);
 
     // load next step
-    if (!loadImage("gfxtext.png", &im1)) fatalError("runBlocking: cannot load PNG file.\n");
+    if (!loadImage("assets/gfxtext.png", &im1)) fatalError("runBlocking: cannot load PNG file.\n");
     if (!newImage(im1.mWidth, im1.mHeight, &im2)) fatalError("runBlocking: cannot open image.\n");
     if (!newImage(im1.mWidth, im1.mHeight, &im3)) fatalError("runBlocking: cannot open image.\n");
 
@@ -305,7 +305,7 @@ void runScaleUpImage(int32_t sx, int32_t sy)
     // initialize buffer
     if (!newImage(320, 240, &im1)) fatalError("runScaleUpImage: cannot open image.\n");
     if (!newImage(320, 240, &im2)) fatalError("runScaleUpImage: cannot open image.\n");
-    if (!loadImage("gfxspr.png", &im3)) fatalError("runScaleUpImage: cannot open PNG file.\n");
+    if (!loadImage("assets/gfxspr.png", &im3)) fatalError("runScaleUpImage: cannot open PNG file.\n");
 
     // setup lookup table
     tables = (int32_t*)malloc(im2.mWidth * sizeof(int32_t));
@@ -495,9 +495,9 @@ void runLens()
 {
     GFX_IMAGE scr;
     int32_t tx, ty, x, y, i;
-    int32_t flareput[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    int32_t flarepos[16] = {-1110, -666, 0, 1087, 1221, 1309, 1776, 2197, 2819, 3130, 3220, 3263, 3663, 3707, 4440, 5125};
-    char *str = "Drag your mouse to see details and left click to exit!";
+    const int32_t flareput[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    const int32_t flarepos[16] = {-1110, -666, 0, 1087, 1221, 1309, 1776, 2197, 2819, 3130, 3220, 3263, 3663, 3707, 4440, 5125};
+    const char *str = "Drag your mouse to see details and left click to exit!";
 
     // initialize mouse driver and load source image
     if (!initMouse()) fatalError("runLens: cannot init mouse.\n");
@@ -703,15 +703,15 @@ int main()
     printf("GFXLIB initializing....\n");
     initGfxLib(1, runExit);
 
-    if (!loadFont("sysfont.xfn", 0)) fatalError("Cannot load system font!\n");
-    if (!loadImage("gfxbg0.png", &bg)) fatalError("Cannot load image:gfxbg0.png!\n");
-    if (!loadImage("gfxbump0.png", &bump1)) fatalError("Cannot load image:gfxbump0.png!\n");
-    if (!loadImage("gfxbump1.png", &bump2)) fatalError("Cannot load image:gfxbump1.png!\n");
-    if (!loadImage("gfxlogos.png", &logo)) fatalError("Cannot load image:gfxlogos.png!\n");
-    if (!loadImage("gfxsky.png", &sky)) fatalError("Cannot load image:gfxsky.png!\n");
+    if (!loadFont("assets/sysfont.xfn", 0)) fatalError("Cannot load system font!\n");
+    if (!loadImage("assets/gfxbg0.png", &bg)) fatalError("Cannot load image:gfxbg0.png!\n");
+    if (!loadImage("assets/gfxbump0.png", &bump1)) fatalError("Cannot load image:gfxbump0.png!\n");
+    if (!loadImage("assets/gfxbump1.png", &bump2)) fatalError("Cannot load image:gfxbump1.png!\n");
+    if (!loadImage("assets/gfxlogos.png", &logo)) fatalError("Cannot load image:gfxlogos.png!\n");
+    if (!loadImage("assets/gfxsky.png", &sky)) fatalError("Cannot load image:gfxsky.png!\n");
     for (i = 0; i < 16; i++)
     {
-        sprintf(sbuff, "flare-%dx.png", i + 1);
+        sprintf(sbuff, "assets/flare-%dx.png", i + 1);
         if (!loadImage(sbuff, &flares[i])) fatalError("Cannot load image: %s!\n", sbuff);
     }
     memset(&drv, 0, sizeof(VBE_DRIVER_INFO));
@@ -776,11 +776,11 @@ int main()
     }
     fullSpeed = 1;
     showText(10, yc, &tx, "Please wait while loading images...");
-    if (!loadImage("fade1x.png", &fade1)) fatalError("Cannot load image fade1x.png!\n");
+    if (!loadImage("assets/fade1x.png", &fade1)) fatalError("Cannot load image fade1x.png!\n");
     showText(10, yc, &tx, " - fade1x.png");
-    if (!loadImage("fade2x.png", &fade2)) fatalError("Cannot load image fade2x.png!\n");
+    if (!loadImage("assets/fade2x.png", &fade2)) fatalError("Cannot load image fade2x.png!\n");
     showText(10, yc, &tx, " - fade2x.png");
-    if (!loadImage("flare1x.png", &flare)) fatalError("Cannot load image flare1x.png!\n");
+    if (!loadImage("assets/flare1x.png", &flare)) fatalError("Cannot load image flare1x.png!\n");
     showText(10, yc, &tx, " - flare1x.png");
     showText(10, yc, &tx, "");
     fullSpeed = 0;

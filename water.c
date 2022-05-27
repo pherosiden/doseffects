@@ -298,7 +298,7 @@ void main()
     frames = 0;	
     ticks = GetTicks();
 
-    loadCEL("sea.cel");
+    loadCEL("assets/sea.cel");
     flipScreen(dbuff[0], vmem);
     flipScreen(dbuff[0], vbuff[0]);
     

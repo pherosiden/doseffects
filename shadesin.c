@@ -215,7 +215,7 @@ void main()
         setRGB(x + 192, 63, 63, x);
     }
 
-    fp = fopen("killer.cel", "rb");
+    fp = fopen("assets/killer.cel", "rb");
     if (!fp) return;
     fseek(fp, 800, SEEK_SET);
     fread(vmem, 64000, 1, fp);

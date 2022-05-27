@@ -143,7 +143,7 @@ void loadImage()
     FILE *fp;
     uint8_t pal[768] = {0};
 
-    fp = fopen("TFACE.CEL", "rb");
+    fp = fopen("assets/tface.cel", "rb");
     if (!fp) return;
 
     fseek(fp, 32, SEEK_SET);
@@ -151,7 +151,7 @@ void loadImage()
     fread(vbuff2[0], 1, 64000, fp);
     fclose(fp);
 
-    fp = fopen("ROBOT.CEL", "rb");
+    fp = fopen("assets/robot.cel", "rb");
     if (!fp) return;
 
     fseek(fp, 800, SEEK_SET);

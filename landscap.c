@@ -273,7 +273,7 @@ void generateLandscape()
     FILE *fp;
     uint16_t i;
 
-    fp = fopen("land.map", "rb");
+    fp = fopen("assets/land.map", "rb");
     if (!fp)
     {
         srand(time(NULL));
@@ -282,7 +282,7 @@ void generateLandscape()
         putPixel(0, YMAXS - 1, random(HMAX));
         putPixel(XMAXS - 1, YMAXS - 1, random(HMAX));
         subDivide(0, 0, XMAXS, YMAXS);
-        fp = fopen("land.map", "wb");
+        fp = fopen("assets/land.map", "wb");
         fwrite(vmem, XMAXS * YMAXS, 1, fp);
         fclose(fp);
     }

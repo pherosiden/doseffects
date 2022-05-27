@@ -76,7 +76,7 @@ void main()
         int     0x10
     }
 
-    loadBMP("face.bmp");
+    loadBMP("assets/face.bmp");
     flipScreen();
     while(!kbhit());
 

@@ -1404,7 +1404,7 @@ void displaySprite(const char *fname)
 
     uint32_t frames = 0;
     int32_t x, y, lx, ly, dx, dy, f1, f2;
-    const char *bkg[] = {"1lan8.bmp", "1lan16.bmp", "1lan24.bmp", "1lan32.bmp"};
+    const char *bkg[] = {"assets/1lan8.bmp", "assets/1lan16.bmp", "assets/1lan24.bmp", "assets/1lan32.bmp"};
 
     dx = 8;
     dy = 1;
@@ -1536,7 +1536,7 @@ void displayPlasma()
     uint8_t cost[256] = {0};
 
     // load text font
-    if (!loadFont("HYENA.XFN", 0)) fatalError("displayPlasma: cannot load font.\n");
+    if (!loadFont("assets/hyena.xfn", 0)) fatalError("displayPlasma: cannot load font.\n");
 
     // plasma image buffer
     if (!newImage(160, 120, &src)) fatalError("displayPlasma: cannot allocate image buffer.\n");
@@ -1645,24 +1645,24 @@ int main(int argc, const char* argv[])
 
     // init clock time and random number generation
     initGfxLib(1, quitMessage);
-    if (!loadFont("FONTVN.XFN", 0)) fatalError("Cannot load font!\n");
+    if (!loadFont("assets/fontvn.xfn", 0)) fatalError("Cannot load font!\n");
     if (!setVesaMode(800, 600, 32, 85)) fatalError("Cannot init video mode.\n");
 
     makeFont(strLoading);
     writeString(centerX - (getFontWidth(strLoading) >> 1), centerY - getFontHeight(strLoading), strLoading, fromRGB(255, 255, 64), 0);
 
-    showPNG("caibang.png");
+    showPNG("assets/caibang.png");
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen36.png");
     delay(3000);
     fadeCircle(2, 0);
 
-    showBitmap("1lan32.bmp");
+    showBitmap("assets/1lan32.bmp");
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen37.bmp");
     delay(3000);
     fadeCircle(3, 0);
 
-    handleMouse("mouse32.bmp");
-    displaySprite("smile32.bmp");
+    handleMouse("assets/mouse32.bmp");
+    displaySprite("assets/smile32.bmp");
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen38.bmp");
 
     closeFont(0);
@@ -1683,7 +1683,7 @@ int main(int argc, const char* argv[])
     getPalette(pal2);
     setBlackPalette();
     
-    if (!loadFont("ODHL.XFN", 0)) fatalError("Cannot load font!\n");
+    if (!loadFont("assets/odhl.xfn", 0)) fatalError("Cannot load font!\n");
     writeString(centerX - (getFontWidth(strWelcome[0]) >> 1), msgy, strWelcome[0], 40, 1);
     writeString(centerX - (getFontWidth(strWelcome[1]) >> 1), msgy + 60, strWelcome[1], 32, 1);
     writeString(centerX - (getFontWidth(strWelcome[2]) >> 1), msgy + 120, strWelcome[2], 35, 1);
@@ -1906,8 +1906,8 @@ int main(int argc, const char* argv[])
     clearScreen(0);
     setBlackPalette();
 
-    if (!loadFont("SYS8X16.XFN", 0)) fatalError("Cannot load font!\n");
-    if (!loadFont("TRIP.XFN", 1)) fatalError("Cannot load font!\n");
+    if (!loadFont("assets/sys8x16.xfn", 0)) fatalError("Cannot load font!\n");
+    if (!loadFont("assets/trip.xfn", 1)) fatalError("Cannot load font!\n");
     
     FX = FX1;
 
@@ -2065,7 +2065,7 @@ int main(int argc, const char* argv[])
     clearScreen(0);
     
     j = introy;
-    if (!loadFont("FONTVN.XFN", 0)) fatalError("Cannot load font!\n");
+    if (!loadFont("assets/fontvn.xfn", 0)) fatalError("Cannot load font!\n");
     for (i = 0; i < numTitle; i++)
     {
         j += i * getFontHeight(strTitle[i]);

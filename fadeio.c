@@ -270,7 +270,7 @@ void main()
         jz      next
     }
 
-    fp = fopen("arnold.cel", "rb");
+    fp = fopen("assets/arnold.cel", "rb");
     if (!fp) return;
 
     fseek(fp, 32, SEEK_SET);

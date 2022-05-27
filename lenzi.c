@@ -280,7 +280,7 @@ void main()
         int     0x10
     }
 
-    fp = fopen("insect.cel", "rb");
+    fp = fopen("assets/insect.cel", "rb");
     if (!fp) return;
     fseek(fp, 32, SEEK_SET);
     fread(pal, 1, 768, fp);

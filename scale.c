@@ -311,7 +311,7 @@ void main()
         int     0x10
     }
 
-    loadCEL("face.cel");
+    loadCEL("assets/face.cel");
     run1();
 
     do {

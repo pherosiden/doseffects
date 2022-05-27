@@ -209,7 +209,7 @@ void main()
 
     preCalc();
 
-    fp = fopen("image.cel", "rb");
+    fp = fopen("assets/image.cel", "rb");
     if (!fp) return;
 
     fseek(fp, 32, SEEK_SET);
@@ -217,7 +217,7 @@ void main()
     fread(vbuff1, 1, 64000, fp);
     fclose(fp);
     
-    fp = fopen("wall.cel", "rb");
+    fp = fopen("assets/wall.cel", "rb");
     if (!fp) return;
 
     fseek(fp, 800, SEEK_SET);

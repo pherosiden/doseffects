@@ -102,7 +102,7 @@ void main()
         int     0x10
     }
 
-    fp = fopen("palio.cel", "rb");
+    fp = fopen("assets/palio.cel", "rb");
     if (!fp) return;
     fseek(fp, 32, SEEK_SET);
     fread(pal, 1, 768, fp);

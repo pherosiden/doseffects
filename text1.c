@@ -132,7 +132,7 @@ void main()
         int     0x10
     }
 
-    loadFont("font001.fnt");
+    loadFont("assets/font001.fnt");
     writeXY(1,  2, "I LOVE ...");
     writeXY(1, 38, "DEMOS!");
     writeXY(1, 74, "GRAPHICS!");

@@ -100,7 +100,7 @@ void loadImage()
     int16_t i;
     uint8_t pal[768] = {0};
 
-    fp = fopen("crew.cel", "rb");
+    fp = fopen("assets/crew.cel", "rb");
     if (!fp) exit(1);
 
     fseek(fp, 32, SEEK_SET);

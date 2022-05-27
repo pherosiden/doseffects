@@ -46,7 +46,7 @@ void loadImage()
 {
     FILE *fp;
 
-    if (!(fp = fopen("pig.cel", "rb"))) return;
+    if (!(fp = fopen("assets/pig.cel", "rb"))) return;
     fseek(fp, 32, SEEK_SET);
     fread(pal, 1, 768, fp);
     fread(img, 1, 64000, fp);

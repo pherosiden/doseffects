@@ -179,7 +179,7 @@ void main()
     }
     
     srand(time(NULL));
-    loadPal("fire.pal");
+    loadPal("assets/fire.pal");
     initRand();
     drawSeed();
 

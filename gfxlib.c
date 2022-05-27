@@ -23598,7 +23598,7 @@ void handleMouse(const char *fname)
     int32_t lastx = 0, lasty = 0;
     uint32_t lastTime = 0;
     uint32_t needDraw = 0xFFFF;
-    const char *bkg[] = {"1lan8.bmp", "1lan16.bmp", "1lan24.bmp", "1lan32.bmp"};
+    const char *bkg[] = {"assets/1lan8.bmp", "assets/1lan16.bmp", "assets/1lan24.bmp", "assets/1lan32.bmp"};
 
     // init and setup bitmap mouse and button
     if (!initMouseButton(&mi)) fatalError("handleMouse: cannot init mouse driver.\n");

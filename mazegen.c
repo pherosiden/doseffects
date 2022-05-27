@@ -218,7 +218,7 @@ void main()
 
     if (key == 'Y' || key == 'y')
     {
-        fptr = fopen("MAZE.DAT", "wb");
+        fptr = fopen("assets/maze.dat", "wb");
         if (fptr)
         {
             fwrite(maze[0], 1, sizeof(maze), fptr);

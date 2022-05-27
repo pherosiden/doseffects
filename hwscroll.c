@@ -102,7 +102,7 @@ void main()
         int     0x10
     }
 
-    fp = fopen("fear.cel", "rb");
+    fp = fopen("assets/fear.cel", "rb");
     if (!fp) return;
 
     fseek(fp, 32, SEEK_SET);

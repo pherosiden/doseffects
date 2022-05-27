@@ -122,7 +122,7 @@ void main()
         int     0x10
     }
 
-    fp = fopen("mickey.dat", "rb");
+    fp = fopen("assets/mickey.dat", "rb");
     if (!fp) return;
     fread(pal, 1, 768, fp);
 

@@ -166,7 +166,7 @@ void main()
         int     0x10
     }
 
-    fp = fopen("author.cel", "rb");
+    fp = fopen("assets/author.cel", "rb");
     if (!fp) return;
     fseek(fp, 800, SEEK_SET);
     fread(vbuff1[0], 1, 64000, fp);

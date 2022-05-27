@@ -136,7 +136,7 @@ void createCosTable()
 
 void loadCEL()
 {
-    FILE *fp = fopen("skull.cel", "rb");
+    FILE *fp = fopen("assets/skull.cel", "rb");
     if (!fp) return;
 
     fseek(fp, 32, SEEK_SET);

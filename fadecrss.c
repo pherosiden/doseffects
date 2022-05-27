@@ -172,9 +172,9 @@ void setItUp()
 
     for (x = 0; x < 256; x++) setRGB(x, 0, 0, 0);
 
-    loadCEL("to.cel", pal2, vbuff1);
+    loadCEL("assets/to.cel", pal2, vbuff1);
     flip(vbuff1, vmem);
-    loadCEL("from.cel", pal1, vbuff1);
+    loadCEL("assets/from.cel", pal1, vbuff1);
 
     for (y = 0; y < 200; y++)
     {
@@ -290,10 +290,10 @@ void main()
         int     0x10
     }
 
-    fp = fopen("fade.dat", "rb");
+    fp = fopen("assets/fade.dat", "rb");
     if (!fp)
     {
-        fp = fopen("fade.dat", "wb");
+        fp = fopen("assets/fade.dat", "wb");
         if (!fp) return;
 
         setItUp();

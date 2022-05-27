@@ -118,7 +118,7 @@ void initSnow()
 {
     FILE *fp;
 
-    if (!(fp = fopen("flake.cel", "rb"))) exit(1);
+    if (!(fp = fopen("assets/flake.cel", "rb"))) exit(1);
     fseek(fp, 32, SEEK_SET);
     fread(pal, 1, 768, fp);
     fread(vmem, 1, 64000, fp);

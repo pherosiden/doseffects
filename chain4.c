@@ -163,7 +163,7 @@ void putImage()
     int16_t i, j;
     FILE *fp;
 
-    fp = fopen("chen.cel", "rb");
+    fp = fopen("assets/chen.cel", "rb");
     if (!fp) return;
 
     fseek(fp, 32, SEEK_SET);

@@ -298,7 +298,7 @@ void main()
 
     srand(time(NULL));
 
-    fp = fopen("bubmio.dat", "rb");
+    fp = fopen("assets/bubmio.dat", "rb");
     if (!fp) exit(1);
 
     for (i = 0; i <= 6; i++) fread(frames[i], 1, W * H, fp);
@@ -311,7 +311,7 @@ void main()
 
     for (i = 0; i <= 15; i++) setRGB(i, palbubmio[i][0], palbubmio[i][1], palbubmio[i][2]);
 
-    fp = fopen("fun.cel", "rb");
+    fp = fopen("assets/fun.cel", "rb");
     if (!fp) return;
     
     fseek(fp, 32, SEEK_SET);

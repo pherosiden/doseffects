@@ -182,7 +182,7 @@ void doPic()
     
     memset(nextrow, 0, sizeof(nextrow));
 
-    fp = fopen("boss.cel", "rb");
+    fp = fopen("assets/boss.cel", "rb");
     if (!fp) return;
     fseek(fp, 800, SEEK_SET);
 
@@ -231,7 +231,7 @@ void main()
         int     0x10
     }
 
-    fp = fopen("duke.cel", "rb");
+    fp = fopen("assets/duke.cel", "rb");
     if (!fp) return;
     fseek(fp, 32, SEEK_SET);
     fread(pal, 1, 768, fp);

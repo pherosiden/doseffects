@@ -143,7 +143,7 @@ void main()
     printStr(1, 2, 0x07, "Press any key to start demo...");
     getch();
 
-    fp = fopen("winter.cel", "rb");
+    fp = fopen("assets/winter.cel", "rb");
     if (!fp) return;
 
     fseek(fp, 32, SEEK_SET);

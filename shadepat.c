@@ -146,7 +146,7 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg, uint8_t *mem)
 
 void loadImage()
 {
-    FILE *fp = fopen("killer.cel", "rb");
+    FILE *fp = fopen("assets/killer.cel", "rb");
     if (!fp) return;
 
     fseek(fp, 800, SEEK_SET);
@@ -221,7 +221,7 @@ void editShadeBob()
         }
     } while(!kbhit());
 
-    fp = fopen("path.dat", "wb");
+    fp = fopen("assets/path.dat", "wb");
     fwrite(&arrpos, sizeof(arrpos), 1, fp);
     fwrite(points, sizeof(Point), arrpos, fp);
     fclose(fp);
@@ -229,7 +229,7 @@ void editShadeBob()
 
 void playShadeBob()
 {
-    FILE *fp = fopen("path.dat", "rb");
+    FILE *fp = fopen("assets/path.dat", "rb");
 
     if (!fp) return;
 

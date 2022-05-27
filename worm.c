@@ -74,7 +74,7 @@ void main()
 
     setPalette();
 
-    fp = fopen("worm.cel", "rb");
+    fp = fopen("assets/worm.cel", "rb");
     if (!fp) return;
 
     fseek(fp, 800, SEEK_SET);

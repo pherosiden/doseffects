@@ -140,7 +140,7 @@ void initMap()
 {
     FILE *fp;
 
-    fp = fopen("ground.cel", "rb");
+    fp = fopen("assets/ground.cel", "rb");
     if (!fp) exit(1);
 
     fseek(fp, 32, SEEK_SET);
@@ -148,14 +148,14 @@ void initMap()
     fread(tmap, 1, 65535, fp);
     fclose(fp);
 
-    fp = fopen("height.cel", "rb");
+    fp = fopen("assets/height.cel", "rb");
     if (!fp) exit(1);
 
     fseek(fp, 800, SEEK_SET);
     fread(hmap, 1, 65535, fp);
     fclose(fp);
 
-    fp = fopen("sky.cel", "rb");
+    fp = fopen("assets/sky.cel", "rb");
     if (!fp) exit(1);
 
     fseek(fp, 800, SEEK_SET);

@@ -25,7 +25,7 @@ void readPalette()
     int16_t i, j;
     FILE *fp;
     
-    fp = fopen("flame.pal", "rt");
+    fp = fopen("assets/flame.pal", "rt");
     if (!fp) return;
 
     for (i = 0; i <= 255; i++)

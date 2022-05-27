@@ -177,7 +177,7 @@ void main()
     j = 320 - gr;
     k = 200 - gr;
 
-    fp = fopen("killer.cel", "rb");
+    fp = fopen("assets/killer.cel", "rb");
     if (!fp) return;
 
     fseek(fp, 800, SEEK_SET);

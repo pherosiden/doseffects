@@ -173,7 +173,7 @@ void main()
         int     0x10
     }
 
-    loadFont("font002.fnt");
+    loadFont("assets/font002.fnt");
 
     row = 0;
     newrow = 0;

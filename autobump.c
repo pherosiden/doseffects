@@ -246,7 +246,7 @@ void main()
 
     moveMouse(160, 100);
 
-    fp = fopen("intro.cel", "rb");
+    fp = fopen("assets/intro.cel", "rb");
     if (!fp) return;
 
     fseek(fp, 800, SEEK_SET);

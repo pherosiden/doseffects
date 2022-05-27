@@ -13,23 +13,29 @@
 #include "gfxlib.c"
 #include <direct.h>
 
-void loadFontDir(const char *ext)
+void loadFontDir(const char *path, const char *ext)
 {
     DIR *dirp;
     struct dirent *dp;
     int16_t i, height, y = 10;
-    char text[256] = {0};
+    char buff[256] = {0};
     GFX_FONT *font = NULL;
 
     // open font directory
-    dirp = opendir(ext);
+    dirp = opendir(path);
     if (!dirp) return;
 
     // scan all fonts file
     while ((dp = readdir(dirp)))
     {
-        if (!loadFont(dp->d_name, 0)) fatalError("Cannot load font: %s\n", dp->d_name);
-        sprintf(text, "%s - The quick brown fox jumps over the lazy dog", dp->d_name);
+        // skip if not regular files, not GFX font files
+        if (!strstr(dp->d_name, ext)) continue;
+
+        // format related path
+        sprintf(buff, "%s/%s", path, dp->d_name);
+
+        if (!loadFont(buff, 0)) fatalError("Cannot load font: %s\n", dp->d_name);
+        sprintf(buff, "%s - The quick brown fox jumps over the lazy dog", dp->d_name);
 
         // indexed current font
         font = getFont(fontType);
@@ -38,7 +44,7 @@ void loadFontDir(const char *ext)
         for (i = 0; i <= font->subFonts; i++)
         {
             if (font->subFonts > 0) setFontSize(i);
-            height = getFontHeight(text);
+            height = getFontHeight(buff);
             
             // have limit line
             if (y > cmaxY - height)
@@ -49,7 +55,7 @@ void loadFontDir(const char *ext)
             }
 
             // draw font
-            writeString(10, y, text, fromRGB(255, 255, 255), 0);
+            writeString(10, y, buff, fromRGB(255, 255, 255), 0);
             horizLine(0, y + height + 1, cmaxX, fromRGB(0, 0, 255));
             y += (height + 3);
         }
@@ -61,9 +67,9 @@ void loadFontDir(const char *ext)
 
 int main()
 {
-    initGfxLib(1);
+    initGfxLib(1, NULL);
     if (!setVesaMode(800, 600, 32, 85)) return 0;
-    loadFontDir("*.XFN");
+    loadFontDir("assets", ".XFN");
     closeVesaMode();
     return 0;
 }

@@ -231,7 +231,7 @@ void main()
     printStr(1, 2, 0x07, "Any key to start demo...");
     getch();
     
-    fp = fopen("bline.dat", "rb");
+    fp = fopen("assets/bline.dat", "rb");
     if (!fp) exit(1);
     for (i = 0; i < 5; i++) fread(fptr[i], 1, 7680, fp);
     fclose(fp);

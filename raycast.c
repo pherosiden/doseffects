@@ -497,10 +497,10 @@ void main()
         int     0x10
     }
 
-    loadMaze("MAZE.DAT");
-    loadCEL("WALLR.CEL", walls[0]);
-    loadCEL("FLOOR.CEL", floors[0]);
-    loadCEL("CEIL.CEL", ceils[0]);
+    loadMaze("assets/maze.dat");
+    loadCEL("assets/wallr.cel", walls[0]);
+    loadCEL("assets/floor.cel", floors[0]);
+    loadCEL("assets/ceil.cel", ceils[0]);
     setShade();
 
     do {

@@ -224,14 +224,30 @@ void affichage(int32_t range)
     setFontType(oldFont);
 }
 
+void quitMessage()
+{
+    closeVesaMode();
+    printf("+-----------------------------------------------------+\n");
+    printf("|    GFXLIB demo (c) 1998 - 2002 by Nguyen Ngoc Van   |\n");
+    printf("|        Full support 8/15/16/24/32 bits color        |\n");
+    printf("|          Support load/save BMP & PNG files          |\n");
+    printf("|    Using Linear Frame Buffer for best performance   |\n");
+    printf("|           Optimize code by using assembly           |\n");
+    printf("|           Code by: Nguyen Ngoc Van                  |\n");
+    printf("|             Email: pherosiden@gmail.com             |\n");
+    printf("|           Website: http://codedemo.net              |\n");
+    printf("|         Reference: http://crossfire-designs.de      |\n");
+    printf("+-----------------------------------------------------+\n");
+}
+
 int main()
 {
     RGB Pal[256] = {0};
 
+    initGfxLib(1, quitMessage);
     if (!setVesaMode(800, 600, 8, 85)) return 0;
-
-    if (!loadFont("sys8x16.xfn", 0)) return 0;
-    if (!loadFont("trip.xfn", 1)) return 0; 
+    if (!loadFont("assets/sys8x16.xfn", 0)) return 0;
+    if (!loadFont("assets/trip.xfn", 1)) return 0; 
 
     getPalette(Pal);
     setBlackPalette();
@@ -299,8 +315,8 @@ int main()
     saveScreen("screen09.bmp");
     fadeMin();
 
-    closeVesaMode();
     closeFont(0);
     closeFont(1);
+    quitMessage();
     return 1;
 }
