@@ -354,8 +354,8 @@ typedef struct
 
 typedef struct
 {
-    float   x;
-    float   y;
+    double   x;
+    double   y;
 } POINT;
 
 typedef struct
@@ -727,11 +727,11 @@ int32_t     oldMaxX = 0, oldMaxY = 0;           // saved right-bottom
 
 // 3D projection
 enum        {PERSPECTIVE, PARALLELE};
-float       de = 0.0, rho = 0.0, theta = 0.0, phi = 0.0;
-float       aux1 = 0.0, aux2 = 0.0, aux3 = 0.0, aux4 = 0.0;
-float       aux5 = 0.0, aux6 = 0.0, aux7 = 0.0, aux8 = 0.0;
-float       xobs = 0.0, yobs = 0.0, zobs = 0.0;
-float       xproj = 0.0, yproj = 0.0;
+double       de = 0.0, rho = 0.0, theta = 0.0, phi = 0.0;
+double       aux1 = 0.0, aux2 = 0.0, aux3 = 0.0, aux4 = 0.0;
+double       aux5 = 0.0, aux6 = 0.0, aux7 = 0.0, aux8 = 0.0;
+double       xobs = 0.0, yobs = 0.0, zobs = 0.0;
+double       xproj = 0.0, yproj = 0.0;
 int32_t     xecran = 0, yecran = 0;
 uint8_t     projection = 0;
 
@@ -906,15 +906,15 @@ uint64_t getPIT()
 }
 
 // Get current CPU clock rate in Mhz
-float getCpuClockRate()
+double getCpuClockRate()
 {
     uint32_t i = 0;
     uint64_t time0 = 0, time1 = 0;
     uint64_t stamp0 = 0, stamp1 = 0;
     uint64_t ticks = 0, cycles = 0;
 
-    float total = 0;
-    float freq[MIN_TRIES] = {0};
+    double total = 0;
+    double freq[MIN_TRIES] = {0};
 
     // try to calculate CPU clock rate
     for (i = 0; i < MIN_TRIES; i++)
@@ -943,7 +943,7 @@ float getCpuClockRate()
 // Get current CPU speed in MHz
 uint32_t getCpuSpeed()
 {
-    float speed = 0.0;
+    double speed = 0.0;
     uint32_t i = 0;
     for (i = 0; i < MAX_RUN; i++) speed += getCpuClockRate();
     return speed / MAX_RUN;
@@ -10021,8 +10021,8 @@ inline uint32_t clampPixels(const GFX_IMAGE* img, int32_t x, int32_t y)
     uint32_t result = psrc[y * img->mWidth + x]; 
     if (!insrc)
     {
-        uint32_t *pcol = (uint32_t*)&result;
-        pcol[3] = 0;
+        ARGB *pcol = (ARGB*)&result;
+        pcol->a = 0;
     }
     return result;
 }
@@ -10031,7 +10031,6 @@ inline uint32_t clampPixels(const GFX_IMAGE* img, int32_t x, int32_t y)
 inline uint32_t alphaBlend(const uint32_t dstCol, const uint32_t srcCol)
 {
 #ifdef _USE_MMX
-    uint32_t col = 0;
     __asm {
         pxor        mm7, mm7
         movd        mm0, srcCol
@@ -10047,26 +10046,77 @@ inline uint32_t alphaBlend(const uint32_t dstCol, const uint32_t srcCol)
         paddw       mm2, mm0
         psrlw       mm2, 8
         packuswb    mm2, mm7
-        movd        col, mm2
+        movd        eax, mm2
         emms
     }
-    return col;
 #else
     const uint8_t cover = srcCol >> 24;
     const uint8_t rcover = 255 - cover;
-    const uint32_t rb = ((dstCol & 0x00ff00ffU) * rcover + (srcCol & 0x00ff00ffU) * cover);
-    const uint32_t ag = (((dstCol & 0xff00ff00U) >> 8) * rcover + ((srcCol & 0xff00ff00U) >> 8) * cover);
-    return ((rb & 0xff00ff00U) >> 8) | (ag & 0xff00ff00U);
+    const uint32_t rb = ((dstCol & 0x00ff00ff) * rcover + (srcCol & 0x00ff00ff) * cover);
+    const uint32_t ag = (((dstCol & 0xff00ff00) >> 8) * rcover + ((srcCol & 0xff00ff00) >> 8) * cover);
+    return ((rb & 0xff00ff00) >> 8) | (ag & 0xff00ff00);
 #endif
 }
 
 // Bilinear get pixel with FIXED-POINT (signed 16.16)
 inline uint32_t bilinearGetPixelCenter(const GFX_IMAGE* psrc, const int32_t sx, const int32_t sy)
 {
-    const uint32_t *data = (const uint32_t*)psrc->mData;
     const int32_t width = psrc->mWidth;
+    const uint32_t* pixel = (uint32_t*)psrc->mData;
 
-    const uint32_t *p0 = &data[(sy >> 16) * width + (sx >> 16)];
+#ifdef _USE_MMX
+    __asm {
+        mov         eax, sx
+        mov         edx, sy
+        pxor        mm7, mm7
+        shl         edx, 16
+        shl         eax, 16
+        shr         edx, 24
+        shr         eax, 24
+        movd        mm6, edx
+        movd        mm5, eax
+        mov         edx, sy
+        mov         eax, width
+        shl         eax, 2
+        sar         edx, 16
+        imul        edx, eax
+        add         edx, pixel
+        add         eax, edx
+        mov         ecx, sx
+        sar         ecx, 16
+        movd        mm2, dword ptr[eax + ecx * 4]
+        movd        mm0, dword ptr[eax + ecx * 4 + 4]
+        punpcklwd   mm5, mm5
+        punpcklwd   mm6, mm6
+        movd        mm3, dword ptr[edx + ecx * 4]
+        movd        mm1, dword ptr[edx + ecx * 4 + 4]
+        punpckldq   mm5, mm5
+        punpcklbw   mm0, mm7
+        punpcklbw   mm1, mm7
+        punpcklbw   mm2, mm7
+        punpcklbw   mm3, mm7
+        psubw       mm0, mm2
+        psubw       mm1, mm3
+        psllw       mm2, 8
+        psllw       mm3, 8
+        pmullw      mm0, mm5
+        pmullw      mm1, mm5
+        punpckldq   mm6, mm6
+        paddw       mm0, mm2
+        paddw       mm1, mm3
+        psrlw       mm0, 8
+        psrlw       mm1, 8
+        psubw       mm0, mm1
+        psllw       mm1, 8
+        pmullw      mm0, mm6
+        paddw       mm0, mm1
+        psrlw       mm0, 8
+        packuswb    mm0, mm7
+        movd        eax, mm0
+        emms
+    }
+#else
+    const uint32_t *p0 = &pixel[(sy >> 16) * width + (sx >> 16)];
     const uint32_t *p1 = &p0[width];
 
     const uint32_t pu = (uint8_t)(sx >> 8);
@@ -10087,13 +10137,14 @@ inline uint32_t bilinearGetPixelCenter(const GFX_IMAGE* psrc, const int32_t sx, 
     ga += ((p1[1] & 0xff00ff00) >> 8) * w3;
 
     return (ga & 0xff00ff00) | ((br & 0xff00ff00) >> 8);
+#endif
 }
 
 // Bilinear get pixel with FIXED-POINT (signed 16.16)
 inline uint32_t bilinearGetPixelBorder(const GFX_IMAGE* psrc, const int32_t sx, const int32_t sy)
 {
-    GFX_IMAGE img;
-    uint32_t pixels[4];
+    GFX_IMAGE img = {0};
+    uint32_t pixels[4] = {0};
 
     // Convert to fixed points
     const int32_t lx = sx >> 16;
@@ -10128,18 +10179,18 @@ void bilinearRotateLine(uint32_t* pdst, const int32_t boundx0, const int32_t inx
 // 2. separate inbound and outbound pixel calculation
 // 3. MMX instructions
 // 4. clipping data
-void bilinearRotateImage(const GFX_IMAGE* dst, const GFX_IMAGE* src, const float degree, const float scalex, const float scaley)
+void bilinearRotateImage(const GFX_IMAGE* dst, const GFX_IMAGE* src, const double degree, const double scalex, const double scaley)
 {
     uint32_t *yline;
     ROTATE_CLIP clip;
 
-    const float scalexy = 1.0 / (scalex * scaley);
-    const float rscalex = scalexy * scaley;
-    const float rscaley = scalexy * scalex;
+    const double scalexy = 1.0 / (scalex * scaley);
+    const double rscalex = scalexy * scaley;
+    const double rscaley = scalexy * scalex;
 
-    const float angle = (degree * M_PI) / 180;
-    const float sina = sin(-angle);
-    const float cosa = cos(-angle);
+    const double angle = (degree * M_PI) / 180.0;
+    const double sina = sin(-angle);
+    const double cosa = cos(-angle);
     const int32_t sini = sina * 65536; // Convert to fixed points (no truncated)
     const int32_t cosi = cosa * 65536; // Convert to fixed points (no truncated)
 
@@ -11323,16 +11374,16 @@ void fillPolygon(POINT *points, int32_t num, uint32_t col)
 }
 
 // generate uniform random number distribution
-float uniformRand(float min, float max)
+double uniformRand(double min, double max)
 {
-    return (float)rand() / (RAND_MAX + 1.0) * (max - min) + min;
+    return (double)rand() / (RAND_MAX + 1.0) * (max - min) + min;
 }
 
 // generate normal random number distribution
-float gaussianRand(float mean, float stddev)
+double gaussianRand(double mean, double stddev)
 {
-    float x, y, r, d, n1;
-    static float n2 = 0.0;
+    double x, y, r, d, n1;
+    static double n2 = 0.0;
     static int32_t cached = 0;
     
     if (!cached)
@@ -11356,15 +11407,15 @@ float gaussianRand(float mean, float stddev)
 }
 
 //generate random polygon
-void randomPolygon(int32_t cx, int32_t cy, int32_t avgRadius, float irregularity, float spikeyness, int32_t numVerts, POINT* points)
+void randomPolygon(int32_t cx, int32_t cy, int32_t avgRadius, double irregularity, double spikeyness, int32_t numVerts, POINT* points)
 {
     int32_t i = 0;
-    float koef = 0;
-    float tmp, sum = 0;
-    float lower, upper;
-    float angle, radius;
-    float gaussValue, rad;
-    float angleSteps[1024] = { 0 };
+    double koef = 0;
+    double tmp, sum = 0;
+    double lower, upper;
+    double angle, radius;
+    double gaussValue, rad;
+    double angleSteps[1024] = { 0 };
     
     //valid params
     spikeyness = clamp(spikeyness, 0, 1) * avgRadius;
@@ -11878,8 +11929,8 @@ void drawEllipseSub(int32_t xm, int32_t ym, int32_t xr, int32_t yr, uint32_t rgb
 void drawEllipseRect(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t rgb)
 {
     int32_t a = abs(x1 - x0), b = abs(y1 - y0), b1 = b & 1;
-    float dx = 4 * (1.0 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
-    float err = dx + dy + b1 * a * a, e2;
+    double dx = 4 * (1.0 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
+    double err = dx + dy + b1 * a * a, e2;
 
     if (a <= 0 || b <= 0) return;
     if (x0 > x1) { x0 = x1; x1 += a; }
@@ -11913,8 +11964,8 @@ void drawEllipseRect(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t rg
 void drawEllipseRectAdd(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t rgb)
 {
     int32_t a = abs(x1 - x0), b = abs(y1 - y0), b1 = b & 1;
-    float dx = 4 * (1.0 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
-    float err = dx + dy + b1 * a * a, e2;
+    double dx = 4 * (1.0 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
+    double err = dx + dy + b1 * a * a, e2;
 
     if (a <= 0 || b <= 0) return;
     if (x0 > x1) { x0 = x1; x1 += a; }
@@ -11948,8 +11999,8 @@ void drawEllipseRectAdd(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t
 void drawEllipseRectSub(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t rgb)
 {
     int32_t a = abs(x1 - x0), b = abs(y1 - y0), b1 = b & 1;
-    float dx = 4 * (1.0 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
-    float err = dx + dy + b1 * a * a, e2;
+    double dx = 4 * (1.0 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
+    double err = dx + dy + b1 * a * a, e2;
 
     if (a <= 0 || b <= 0) return;
     if (x0 > x1) { x0 = x1; x1 += a; }
@@ -12518,7 +12569,7 @@ void drawEllipseAlpha(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t r
 {
     int32_t f;
     int32_t a, b, b1;
-    float dx, dy, ed, alpha, err;
+    double dx, dy, ed, alpha, err;
 
     // Only 32bit support alpha-blend mode
     if (bytesPerPixel != 4) return;
@@ -12618,7 +12669,7 @@ void drawQuadBezierSeg(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x
 {
     int32_t sx = x2 - x1, sy = y2 - y1;
     int32_t xx = x0 - x1, yy = y0 - y1, xy;
-    float dx, dy, err, cur = xx * sy - yy * sx;
+    double dx, dy, err, cur = xx * sy - yy * sx;
 
     if (sx * sx + sy * sy > xx * xx + yy * yy)
     {
@@ -12677,7 +12728,7 @@ void drawQuadBezierSeg(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x
 void drawQuadBezier(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t rgb)
 {
     int32_t x = x0 - x1, y = y0 - y1;
-    float t = x0 - 2 * x1 + x2, r;
+    double t = x0 - 2 * x1 + x2, r;
 
     if (x * (x2 - x1) > 0)
     {
@@ -12712,11 +12763,11 @@ void drawQuadBezier(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, 
     drawQuadBezierSeg(x0, y0, x1, y1, x2, y2, rgb);
 }
 
-void drawQuadRationalBezierSeg(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, float w, uint32_t rgb)
+void drawQuadRationalBezierSeg(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, double w, uint32_t rgb)
 {
     int32_t sx = x2 - x1, sy = y2 - y1;
-    float dx = x0 - x2, dy = y0 - y2, xx = x0 - x1, yy = y0 - y1;
-    float xy = xx * sy + yy * sx, cur = xx * sy - yy * sx, err;
+    double dx = x0 - x2, dy = y0 - y2, xx = x0 - x1, yy = y0 - y1;
+    double xy = xx * sy + yy * sx, cur = xx * sy - yy * sx, err;
 
     if (cur != 0.0 && w > 0.0)
     {
@@ -12776,10 +12827,10 @@ void drawQuadRationalBezierSeg(int32_t x0, int32_t y0, int32_t x1, int32_t y1, i
     drawLine(x0, y0, x2, y2, rgb);
 }
 
-void drawQuadRationalBezier(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, float w, uint32_t rgb)
+void drawQuadRationalBezier(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, double w, uint32_t rgb)
 {
     int32_t x = x0 - 2 * x1 + x2, y = y0 - 2 * y1 + y2;
-    float xx = x0 - x1, yy = y0 - y1, ww, t, q;
+    double xx = x0 - x1, yy = y0 - y1, ww, t, q;
 
     if (xx * (x2 - x1) > 0)
     {
@@ -12791,7 +12842,7 @@ void drawQuadRationalBezier(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int3
             y2 = yy + y1;
         }
 
-        if (x0 == x2 || w == 1.0) t = (x0 - x1) / (float)x;
+        if (x0 == x2 || w == 1.0) t = (x0 - x1) / (double)x;
         else
         {
             q = sqrt(4.0 * w * w * (x0 - x1) * (x2 - x1) + (x2 - x0) * (x2 - x0));
@@ -12845,7 +12896,7 @@ void drawQuadRationalBezier(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int3
 void drawRotatedEllipseRect(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t zd, uint32_t rgb)
 {
     int32_t xd = x1 - x0, yd = y1 - y0;
-    float w = xd * yd;
+    double w = xd * yd;
 
     if (zd == 0) { drawEllipseRect(x0, y0, x1, y1, rgb); return; }
     if (w != 0.0) w = (w - zd) / (w + w);
@@ -12858,22 +12909,22 @@ void drawRotatedEllipseRect(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int3
     drawQuadRationalBezierSeg(x1, y1 - yd, x1, y0, x0 + xd, y0, w, rgb);
 }
 
-void drawRotatedEllipse(int32_t x, int32_t y, int32_t a, int32_t b, float angle, uint32_t rgb)
+void drawRotatedEllipse(int32_t x, int32_t y, int32_t a, int32_t b, double angle, uint32_t rgb)
 {
-    float xd = a * a, yd = b * b;
-    float s = sin(angle), zd = (xd - yd) * s;
+    double xd = a * a, yd = b * b;
+    double s = sin(angle), zd = (xd - yd) * s;
     xd = sqrt(xd - zd * s), yd = sqrt(yd + zd * s);
     a = xd + 0.5; b = yd + 0.5; zd = zd * a * b / (xd * yd);
     drawRotatedEllipseRect(x - a, y - b, x + a, y + b, 4 * zd * cos(angle), rgb);
 }
 
-void drawCubicBezierSeg(int32_t x0, int32_t y0, float x1, float y1, float x2, float y2, int32_t x3, int32_t y3, uint32_t rgb)
+void drawCubicBezierSeg(int32_t x0, int32_t y0, double x1, double y1, double x2, double y2, int32_t x3, int32_t y3, uint32_t rgb)
 {
     int32_t f, fx, fy, leg = 1;
     int32_t sx = x0 < x3 ? 1 : -1, sy = y0 < y3 ? 1 : -1;
-    float xc = -fabs(x0 + x1 - x2 - x3), xa = xc - 4 * sx * (x1 - x2), xb = sx * (x0 - x1 - x2 + x3);
-    float yc = -fabs(y0 + y1 - y2 - y3), ya = yc - 4 * sy * (y1 - y2), yb = sy * (y0 - y1 - y2 + y3);
-    float ab, ac, bc, cb, xx, xy, yy, dx, dy, ex, *pxy, EP = 0.01;
+    double xc = -fabs(x0 + x1 - x2 - x3), xa = xc - 4 * sx * (x1 - x2), xb = sx * (x0 - x1 - x2 + x3);
+    double yc = -fabs(y0 + y1 - y2 - y3), ya = yc - 4 * sy * (y1 - y2), yb = sy * (y0 - y1 - y2 + y3);
+    double ab, ac, bc, cb, xx, xy, yy, dx, dy, ex, *pxy, EP = 0.01;
 
     if (xa == 0 && ya == 0)
     {
@@ -12953,8 +13004,8 @@ void drawCubicBezier(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2,
     int32_t xb = x0 - x1 - x2 + x3, xd = xb + 4 * (x1 + x2);
     int32_t yc = y0 + y1 - y2 - y3, ya = yc - 4 * (y1 - y2);
     int32_t yb = y0 - y1 - y2 + y3, yd = yb + 4 * (y1 + y2);
-    float fx0 = x0, fx1, fx2, fx3, fy0 = y0, fy1, fy2, fy3;
-    float t1 = xb * xb - xa * xc, t2, t[5];
+    double fx0 = x0, fx1, fx2, fx3, fy0 = y0, fy1, fy2, fy3;
+    double t1 = xb * xb - xa * xc, t2, t[5];
 
     if (xa == 0)
     {
@@ -13008,12 +13059,12 @@ void drawCubicBezier(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2,
     }
 }
 
-void drawLineWidthAlpha(int32_t x0, int32_t y0, int32_t x1, int32_t y1, float wd, uint32_t rgb)
+void drawLineWidthAlpha(int32_t x0, int32_t y0, int32_t x1, int32_t y1, double wd, uint32_t rgb)
 {
     int32_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1; 
     int32_t dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1; 
     int32_t err = dx - dy, e2, x2, y2;
-    float ed = dx + dy == 0 ? 1 : sqrt(dx * dx + dy * dy);
+    double ed = dx + dy == 0 ? 1 : sqrt(dx * dx + dy * dy);
 
     // Only 32bit support alpha-blend mode
     if (bytesPerPixel != 4) return;
@@ -13046,7 +13097,7 @@ void drawQuadBezierSegBlend(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int3
 {
     int32_t sx = x2 - x1, sy = y2 - y1;
     int32_t xx = x0 - x1, yy = y0 - y1, xy;
-    float dx, dy, err, ed, cur = xx * sy - yy * sx;
+    double dx, dy, err, ed, cur = xx * sy - yy * sx;
 
     // Only 32bit support alpha-blend mode
     if (bytesPerPixel != 4) return;
@@ -13103,12 +13154,12 @@ void drawQuadBezierSegBlend(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int3
     drawLineAlpha(x0, y0, x2, y2, rgb);
 }
 
-void drawQuadRationalBezierSegAlpha(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, float w, uint32_t rgb)
+void drawQuadRationalBezierSegAlpha(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2, double w, uint32_t rgb)
 {
     int32_t f;
     int32_t sx = x2 - x1, sy = y2 - y1;
-    float dx = x0 - x2, dy = y0 - y2, xx = x0 - x1, yy = y0 - y1;
-    float xy = xx * sy + yy * sx, cur = xx * sy - yy * sx, err, ed;
+    double dx = x0 - x2, dy = y0 - y2, xx = x0 - x1, yy = y0 - y1;
+    double xy = xx * sy + yy * sx, cur = xx * sy - yy * sx, err, ed;
     
     // Only 32bit support alpha-blend mode
     if (bytesPerPixel != 4) return;
@@ -13175,13 +13226,13 @@ void drawQuadRationalBezierSegAlpha(int32_t x0, int32_t y0, int32_t x1, int32_t 
     drawLineAlpha(x0, y0, x2, y2, rgb);
 }
 
-void drawCubicBezierSegAlpha(int32_t x0, int32_t y0, float x1, float y1, float x2, float y2, int32_t x3, int32_t y3, uint32_t rgb)
+void drawCubicBezierSegAlpha(int32_t x0, int32_t y0, double x1, double y1, double x2, double y2, int32_t x3, int32_t y3, uint32_t rgb)
 {
     int32_t f, fx, fy, leg = 1;
     int32_t sx = x0 < x3 ? 1 : -1, sy = y0 < y3 ? 1 : -1;
-    float xc = -fabs(x0 + x1 - x2 - x3), xa = xc - 4 * sx * (x1 - x2), xb = sx * (x0 - x1 - x2 + x3);
-    float yc = -fabs(y0 + y1 - y2 - y3), ya = yc - 4 * sy * (y1 - y2), yb = sy * (y0 - y1 - y2 + y3);
-    float ab, ac, bc, ba, xx, xy, yy, dx, dy, ex, px, py, ed, ip, EP = 0.01;
+    double xc = -fabs(x0 + x1 - x2 - x3), xa = xc - 4 * sx * (x1 - x2), xb = sx * (x0 - x1 - x2 + x3);
+    double yc = -fabs(y0 + y1 - y2 - y3), ya = yc - 4 * sy * (y1 - y2), yb = sy * (y0 - y1 - y2 + y3);
+    double ab, ac, bc, ba, xx, xy, yy, dx, dy, ex, px, py, ed, ip, EP = 0.01;
 
     // Only 32bit support alpha-blend mode
     if (bytesPerPixel != 4) return;
@@ -13833,7 +13884,7 @@ void blockOutMidImage(GFX_IMAGE *dst, GFX_IMAGE *src, int32_t xb, int32_t yb)
     }
 }
 
-void fadeOutCircle(float pc, int32_t size, int32_t type, uint32_t col)
+void fadeOutCircle(double pc, int32_t size, int32_t type, uint32_t col)
 {
     int32_t val, dsize, max, x, y;
 
@@ -14141,10 +14192,10 @@ void rotateLine(uint8_t *dst, uint8_t *src, uint8_t *tables, int32_t width, int3
     }
 }
 
-void rotateImage(GFX_IMAGE *dst, GFX_IMAGE *src, int32_t *tables, int32_t axisx, int32_t axisy, float angle, float scale)
+void rotateImage(GFX_IMAGE *dst, GFX_IMAGE *src, int32_t *tables, int32_t axisx, int32_t axisy, double angle, double scale)
 {
-    float th, sint, cost;
-    float sinx, cosx, siny, cosy;
+    double th, sint, cost;
+    double sinx, cosx, siny, cosy;
 
     int32_t x, y, primex, primey, lineWidth = 0;
     uint32_t *psrc = (uint32_t*)src->mData;
@@ -14365,7 +14416,7 @@ void bumpImage(GFX_IMAGE *dst, GFX_IMAGE *src1, GFX_IMAGE *src2, int32_t lx, int
 // Init projection params
 void initProjection()
 {
-    float th, ph;
+    double th, ph;
 
     th = M_PI * theta / 180;
     ph = M_PI * phi / 180;
@@ -14382,7 +14433,7 @@ void initProjection()
 }
 
 // projection points
-void projette(float x, float y, float z)
+void projette(double x, double y, double z)
 {
     xobs = -x * aux1 + y * aux3;
     yobs = -x * aux5 - y * aux6 + z * aux4;
@@ -14402,7 +14453,7 @@ void projette(float x, float y, float z)
 }
 
 // Move current cursor in 3D mode
-void deplaceEn(float x, float y, float z)
+void deplaceEn(double x, double y, double z)
 {
     projette(x, y, z);
     xecran = centerX + xproj * ECHE;
@@ -14411,7 +14462,7 @@ void deplaceEn(float x, float y, float z)
 }
 
 // Draw line from current cursor in 3D mode
-void traceVers(float x, float y, float z, uint32_t col)
+void traceVers(double x, double y, double z, uint32_t col)
 {
     projette(x, y, z);
     xecran = centerX + xproj * ECHE;
@@ -14419,7 +14470,7 @@ void traceVers(float x, float y, float z, uint32_t col)
     lineTo(xecran, yecran, col);
 }
 
-void traceVersAdd(float x, float y, float z, uint32_t col)
+void traceVersAdd(double x, double y, double z, uint32_t col)
 {
     projette(x, y, z);
     xecran = centerX + xproj * ECHE;
@@ -14427,7 +14478,7 @@ void traceVersAdd(float x, float y, float z, uint32_t col)
     lineToAdd(xecran, yecran, col);
 }
 
-void traceVersSub(float x, float y, float z, uint32_t col)
+void traceVersSub(double x, double y, double z, uint32_t col)
 {
     projette(x, y, z);
     xecran = centerX + xproj * ECHE;

@@ -41,29 +41,29 @@ int32_t minh[LIMITX] = {0};
 int32_t c1, c2, c3, c4;
 int32_t lines, points;
 
-float incx, incy;
-float echx, echy;
+double incx, incy;
+double echx, echy;
 
-float f1, f2, f3, f4;
-float gx1, gx2, gy1, gy2;
+double f1, f2, f3, f4;
+double gx1, gx2, gy1, gy2;
 
-float u, udebut, ufin, du;
-float v, vdebut, vfin, dv;
+double u, udebut, ufin, du;
+double v, vdebut, vfin, dv;
 
 char vue = 'r';
 int32_t visiPrec = 0;
 int32_t visiCour = 0;
 
-float (*FX)(float, float);
-float (*FY)(float, float);
-float (*FZ)(float, float);
+double (*FX)(double, double);
+double (*FY)(double, double);
+double (*FZ)(double, double);
 
-void findRepeat(float *rept)
+void findRepeat(double *rept)
 {
-    float lx, ly, r;
-    float lim1 = 0.0, lim2 = 0.0;
-    float rmax = 200 * M_PI;
-    float fx = 0.0, fy = 0.0;
+    double lx, ly, r;
+    double lim1 = 0.0, lim2 = 0.0;
+    double rmax = 200 * M_PI;
+    double fx = 0.0, fy = 0.0;
     
     do {
         *rept += 2 * M_PI;
@@ -75,10 +75,10 @@ void findRepeat(float *rept)
     } while ((lim1 >= 1000000.0 || lim2 >= 1000000.0) && *rept <= rmax); 
 }
 
-void drawCylodiod(int32_t xc, int32_t yc, int32_t rd, uint8_t a, uint8_t b, float rept, uint32_t col)
+void drawCylodiod(int32_t xc, int32_t yc, int32_t rd, uint8_t a, uint8_t b, double rept, uint32_t col)
 {
-    float theta = 0.0;
-    float x1, y1, x2, y2;
+    double theta = 0.0;
+    double x1, y1, x2, y2;
 
     x1 = xc + rd * sin(3 * theta) * cos(theta) * cos(a * theta);
     y1 = yc + rd * sin(3 * theta) * sin(theta) * sin(b * theta);
@@ -95,7 +95,7 @@ void drawCylodiod(int32_t xc, int32_t yc, int32_t rd, uint8_t a, uint8_t b, floa
 
 void drawPolygon(int32_t xc, int32_t yc, int32_t rd, uint8_t odre, uint8_t pas)
 {
-    float theta;
+    double theta;
     int32_t phi = 0;
     
     while (phi < 360)
@@ -110,7 +110,7 @@ void drawPolygon(int32_t xc, int32_t yc, int32_t rd, uint8_t odre, uint8_t pas)
 void rotatePolygon(POINT *pt, int32_t n, int32_t xc, int32_t yc, int32_t rd, int32_t num, uint8_t odre, uint32_t col)
 {
     int32_t i, j;
-    float phi = 0.0;
+    double phi = 0.0;
 
     for (i = 0; i < n; i++)
     {
@@ -156,7 +156,7 @@ void randomPoly(POINT *pt, int32_t n, int32_t xm, int32_t ym, int32_t num, uint8
 void drawHexagon(POINT *pt, int32_t num, int32_t xc, int32_t yc, int32_t n, int32_t rd, uint8_t odre, uint32_t col)
 {
     int32_t i, j, k, m;
-    float coef = 2 * M_PI / num, phi;
+    double coef = 2 * M_PI / num, phi;
 
     for (i = 1; i <= num; i++)
     {
@@ -201,10 +201,10 @@ void drawHexagon(POINT *pt, int32_t num, int32_t xc, int32_t yc, int32_t n, int3
 void graphDemo0(int32_t xc, int32_t yc, int32_t xr, int32_t yr)
 {
     int32_t i = 0;
-    float x0, y0, x1, y1;
-    float x = xr * 0.4;
-    float y = yr * 0.4;
-    float a = 0.0, m;
+    double x0, y0, x1, y1;
+    double x = xr * 0.4;
+    double y = yr * 0.4;
+    double a = 0.0, m;
 
     for (i = 0; i < 800 && !keyPressed(27); i++)
     {
@@ -224,8 +224,8 @@ void graphDemo0(int32_t xc, int32_t yc, int32_t xr, int32_t yr)
 void graphDemo1(int32_t xc, int32_t yc, int32_t xr, int32_t yr)
 {
     int32_t i = 0;
-    float x1, y1, x2, y2;
-    float a = 0.0, m, n;
+    double x1, y1, x2, y2;
+    double a = 0.0, m, n;
 
     for (i = 0; i < 500 && !keyPressed(27); i++)
     {
@@ -245,8 +245,8 @@ void graphDemo1(int32_t xc, int32_t yc, int32_t xr, int32_t yr)
 void graphDemo2(int32_t xc, int32_t yc, int32_t r)
 {
     int32_t i = 0;
-    float x1, y1, x2, y2;
-    float a = 0.0, f;
+    double x1, y1, x2, y2;
+    double a = 0.0, f;
 
     for (i = 0; i < 1600 && !keyPressed(27); i++)
     {
@@ -265,8 +265,8 @@ void graphDemo2(int32_t xc, int32_t yc, int32_t r)
 void graphDemo3(int32_t xc, int32_t yc, int32_t r)
 {
     int32_t i = 0;
-    float x1, y1, x2, y2;
-    float a = 0.0, f;
+    double x1, y1, x2, y2;
+    double a = 0.0, f;
     
     for (i = 0; i < 1600 && !keyPressed(27); i++)
     {
@@ -285,8 +285,8 @@ void graphDemo3(int32_t xc, int32_t yc, int32_t r)
 void graphDemo4(int32_t xc, int32_t yc, int32_t r)
 {
     int32_t i = 0;
-    float x1, y1, x2, y2;
-    float a = 0.0, e;
+    double x1, y1, x2, y2;
+    double a = 0.0, e;
 
     for (i = 0; i < 800 && !keyPressed(27); i++)
     {
@@ -304,8 +304,8 @@ void graphDemo4(int32_t xc, int32_t yc, int32_t r)
 
 void graphDemo5(int32_t xi, int32_t yi, int32_t r, int32_t xr, int32_t yr)
 {
-    float a, e;
-    float x, y, sx, sy;
+    double a, e;
+    double x, y, sx, sy;
     int32_t n, phi, i, k;
 
     for (n = 2; n <= 7; n++)
@@ -341,9 +341,9 @@ void graphDemo6(int32_t xc, int32_t yc, int32_t r)
     int32_t xx[120] = {0};
     int32_t yy[120] = {0};
 
-    float x = 4 * r;
-    float sx, sy, x1, y1, x2, y2;
-    float theta, a = 0.0;
+    double x = 4 * r;
+    double sx, sy, x1, y1, x2, y2;
+    double theta, a = 0.0;
 
     int32_t px, py, i;
 
@@ -385,8 +385,8 @@ void graphDemo7(int32_t xc, int32_t yc, int32_t r)
     int32_t xx[120] = {0};
     int32_t yy[120] = {0};
 
-    float theta, a = 0.0, m, n;
-    float x = 4 * r, sx, sy, x1, y1, x2, y2;
+    double theta, a = 0.0, m, n;
+    double x = 4 * r, sx, sy, x1, y1, x2, y2;
     
     int32_t px, py, i;
 
@@ -436,8 +436,8 @@ void graphDemo8(int32_t xc, int32_t yc, int32_t d, int32_t r)
     int32_t xx[120] = {0};
     int32_t yy[120] = {0};
         
-    float theta, sc, a, m;
-    float dd, un, uv, k, s, x, y, px, py, sx, sy, sq;
+    double theta, sc, a, m;
+    double dd, un, uv, k, s, x, y, px, py, sx, sy, sq;
 
     a = 0.0;
     un = 12.0;
@@ -489,9 +489,9 @@ void graphDemo8(int32_t xc, int32_t yc, int32_t d, int32_t r)
     }
 }
 
-void graphDemo9(int32_t xc, int32_t yc, float rd)
+void graphDemo9(int32_t xc, int32_t yc, double rd)
 {
-    float a, aa, ls, di, r;
+    double a, aa, ls, di, r;
     const int32_t data[] = {7, 436, 245, 17, 775, 180, 31, 1020, 130};
     int32_t i, k, s;
     int32_t ste, re, x, y, px, py;
@@ -568,7 +568,7 @@ void graphDemo9(int32_t xc, int32_t yc, float rd)
 void initDemo10(int32_t num, int32_t n)
 {
     int32_t i;
-    float a = 0.0, r;
+    double a = 0.0, r;
 
     switch (num)
     {
@@ -816,105 +816,105 @@ void graphDemo15()
     for (i = 0; i < cmaxY; i++) horizLine(0, i, cmaxX, 1 + (int32_t)(i / 1.87) % 255);
 }
 
-float FX1(float x, float y)
+double FX1(double x, double y)
 {
-     float phi = sqrt(x * x + y * y);
-     if (phi == 0.0) phi = FLT_MIN;
+     double phi = sqrt(x * x + y * y);
+     if (phi == 0.0) phi = DBL_MIN;
      return 10 * sin(phi) / phi;
 }
 
-float FX2(float x, float y)
+double FX2(double x, double y)
 {
-     float phi = sqrt(x * x + y * y);
+     double phi = sqrt(x * x + y * y);
      return -phi + fabs(sin(phi));
 }
 
-float FX3(float x, float y)
+double FX3(double x, double y)
 {
-    if (x == 0.0) x = FLT_MIN;
-    if (y == 0.0) y = FLT_MIN;
+    if (x == 0.0) x = DBL_MIN;
+    if (y == 0.0) y = DBL_MIN;
     return 10 * sin(x) / x * sin(y) / y;
 }
 
-float FX4(float x, float y)
+double FX4(double x, double y)
 {
-    if (x == 0.0) x = FLT_MIN;
+    if (x == 0.0) x = DBL_MIN;
     return 0.1 * (x * x + y * y) * sin(x) / x;
 }
 
-float FX5(float x, float y)
+double FX5(double x, double y)
 {
     return 0.2 * sin(x) * cos(y) - 3 * exp(-x * x - y * y) * cos(1.75 * (x * x + y * y));
 }
 
-float FX11(float u, float v)
+double FX11(double u, double v)
 {
     return (6 * cos(u)) * cos(v);
 }
 
-float FY11(float u, float v)
+double FY11(double u, double v)
 {
   return (3 * cos(u)) * sin(v);
 }
 
-float FZ11(float u, float v)
+double FZ11(double u, double v)
 {
     v = 0;
     return 2 * sin(u) + v;
 }
 
-float FX21(float u, float v)
+double FX21(double u, double v)
 {
     return (6 + 3 * cos(u)) * cos(v);
 }
 
-float FY21(float u, float v)
+double FY21(double u, double v)
 {
   return (6 + 3 * cos(u)) * sin(v);
 }
 
-float FZ21(float u, float v)
+double FZ21(double u, double v)
 {
     v = 0;
     return 3 * sin(u) + v;
 }
 
-float FX31(float u, float v)
+double FX31(double u, double v)
 {
     return (3 + 3 * cos(u)) * cos(v);
 }
 
-float FY31(float u, float v)
+double FY31(double u, double v)
 {
   return (3 + 3 * cos(u)) * sin(v);
 }
 
-float FZ31(float u, float v)
+double FZ31(double u, double v)
 {
     v = 0;
     return 3 * sin(u) + v;
 }
 
-float FX41(float u, float v)
+double FX41(double u, double v)
 {
     v = 0;
     return u + v;
 }
 
-float FY41(float u, float v)
+double FY41(double u, double v)
 {
     u = 0;
     return v + u;
 }
 
-float FZ41(float u, float v)
+double FZ41(double u, double v)
 {
     return u * u - v * v;
 }
 
 void familleDesCourbesEnU()
 {
-    float x, y, z;
+    double x, y, z;
     u = udebut;
 
     while (u <= ufin)
@@ -938,7 +938,7 @@ void familleDesCourbesEnU()
 
 void familleDesCourbesEnV()
 {
-    float x, y, z;
+    double x, y, z;
     v = vdebut;
 
     while (v <= vfin)
@@ -1094,7 +1094,7 @@ void initParameter41()
 void initDiverses()
 {
     int32_t i;
-    float aux;
+    double aux;
 
     incx = (gx2 - gx1) / points;
     incy = (gy2 - gy1) / lines;
@@ -1117,7 +1117,7 @@ void initDiverses()
 void rechercheFenetre()
 {
     int32_t i, j;
-    float x, y, z;
+    double x, y, z;
      
     for (i = 0; i < lines; i++)
     {
@@ -1205,7 +1205,7 @@ void inter(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t *taux, int32_
 
 void dessinefonction()
 {
-    float x, y, z;
+    double x, y, z;
 
     int32_t xi, yi, i, j;
     int32_t xprec, yprec, xcour, ycour;
@@ -1609,8 +1609,8 @@ int main(int argc, const char* argv[])
     RGB 	pal1[256] = {0};
     RGB 	pal2[256] = {0};
 
-    float ratio = 0.0;
-    float rept = 0.0;
+    double ratio = 0.0;
+    double rept = 0.0;
 
     int32_t i, j, a = 70, b = 20;
     int32_t introy = 0, msgy = 20;
