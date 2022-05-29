@@ -874,7 +874,7 @@ int main()
     getImage(0, 0, lfbWidth, lfbHeight, &scr);
     runBumpImage();
     newImage(lfbWidth, lfbHeight, &old);
-    newImage(centerX, centerY, &im);
+    newImage(lfbWidth >> 1, lfbHeight >> 1, &im);
     getImage(0, 0, lfbWidth, lfbHeight, &old);
     scaleImage(&im, &old, 0);
     putImage(0, 0, &scr);
