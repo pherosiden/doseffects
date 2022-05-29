@@ -779,7 +779,7 @@ int main()
     writeString(xc + tx, 250, sbuff, gray127, 2);
     sprintf(sbuff, "Available memory: %u KB", meminfo.NumPhysicalPagesFree << 2);
     writeString(xc + tx, 260, sbuff, gray127, 2);
-    if (cpuSpeed < 10 || !(haveMMX && have3DNow))
+    if (cpuSpeed < 100 || (!haveMMX && !have3DNow))
     {
         writeString(xc + tx, 290, "WARNING: Your machine is very slow! this", redcol, 2);
         writeString(xc + tx, 300, "mean some features of GFXLIB maybe not", redcol, 2);
