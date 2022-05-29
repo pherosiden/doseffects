@@ -2168,8 +2168,6 @@ void putPixelBob(int32_t x, int32_t y)
 // Get pixel functions
 uint32_t getPixel8(int32_t x, int32_t y)
 {
-    uint8_t col = 0;
-
     if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return 0;
 
     __asm {
@@ -2179,16 +2177,13 @@ uint32_t getPixel8(int32_t x, int32_t y)
         add     eax, x
         mov     esi, lfbPtr
         add     esi, eax
+        xor     eax, eax
         lodsb
-        mov     col, al
     }
-    return col;
 }
 
 uint32_t getPixel16(int32_t x, int32_t y)
 {
-    uint16_t col = 0;
-
     if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return 0;
 
     __asm {
@@ -2199,10 +2194,9 @@ uint32_t getPixel16(int32_t x, int32_t y)
         shl     eax, 1
         mov     esi, lfbPtr
         add     esi, eax
+        xor     eax, eax
         lodsw
-        mov     col, ax
     }
-    return col;
 }
 
 uint32_t getPixel24(int32_t x, int32_t y)
@@ -2226,13 +2220,12 @@ uint32_t getPixel24(int32_t x, int32_t y)
         lodsb
         mov     byte ptr [col + 2], al
     }
+
     return col;
 }
 
 uint32_t getPixel32(int32_t x, int32_t y)
 {
-    uint32_t col = 0;
-
     if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return 0;
 
     __asm {
@@ -2243,10 +2236,9 @@ uint32_t getPixel32(int32_t x, int32_t y)
         shl     eax, 2
         mov     esi, lfbPtr
         add     esi, eax
+        xor     eax, eax
         lodsd
-        mov     col, eax
     }
-    return col;
 }
 
 // Put pixel add with destination
