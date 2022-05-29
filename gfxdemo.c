@@ -12,17 +12,23 @@
 #include "gfxlib.c"
 #include <graph.h>
 
-// String buffer
-typedef char STRBUFF[80];
+//max message lines
+#define MAX_TEXT_LINE   23
 
-// Show text intro message
+//max message lenght
+#define MAX_MSG_LEN     80
+
+// string buffer
+typedef char STRBUFF[MAX_MSG_LEN];
+
+// show text intro message
 int32_t fullSpeed = 0;
-STRBUFF texts[17] = {0};
+STRBUFF texts[MAX_TEXT_LINE] = {0};
 
+GFX_IMAGE flares[16] = {0};
+GFX_IMAGE bg, txt, scr, old, im;
 GFX_IMAGE fade1, fade2, flare;
 GFX_IMAGE bump1, bump2, logo, sky;
-GFX_IMAGE bg, tx, scr, old, im;
-GFX_IMAGE flares[16] = {0};
 
 // inline optimize for multiple call
 inline int32_t sqr(int32_t x)
@@ -58,12 +64,14 @@ void runExit()
     freeImage(&logo);
     freeImage(&sky);
     freeImage(&bg);
-    freeImage(&tx);
+    freeImage(&txt);
     freeImage(&scr);
     freeImage(&old);
     freeImage(&im);
     for (i = 0; i < 16; i++) freeImage(&flares[i]);
     closeVesaMode();
+
+    // print intro message
     printf("+-----------------------------------------------------+\n");
     printf("|    GFXLIB demo (c) 1998 - 2002 by Nguyen Ngoc Van   |\n");
     printf("|        Full support 8/15/16/24/32 bits color        |\n");
@@ -88,14 +96,14 @@ void showText(int32_t sx, int32_t sy, GFX_IMAGE *img, char *str)
     // make scrolling text
     col = fromRGB(127, 127, 127);
     memcpy(texts[0], texts[1], sizeof(texts) - sizeof(texts[0]));
-    strcpy(texts[16], str);
+    strcpy(texts[MAX_TEXT_LINE - 1], str);
 
     // don't delay each character
     if (fullSpeed)
     {
         waitRetrace();
         putImage(sx, sy, img);
-        for (i = 0; i < 17; i++) writeString(sx + 10, sy + 10 + i * 10, texts[i], col, 2);
+        for (i = 0; i < MAX_TEXT_LINE; i++) writeString(sx + 10, sy + 10 + i * 10, texts[i], col, 2);
         keyPressed(27);
     }
     else
@@ -106,7 +114,7 @@ void showText(int32_t sx, int32_t sy, GFX_IMAGE *img, char *str)
             // fill original background
             waitRetrace();
             putImage(sx, sy, img);
-            for (i = 0; i < 16; i++) writeString(sx + 10, sy + 10 + i * 10 + y, texts[i], col, 2);
+            for (i = 0; i < MAX_TEXT_LINE - 1; i++) writeString(sx + 10, sy + 10 + i * 10 + y, texts[i], col, 2);
         }
 
         x = 0;
@@ -117,7 +125,7 @@ void showText(int32_t sx, int32_t sy, GFX_IMAGE *img, char *str)
         for (i = 0; i < len; i++)
         {
             msg[0] = str[i];
-            writeString(sx + 10 + x, sy + 10 + 160, msg, col, 2);
+            writeString(sx + 10 + x, sy + 10 + 220, msg, col, 2);
             x += getFontWidth(msg);
 
             // check for delay and skip
@@ -303,8 +311,8 @@ void runScaleUpImage(int32_t sx, int32_t sy)
     int32_t i, *tables = NULL;
 
     // initialize buffer
-    if (!newImage(320, 240, &im1)) fatalError("runScaleUpImage: cannot open image.\n");
-    if (!newImage(320, 240, &im2)) fatalError("runScaleUpImage: cannot open image.\n");
+    if (!newImage(lfbWidth >> 1, lfbHeight >> 1, &im1)) fatalError("runScaleUpImage: cannot open image.\n");
+    if (!newImage(lfbWidth >> 1, lfbHeight >> 1, &im2)) fatalError("runScaleUpImage: cannot open image.\n");
     if (!loadImage("assets/gfxspr.png", &im3)) fatalError("runScaleUpImage: cannot open PNG file.\n");
 
     // setup lookup table
@@ -316,8 +324,8 @@ void runScaleUpImage(int32_t sx, int32_t sy)
         changeDrawBuffer(im1.mData, im1.mWidth, im1.mHeight);
 
         // put some random pixel and GFX message
-        for (i = 0; i < 200; i++) putPixel(random(im1.mWidth - 4) + 2, random(im1.mHeight - 4) + 2, fromRGB(0, 255, 200));
-        if (random(128) == 64) putImageAlpha((im1.mWidth - im3.mWidth) >> 1, (im1.mHeight - im3.mHeight) >> 1, &im3);
+        for (i = 0; i < 400; i++) putPixel(random(im1.mWidth - 4) + 2, random(im1.mHeight - 4) + 2, fromRGB(0, 255, 200));
+        if (random(64) == 32) putImageAlpha((im1.mWidth - im3.mWidth) >> 1, (im1.mHeight - im3.mHeight) >> 1, &im3);
 
         // blur & scale buffer
         blurImage(&im1);
@@ -390,7 +398,7 @@ void runAddImage(int32_t sx, int32_t sy)
         restoreDrawBuffer();
         waitRetrace();
         putImage(sx, sy, &img);
-    } while (pos != 0 && !keyPressed(27));
+    } while (pos > 0 && !keyPressed(27));
 }
 
 void runRotateImage(int32_t sx, int32_t sy)
@@ -403,7 +411,7 @@ void runRotateImage(int32_t sx, int32_t sy)
     if (!newImage(fade2.mWidth, fade2.mHeight, &im)) fatalError("runRotateImage: cannot open image.\n");
 
     // pre-calculate lookup table
-    tables = (int32_t*)calloc(2 * fade2.mWidth + fade2.mHeight, sizeof(int32_t) + 2 * sizeof(int32_t));
+    tables = (int32_t*)calloc(2 * fade2.mWidth + fade2.mHeight + 2, sizeof(int32_t));
     if (!tables) fatalError("rotateImage: cannot alloc lookup tables.\n");
 
     do {
@@ -451,12 +459,16 @@ void runBilinearRotateImage(int32_t sx, int32_t sy)
 
 void runAntialias(int32_t sx, int32_t sy)
 {
-    GFX_IMAGE img, dst;
     uint32_t i, col;
+    GFX_IMAGE img, dst;
+
+    //save current midx, midy
+    const int32_t midx = lfbWidth >> 1;
+    const int32_t midy = lfbHeight >> 1;
 
     // initialize image buffer
-    if (!newImage(320, 240, &img)) fatalError("runAntialias: cannot allocate image.\n");
-    if (!newImage(320, 240, &dst)) fatalError("runAntialias: cannot allocate image.\n");
+    if (!newImage(midx, midy, &img)) fatalError("runAntialias: cannot allocate image.\n");
+    if (!newImage(midx, midy, &dst)) fatalError("runAntialias: cannot allocate image.\n");
 
     do {
         // redirect render to image buffer
@@ -471,9 +483,9 @@ void runAntialias(int32_t sx, int32_t sy)
             // which shape to be drawed
             switch (random(3))
             {
-            case 0: drawLineAlpha(random(320), random(240), random(320), random(240), col); break;
-            case 1: drawCircleAlpha(random(320), random(240), random(320) >> 2, col); break;
-            case 2: drawEllipseAlpha(random(320), random(240), random(320), random(240), col); break;
+            case 0: drawLineAlpha(random(midx), random(midy), random(midx), random(midy), col); break;
+            case 1: drawCircleAlpha(random(midx), random(midy), random(midx) >> 2, col); break;
+            case 2: drawEllipseAlpha(random(midx), random(midy), random(midx), random(midy), col); break;
             }
         }
 
@@ -561,8 +573,8 @@ void runBumpImage()
 
     do {
         // calculate position
-        lx = cos(cnt / 13.0) * 133 + 320;
-        ly = sin(cnt / 23.0) * 133 + 240;
+        lx = cos(cnt / 13.0) * 133 + centerX;
+        ly = sin(cnt / 23.0) * 133 + centerY;
 
         // start bumping buffer
         bumpImage(&dst, &bump1, &bump2, lx, ly);
@@ -580,10 +592,10 @@ void runBumpImage()
 
 void runPlasmaScale(int32_t sx, int32_t sy)
 {
-    uint8_t *data;
+    uint8_t *data = NULL;
     GFX_IMAGE plasma, screen;
 
-    uint8_t sinx[256];
+    uint8_t sinx[256] = {0};
     uint32_t frames, tectr, ofs, y;
     uint16_t x1, x2, x3, y1, y2, y3;
     uint16_t cr, cg, cb, endx, a, b, c;
@@ -592,8 +604,8 @@ void runPlasmaScale(int32_t sx, int32_t sy)
 
     // initialized lookup table and preload image
     for (y = 0; y < 256; y++) sinx[y] = sin(y * M_PI / 128) * 127 + 128;
-    if (!newImage(160, 120, &plasma)) fatalError("Cannot open image plasma.\n");; 
-    if (!newImage(320, 240, &screen)) fatalError("Cannot open image screen.\n");; 
+    if (!newImage(lfbWidth >> 2, lfbHeight >> 2, &plasma)) fatalError("Cannot open image plasma.\n");; 
+    if (!newImage(lfbWidth >> 1, lfbHeight >> 1, &screen)) fatalError("Cannot open image screen.\n");; 
 
     frames  = 0;
     endx    = plasma.mWidth >> 1;
@@ -695,6 +707,7 @@ int main()
 {
     int32_t i, xc, yc;
     char sbuff[80] = {0};
+    const int32_t tx = 10;
 
     VBE_DRIVER_INFO	drv;
     uint32_t gray32, gray64, gray127, redcol;
@@ -704,7 +717,7 @@ int main()
     initGfxLib(1, runExit);
 
     if (!loadFont("assets/sysfont.xfn", 0)) fatalError("Cannot load system font!\n");
-    if (!loadImage("assets/gfxbg0.png", &bg)) fatalError("Cannot load image:gfxbg0.png!\n");
+    if (!loadImage("assets/gfxbg5.png", &bg)) fatalError("Cannot load image:gfxbg0.png!\n");
     if (!loadImage("assets/gfxbump0.png", &bump1)) fatalError("Cannot load image:gfxbump0.png!\n");
     if (!loadImage("assets/gfxbump1.png", &bump2)) fatalError("Cannot load image:gfxbump1.png!\n");
     if (!loadImage("assets/gfxlogos.png", &logo)) fatalError("Cannot load image:gfxlogos.png!\n");
@@ -717,11 +730,11 @@ int main()
     memset(&drv, 0, sizeof(VBE_DRIVER_INFO));
     getVesaDriverInfo(&drv);
 
-    if (!setVesaMode(640, 480, 32, 85)) fatalError("Cannot init graphic mode.\n");
+    if (!setVesaMode(800, 600, 32, 0)) fatalError("Cannot init graphic mode.\n");
 
     runIntro();
     putImage(0, 0, &bg);
-    putImageAlpha(cmaxX - logo.mWidth, 0, &logo);
+    putImageAlpha(lfbWidth - logo.mWidth, lfbHeight - logo.mHeight, &logo);
 
     xc = centerX + 40;
     yc = centerY + 40;
@@ -730,164 +743,149 @@ int main()
     gray127 = fromRGB(127, 127, 127);
     redcol = fromRGB(192, 0, 0);
 
-    fillRectPatternAdd(10, 10, xc - 10, yc - 10, gray32, ptnHatchX);
-    fillRectSub(10, yc, xc - 10, yc + 190, gray64);
+    fillRectPatternAdd(tx, tx, xc - 10, yc - 10, gray32, ptnHatchX);
     fillRect(20, 20, xc - 20, yc - 20, 0);
+    fillRectSub(tx, yc, xc - 10, cmaxY - 10, gray64);
+        
+    newImage(xc - 10, cmaxY - 10, &txt);
+    getImage(tx, yc, xc - 10, cmaxY - 10, &txt);
     
-    newImage(xc - 20, 190, &tx);
-    getImage(10, yc, xc - 20, 190, &tx);
-    
-    writeString(xc + 6, 70, "GFXLIB v1.1.WC", gray127, 2);
-    writeString(xc + 6, 90, "A short show of some abilities", gray127, 2);
-    writeString(xc + 6, 100, "GFXLIB does provide. Note that", gray127, 2);
-    writeString(xc + 6, 110, "this is only a small amount of", gray127, 2);
-    writeString(xc + 6, 120, "all available features.", gray127, 2);
+    writeString(xc + tx, 70, "GFXLIB v1.2.WC", gray127, 2);
+    writeString(xc + tx, 90, "A short show of some abilities", gray127, 2);
+    writeString(xc + tx, 100, "GFXLIB does provide. Note that", gray127, 2);
+    writeString(xc + tx, 110, "this is only a small amount of", gray127, 2);
+    writeString(xc + tx, 120, "all available features.", gray127, 2);
     sprintf(sbuff, "Card    : %c%c%c%c %x.%x", drv.VBESignature[0], drv.VBESignature[1], drv.VBESignature[2], drv.VBESignature[3], drv.VBEVersion >> 8, drv.VBEVersion & 0xFF);
-    writeString(xc + 6, 140, sbuff, gray127, 2);
+    writeString(xc + tx, 140, sbuff, gray127, 2);
     sprintf(sbuff, "Memory  : %u KB", drv.TotalMemory << 6);
-    writeString(xc + 6, 150, sbuff, gray127, 2);
+    writeString(xc + tx, 150, sbuff, gray127, 2);
     sprintf(sbuff, "Provider: %s", drv.OEMStringPtr);
-    writeString(xc + 6, 160, sbuff, gray127, 2);
+    writeString(xc + tx, 160, sbuff, gray127, 2);
     sprintf(sbuff, "Version : %0.4X", drv.OemSoftwareRev);
-    writeString(xc + 6, 170, sbuff, gray127, 2);
+    writeString(xc + tx, 170, sbuff, gray127, 2);
     sprintf(sbuff, "Vendor  : %s", drv.OemVendorNamePtr);
-    writeString(xc + 6, 180, sbuff, gray127, 2);
+    writeString(xc + tx, 180, sbuff, gray127, 2);
     sprintf(sbuff, "Revision: %s", drv.OemProductRevPtr);
-    writeString(xc + 6, 190, sbuff, gray127, 2);
+    writeString(xc + tx, 190, sbuff, gray127, 2);
     sprintf(sbuff, "Mode    : %dx%dx%db", lfbWidth, lfbHeight, bitsPerPixel);
-    writeString(xc + 6, 200, sbuff, gray127, 2);
+    writeString(xc + tx, 200, sbuff, gray127, 2);
     sprintf(sbuff, "CPU manufacturer: %s", cpuVendor);
-    writeString(xc + 6, 220, sbuff, gray127, 2);
+    writeString(xc + tx, 220, sbuff, gray127, 2);
     sprintf(sbuff, "CPU features    : %s", cpuFeatures);
-    writeString(xc + 6, 230, sbuff, gray127, 2);
+    writeString(xc + tx, 230, sbuff, gray127, 2);
     sprintf(sbuff, "CPU clock rate  : %u MHz", cpuSpeed);
-    writeString(xc + 6, 240, sbuff, gray127, 2);
+    writeString(xc + tx, 240, sbuff, gray127, 2);
     sprintf(sbuff, "Total memory    : %u KB", meminfo.LargestBlockAvail >> 10);
-    writeString(xc + 6, 250, sbuff, gray127, 2);
+    writeString(xc + tx, 250, sbuff, gray127, 2);
     sprintf(sbuff, "Available memory: %u KB", meminfo.NumPhysicalPagesFree << 2);
-    writeString(xc + 6, 260, sbuff, gray127, 2);
-    if (cpuSpeed < 300 || !haveMMX || !haveSSE || !have3DNow)
+    writeString(xc + tx, 260, sbuff, gray127, 2);
+    if (cpuSpeed < 10 || !(haveMMX && have3DNow))
     {
-        writeString(xc + 6, 290, "WARNING: Your machine is very", redcol, 2);
-        writeString(xc + 6, 300, "slow! this mean some features", redcol, 2);
-        writeString(xc + 6, 310, "of GFXLIB maybe not works", redcol, 2);
-        writeString(xc + 6, 320, "as espectation. I hope you run", redcol, 2);
-        writeString(xc + 6, 330, "this demo on the faster machine!", redcol, 2);
+        writeString(xc + tx, 290, "WARNING: Your machine is very slow! this", redcol, 2);
+        writeString(xc + tx, 300, "mean some features of GFXLIB maybe not", redcol, 2);
+        writeString(xc + tx, 310, "works as espectation. I hope you run this", redcol, 2);
+        writeString(xc + tx, 320, "demo on the faster machine!", redcol, 2);
     }
     fullSpeed = 1;
-    showText(10, yc, &tx, "Please wait while loading images...");
+    showText(tx, yc, &txt, "Please wait while loading images...");
     if (!loadImage("assets/fade1x.png", &fade1)) fatalError("Cannot load image fade1x.png!\n");
-    showText(10, yc, &tx, " - fade1x.png");
+    showText(tx, yc, &txt, " - fade1x.png");
     if (!loadImage("assets/fade2x.png", &fade2)) fatalError("Cannot load image fade2x.png!\n");
-    showText(10, yc, &tx, " - fade2x.png");
+    showText(tx, yc, &txt, " - fade2x.png");
     if (!loadImage("assets/flare1x.png", &flare)) fatalError("Cannot load image flare1x.png!\n");
-    showText(10, yc, &tx, " - flare1x.png");
-    showText(10, yc, &tx, "");
+    showText(tx, yc, &txt, " - flare1x.png");
+    showText(tx, yc, &txt, "");
     fullSpeed = 0;
-    showText(10, yc, &tx, "This is an early demonstration of the");
-    showText(10, yc, &tx, "abilities of GFXLIB.");
-    showText(10, yc, &tx, "What you will see here are only some");
-    showText(10, yc, &tx, "of the image manipulating effects which");
-    showText(10, yc, &tx, "are currently built in. More to come");
-    showText(10, yc, &tx, "and shown...");
+    showText(tx, yc, &txt, "This is an early demonstration of the abilities of");
+    showText(tx, yc, &txt, "GFXLIB. What you'll see here are just a few of the");
+    showText(tx, yc, &txt, "image manipulation effects that are currently");
+    showText(tx, yc, &txt, "available. There will be more to show you later...");
+    showText(tx, yc, &txt, "Starting...");
     delay(1000);
-    showText(10, yc, &tx, "Starting...");
     runBlocking(20, 20);
     fullSpeed = 0;
-    showText(10, yc, &tx, "----");
-    showText(10, yc, &tx, "What you saw was a combination of the");
-    showText(10, yc, &tx, "command 'blockout' and the command");
-    showText(10, yc, &tx, "brightnessImage. The text is an");
-    showText(10, yc, &tx, "alphamapped image. You may see: working");
-    showText(10, yc, &tx, "with images got very easy in GFXLIB -");
-    showText(10, yc, &tx, "no half things anymore! To the next...");
-    showText(10, yc, &tx, "Press any key to continue...");
+    showText(tx, yc, &txt, "----");
+    showText(tx, yc, &txt, "What you saw was a combination of the command");
+    showText(tx, yc, &txt, "blockOut and the command brightnessImage. The text");
+    showText(tx, yc, &txt, "is an alpha mapped image. You may see that working");
+    showText(tx, yc, &txt, "with images has gotten very easy in GFXLIB-no");
+    showText(tx, yc, &txt, "half-things anymore! Press the enter key!");
     while(!keyPressed(27));
     runAddImage(20, 20);
     fullSpeed = 0;
-    showText(10, yc, &tx, "----");
-    showText(10, yc, &tx, "This was simply another flag of a draw");
-    showText(10, yc, &tx, "operation. It was used here to force");
-    showText(10, yc, &tx, "draw to add the content of the image to");
-    showText(10, yc, &tx, "the background of the image. You are also");
-    showText(10, yc, &tx, "able to subtract the image and to work");
-    showText(10, yc, &tx, "with an alphamap like PNG-image can");
-    showText(10, yc, &tx, "contain one. Press any key for the next");
+    showText(tx, yc, &txt, "----");
+    showText(tx, yc, &txt, "This was simply another flag of a draw-operation.");
+    showText(tx, yc, &txt, "It was used here to force draw to add the content");
+    showText(tx, yc, &txt, "of the image to the background of the image. You");
+    showText(tx, yc, &txt, "are also able to subtract the image and to work");
+    showText(tx, yc, &txt, "with an alpha map like PNG-images can contain one.");
+    showText(tx, yc, &txt, "The next effect - press enter...");
     while(!keyPressed(27));
     runCrossFade(20, 20);
     fullSpeed = 0;
-    showText(10, yc, &tx, "----");
-    showText(10, yc, &tx, "This thing is called cross-fading or");
-    showText(10, yc, &tx, "alpha-blending. In GFXLIB, the");
-    showText(10, yc, &tx, "procedure is called 'blendImage'. This");
-    showText(10, yc, &tx, "procedure makes of 2 images another,");
-    showText(10, yc, &tx, "where you can decide which image covers");
-    showText(10, yc, &tx, "covers more the other.");
-    showText(10, yc, &tx, "Press any key...");
+    showText(tx, yc, &txt, "----");
+    showText(tx, yc, &txt, "This thing is called crossFading or alphaBlending.");
+    showText(tx, yc, &txt, "In GFXLIB, the procedure is called blendImage.");
+    showText(tx, yc, &txt, "This procedure creates 2 images of one another,");
+    showText(tx, yc, &txt, "where you can decide which image covers more of");
+    showText(tx, yc, &txt, "the other. For the next, enter...");
     while(!keyPressed(27));
     runBilinearRotateImage(20, 20);
     fullSpeed = 0;
-    showText(10, yc, &tx, "----");
-    showText(10, yc, &tx, "This is an image rotation. The res-");
-    showText(10, yc, &tx, "ponsible routine for this is called");
-    showText(10, yc, &tx, "bilinearRotateImage. It doesn't seem");
-    showText(10, yc, &tx, "to be very fast here, but in this demo");
-    showText(10, yc, &tx, "the rotation is an optimize version of");
-    showText(10, yc, &tx, "bilinear image interpolation. You can");
-    showText(10, yc, &tx, "reach on a INTEL MMX-133 up to 20 fps");
-    showText(10, yc, &tx, "at 640x480x32. You can see another");
-    showText(10, yc, &tx, "version of rotate image is so fast if");
-    showText(10, yc, &tx, "only rotate and show image, check my");
-    showText(10, yc, &tx, "source code for details.");
-    showText(10, yc, &tx, "Press any key...");
+    showText(tx, yc, &txt, "----");
+    showText(tx, yc, &txt, "This is an image rotation. The responsible routine");
+    showText(tx, yc, &txt, "for this is called bilinearRotateImage. It doesn't");
+    showText(tx, yc, &txt, "seem to be very fast here, but in this demo the");
+    showText(tx, yc, &txt, "rotation is an optimize version of bilinear image");
+    showText(tx, yc, &txt, "interpolation. You can reach on a INTEL MMX-133 up");
+    showText(tx, yc, &txt, "to 20 fps at 800x600x32. You can see another ver-");
+    showText(tx, yc, &txt, "sion of rotate image is so fast if only rotate and");
+    showText(tx, yc, &txt, "show image, check my source code for details.");
+    showText(tx, yc, &txt, "Press any key...");
     while(!keyPressed(27));
     runScaleUpImage(20, 20);
     fullSpeed = 0;
-    showText(10, yc, &tx, "----");
-    showText(10, yc, &tx, "Much more fancy than the other FX...");
-    showText(10, yc, &tx, "Yea, you see two effects combined here.");
-    showText(10, yc, &tx, "scaleup and blur image are doing");
-    showText(10, yc, &tx, "their work here. Check the source code");
-    showText(10, yc, &tx, "to see the details. Press any key...");
+    showText(tx, yc, &txt, "----");
+    showText(tx, yc, &txt, "Much fancier than the other FX...Yeah, you see");
+    showText(tx, yc, &txt, "two effects combined here. Scales and blurred");
+    showText(tx, yc, &txt, "image are doing their work here. Check the source");
+    showText(tx, yc, &txt, "code to see the details. Press enter... ;)");
     while(!keyPressed(27));
     runAntialias(20, 20);
     fullSpeed = 0;
-    showText(10, yc, &tx, "----");
-    showText(10, yc, &tx, "Antialiased lines, circles and ellipses.");
-    showText(10, yc, &tx, "Possible with GFXLIB and also even faster");
-    showText(10, yc, &tx, "than seen here (just slow for show).");
-    showText(10, yc, &tx, "Perfect for 3D models and similar.");
-    showText(10, yc, &tx, "Press any key...");
+    showText(tx, yc, &txt, "----");
+    showText(tx, yc, &txt, "Anti-aliased lines, circles and ellipses. Possible");
+    showText(tx, yc, &txt, "with GFXLIB and also even faster than seen here");
+    showText(tx, yc, &txt, "(just slow for show). Ideal for 3D models and the");
+    showText(tx, yc, &txt, "like. Enter for the next...");
     while(!keyPressed(27));
     runPlasmaScale(20, 20);
     fullSpeed = 0;
-    showText(10, yc, &tx, "----");
-    showText(10, yc, &tx, "Plasma effect with hight color, this also");
-    showText(10, yc, &tx, "combine scale up image with bilinear");
-    showText(10, yc, &tx, "interpolation to process hight quality.");
-    showText(10, yc, &tx, "This version is optimized using integer");
-    showText(10, yc, &tx, "number but not really fast here.");
-    showText(10, yc, &tx, "Press any key...");
+    showText(tx, yc, &txt, "----");
+    showText(tx, yc, &txt, "Plasma effect with high colors. This also combines");
+    showText(tx, yc, &txt, "the scaled up image with bi-cubic interpolation to");
+    showText(tx, yc, &txt, "process the image with the best quality. This ver-");
+    showText(tx, yc, &txt, "sion is fully optimized by using a fixed number");
+    showText(tx, yc, &txt, "and MMX instructions to maximize speed (extremely");
+    showText(tx, yc, &txt, "fast). Enter for the next...");
     while(!keyPressed(27));
     fillRect(20, 20, xc - 20, yc - 20, 0);
     newImage(lfbWidth, lfbHeight, &scr);
     getImage(0, 0, lfbWidth, lfbHeight, &scr);
     runBumpImage();
     newImage(lfbWidth, lfbHeight, &old);
-    newImage(320, 240, &im);
+    newImage(centerX, centerY, &im);
     getImage(0, 0, lfbWidth, lfbHeight, &old);
     scaleImage(&im, &old, 0);
     putImage(0, 0, &scr);
     putImage(20, 20, &im);
     fullSpeed = 0;
-    showText(10, yc, &tx, "----");
-    showText(10, yc, &tx, "Bumbing effect with full screen, this");
-    showText(10, yc, &tx, "effect combined many images and use");
-    showText(10, yc, &tx, "subtract, adding pixel to calculate");
-    showText(10, yc, &tx, "render buffer. Scale down image using");
-    showText(10, yc, &tx, "Bresenham algorithm for faster speed");
-    showText(10, yc, &tx, "of image interpolation.");
-    showText(10, yc, &tx, "Any key for next...");
+    showText(tx, yc, &txt, "----");
+    showText(tx, yc, &txt, "2D bump mapping effect with full screen, this");
+    showText(tx, yc, &txt, "effect also combines many images and uses sub-");
+    showText(tx, yc, &txt, "tracting and adding pixels to calculate the render");
+    showText(tx, yc, &txt, "buffer. Scale the image using Bresenham algorithm");
+    showText(tx, yc, &txt, "for quick image interpolation. Enter for the next.");
     while(!keyPressed(27));
     runLens();
     getImage(0, 0, lfbWidth, lfbHeight, &old);
@@ -895,28 +893,26 @@ int main()
     putImage(0, 0, &scr);
     putImage(20, 20, &im);
     fullSpeed = 0;
-    showText(10, yc, &tx, "----");
-    showText(10, yc, &tx, "Yeah! Lens effect, this effect also");
-    showText(10, yc, &tx, "combined many images too and other");
-    showText(10, yc, &tx, "pixel manipulation such as substract,");
-    showText(10, yc, &tx, "adding for each render buffer. This");
-    showText(10, yc, &tx, "also use bilinear algorithm with hight");
-    showText(10, yc, &tx, "quality for scale down image. Use mouse");
-    showText(10, yc, &tx, "hardware interrupt to tracking event.");
-    showText(10, yc, &tx, "Any key to continue...");
+    showText(tx, yc, &txt, "----");
+    showText(tx, yc, &txt, "The lens flare effect, this effect is a simulation");
+    showText(tx, yc, &txt, "of the lens flare in photo shop. It's combined");
+    showText(tx, yc, &txt, "many images too, and other pixel manipulations");
+    showText(tx, yc, &txt, "such as subtracting and adding for each to the");
+    showText(tx, yc, &txt, "render buffer. This is also used for bi-cubic");
+    showText(tx, yc, &txt, "interpolation with the best quality for scale.");
+    showText(tx, yc, &txt, "Use hardware mouse tracking events. Enter...");
     while(!keyPressed(27));
     fullSpeed = 0;
-    showText(10, yc, &tx, "----");
-    showText(10, yc, &tx, "That's all folks! More to come soon.");
-    showText(10, yc, &tx, "In short time, that's enought. See");
-    showText(10, yc, &tx, "from my source code for another stuffs.");
-    showText(10, yc, &tx, "If there occured something which seems");
-    showText(10, yc, &tx, "to be a bug or any suggestion, please");
-    showText(10, yc, &tx, "contact me immediately. Thanks!");
-    showText(10, yc, &tx, "");
-    showText(10, yc, &tx, "Nguyen Ngoc Van -- pherosiden@gmail.com");
-    showText(10, yc, &tx, "");
-    showText(10, yc, &tx, "Any key to exit ;-)");
+    showText(tx, yc, &txt, "----");
+    showText(tx, yc, &txt, "That's all, folks! More to come soon. In a short");
+    showText(tx, yc, &txt, "time, that's enough. See my source code for other");
+    showText(tx, yc, &txt, "stuff. If there is something which seems to be a");
+    showText(tx, yc, &txt, "bug or any suggestion, please contact me at:");
+    showText(tx, yc, &txt, "http://codedemo.net. Many thanks!");
+    showText(tx, yc, &txt, "");
+    showText(tx, yc, &txt, "Nguyen Ngoc Van -- pherosiden@gmail.com");
+    showText(tx, yc, &txt, "");
+    showText(tx, yc, &txt, "Enter to exit ;-)");
     while(!keyPressed(27));
     closeFont(0);
     runExit();

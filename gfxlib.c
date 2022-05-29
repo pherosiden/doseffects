@@ -778,17 +778,10 @@ uint8_t     ptnWideDot[]        = {0x80, 0x00, 0x08, 0x00, 0x80, 0x00, 0x08, 0x0
 uint8_t     ptnCloseDot[]       = {0x88, 0x00, 0x22, 0x00, 0x88, 0x00, 0x22, 0x00};
 
 // Round up integer
-inline int32_t roundInt(double x)
+inline int32_t fround(double x)
 {
     if (x > 0.0) return x + 0.5;
     return x - 0.5;
-}
-
-// Round up to uint32_t
-inline uint32_t roundLong(double x)
-{
-    if (x > 0.0) return (uint32_t)(x + 0.5);
-    return (uint32_t)(x - 0.5);
 }
 
 // Generate random value from number
@@ -1618,6 +1611,12 @@ int32_t keyPressed(int32_t keyQuit)
     return key;
 }
 
+// Set handler when exit program
+void setQuitCallback(void (*fnQuit)())
+{
+    quitCallback = fnQuit;
+}
+
 // VESA 3.0, calculate CRTC timing using GTF formular
 void calcCrtcTimingGTF(VBE_CRTC_INFO_BLOCK *crtc, int32_t hpixels, int32_t vlines, int32_t freq, int32_t interlaced, int32_t margins)
 {
@@ -2032,7 +2031,7 @@ void changeViewPort(int32_t x1, int32_t y1, int32_t x2, int32_t y2)
     cmaxY = y2;
 
     //update buffer width and height
-    lfbWidth = cmaxX - cminX + 1;
+    lfbWidth = cmaxX - cminX + 1;   
     lfbHeight = cmaxY - cminY + 1;
 
     //update center x,y
@@ -13476,40 +13475,38 @@ void initPlasma(uint8_t *sint, uint8_t *cost)
     for (i = 127; i >= 0; i--) setRGB(i + 128, pal[i << 1].r, pal[i << 1].g, pal[i << 1].b);
 }
 
-void prepareTunnel(GFX_IMAGE *dimg, uint8_t *buf1, uint8_t *buf2)
+void prepareTunnel(GFX_IMAGE *dimg, uint8_t *buff1, uint8_t *buff2)
 {
-    const int32_t maxAng = 1024;
-    const float preCalc = M_PI / (maxAng >> 1);
+    const int32_t maxAng = 2048;
+    const double angDec = 0.85;
+    const double dstInc = 0.02;
+    const double preCalc = M_PI / (maxAng >> 2);
+
+    const int32_t dcx = dimg->mWidth >> 1;
+    const int32_t dcy = dimg->mHeight >> 1;
 
     int32_t x, y, ofs;
-    float ang, angDec;
-    float z, zdec;
-    float dst, dstInc;
-
-    zdec   = 0.7;
-    angDec = zdec;
-    z      = 207;
-    ang    = maxAng - 1;
-    dst    = 1;
-    dstInc = 0.02;
+    double z = 250.0;
+    double dst = 1.0;
+    double ang = maxAng - 1.0;
 
     do {
-        x = roundInt(z * sin(ang * preCalc)) + (dimg->mWidth >> 1);
-        y = roundInt(z * cos(ang * preCalc)) + (dimg->mHeight >> 1);
+        x = fround(z * sin(ang * preCalc)) + dcx;
+        y = fround(z * cos(ang * preCalc)) + dcy;
 
         ang -= angDec;
         if (ang < 0)
         {
             ang += maxAng;
             dst += dst * dstInc;
-            z   -= zdec;
+             z -= angDec;
         }
 
         if (x >= 0 && x < dimg->mWidth && y >= 0 && y < dimg->mHeight)
         {
             ofs = y * dimg->mWidth + x;
-            buf1[ofs] = roundInt(dst);
-            buf2[ofs] = roundInt(dst - ang / 4);
+            buff1[ofs] = fround(dst);
+            buff2[ofs] = fround(dst - ang / 4);
         }
     } while (z >= 0);
 }
@@ -13908,12 +13905,12 @@ void scaleUpImage(GFX_IMAGE *dst, GFX_IMAGE *src, int32_t *tables, int32_t xfact
     if (bytesPerPixel != 4) fatalError("scaleUpImage: only 32 bits supported.\n");
 
     // init lookup table
-    for (i = 0; i < src->mWidth; i++) tables[i] = roundInt(1.0 * i / (src->mWidth - 1) * ((src->mWidth - 1) - (xfact << 1))) + xfact;
+    for (i = 0; i < src->mWidth; i++) tables[i] = fround(1.0 * i / (src->mWidth - 1) * ((src->mWidth - 1) - (xfact << 1))) + xfact;
 
     // scaleup line by line
     for (i = 0; i < src->mHeight; i++)
     {
-        y = roundInt(1.0 * i / (src->mHeight - 1) * ((src->mHeight - 1) - (yfact << 1))) + yfact;
+        y = fround(1.0 * i / (src->mHeight - 1) * ((src->mHeight - 1) - (yfact << 1))) + yfact;
         scaleUpLine(pdst, src->mData, tables, src->mWidth, y * src->mRowBytes);
         pdst += dst->mWidth;
     }
@@ -14214,16 +14211,23 @@ void bumpImage(GFX_IMAGE *dst, GFX_IMAGE *src1, GFX_IMAGE *src2, int32_t lx, int
     void *src2data = src2->mData;
     void *dstdata  = dst->mData;
 
+    const int32_t bmax = 260;
+    const int32_t xstart = 50, ystart = 50;
+    const int32_t endx = lfbWidth - xstart;
+    const int32_t endy = lfbHeight - ystart;
+
     int32_t src1width = src1->mWidth;
     int32_t src2width = src2->mWidth;
     int32_t dstwidth  = dst->mWidth;
     int32_t src1len   = src1->mRowBytes;
     
+    int32_t nx = 0, ny = 0, vlx = 0, vly = 0;
     int32_t x = 0, y = 0, osrc2 = 0, osrc1 = 0, odst = 0;
-    int32_t nx = 0, ny = 0, vlx = 0, vly = 0, bmax = 260;
+        
     
     __asm {
-        mov     y, 120
+        mov     eax, ystart
+        mov     y, eax
     starty:
         mov     ebx, y
         mov     eax, src1width
@@ -14241,7 +14245,8 @@ void bumpImage(GFX_IMAGE *dst, GFX_IMAGE *src1, GFX_IMAGE *src2, int32_t lx, int
         add     eax, 99
         shl     eax, 2
         mov     odst, eax
-        mov     x, 100
+        mov     eax, xstart
+        mov     x, eax
     startx:
         mov     eax, x
         sub     eax, lx
@@ -14347,12 +14352,12 @@ void bumpImage(GFX_IMAGE *dst, GFX_IMAGE *src1, GFX_IMAGE *src2, int32_t lx, int
         mov     [edi + 2], al
     stop:
         inc     x
-        mov     eax, x
-        cmp     eax, 510
+        mov     eax, endx
+        cmp     x, eax
         jna     startx
         inc     y
-        mov     eax, y
-        cmp     eax, 350
+        mov     eax, endy
+        cmp     y, eax
         jna     starty
     }
 }
