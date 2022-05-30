@@ -503,17 +503,18 @@ void runAntialias(int32_t sx, int32_t sy)
     freeImage(&dst);
 }
 
-void runLens()
+void runLensFlare()
 {
     GFX_IMAGE scr;
     int32_t tx, ty, x, y, i;
+    uint64_t time = 0, oldTime = 0;
     const int32_t flareput[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
     const int32_t flarepos[16] = {-1110, -666, 0, 1087, 1221, 1309, 1776, 2197, 2819, 3130, 3220, 3263, 3663, 3707, 4440, 5125};
     const char *str = "Drag your mouse to see details and left click to exit!";
 
     // initialize mouse driver and load source image
-    if (!initMouse()) fatalError("runLens: cannot init mouse.\n");
-    if (!newImage(lfbWidth, lfbHeight, &scr)) fatalError("runLens: cannot open image.\n");
+    if (!initMouse()) fatalError("runLensFlare: cannot init mouse.\n");
+    if (!newImage(lfbWidth, lfbHeight, &scr)) fatalError("runLensFlare: cannot open image.\n");
 
     // install new mouse interrupt
     installMouseHandler();
@@ -530,6 +531,10 @@ void runLens()
     ty = scr.mHeight - getFontHeight(str) - 2;
 
     do {
+        //timing for FPS counter
+        oldTime = time;
+        time = getCurrentTime();
+
         // redirect render to image buffer
         changeDrawBuffer(scr.mData, scr.mWidth, scr.mHeight);
         putImage(0, 0, &sky);
@@ -549,13 +554,15 @@ void runLens()
         }
 
         // put logo and draw text message
-        putImageAlpha(lfbWidth - logo.mWidth, lfbHeight - logo.mHeight, &logo);
-        drawTextImage(tx, ty, str, fromRGB(255, 255, 255), &scr);
+        putImageAlpha(lfbWidth - logo.mWidth, 1, &logo);
+        drawTextImage(tx, ty, fromRGB(255, 255, 255), &scr, str);
+        drawTextImage(1, 1, fromRGB(255, 255, 255), &scr, "FPS:%.2f", 1.0 / (ticksToMicroSec(time - oldTime) / 1000000.0));
 
         // restore render buffer to screen buffer
         restoreDrawBuffer();
         waitRetrace();
         putImage(0, 0, &scr);
+        
     } while (!keyPressed(27) && !mcd.mbx);
 
     // cleanup...
@@ -742,7 +749,7 @@ int main()
 
     fillRectPatternAdd(tx, tx, xc - 10, yc - 10, gray32, ptnHatchX);
     fillRect(20, 20, xc - 20, yc - 20, 0);
-    fillRectSub(tx, yc, xc - 10, cmaxY - 10, gray64);
+    fillRectSub(tx, yc, xc - 10, cmaxY - 10, gray32);
         
     newImage(xc - 10, cmaxY - 10, &txt);
     getImage(tx, yc, xc - 10, cmaxY - 10, &txt);
@@ -884,7 +891,7 @@ int main()
     showText(tx, yc, &txt, "buffer. Scale the image using Bresenham algorithm");
     showText(tx, yc, &txt, "for quick image interpolation. Enter for the next.");
     while(!keyPressed(27));
-    runLens();
+    runLensFlare();
     getImage(0, 0, lfbWidth, lfbHeight, &old);
     bilinearScaleImage(&im, &old);
     putImage(0, 0, &scr);

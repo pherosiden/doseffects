@@ -27,6 +27,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <float.h>
 
 // Enable MMX features
 #define _USE_MMX
@@ -1233,8 +1234,6 @@ void delay(uint32_t ms)
 // DPMI alloc DOS memory block
 uint32_t allocDosSegment(uint32_t pageSize)
 {
-    uint32_t value = 0;
-
     __asm {
         mov     ebx, pageSize
         cmp     ebx, 65535
@@ -1251,10 +1250,7 @@ uint32_t allocDosSegment(uint32_t pageSize)
     error:
         xor     eax, eax
     quit:
-        mov     value, eax
-    }     
-
-    return value;
+    }
 }
 
 // DPMI free DOS memory block
@@ -1275,8 +1271,6 @@ void freeDosSegment(uint32_t *selSegment)
 // Simulation real mode interrupt
 int32_t simRealModeInt(uint8_t num, RM_REGS *rmRegs)
 {
-    int32_t value = 0;
-
     __asm {
         xor     ebx, ebx
         mov     bl, num
@@ -1290,17 +1284,12 @@ int32_t simRealModeInt(uint8_t num, RM_REGS *rmRegs)
     error:
         xor     eax, eax
     quit:
-        mov     value, eax
     }
-
-    return value;
 }
 
 // DPMI alloc selector
 uint16_t allocSelector()
 {
-    uint16_t value = 0;
-
     __asm {
         xor     eax, eax
         mov     ecx, 1
@@ -1308,10 +1297,7 @@ uint16_t allocSelector()
         jnc     quit
         xor     ax, ax
     quit:
-        mov     value, ax
     }
-
-    return value;
 }
 
 // DPMI free selector
@@ -1329,8 +1315,6 @@ void freeSelector(uint16_t *sel)
 // DPMI set selector access rights
 int32_t setSelectorRights(uint16_t sel, uint16_t accRights)
 {
-    int32_t value = 0;
-
     __asm {
         mov     bx, sel
         mov     cx, accRights
@@ -1342,17 +1326,12 @@ int32_t setSelectorRights(uint16_t sel, uint16_t accRights)
     error:
         xor     eax, eax
     quit:
-        mov     value, eax
     }
-
-    return value;
 }
 
 // DPMI set selector base
 int32_t setSelectorBase(uint16_t sel, uint32_t linearAddr)
 {
-    int32_t value = 0;
-
     __asm {
         mov     bx, sel
         mov     ecx, linearAddr
@@ -1367,17 +1346,12 @@ int32_t setSelectorBase(uint16_t sel, uint32_t linearAddr)
     error:
         xor     eax, eax
     quit:
-        mov     value, eax
     }
-
-    return value;
 }
 
 // DPMI set selector limit
 int32_t setSelectorLimit(uint16_t sel, uint32_t selLimit)
 {
-    int32_t value = 0;
-
     __asm {
         mov     bx, sel
         mov     ecx, selLimit
@@ -1392,17 +1366,12 @@ int32_t setSelectorLimit(uint16_t sel, uint32_t selLimit)
     error:
         xor     eax, eax
     quit:
-        mov     value, eax
     }
-
-    return value;
 }
 
 // DPMI map real address to linear address
 uint32_t mapPhysicalAddress(uint32_t physAddr, uint32_t len)
 {
-    uint32_t value = 0;
-
     __asm {
         mov     ebx, physAddr
         mov     esi, len
@@ -1423,10 +1392,7 @@ uint32_t mapPhysicalAddress(uint32_t physAddr, uint32_t len)
     error:
         xor     eax, eax
     quit:
-        mov     value, eax
     }
-
-    return value;
 }
 
 // DPMI free linear address
@@ -1445,8 +1411,6 @@ void freePhysicalAddress(uint32_t* linearAddr)
 // Convert real pointer to linear pointer
 uint32_t mapRealPointer(uint32_t rmSegOfs)
 {
-    uint32_t value = 0;
-
     __asm {
         mov     eax, rmSegOfs
         mov     edx, eax
@@ -1454,10 +1418,7 @@ uint32_t mapRealPointer(uint32_t rmSegOfs)
         and     edx, 0000FFFFh
         shr     eax, 12
         add     eax, edx
-        mov     value, eax
     }
-
-    return value;
 }
 
 // Get VESA driver info
@@ -10205,10 +10166,10 @@ void bilinearRotateImage(const GFX_IMAGE* dst, const GFX_IMAGE* src, const doubl
     const int32_t dstw = dst->mWidth;
     const int32_t dsth = dst->mHeight;
     
-    const int32_t ax = (rscalex * cosi);
-    const int32_t ay = (rscalex * sini);
-    const int32_t bx = (-rscaley * sini);
-    const int32_t by = (rscaley * cosi);
+    const int32_t ax = rscalex * cosi;
+    const int32_t ay = rscalex * sini;
+    const int32_t bx = -rscaley * sini;
+    const int32_t by = rscaley * cosi;
 
     const int32_t dcx = dstw >> 1;
     const int32_t dcy = dsth >> 1;
@@ -10261,6 +10222,7 @@ void bilinearScaleImage(const GFX_IMAGE* dst, const GFX_IMAGE* src)
     int32_t srcx, srcy, x, y;
     int32_t startx, starty, endx, endy;
     uint32_t* pdst = (uint32_t*)dst->mData;
+
     const int32_t srcw = src->mWidth;
     const int32_t srch = src->mHeight;
     const int32_t dstw = dst->mWidth;
@@ -13554,7 +13516,7 @@ void prepareTunnel(GFX_IMAGE *dimg, uint8_t *buff1, uint8_t *buff2)
         {
             ang += maxAng;
             dst += dst * dstInc;
-             z -= angDec;
+            z -= angDec;
         }
 
         if (x >= 0 && x < dimg->mWidth && y >= 0 && y < dimg->mHeight)
@@ -13566,9 +13528,9 @@ void prepareTunnel(GFX_IMAGE *dimg, uint8_t *buff1, uint8_t *buff2)
     } while (z >= 0);
 }
 
-void drawTunnel(GFX_IMAGE *dimg, GFX_IMAGE *simg, uint8_t *buf1, uint8_t *buf2, uint8_t *mov, uint8_t step)
+void drawTunnel(GFX_IMAGE *dimg, GFX_IMAGE *simg, uint8_t *buff1, uint8_t *buff2, uint8_t *mov, uint8_t step)
 {
-    uint8_t val;
+    uint8_t val = 0;
     uint32_t size = dimg->mSize >> 2;
     uint32_t *dst = (uint32_t*)dimg->mData;
     uint32_t *src = (uint32_t*)simg->mData;
@@ -13578,8 +13540,8 @@ void drawTunnel(GFX_IMAGE *dimg, GFX_IMAGE *simg, uint8_t *buf1, uint8_t *buf2, 
     *mov += step;
     while (size--)
     {
-        val = *buf1++ + *mov;
-        *dst++ = *(src + ((val << 8) | *buf2++));
+        val = *buff1++ + *mov;
+        *dst++ = *(src + ((val << 8) | *buff2++));
     }
 }
 
@@ -14154,7 +14116,7 @@ void blendImage(GFX_IMAGE *dst, GFX_IMAGE *src1, GFX_IMAGE *src2, uint8_t cover)
 #endif
 }
 
-void rotateLine(uint8_t *dst, uint8_t *src, uint8_t *tables, int32_t width, int32_t siny, int32_t cosy)
+void rotateLine(uint32_t *dst, uint32_t *src, int32_t *tables, int32_t width, int32_t siny, int32_t cosy)
 {
     int32_t pos = (width + 1) << 3;
 
@@ -14253,7 +14215,7 @@ void rotateImage(GFX_IMAGE *dst, GFX_IMAGE *src, int32_t *tables, int32_t axisx,
     // process rotate line by line
     for (y = 0; y < dst->mHeight; y++)
     {
-        rotateLine((uint8_t*)pdst, (uint8_t*)psrc, (uint8_t*)tables, dst->mWidth, siny, cosy);
+        rotateLine(pdst, psrc, tables, dst->mWidth, siny, cosy);
         pdst += dst->mWidth;
         siny -= sint;
         cosy -= cost;
@@ -14445,6 +14407,7 @@ void projette(double x, double y, double z)
     if (projection == PERSPECTIVE)
     {
         zobs = -x * aux7 - y * aux8 - z * aux2 + rho;
+        if (zobs == 0.0) zobs = DBL_MIN;
         xproj = de * xobs / zobs;
         yproj = de * yobs / zobs;
     }
@@ -15193,17 +15156,25 @@ int32_t drawText(int32_t ypos, const char **str, int32_t size)
 }
 
 // draw text into image buffer
-void drawTextImage(int32_t x, int32_t y, const char *str, uint32_t col, GFX_IMAGE *img)
+void drawTextImage(int32_t x, int32_t y, uint32_t col, GFX_IMAGE *img, const char *format, ...)
 {
+    va_list args;
+    char buffer[1024] = { 0 };
+
     // save current screen address
     uint8_t *oldPtr = lfbPtr;
 
     // check for font loaded
     if (!gfxFonts[fontType].dataPtr) return;
 
+    // parse arguments
+    va_start(args, format);
+    vsprintf(buffer, format, args);
+    va_end(args);
+
     // change screen address to image buffer
     lfbPtr = img->mData;
-    writeString(x, y, str, col, 2);
+    writeString(x, y, buffer, col, 2);
 
     // must be restored after draw
     lfbPtr = oldPtr;

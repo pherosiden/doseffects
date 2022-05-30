@@ -11,7 +11,6 @@
 
 #include "gfxlib.c"
 #include <graph.h>
-#include <float.h>
 
 // CHR font information
 #define CHR_WIDTH   8   // character width
