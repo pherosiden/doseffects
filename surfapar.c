@@ -242,14 +242,14 @@ void quitMessage()
 
 int main()
 {
-    RGB Pal[256] = {0};
+    RGB pal[256] = {0};
 
-    initGfxLib(1, quitMessage);
     if (!setVesaMode(800, 600, 8, 85)) return 0;
     if (!loadFont("assets/sys8x16.xfn", 0)) return 0;
     if (!loadFont("assets/trip.xfn", 1)) return 0; 
 
-    getPalette(Pal);
+    setQuitCallback(quitMessage);
+    getPalette(pal);
     setBlackPalette();
     
     FX = FX1;
@@ -262,7 +262,7 @@ int main()
     familleDesCourbesEnV();
     affichage(14);
 
-    fadeIn(Pal);
+    fadeIn(pal);
     rotatePalette(32, 103, 72);
     saveScreen("screen06.bmp");
     fadeMin();
@@ -278,7 +278,7 @@ int main()
     familleDesCourbesEnV();
     affichage(14);
     
-    fadeIn(Pal);
+    fadeIn(pal);
     rotatePalette(32, 103, 72);
     saveScreen("screen07.bmp");
     fadeMin();
@@ -294,7 +294,7 @@ int main()
     familleDesCourbesEnV();
     affichage(14);
     
-    fadeIn(Pal);
+    fadeIn(pal);
     rotatePalette(32, 103, 72);
     saveScreen("screen08.bmp");
     fadeMin();
@@ -310,7 +310,7 @@ int main()
     familleDesCourbesEnV();
     affichage(14);
     
-    fadeIn(Pal);
+    fadeIn(pal);
     rotatePalette(32, 103, 72);
     saveScreen("screen09.bmp");
     fadeMin();

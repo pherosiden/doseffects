@@ -407,12 +407,11 @@ int main()
 {
     RGB pal[256] = {0};
 
-    initGfxLib(1, quitMessage);
-
     if (!setVesaMode(800, 600, 8, 0)) return 0;
     if (!loadFont("assets/sys8x16.xfn", 0)) return 0;
     if (!loadFont("assets/trip.xfn", 1)) return 0; 
 
+    setQuitCallback(quitMessage);
     getPalette(pal);
     setBlackPalette();
 

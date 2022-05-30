@@ -196,6 +196,11 @@ void mandelbrotSet(int32_t width, int32_t height, int32_t iters, double zoom, do
     }
 }
 
+void runExit()
+{
+    closeVesaMode();
+}
+
 int main()
 {
     // Init video mode
@@ -205,6 +210,9 @@ int main()
         return 1;
     }
 
+    // Set quit callbac function
+    setQuitCallback(runExit);
+    
     // Make palette for 256 colors
     if (bitsPerPixel == 8) makePalette();
     juliaSet(cmaxX, cmaxY, 256, -0.7, 0.27015, 1, 0, 0);
@@ -215,6 +223,6 @@ int main()
     mandelbrotSet(cmaxX, cmaxY, 512, 1179.8039, -0.743153, -0.139405);
     if (bitsPerPixel == 8) rotatePalette(1, 255, 0);
     
-    closeVesaMode();
+    runExit();
     return 0;
 }

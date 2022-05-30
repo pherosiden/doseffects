@@ -64,8 +64,8 @@ void runExit()
 
 int main()
 {
-    initGfxLib(1, runExit);
     if (!setVesaMode(800, 600, 8, 85)) return 1;
+    setQuitCallback(runExit);
     srand(time(NULL));
     ballCircle();
     runExit();

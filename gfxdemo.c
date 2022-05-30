@@ -600,8 +600,6 @@ void runPlasmaScale(int32_t sx, int32_t sy)
     uint16_t x1, x2, x3, y1, y2, y3;
     uint16_t cr, cg, cb, endx, a, b, c;
 
-    uint32_t edi;
-
     // initialized lookup table and preload image
     for (y = 0; y < 256; y++) sinx[y] = sin(y * M_PI / 128) * 127 + 128;
     if (!newImage(lfbWidth >> 2, lfbHeight >> 2, &plasma)) fatalError("Cannot open image plasma.\n");; 
@@ -612,7 +610,6 @@ void runPlasmaScale(int32_t sx, int32_t sy)
     data    = plasma.mData;
 
     do {
-        edi = 0;
         ofs = 0;
         tectr = frames * 10;
         x1 = sinx[(tectr / 12) & 0xFF];
