@@ -538,7 +538,7 @@ void runLensFlare()
         // redirect render to image buffer
         changeDrawBuffer(scr.mData, scr.mWidth, scr.mHeight);
         putImage(0, 0, &sky);
-        fillRectSub(0, 0, cmaxX, cmaxY, fromRGB(0, (1.0 * mcd.mdx / cmaxY) * 64.0, (1.0 * mcd.mdx / cmaxY) * 64.0));
+        fillRectSub(0, 0, lfbWidth, lfbHeight, fromRGB(0, (1.0 * mcd.mdx / cmaxY) * 64.0, (1.0 * mcd.mdx / cmaxY) * 64.0));
 
         // put all flare image to render buffer
         for (i = 0; i < 16; i++)
@@ -747,10 +747,10 @@ int main()
     gray127 = fromRGB(127, 127, 127);
     redcol = fromRGB(192, 0, 0);
 
-    fillRectPatternAdd(tx, tx, xc - 10, yc - 10, gray32, ptnHatchX);
-    fillRect(20, 20, xc - 20, yc - 20, 0);
-    fillRectSub(tx, yc, xc - 10, cmaxY - 10, gray32);
-        
+    fillRectPatternAdd(tx, tx, xc - 9, yc - 9, gray32, ptnHatchX);
+    fillRect(20, 20, xc - 19, yc - 19, 0);
+    fillRectSub(tx, yc, xc - 9, yc - 9, gray32);
+
     newImage(xc - 10, cmaxY - 10, &txt);
     getImage(tx, yc, xc - 10, cmaxY - 10, &txt);
     
@@ -873,7 +873,7 @@ int main()
     showText(tx, yc, &txt, "and MMX instructions to maximize speed (extremely");
     showText(tx, yc, &txt, "fast). Enter for the next...");
     while(!keyPressed(27));
-    fillRect(20, 20, xc - 20, yc - 20, 0);
+    fillRect(20, 20, xc - 19, yc - 19, 0);
     newImage(lfbWidth, lfbHeight, &scr);
     getImage(0, 0, lfbWidth, lfbHeight, &scr);
     runBumpImage();

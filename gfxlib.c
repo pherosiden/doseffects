@@ -2636,11 +2636,15 @@ void clearScreen32(uint32_t col)
 }
 
 // Fill box with color functions
-void fillRect8(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
+void fillRect8(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
     
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
+
     // Clip image to context boundaries
     lminX = max(x1, cminX);
     lminY = max(y1, cminY);
@@ -2721,10 +2725,14 @@ void fillRect8(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
 #endif
 }
 
-void fillRect16(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
+void fillRect16(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
     
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -2807,10 +2815,14 @@ void fillRect16(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
 #endif
 }
 
-void fillRect24(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
+void fillRect24(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
     
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -2855,10 +2867,14 @@ void fillRect24(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
     }
 }
 
-void fillRect32(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
+void fillRect32(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
 
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -2931,10 +2947,14 @@ void fillRect32(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
 }
 
 // Fill rectangle with adding current pixel color
-void fillRectAdd32(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
+void fillRectAdd32(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
     
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -3032,10 +3052,14 @@ void fillRectAdd32(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
 #endif    
 }
 
-void fillRectAdd24(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
+void fillRectAdd24(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
     
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -3093,10 +3117,14 @@ void fillRectAdd24(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
     }
 }
 
-void fillRectAdd16(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
+void fillRectAdd16(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
     
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -3160,10 +3188,14 @@ void fillRectAdd16(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
     }
 }
 
-void fillRectAdd15(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
+void fillRectAdd15(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
     
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -3229,10 +3261,14 @@ void fillRectAdd15(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
 }
 
 // Fill rectangle with substraction current pixel color
-void fillRectSub32(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
+void fillRectSub32(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
 
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -3330,10 +3366,14 @@ void fillRectSub32(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
 #endif    
 }
 
-void fillRectSub24(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
+void fillRectSub24(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
 
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -3391,10 +3431,14 @@ void fillRectSub24(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
     }
 }
 
-void fillRectSub16(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
+void fillRectSub16(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
     
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -3455,10 +3499,14 @@ void fillRectSub16(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
     }
 }
 
-void fillRectSub15(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
+void fillRectSub15(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
     
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -3519,10 +3567,14 @@ void fillRectSub15(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col)
     }
 }
 
-void fillRectPattern32(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col, uint8_t *pattern)
+void fillRectPattern32(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col, uint8_t *pattern)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
     
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -3633,10 +3685,14 @@ void fillRectPattern32(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t 
 #endif
 }
 
-void fillRectPattern24(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col, uint8_t *pattern)
+void fillRectPattern24(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col, uint8_t *pattern)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
     
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -3693,10 +3749,14 @@ void fillRectPattern24(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t 
     }
 }
 
-void fillRectPattern16(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col, uint8_t *pattern)
+void fillRectPattern16(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col, uint8_t *pattern)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
 
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -3747,10 +3807,14 @@ void fillRectPattern16(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t 
     }
 }
 
-void fillRectPattern8(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col, uint8_t *pattern)
+void fillRectPattern8(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col, uint8_t *pattern)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
 
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -3799,10 +3863,14 @@ void fillRectPattern8(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t c
     }
 }
 
-void fillRectPatternAdd32(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col, uint8_t *pattern)
+void fillRectPatternAdd32(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col, uint8_t *pattern)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
     
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -3940,10 +4008,14 @@ void fillRectPatternAdd32(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32
 #endif    
 }
 
-void fillRectPatternAdd24(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col, uint8_t *pattern)
+void fillRectPatternAdd24(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col, uint8_t *pattern)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
     
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -4014,10 +4086,14 @@ void fillRectPatternAdd24(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32
     }
 }
 
-void fillRectPatternAdd16(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col, uint8_t *pattern)
+void fillRectPatternAdd16(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col, uint8_t *pattern)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
 
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -4095,10 +4171,14 @@ void fillRectPatternAdd16(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32
     }
 }
 
-void fillRectPatternAdd15(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col, uint8_t *pattern)
+void fillRectPatternAdd15(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col, uint8_t *pattern)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
 
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -4177,10 +4257,14 @@ void fillRectPatternAdd15(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32
     }
 }
 
-void fillRectPatternSub32(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col, uint8_t *pattern)
+void fillRectPatternSub32(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col, uint8_t *pattern)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
     
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -4318,10 +4402,14 @@ void fillRectPatternSub32(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32
 #endif
 }
 
-void fillRectPatternSub24(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col, uint8_t *pattern)
+void fillRectPatternSub24(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col, uint8_t *pattern)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
     
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -4393,10 +4481,14 @@ void fillRectPatternSub24(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32
     }
 }
 
-void fillRectPatternSub16(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col, uint8_t *pattern)
+void fillRectPatternSub16(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col, uint8_t *pattern)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
 
     // Clip image to context boundaries
     lminX = max(x1, cminX);
@@ -4471,10 +4563,14 @@ void fillRectPatternSub16(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32
     }
 }
 
-void fillRectPatternSub15(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t col, uint8_t *pattern)
+void fillRectPatternSub15(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col, uint8_t *pattern)
 {
-    int32_t lwidth, lheight;
+    int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
+    
+    // Calculate new position
+    x2 = x1 + (width - 1);
+    y2 = y1 + (height - 1);
 
     // Clip image to context boundaries
     lminX = max(x1, cminX);
