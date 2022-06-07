@@ -1,5 +1,5 @@
 /*--------------------------------------------*/
-/*   Smooth scrolling font                    */   
+/*   Smooth scrolling font                    */
 /* Compile: bcc -mt -tDc -O3 -3               */
 /*--------------------------------------------*/
 
@@ -11,20 +11,13 @@
 #include <stdio.h>
 #include <conio.h>
 
-const char *scrolledText = "Smooth Text Scroll in text mode (c) 1998 by NGUYEN NGOC VAN ";
-uint8_t masktab[] = {1, 2, 4, 8, 16, 32, 64, 128};
+#define	peekb(S, O)     *(uint8_t far*)MK_FP(S, O)
+#define	pokeb(S, O, V)  *(uint8_t far*)MK_FP(S, O) = (V)
+
+int16_t len = 0, col = 0;
 uint8_t fonttab[256][32] = {0};
-int16_t len, col;
-
-void pokeb(uint16_t seg, uint16_t ofs, uint8_t val)
-{
-    *((uint8_t*)MK_FP(seg, ofs)) = val;
-}
-
-uint8_t peekb(uint16_t seg, uint16_t ofs)
-{
-    return *((uint8_t*)MK_FP(seg, ofs));
-}
+const uint8_t masktab[] = {1, 2, 4, 8, 16, 32, 64, 128};
+const char scrolledText[] = "Smooth Text Scroll in text mode (c) 1998 by NGUYEN NGOC VAN ";
 
 void setCharWidth()
 {
@@ -93,6 +86,7 @@ void setCharWidth()
 void writeScrollTextCharacters(uint8_t row)
 {
     int16_t i;
+    uint16_t ofs;
 
     __asm {
         // Set Fonts 0 & 1
@@ -104,12 +98,14 @@ void writeScrollTextCharacters(uint8_t row)
     // Write Characters
     for (i = 0; i < 80; i++)
     {
+        // Calculate offset
+        ofs = (row << 7) + (row << 5) + (i << 1);
+
         // Set Characters
-        pokeb(0xB800, (row << 7) + (row << 5) + (i << 1), i);
+        pokeb(0xB800, ofs, i);
 
         // Set Attribute To Secondary Font
-        pokeb(0xB800, (row << 7) + (row << 5) + (i << 1) + 1,
-        peekb(0xB800, (row << 7) + (row << 5) + (i << 1) + 1) | 0x08);
+        pokeb(0xB800, ofs + 1, peekb(0xB800, ofs + 1) | 0x08);
     }
 }
 
@@ -241,8 +237,10 @@ void makeFontDefTable()
 
     setAccessToFontMemory();
 
-    for (i = 0; i < 256; i++) for (j = 0; j < 32; j++)
-    fonttab[i][j] = peekb(0xB800, (i << 5) + j);
+    for (i = 0; i < 256; i++)
+    {
+        for (j = 0; j < 32; j++) fonttab[i][j] = peekb(0xB800, (i << 5) + j);
+    }
 
     setAccessToTextMemory();
 }
@@ -265,7 +263,6 @@ void scrollMessage()
     __asm {
         // Wait For Retrace
         mov     dx, 0x03DA
-
     waitR:
         in      al, dx
         test    al, 0x08
@@ -275,7 +272,6 @@ void scrollMessage()
         mov     ax, 0xB800 + (0x4000 / 16)
         mov     es, ax
         mov     cx, 32
-
     row:
         mov     di, (79 * 32) - 1
         add     di, cx
@@ -285,7 +281,6 @@ void scrollMessage()
         popf
         push    cx
         mov     cx, 79
-
     chars:
         rcl     byte ptr es:[di], 1
         pushf
@@ -309,10 +304,9 @@ void scrollMessage()
     if (len >= strlen(scrolledText)) len = 0;
 
     // Write New Column Of Pixels
-    for (j = 0; j <= 31; j++)
+    for (j = 0; j < 32; j++)
         pokeb(0xB800, 0x4000 + (79 * 32) + len,
-        peekb(0xB800, 0x4000 + (79 * 32) + j) |
-        (fonttab[scrolledText[len]][j] & masktab[col]) >> col);
+        peekb(0xB800, 0x4000 + (79 * 32) + j) | (fonttab[scrolledText[len]][j] & masktab[col]) >> col);
 
     setAccessToTextMemory();
 }

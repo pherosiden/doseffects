@@ -507,7 +507,7 @@ void runLensFlare()
 {
     GFX_IMAGE scr;
     int32_t tx, ty, x, y, i;
-    uint64_t time = 0, oldTime = 0;
+    uint64_t time = 0, oldTime = 0, lapTime = 0;
     const int32_t flareput[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
     const int32_t flarepos[16] = {-1110, -666, 0, 1087, 1221, 1309, 1776, 2197, 2819, 3130, 3220, 3263, 3663, 3707, 4440, 5125};
     const char *str = "Drag your mouse to see details and left click to exit!";
@@ -556,7 +556,8 @@ void runLensFlare()
         // put logo and draw text message
         putImageAlpha(lfbWidth - logo.mWidth, 1, &logo);
         drawTextImage(tx, ty, fromRGB(255, 255, 255), &scr, str);
-        drawTextImage(1, 1, fromRGB(255, 255, 255), &scr, "FPS:%.2f", 1.0 / (ticksToMicroSec(time - oldTime) / 1000000.0));
+        lapTime = ticksToMicroSec(time - oldTime);
+        if (lapTime > 10000) drawTextImage(1, 1, fromRGB(255, 255, 255), &scr, "FPS: %.2f", 1000000.0 / lapTime);
 
         // restore render buffer to screen buffer
         restoreDrawBuffer();
@@ -727,7 +728,7 @@ int main()
     if (!loadImage("assets/gfxsky.png", &sky)) fatalError("Cannot load image:gfxsky.png!\n");
     for (i = 0; i < 16; i++)
     {
-        sprintf(sbuff, "assets/flare-%dx.png", i + 1);
+        sprintf(sbuff, "assets/flare%dx.png", i + 1);
         if (!loadImage(sbuff, &flares[i])) fatalError("Cannot load image: %s!\n", sbuff);
     }
     memset(&drv, 0, sizeof(VBE_DRIVER_INFO));
@@ -795,8 +796,8 @@ int main()
     showText(tx, yc, &txt, " - fade1x.png");
     if (!loadImage("assets/fade2x.png", &fade2)) fatalError("Cannot load image fade2x.png!\n");
     showText(tx, yc, &txt, " - fade2x.png");
-    if (!loadImage("assets/flare1x.png", &flare)) fatalError("Cannot load image flare1x.png!\n");
-    showText(tx, yc, &txt, " - flare1x.png");
+    if (!loadImage("assets/flare0x.png", &flare)) fatalError("Cannot load image flare0x.png!\n");
+    showText(tx, yc, &txt, " - flare0x.png");
     showText(tx, yc, &txt, "");
     fullSpeed = 0;
     showText(tx, yc, &txt, "This is an early demonstration of the abilities of");
