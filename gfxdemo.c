@@ -562,7 +562,6 @@ void runLensFlare()
         restoreDrawBuffer();
         waitRetrace();
         putImage(0, 0, &scr);
-        
     } while (!keyPressed(27) && !mcd.mbx);
 
     // cleanup...
