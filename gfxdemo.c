@@ -747,12 +747,12 @@ int main()
     gray127 = fromRGB(127, 127, 127);
     redcol = fromRGB(192, 0, 0);
 
-    fillRectPatternAdd(tx, tx, xc - 9, yc - 9, gray32, ptnHatchX);
-    fillRect(20, 20, xc - 19, yc - 19, 0);
-    fillRectSub(tx, yc, xc - 9, yc - 9, gray32);
+    fillRectPatternAdd(tx, tx, xc - 19, yc - 19, gray32, ptnHatchX);
+    fillRect(20, 20, xc - 39, yc - 39, 0);
+    fillRectSub(tx, yc, xc - 19, cmaxY - yc - 9, gray32);
 
-    newImage(xc - 10, cmaxY - 10, &txt);
-    getImage(tx, yc, xc - 10, cmaxY - 10, &txt);
+    newImage(xc - 19, cmaxY - yc - 9, &txt);
+    getImage(tx, yc, xc - 19, cmaxY - yc - 9, &txt);
     
     writeString(xc + tx, 70, "GFXLIB v1.2.WC", gray127, 2);
     writeString(xc + tx, 90, "A short show of some abilities", gray127, 2);
@@ -842,7 +842,7 @@ int main()
     showText(tx, yc, &txt, "seem to be very fast here, but in this demo the");
     showText(tx, yc, &txt, "rotation is an optimize version of bilinear image");
     showText(tx, yc, &txt, "interpolation. You can reach on a INTEL MMX-133 up");
-    showText(tx, yc, &txt, "to 20 fps at 800x600x32. You can see another ver-");
+    showText(tx, yc, &txt, "to 45 fps at 800x600x32. You can see another ver-");
     showText(tx, yc, &txt, "sion of rotate image is so fast if only rotate and");
     showText(tx, yc, &txt, "show image, check my source code for details.");
     showText(tx, yc, &txt, "Press any key...");
@@ -873,7 +873,7 @@ int main()
     showText(tx, yc, &txt, "and MMX instructions to maximize speed (extremely");
     showText(tx, yc, &txt, "fast). Enter for the next...");
     while(!keyPressed(27));
-    fillRect(20, 20, xc - 19, yc - 19, 0);
+    fillRect(20, 20, xc - 39, yc - 39, 0);
     newImage(lfbWidth, lfbHeight, &scr);
     getImage(0, 0, lfbWidth, lfbHeight, &scr);
     runBumpImage();
