@@ -14325,7 +14325,7 @@ void bumpImage(GFX_IMAGE *dst, GFX_IMAGE *src1, GFX_IMAGE *src2, int32_t lx, int
     void *dstdata  = dst->mData;
 
     const int32_t bmax = 400;
-    const int32_t xstart = 20, ystart = 20;
+    const int32_t xstart = 100, ystart = 100;
     const int32_t endx = lfbWidth - xstart;
     const int32_t endy = lfbHeight - ystart;
 
@@ -14336,7 +14336,6 @@ void bumpImage(GFX_IMAGE *dst, GFX_IMAGE *src1, GFX_IMAGE *src2, int32_t lx, int
     
     int32_t nx = 0, ny = 0, vlx = 0, vly = 0;
     int32_t x = 0, y = 0, osrc2 = 0, osrc1 = 0, odst = 0;
-        
     
     __asm {
         mov     eax, ystart
@@ -14367,12 +14366,9 @@ void bumpImage(GFX_IMAGE *dst, GFX_IMAGE *src1, GFX_IMAGE *src2, int32_t lx, int
         mov     eax, y
         sub     eax, ly
         mov     vly, eax
-        add     osrc2, 4
-        add     osrc1, 4
-        add     odst, 4
         mov     ecx, vlx
-        mov     ebx, bmax
         mov     eax, vly
+        mov     ebx, bmax
         neg     ebx
         cmp     ecx, bmax
         jnl     stop
@@ -14464,6 +14460,9 @@ void bumpImage(GFX_IMAGE *dst, GFX_IMAGE *src1, GFX_IMAGE *src2, int32_t lx, int
     nextr:
         mov     [edi + 2], al
     stop:
+        add     osrc2, 4
+        add     osrc1, 4
+        add     odst, 4
         inc     x
         mov     eax, endx
         cmp     x, eax
