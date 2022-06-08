@@ -580,8 +580,8 @@ void runBumpImage()
 
     do {
         // calculate position
-        lx = cos(cnt / 13.0) * 133 + centerX;
-        ly = sin(cnt / 23.0) * 133 + centerY;
+        lx = cos(cnt / 13.0) * 133.0 + centerX;
+        ly = sin(cnt / 23.0) * 133.0 + centerY;
 
         // start bumping buffer
         bumpImage(&dst, &bump1, &bump2, lx, ly);

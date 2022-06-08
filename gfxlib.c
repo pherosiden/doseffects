@@ -14324,8 +14324,8 @@ void bumpImage(GFX_IMAGE *dst, GFX_IMAGE *src1, GFX_IMAGE *src2, int32_t lx, int
     void *src2data = src2->mData;
     void *dstdata  = dst->mData;
 
-    const int32_t bmax = 260;
-    const int32_t xstart = 50, ystart = 50;
+    const int32_t bmax = 400;
+    const int32_t xstart = 20, ystart = 20;
     const int32_t endx = lfbWidth - xstart;
     const int32_t endy = lfbHeight - ystart;
 
