@@ -14333,7 +14333,7 @@ void bumpImage(GFX_IMAGE *dst, GFX_IMAGE *src1, GFX_IMAGE *src2, int32_t lx, int
     int32_t dstwidth  = dst->mWidth;
     int32_t src1width = src1->mWidth;
     int32_t src2width = src2->mWidth;
-    int32_t src1len   = src1->mRowBytes;
+    int32_t src1len   = src1->mRowBytes - 1;
     
     int32_t nx = 0, ny = 0, vlx = 0, vly = 0;
     int32_t x = 0, y = 0, osrc2 = 0, osrc1 = 0, odst = 0;
