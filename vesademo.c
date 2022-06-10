@@ -101,7 +101,7 @@ void drawPolygon(int32_t xc, int32_t yc, int32_t rd, uint8_t odre, uint8_t pas)
     {
         theta = M_PI * phi / 180;
         moveTo(xc + rd * cos(theta), yc + rd * sin(theta));
-        lineTo(xc + rd * cos(odre * theta), yc + rd * sin(odre * theta), phi % 192 + 16);
+        lineTo(xc + rd * cos(odre * theta), yc + rd * sin(odre * theta), (phi % 192) + 16);
         phi += pas;
     };
 }
@@ -120,7 +120,7 @@ void rotatePolygon(POINT *pt, int32_t n, int32_t xc, int32_t yc, int32_t rd, int
 
     for (j = 0; j < num; j++)
     {
-        drawPoly(pt, n, j % 69 + col);
+        drawPoly(pt, n, (j % 69) + col);
         for (i = 0; i < n; i++)
         {
             pt[i].x = pt[i].x + (pt[(i + 1) % n].x - pt[i].x) / odre;
@@ -143,7 +143,7 @@ void randomPoly(POINT *pt, int32_t n, int32_t xm, int32_t ym, int32_t num, uint8
 
     for (j = 0; j < num; j++)
     {
-        drawPoly(pt, n, j % 69 + col);
+        drawPoly(pt, n, (j % 69) + col);
         for (k = 0; k < n; k++)
         {
             pt[k].x = pt[k].x + (pt[(k + 1) % n].x - pt[k].x) / odre;
@@ -172,7 +172,7 @@ void drawHexagon(POINT *pt, int32_t num, int32_t xc, int32_t yc, int32_t n, int3
 
         for (j = 0; j < n; j++)
         {
-            drawPoly(pt, 3, j % 69 + col);		
+            drawPoly(pt, 3, (j % 69) + col);		
             if (i % 2)
             {
                 for (k = 2; k > 0; k--)
@@ -558,7 +558,7 @@ void graphDemo9(int32_t xc, int32_t yc, double rd)
         x = xc + 250 * rd * (1 + 1.0 / 5 * sin(9.06 * a)) * cos(a);
         y = yc + 250 * rd * (1 + 1.0 / 5 * sin(9.06 * a)) * sin(a);
         if (a == 0.0) moveTo(x, y);
-        lineTo(x, y, i % 72 + 32);
+        lineTo(x, y, (i % 72) + 32);
         a += M_PI / 60;
         i++;
     }
@@ -786,7 +786,7 @@ void graphDemo13()
     {
         for (i = 50; i <= cmaxX - 50; i++)
         {
-            if (getPixel(i, j) == 50) putPixel(i, j, 16 + ((i + j) >> 2) % 192);
+            if (getPixel(i, j) == 50) putPixel(i, j, 16 + (((i + j) >> 2) % 192));
         }
     }
 }
@@ -804,7 +804,7 @@ void graphDemo14()
     {
         for (i = 0; i <= cmaxX; i++)
         {
-            if (getPixel(i, j) == 50) putPixel(i, j, 16 + ((i + j) >> 2) % 192);
+            if (getPixel(i, j) == 50) putPixel(i, j, 16 + (((i + j) >> 2) % 192));
         }
     }
 }
@@ -812,7 +812,7 @@ void graphDemo14()
 void graphDemo15()
 {
     int32_t i;    
-    for (i = 0; i < cmaxY; i++) horizLine(0, i, cmaxX, 1 + (int32_t)(i / 1.87) % 255);
+    for (i = 0; i < cmaxY; i++) horizLine(0, i, cmaxX, 1 + ((int32_t)(i / 1.87) % 255));
 }
 
 double FX1(double x, double y)
@@ -1326,7 +1326,7 @@ void affichage(int32_t range)
     
     for (i = 50; i < cmaxX - 50; i++)
     {
-        for (j = 50; j < cmaxX - 50; j++) if (getPixel(i, j) == 50) putPixel(i, j, 32 + ((i + j) / range) % 72);
+        for (j = 50; j < cmaxX - 50; j++) if (getPixel(i, j) == 50) putPixel(i, j, 32 + (((i + j) / range) % 72));
     }
     
     setFontType(savefont);
