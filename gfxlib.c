@@ -1,4 +1,4 @@
-/*===============================================================*/
+/*---------------------------------------------------------------*/
 /*                  GFXLIB Graphics Library                      */
 /*            Full supports 8/15/16/24/32 bits color             */
 /*       Support both page flipping and double buffering         */
@@ -10,13 +10,15 @@
 /*             Target OS: DOS32A / PMODEW                        */
 /*                Author: Nguyen Ngoc Van                        */
 /*                Create: 25/05/2001                             */
+/*           Last update: 10/06/2022                             */
+/*               Version: 1.2.6                                  */
 /*               Website: http://codedemo.net                    */
 /*                 Email: pherosiden@gmail.com                   */
 /*            References: http://crossfire-designs.de            */
-/*===============================================================*/
+/*---------------------------------------------------------------*/
 /* NOTE: You can use this code freely and any purpose without    */
 /* any warnings. Please leave the copyright.                     */
-/*===============================================================*/
+/*---------------------------------------------------------------*/
 
 #include <dos.h>
 #include <math.h>
