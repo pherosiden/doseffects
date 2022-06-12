@@ -567,7 +567,7 @@ void graphDemo9(int32_t xc, int32_t yc, double rd)
 void initDemo10(int32_t num, int32_t n)
 {
     int32_t i;
-    double a = 0.0, r;
+    double a = 0.0, r = 0.0;
 
     switch (num)
     {
@@ -666,12 +666,11 @@ void checkBounds(int32_t a, int32_t c, int32_t *b)
 
 void diagonalLine(int32_t x1, int32_t y1, int32_t x2, int32_t y2)
 {	
-    int32_t dst = 0;
+    void *plotPixel = putPixelBob;
     int32_t dxInc = 0, dyInc = 0;
     int32_t sxInc = 0, syInc = 0;
-    int32_t sc = 0,	dc = 0;
-    void *plotPixel = putPixelBob;
-
+    int32_t dst = 0, sc = 0, dc = 0;
+    
     __asm {
         mov    ecx, 1
         mov    edx, 1
