@@ -49,7 +49,7 @@ void ballCircle()
         x = rand() % lfbWidth;
         y = rand() % lfbHeight;
         col = (rand() % 4) * 64;
-        for (i = 0; i < 64; i++) fillCircle(x + (64 - i) / 2, y + (64 - i) / 2, (64 - i) * 2, i + col);
+        for (i = 0; i < 64; i++) fillCircle(x + ((64 - i) >> 1), y + ((64 - i) >> 1), (64 - i) << 1, i + col);
         frames++;
     }
 }
@@ -59,7 +59,7 @@ void runExit()
     et = GetTicks();
     fadeCircle(0, 0);
     closeVesaMode();
-    printf("FPS:%.2f\n", (frames * 18.2) / (et - st));
+    printf("FPS: %.2f\n", (frames * 18.2) / (et - st));
 }
 
 int main()

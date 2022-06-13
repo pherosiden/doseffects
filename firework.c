@@ -320,7 +320,7 @@ void initExplodeTable()
             {
                 explodes[i][idx].x = explodes[i - 1][idx].x;
                 explodes[i][idx].y = explodes[i - 1][idx].y + 1;
-                explodes[i][idx].color = explodes[EXPLODE_FRAMES - 1][idx].color + roundf((15.0 / FADEDOWN_FRAMES) * (1.0 * i - EXPLODE_FRAMES));
+                explodes[i][idx].color = explodes[EXPLODE_FRAMES - 1][idx].color + ((15.0 / FADEDOWN_FRAMES) * (1.0 * i - EXPLODE_FRAMES));
                 explodes[i][idx].wait = 2;
                 explodes[i][idx].circle = j - 1;
                 idx++;
@@ -352,20 +352,20 @@ void initPal()
 
     for (i = 0; i <= ARROWS_LENGTH - 2; i++)
     {
-        setPal(i + 16, BRIGHT_ARROW - i, roundf(BRIGHT_ARROW - i * multiple), 0);
+        setPal(i + 16, BRIGHT_ARROW - i, (BRIGHT_ARROW - i * multiple), 0);
     }
 
-    setPal(16, roundf(1.0 * BRIGHT_ARROW / 45.0 * 63.0), 0, 0);
+    setPal(16, (1.0 * BRIGHT_ARROW / 45 * 63), 0, 0);
     setPal(15 + ARROWS_LENGTH, 0, 0, 0);
 
-    for (i = 0; i != 16; i++) setPal(i + 48, roundf(63.0 - i / 15.0 * 63.0), 0, 0);
-    for (i = 0; i != 16; i++) setPal(i + 64, roundf(63.0 - i / 15.0 * 63.0), 0, roundf(63.0 - i / 15.0 * 63.0));
-    for (i = 0; i != 16; i++) setPal(i + 80, roundf(63.0 - i / 15.0 * 63.0), roundf(63.0 - i / 15.0 * 63.0), 0);
-    for (i = 0; i != 16; i++) setPal(i + 96, roundf(63.0 - i / 15.0 * 63.0), roundf(63.0 - i / 15.0 * 63.0), roundf(63.0 - i / 15.0 * 63.0));
-    for (i = 0; i != 16; i++) setPal(i + 112, 0, roundf(63.0 - i / 15.0 * 63.0), 0);
-    for (i = 0; i != 16; i++) setPal(i + 128, 0, 0, roundf(63.0 - i / 15.0 * 63.0));
-    for (i = 0; i != 16; i++) setPal(i + 144, roundf(63.0 - i / 15.0 * 63.0), roundf(31 - i / 15.0 * 31.0), 0);
-    for (i = 0; i != 16; i++) setPal(i + 160, 0, roundf(31.0 - i / 15.0 * 31.0), 0);
+    for (i = 0; i < 16; i++) setPal(i + 48, (63.0 - i / 15.0 * 63), 0, 0);
+    for (i = 0; i < 16; i++) setPal(i + 64, (63.0 - i / 15.0 * 63), 0, (63.0 - i / 15.0 * 63));
+    for (i = 0; i < 16; i++) setPal(i + 80, (63.0 - i / 15.0 * 63), (63.0 - i / 15.0 * 63), 0);
+    for (i = 0; i < 16; i++) setPal(i + 96, (63.0 - i / 15.0 * 63), (63.0 - i / 15.0 * 63), (63.0 - i / 15.0 * 63));
+    for (i = 0; i < 16; i++) setPal(i + 112, 0, (63.0 - i / 15.0 * 63), 0);
+    for (i = 0; i < 16; i++) setPal(i + 128, 0, 0, (63.0 - i / 15.0 * 63));
+    for (i = 0; i < 16; i++) setPal(i + 144, (63.0 - i / 15.0 * 63), (31.0 - i / 15.0 * 31), 0);
+    for (i = 0; i < 16; i++) setPal(i + 160, 0, (31.0 - i / 15.0 * 31), 0);
 }
 
 void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
@@ -423,7 +423,7 @@ void main()
 
     for (i = 0; i < NUM_ARROWS; i++)
     {
-        arrows[i] = (TArrow*)malloc(sizeof(TArrow));
+        arrows[i] = (TArrow*)calloc(sizeof(TArrow), 1);
         if (!arrows[i])
         {
             printf("Cannot allocate arrow[%d]\n", i);
