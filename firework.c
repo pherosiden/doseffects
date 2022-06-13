@@ -58,10 +58,9 @@ TArrow      *arrows[NUM_ARROWS] = {0};
 TPoint      sincos[ANGLE_SCALE] = {0};
 TExplode    explodes[PIXEL_CIRCLE * NUM_CIRCLE][PIXELS_EXPLODE] = {0};
 
-uint16_t cnt = 0;
-uint16_t oldTime = 0;
-
-uint8_t *tmem = (uint8_t*)0xB8000000L;
+uint16_t    cnt = 0;
+uint16_t    oldTime = 0;
+uint8_t     *tmem = (uint8_t*)0xB8000000L;
 
 void setPixel(int16_t x, int16_t y, uint8_t c)
 {

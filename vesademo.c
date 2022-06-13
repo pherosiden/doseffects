@@ -810,7 +810,7 @@ void graphDemo14()
 
 void graphDemo15()
 {
-    int32_t i;    
+    int32_t i;
     for (i = 0; i < cmaxY; i++) horizLine(0, i, cmaxX, 1 + ((int32_t)(i / 1.87) % 255));
 }
 
@@ -1768,20 +1768,16 @@ int main(int argc, const char* argv[])
     setBlackPalette();
     
     initDemo10(1, 4);
-    for (i = 0; i <= 95; i++)
-    graphDemo10(centerX >> 1, centerY >> 1, 140 - i, 140 - i, 64 + i / 3);
+    for (i = 0; i <= 95; i++) graphDemo10(centerX >> 1, centerY >> 1, 140 - i, 140 - i, 64 + i / 3);
     
     initDemo10(2, 2);
-    for (i = 0; i <= 119; i++)
-    graphDemo10(centerX + (centerX >> 1), centerY >> 1, 170 - i, 170 - i, 64 + i / 3);
+    for (i = 0; i <= 119; i++) graphDemo10(centerX + (centerX >> 1), centerY >> 1, 170 - i, 170 - i, 64 + i / 3);
     
     initDemo10(3, 5);
-    for (i = 0; i <= 39; i++)
-    graphDemo10(centerX >> 1, centerY + (centerY >> 1), 110 - (i << 1), 110 - (i << 1), 83 - (i >> 1));
+    for (i = 0; i <= 39; i++) graphDemo10(centerX >> 1, centerY + (centerY >> 1), 110 - (i << 1), 110 - (i << 1), 83 - (i >> 1));
     
     initDemo10(4, 7);
-    for (i = 0; i <= 19; i++)
-    graphDemo10(centerX + (centerX >> 1), centerY + (centerY >> 1), 130 - (i << 2), 130 - (i << 2), 64 + i);
+    for (i = 0; i <= 19; i++) graphDemo10(centerX + (centerX >> 1), centerY + (centerY >> 1), 130 - (i << 2), 130 - (i << 2), 64 + i);
     fadeIn(pal2);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen12.bmp");
     rotatePalette(64, 103, 40);
