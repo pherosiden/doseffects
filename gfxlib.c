@@ -23988,6 +23988,7 @@ int initVBE()
     // call initialize protect mode function first
     fcall.offset = pmInfo->PMInitialize;
     fcall.segment = biosInitSel;
+    
     __asm {
         pusha
         mov    ax, biosStackSel
