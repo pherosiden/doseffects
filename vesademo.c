@@ -2070,7 +2070,6 @@ int main(int argc, const char* argv[])
     writeString(centerX - (getFontWidth(logoGFX) >> 1), j - introy - CHR_WIDTH, logoGFX, 32, 1);
     fadeIn(pal2);
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen33.bmp");
-    memcpy(&pal1[32], &pal2[32], 72 * sizeof(RGB));
     rotatePalette(32, 103, 250);
     
     clearScreen(0);
