@@ -155,7 +155,8 @@ void randomPoly(POINT *pt, int32_t n, int32_t xm, int32_t ym, int32_t num, uint8
 void drawHexagon(POINT *pt, int32_t num, int32_t xc, int32_t yc, int32_t n, int32_t rd, uint8_t odre, uint32_t col)
 {
     int32_t i, j, k, m;
-    double coef = 2 * M_PI / num, phi;
+    double phi = 0.0;
+    const double coef = 2 * M_PI / num;
 
     for (i = 1; i <= num; i++)
     {
@@ -200,11 +201,11 @@ void drawHexagon(POINT *pt, int32_t num, int32_t xc, int32_t yc, int32_t n, int3
 void graphDemo0(int32_t xc, int32_t yc, int32_t xr, int32_t yr)
 {
     int32_t i = 0;
+    double a = 0.0, m = 0.0;
     double x0, y0, x1, y1;
-    double x = xr * 0.4;
-    double y = yr * 0.4;
-    double a = 0.0, m;
-
+    const double x = xr * 0.4;
+    const double y = yr * 0.4;
+    
     for (i = 0; i < 800 && !keyPressed(27); i++)
     {
         x0 = xc + xr * cos(a);
@@ -339,12 +340,11 @@ void graphDemo6(int32_t xc, int32_t yc, int32_t r)
 {
     int32_t xx[120] = {0};
     int32_t yy[120] = {0};
-
-    double x = 4 * r;
-    double sx, sy, x1, y1, x2, y2;
-    double theta, a = 0.0;
-
     int32_t px, py, i;
+
+    const double x = 4.0 * r;
+    double theta, a = 0.0;
+    double sx, sy, x1, y1, x2, y2;
 
     for (i = 0; i < 120 && !keyPressed(27); i++)
     {
@@ -383,11 +383,11 @@ void graphDemo7(int32_t xc, int32_t yc, int32_t r)
 {
     int32_t xx[120] = {0};
     int32_t yy[120] = {0};
+    int32_t px, py, i;
 
     double theta, a = 0.0, m, n;
-    double x = 4 * r, sx, sy, x1, y1, x2, y2;
-    
-    int32_t px, py, i;
+    const double x = 4.0 * r;
+    double sx, sy, x1, y1, x2, y2;
 
     for (i = 0; i < 120 && !keyPressed(27); i++)
     {
@@ -434,16 +434,15 @@ void graphDemo8(int32_t xc, int32_t yc, int32_t d, int32_t r)
     int32_t i = 0;
     int32_t xx[120] = {0};
     int32_t yy[120] = {0};
-        
-    double theta, sc, a, m;
-    double dd, un, uv, k, s, x, y, px, py, sx, sy, sq;
+    
+    double theta, a = 0.0, m;
+    double s, x, y, px, py, sx, sy, sq;
 
-    a = 0.0;
-    un = 12.0;
-    uv = d / un;
-    k = uv / 2.0;
-    sc = uv / 100.0;
-    dd = d / 2.0;
+    const double un = 12.0;
+    const double uv = d / un;
+    const double k = uv / 2.0;
+    const double sc = uv / 100.0;
+    const double dd = d / 2.0;
 
     for (i = 0; i < 120 && !keyPressed(27); i++)
     {
@@ -490,11 +489,11 @@ void graphDemo8(int32_t xc, int32_t yc, int32_t d, int32_t r)
 
 void graphDemo9(int32_t xc, int32_t yc, double rd)
 {
-    double a, aa, ls, di, r;
-    const int32_t data[] = {7, 436, 245, 17, 775, 180, 31, 1020, 130};
     int32_t i, k, s;
     int32_t ste, re, x, y, px, py;
-    
+    const int32_t data[] = {7, 436, 245, 17, 775, 180, 31, 1020, 130};
+    double a, aa, ls, di, r;
+
     srand(time(NULL));
 
     px = xc;
@@ -1147,9 +1146,9 @@ void calculeEchelles()
 
 void horizon(int32_t x1, int32_t y1, int32_t x2, int32_t y2)
 {
-    int32_t x, y, dx, pente;
+    int32_t x, y;
+    const int32_t dx = SIGNED(x2 - x1);
 
-    dx = SIGNED(x2 - x1);
     if (dx == 0)
     {
         maxh[(x2 + 1) % LIMITX] = max(maxh[x2 % LIMITX], y2);
@@ -1157,7 +1156,7 @@ void horizon(int32_t x1, int32_t y1, int32_t x2, int32_t y2)
     }
     else
     {
-        pente = (y2 - y1) / (x2 - x1);
+        const int32_t pente = (y2 - y1) / (x2 - x1);
         for (x = x2 + 1; x <= x1; x++)
         {
             y = pente * (x - x1) + y1;
