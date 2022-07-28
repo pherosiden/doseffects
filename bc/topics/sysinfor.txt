@@ -1,0 +1,174 @@
+Ma4 so61 ma1y
+Tho6ng ba1o he65 tho61ng
+Ho75p d9o62ng tho3a thua65n
+Phie6n ba3n chu7a d9a8ng ky1 su73 du5ng
+Tie61n ha2nh ca2i d9a85t
+Ca65p nha65t chu7o7ng tri2nh
+Kho73i d9o65ng he65 tho61ng 
+Lu75a cho5n o63 d9i4a
+Kie63m tra d9i4a 
+Tho6ng tin d9i4a 
+Cha2o mu72ng ca1c ba5n d9e61n vo71i chu7o7ng tri2nh TOPICS version 2.0
+Lo64i he65 tho61ng
+INFORMATICS VIETNAM
+TOPICS
+Copyright (c) 2001
+By Student
+Nguye64n Ngo5c Va6n
+Kho6ng the63 mo73 ta65p tin 
+Kho6ng the63 ta5o ta65p tin 
+Kho6ng the63 d9o5c d9u7o75c ta65p tin register.dat
+Lo64i d9o5c ta65p tin 
+Lo64i ghi ta65p tin 
+Nha65p te6n cu3a ba5n
+Nha65p ma4 so61 ca2i d9a85t
+Cho5n o63 d9i4a ca2i d9a85t
+Go4 mo65t phi1m ba61t ky2 d9e63 thoa1t chu7o7ng tri2nh
+Ba5n co1 cha81c thoa1t chu7o7ng tri2nh kho6ng ?
+Tho6ng tin kho6ng ho75p le65. Ha4y thu73 la5i!
+Qua1 tri2nh ca2i d9a85t d9a4 hoa2n ta61t
+Kie63m tra dung lu7o75ng d9i4a
+Kie63m tra dung lu7o75ng d9i4a tro61ng
+Kho6ng ca61p pha1t d9u7o75c bo65 nho71
+Ba5n pha3i cho5n ca1c ta65p tin chu7o7ng tri2nh
+va2 ca1c ta65p tin du74 lie65u. No1 ca62n thie61t !
+Lo64i kho73i d9o65ng he65 tho61ng d9o62 ho5a
+Kho6ng d9u3 kho6ng gian d9i4a d9e63 chu71a chu7o7ng tri2nh
+Ca1c ta65p tin chi1nh sau d9a6y se4 d9u7o75c ca2i va2o ma1y ti1nh cu3a ba5n
+Kho6ng the63 d9o5c d9u7o75c o63 d9i4a cu3a ba5n
+Chu7o7ng tri2nh d9ang che1p ca1c ta65p tin ca62n thie61t
+Chu7o7ng tri2nh d9ang kie63m tra o63 d9i4a cu71ng cu3a ba5n
+Xin ba5n vui lo2ng d9o75i trong mo65t va2i gia6y nu74a.
+D9ang ca65p ca1c tri2nh d9ie62u khie63n
+C:\WINDOWS\register.dat
+A:\TOPICS\DRIVERS\mouse.com
+Í SVGA256.BGI    Í EGAVGA.BGI
+Í LITT.CHR       Í TRIP.CHR
+Í SANS.CHR       Í GOTH.CHR
+Í TRANFROM.EXE   Í PROCPICT.EXE
+Í PROCDIR.EXE    Í KARAOKE.EXE
+Í ALGORITH.EXE   Í CHECKINF.EXE
+Í QUESTION.DAT   Í LOADFONT.COM
+Í VRD.EXE        Í PICTBMP16.BMP
+Í DIRECT.DRV     Í RELEASE.SYS
+Co1 lo64i ca2i d9a85t. Xin go4 mo65t phi1m ba61t ky2 d9e63 thoa1t
+Vui lo2ng lie6n he65 vo71i ta1c gia3 d9e63 nha65n d9u7o75c phie6n
+ba3n mo71i nha61t. Ca1m o7n ba5n d9a4 cho5n chu7o7ng tri2nh !
+Chu7o7ng tri2nh TOPICS version 2.0 la2 phie6n ba3n cha5y thu73 nghie65m. Cho
+ne6n ta1c gia3 khuye61n ca1o va64n co2n co1 lo64i. Nghie6m ca61m mo5i ha2nh vi sao
+che1p mo65t pha62n hay ca3 chu7o7ng tri2nh hay ca1c ha2nh vi pha1t ta1n chu7o7ng
+tri2nh ma2 kho6ng co1 su75 d9o62ng y1 hay gia61y phe1p cu3a ta1c gia3 thi2 ca1c ba5n
+pha3i hoa2n toa2n chi5u tra1ch nhie65m vo71i ba3n quye62n cu3a ta1c gia3.
+D9a6y la2 phie6n ba3n kho6ng chi1nh thu71c. Ne61u ba5n ca3m tha61y  ra82ng ba5n
+thi1ch chu7o7ng tri2nh TOPICS  na2y thi2 ba5n ca62n d9a8ng ky1 no1 vo71i ta1c
+gia3. Mo5i hi2nh thu71c su73 du5ng pha62n me62m ma2 kho6ng co1 ba3n quye62n cu3a
+ta1c gia3 la2 vi pha5m che61 d9o65 ba3n quye62n. Pha62n me62m na2y chi3 su73 du5ng
+trong tho72i gian 7 nga2y hoa85c 100 la62n cha5y chu7o7ng tri2nh. Ta61t ca3
+ca1c mu5c d9i1ch su73 du5ng la6u ho7n ca62n pha3i d9a8ng ky1 vo71i ta1c gia3 chi3
+vo71i 20$ la2 ba5n hoa2n toa2n so73 hu74u mo65t bo65 pha62n me62m d9a62y d9u3  nha61t.
+Xin vui lo2ng lie6n he65 vo71i ta1c gia3 ta5i ca1c d9i5a chi3 sau:
+So61 nha2     : 57A Pric 1st Dist 4th
+D9ie65n thoa5i : 8267231
+Email      : sidensundling@fptnet.com.vn
+Ca1m o7n ca1c ba5n d9a4 nhie65t ti2nh u3ng ho65 chu7o7ng tri2nh TOPICS na2y!
+D9ang che1p :
+Chu7o7ng tri2nh ca2i d9a85t TOPICS
+Ba5n pha3i da3m ba3o ra82ng ta65p tin SVGA256.BGI d9ang to62n ta5i.
+Ne61u ba5n kho6ng co1 ta65p tin na2y, vui lo2ng lie6n he65 vo71i ta1c gia3 d9e63 che1p no1.
+Ca1m o7n ca1c ba5n d9a4 su73 du5ng chu7o7ng tri2nh na2y. Xin cha2o tha6n a1i !!!
+A:\TOPICS\DRIVERS
+C:\WINDOWS\REGISTER\
+Phie6n ba3n chu7a d9a8ng ky1
+Ba5n pha3i d9a8ng ky1 chu7o7ng tri2nh na2y d9e63 tie61p tu5c su73 du5ng no1 to61t ho7n
+(Chu7o7ng tri2nh d9a4 d9a8ng ky1 kho6ng hie65n tho6ng ba1o na2y)
+Ne61u ba5n d9a4 co1 ma4 so61 sa3n pha63m. Ha4y go4 ma4 so61 va2o o6 Ma4 so61 sa3n pha63m va2 nha65p
+te6n ba5n va2o o6 Nha65p te6n ro62i nha61n nu1t D9a8ng ky1 d9e63 d9a8ng ky1 chu7o7ng tri2nh na2y
+Te6n cu3a ba5n la2
+Ma4 so61 sa3n pha63m
+Te6n kho6ng ho75p le65!
+Ma4 sa3n pha63m kho6ng ho75p le65!
+Ca1m o7n ba5n d9a4 d9a8ng ky1 to61t.
+D9a8ng ky1 kho6ng tha2nh co6ng      
+Ta65p tin register does not exist
+60FA-NVTU-4322
+Ne61u nhu7 ba5n kho6ng co1 ma4 so61 sa3n pha63m.  Ha4y go73i cho to6i ma4 so61 ma1y cu3a ba5n
+la2 ID0L-E3V6-4674 cu2ng vo71i mo65t khoa3ng chi phi1 $20 d9e61n ca1c d9i5a chi3 sau:
+Siden Sundling - Nguye64n Ngo5c Va6n
+57A Phu7o72ng 1  - Qua65n 4 - Cu2 lao Nguye64n Kie65u TP.HCM
+D9ie65n thoa5i : 8267321 - Email : sidensundling@fptnet.com.vn
+Khi to6i nha65n d9u7o75c ma4 so61 ma1y  ba5n va2 tie62n.  To6i se4 go73i la5i cho ba5n ma4 so61
+sa3n pha63m cua3 pha62n me62m na2y.  Ba82ng vie65c su73 du5ng pha62n me62m co1 ba3n  quye62n la2
+go1p pha62n khuye61n khi1ch tinh tha62n ta1c gia3 va2 pha1t trie62n pha62n me62m to61t ho7n.
+Ra61t ca1m o7n ca1c ba5n d9a4 u3ng ho65 va2 su73 du5ng chu7o7ng tri2nh TOPICS na2y !!!
+Go74 bo3 chu7o7ng tri2nh
+To1m ta81t tho6ng tin
+D9ang xo1a, xin d9o75i mo65t chu1t...
+Chu7o7ng tri2nh  TOPICS cu3a ba5n d9a4 he61t tho72i gian su73 du5ng. No1
+hoa5t d9o65ng kho6ng to61t trong ma1y ba5n nu74a va2 no1 se4 bi5 loa5i bo3
+ra kho3i he65 tho61ng cu3a ba5n. Ne61u ba5n ca3m tha61y ra82ng ba5n thi1ch
+chu7o7ng tri2nh na2y xin ba5n vui lo2ng d9a8ng ky1 no1 vo71i ta1c gia3!
+Ca1m o7n ba5n d9a4 cho5n va2 su73 du5ng  chu7o7ng tri2nh na2y. Xin cha2o
+ta5m bie65t va2 he5n ga85p la5i ca1c ba5n...
+SIDEN SUNDLING author.
+Chu7o7ng tri2nh TOPICS d9a4 go74 bo3 hoa2n ta61t.
+Lo64i Chu7o7ng tri2nh TOPICS
+NV60FA4322
+ GoodBye 
+Press <ENTER> Key To Exit Program
+Rat cam on cac ban da ung ho va su dung chuong trinh
+cua toi . Mong cac ban gop y ve noi dung  cua chuong
+trinh de chuong trinh duoc hoan thien hon . Moi thac
+mac hay y kien dong gop xin vui long lien he tai dia
+trong phan ban quyen chuong trinh xin chan thanh cam
+on cac ban rat nhieu.
+Rat cam on ban da chon muc nay
+Khoa Cong Nghe Thong Tin
+Truong Dai Hoc KY THUAT CONG NGHE
+- Co so I  : 110 Cao Thang Quan 3
+- Co so II : 144/24 Dien Bien Phu
+Quan Binh Thanh
+Moi chi tiet xin lien he tai dia chi:
+- Email  : sidensundling@vol.vnn.vn
+- Website : http://www.hutech.edu.vn
+- Phone  : 8267231
+- Chu y : Chuong trinh nay la phien ban chay thu nghiem. Cam
+sao chep mot phan hay ca chuong trinh duoi bat ky hinh thuc
+nao, moi vi pham se bi truy to truoc hoi dong cua nha truong.
+Neu cac ban co nhu cau ve chuong trinh nguon xin vui long lien
+he tai cac dia chi tren.
+- Viec lua chon cac Menu Bar ban chi can dung cac phim
+mui ten trai va phai de duy chuyen vet sang den ten Menu
+ban can va go ENTER de chon no. Sau khi ban chon se co Menu
+PopUp tha xuong, trong do co cac Menu con de chon no ban
+cung dung phim mui ten tren va duoi de duy chuyen vet sang
+den muc ban can va go ENTER de chon no.
+- Chu y : Khi Menu PopUp da duoc tha xuong neu ban muon
+doi y khong chon no nua ban cung co the su dung cac phim
+mui ten trai va phai de duy chuyen sang cac Menu PopUp khac
+ma khong can phai go phim ESC de tat Menu PopUp do di. Viec
+chon lua cac Menu con o vi tri dau va o vi tri cuoi ban co
+the chon nhanh bang cac phim HOME va END ung voi Menu Bar
+va Menu PopUp.
+HUONG DAN
+BAN QUYEN
+Press any key to exit
+Chuong trinh gom co 5 menu chinh nhu sau:
+- VE DA GIAC :
+- TINH TIEN :
+- XOAY :
+- CO GIAN :
+- DOI XUNG :
+- THOAT :
+Cac chuc nang lien quan den ve da giac.
+Cac chuc nang lien quan den phep tinh tien.
+Cac chuc nang lien quan den phep xoay.
+Cac chuc nang lien quan den phep co gian.
+Cac chuc nang lien quan den phep doi xung.
+Cac chuc nang huong dan su dung chuong trinh.
+Incorrect Password
+Correct Password
+Press any key to start program
+Enter your password
+ Result 
+ Password 
+TOPICS\REGISTER\register  

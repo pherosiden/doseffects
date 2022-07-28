@@ -4,4 +4,6 @@
 *.obj
 .vscode
 !wc/**
+!bc/**
+!bp/**
 !dosbox-x/**

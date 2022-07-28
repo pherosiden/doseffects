@@ -1,0 +1,40 @@
+ cau hoi 1
+ tra loi 1 
+*tra loi 2
+ tra loi 3
+ tra loi 4
+ cau hoi 2
+ tra loi 1
+ tra loi 2
+ tra loi 3
+*tra loi 4
+ cau hoi 3
+*tra loi 1
+ tra loi 2
+ tra loi 3
+ tra loi 4
+ cau hoi 4
+ tra loi 1
+*tra loi 2
+ tra loi 3
+ tra loi 4
+ cau hoi 5
+ tra loi 1
+ tra loi 2
+ tra loi 3
+*tra loi 4
+ cau hoi 6
+ tra loi 1
+*tra loi 2
+ tra loi 3
+ tra loi 4
+ cau hoi 7
+ tra loi 1
+ tra loi 2
+ tra loi 3
+*tra loi 4
+ cau hoi 8
+ tra loi 1
+ tra loi 2
+*tra loi 3
+ tra loi 4

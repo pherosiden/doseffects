@@ -6,6 +6,8 @@
 /* Website: http://www.codedemo.net     */
 /*--------------------------------------*/
 
+#include <stdint.h>
+
 const char *EMSErrorMsg[] = {
     "EMS driver error (EMM trouble)",
     "EMS hardware error",
@@ -93,23 +95,23 @@ uint16_t EMSNew(uint16_t pages)
     }
 }
 
-uint8_t EMSMap(uint16_t h, uint16_t page, uint8_t ram)
+uint8_t EMSMap(uint16_t handle, uint16_t page, uint8_t ram)
 {
     __asm {
         mov     ah, 0x44
         mov     al, ram
         mov     bx, page
-        mov     dx, h
+        mov     dx, handle
         int     0x67
         shr     ax, 8
     }
 }
 
-void EMSFree(uint16_t h)
+void EMSFree(uint16_t handle)
 {
     __asm {
         mov     ah, 0x45
-        mov     dx, h
+        mov     dx, handle
         int     0x67
         mov     EMSErrorCode, ah
     }
@@ -138,18 +140,18 @@ uint16_t EMSGetHandlesNum()
     }
 }
 
-uint16_t EMSGetPagesNum(uint16_t h)
+uint16_t EMSGetPagesNum(uint16_t handle)
 {
     __asm {
         mov     ah, 0x4C
-        mov     dx, h
+        mov     dx, handle
         int     0x67
         mov     EMSErrorCode, ah
         mov     ax, bx
     }
 }
 
-uint16_t EMSGetHandleStruc(uint16_t fseg, uint16_t fofs)
+uint16_t EMSGetHandleStruct(uint16_t fseg, uint16_t fofs)
 {
     __asm {
         mov     ah, 0x4D
