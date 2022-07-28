@@ -11,13 +11,13 @@
 #include <stdio.h>
 #include <conio.h>
 
-#define	peekb(S, O)     *(uint8_t far*)MK_FP(S, O)
-#define	pokeb(S, O, V)  *(uint8_t far*)MK_FP(S, O) = (V)
+#define	peekb(S, O)     *(uint8_t*)MK_FP(S, O)
+#define	pokeb(S, O, V)  *(uint8_t*)MK_FP(S, O) = (V)
 
-int16_t len = 0, col = 0;
-uint8_t fonttab[256][32] = {0};
-const uint8_t masktab[] = {1, 2, 4, 8, 16, 32, 64, 128};
-const char scrolledText[] = "Smooth Text Scroll in text mode (c) 1998 by NGUYEN NGOC VAN ";
+int16_t len = 0, col = 8;
+uint8_t fonts[256][32] = {0};
+const uint8_t masks[] = {1, 2, 4, 8, 16, 32, 64, 128};
+const char *text = "Smooth Text Scroll in text mode (c) 1998 by NGUYEN NGOC VAN ";
 
 void setCharWidth()
 {
@@ -85,7 +85,7 @@ void setCharWidth()
 
 void writeScrollTextCharacters(uint8_t row)
 {
-    int16_t i;
+    uint8_t i;
     uint16_t ofs;
 
     __asm {
@@ -231,7 +231,7 @@ void setAccessToTextMemory()
     }
 }
 
-void makeFontDefTable()
+void makeFontsTable()
 {
     int16_t i, j;
 
@@ -239,7 +239,7 @@ void makeFontDefTable()
 
     for (i = 0; i < 256; i++)
     {
-        for (j = 0; j < 32; j++) fonttab[i][j] = peekb(0xB800, (i << 5) + j);
+        for (j = 0; j < 32; j++) fonts[i][j] = peekb(0xB800, (i << 5) + j);
     }
 
     setAccessToTextMemory();
@@ -301,12 +301,14 @@ void scrollMessage()
         col--;
     }
 
-    if (len >= strlen(scrolledText)) len = 0;
+    if (len >= strlen(text)) len = 0;
 
     // Write New Column Of Pixels
     for (j = 0; j < 32; j++)
-        pokeb(0xB800, 0x4000 + (79 * 32) + len,
-        peekb(0xB800, 0x4000 + (79 * 32) + j) | (fonttab[scrolledText[len]][j] & masktab[col]) >> col);
+    {
+        pokeb(0xB800, 0x4000 + (79 * 32) + j,
+        peekb(0xB800, 0x4000 + (79 * 32) + j) | (fonts[text[len]][j] & masks[col]) >> col);
+    }
 
     setAccessToTextMemory();
 }
@@ -348,13 +350,10 @@ void setTextMode()
 
 void main()
 {
-    len = 0;
-    col = 8;
-
     setTextMode();
     turnCursorOff();
     setCharWidth();
-    makeFontDefTable();
+    makeFontsTable();
     clearSecondFontMemory();
     writeScrollTextCharacters(23);
     do scrollMessage(); while(!kbhit());

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------*/
 /* Demo link code c++ with asm code (see circlea.asm)      */
-/* Compile: OpenWatcom C/C++                               */
+/* Compile: Open Watcom C/C++                              */
 /*          wasm -zq -fp3 -mc -zcm=tasm circlea.asm        */
 /*          wcl -zq -ox -fp3 -3 -mc circlec.c circlea.obj  */
 /*---------------------------------------------------------*/

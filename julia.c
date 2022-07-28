@@ -210,7 +210,7 @@ int main()
         return 1;
     }
 
-    // Set quit callbac function
+    // Set quit callback function
     setQuitCallback(runExit);
     
     // Make palette for 256 colors

@@ -28,9 +28,9 @@ void readPalette()
     fp = fopen("assets/flame.pal", "rt");
     if (!fp) return;
 
-    for (i = 0; i <= 255; i++)
+    for (i = 0; i < 256; i++)
     {
-        for(j = 0; j <= 2; j++)
+        for(j = 0; j < 3; j++)
         {
             fscanf(fp, "%d", &pal[i][j]);
             pal[i][j] >>= 2;

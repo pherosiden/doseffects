@@ -943,8 +943,6 @@ void part1()
 
 void makeTexture()
 {
-    uint16_t x, y, i, j;
-
     __asm {
         xor     di, di
         mov     ax, seg vbuff
