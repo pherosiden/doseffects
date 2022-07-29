@@ -17,7 +17,7 @@
 int16_t len = 0, col = 8;
 uint8_t fonts[256][32] = {0};
 const uint8_t masks[] = {1, 2, 4, 8, 16, 32, 64, 128};
-const char *text = "Smooth Text Scroll in text mode (c) 1998 by NGUYEN NGOC VAN ";
+const char *text = "Smooth Text Scroll in text mode (c) 1998 by NGUYEN NGOC VAN -o0o- ";
 
 void setCharWidth()
 {
@@ -356,7 +356,7 @@ void main()
     makeFontsTable();
     clearSecondFontMemory();
     writeScrollTextCharacters(23);
-    do scrollMessage(); while(!kbhit());
+    while(!kbhit()) scrollMessage();
     setTextMode();
     turnCursorOn();
 }
