@@ -519,14 +519,14 @@ void main()
         idx++;
 
         if (idx == 2 * WIDTH) idx = WIDTH;
-        retrace();
 
+        retrace();
         for (x = 0; text1[x]; x++)
         {
             eraseChar(tx + (x << 3), ty + sintab[idx + x]);
             showChar(tx + (x << 3), ty + sintab[idx + x + 1], text1[x]);
         }
-
+        
         for (x = 0; text2[x]; x++)
         {
             eraseChar(t2x + (x << 4) + (sintab[idx + x]), t2y);

@@ -339,8 +339,8 @@ void rotateCube()
         ay += YSTR;
         az += ZSTR;
         
-        retrace();
         motionBlur();
+        retrace();
         flip();
     } while (!kbhit());
 }

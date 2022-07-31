@@ -202,8 +202,8 @@ void main()
     do {
         displayMap();
         putImage();
-        flip(0xA000);
         retrace();
+        flip(0xA000);
         clearSeg();
         index += SPEED;
     } while (!kbhit());

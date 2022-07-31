@@ -249,8 +249,8 @@ void showFire(PART *parts)
         } while (i < cnt);
 
         fireBlur();
-        flip(0xA000);
         retrace();
+        flip(0xA000);
         frames++;
     } while(!kbhit());
 }

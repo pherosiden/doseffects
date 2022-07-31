@@ -220,9 +220,9 @@ void showTunnel()
             vbuff[y + 1][x + 1] = 240;
         }
 
-        waitRetrace();
         makeTunnel();
         tunnelBlur();
+        waitRetrace();
         flipScreen();
     } while (!kbhit());
 }

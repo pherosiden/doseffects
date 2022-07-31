@@ -174,9 +174,8 @@ void main()
                 putPixel(20 + sintab[(wave + (j + i) * CE) % 256] + i * FX, 20 + sintab[(wave + j + i * CE) % 256] + j * FY, col);
             }
         }
-
-        flip();
         retrace();
+        flip();
     } while (!kbhit());
 
     __asm {

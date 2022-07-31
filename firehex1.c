@@ -405,8 +405,8 @@ void main()
         rotate();
         motionBlur();
         draw();
-        flip(0xA000);
         retrace();
+        flip(0xA000);
     } while(!kbhit());
 
     __asm {

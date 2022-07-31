@@ -309,11 +309,11 @@ void displayScape()
     int16_t pi, pj, n, x;
 
     do {
-        retrace();
         pi = i;
         pj = j;
         i = getMouseX();
         j = getMouseY();
+        retrace();
         for (n = 0; n < XMAX * YMAX; n++)
         {
             x = -(DENT * (n % XMAX - (XMAX >> 1) - 1) * 45) / (n / XMAX - 45) - 90;

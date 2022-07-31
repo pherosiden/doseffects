@@ -210,13 +210,12 @@ void main()
 
             if (xp < 2 || xp >= j - 2) xr = -xr;
             if (yp < 2 || yp >= k - 2) yr = -yr;
-
+            
+            waitRetrace();
             shadeBob(xp, yp);
             shadeBob(j - xp, yp);
-
             shadeBob(xp, k - yp);
             shadeBob(j - xp, k - yp);
-            waitRetrace();
 
             if (kbhit()) break;
         }

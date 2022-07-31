@@ -223,8 +223,8 @@ void main()
 
     do {
         doFire();
-        flip(0xA000);
         retrace();
+        flip(0xA000);
     } while (!kbhit());
 
     __asm {

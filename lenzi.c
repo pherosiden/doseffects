@@ -259,6 +259,7 @@ void construct(uint8_t n, uint16_t xp, uint16_t yp)
     }
 
     putHand(n, xp, yp);
+    retrace();
     flip(vbuff2[0], vmem);
 }
 
@@ -314,7 +315,6 @@ void main()
         }
 
         construct(m, x, y);
-        retrace();
     } while(!kbhit() && but != 1);
 
     __asm {

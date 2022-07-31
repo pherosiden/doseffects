@@ -255,8 +255,8 @@ void main()
 
         purgeBuf();
         blood(k);
-        flip();
         retrace();
+        flip();
 
         kk++;
         if (kk == 10)

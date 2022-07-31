@@ -247,20 +247,15 @@ void main()
     yadd = 1;
 
     do {
+        retrace();
         copyFromBuffer(oldx, oldy);
-
         x = xpostab[xpos & 0xFF];
         y = ypostab[ypos & 0xFF];
-
         printGlass(x, y);
-
         oldx = x;
         oldy = y;
-
         xpos += xadd;
         ypos += yadd;
-
-        retrace();
     } while(!kbhit());
 
     __asm {

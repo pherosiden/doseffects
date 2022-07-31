@@ -119,8 +119,8 @@ void main()
     do
     {
         doFire();
-        flip();
         waitRetrace();
+        flip();
     } while (!kbhit());
 
     memset(vbuff[199], 0, 320);
@@ -128,8 +128,8 @@ void main()
     for (i = 0; i < 35; i++)
     {
         doQuit();
-        flip();
         waitRetrace();
+        flip();
     }
     __asm {
         mov     ax, 0x03

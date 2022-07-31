@@ -136,7 +136,6 @@ void clearTextMem()
 void writeMsg(int16_t x, int16_t y, uint8_t col, char *msg)
 {
     __asm {
-        push  	ds
         lds     si, msg
         les     di, tmem
         add     di, x
@@ -154,7 +153,6 @@ void writeMsg(int16_t x, int16_t y, uint8_t col, char *msg)
         stosw
         jmp     next
     quit:
-        pop     ds
     }
 }
 

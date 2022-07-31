@@ -306,9 +306,9 @@ void main()
     initWater();
 
     do {
-        waitRetrace();
         makeWater(frames);
         showWater(page);
+        waitRetrace();
         flipScreen(vbuff[0], vmem);
         page ^= 1;
         frames++;

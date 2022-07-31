@@ -190,8 +190,8 @@ void main()
 
     do {
         pierra();
-        flip();
         retrace();
+        flip();
     } while (!kbhit());
 
     __asm {

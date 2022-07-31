@@ -218,6 +218,7 @@ void main()
     do {
         updateWave();
         drawRipples();
+        retrace();
         flip(vbuff, 0xA000);
     } while(!kbhit());
 

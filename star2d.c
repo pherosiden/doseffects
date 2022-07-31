@@ -152,8 +152,8 @@ void main()
     createStar();
 
     do {
-        moveStar();
         waitRetrace();
+        moveStar();
     } while(!kbhit());
     
     __asm {

@@ -221,8 +221,6 @@ void rotatePal(int16_t x, int16_t y)
     moveData(rgb, &pal[x * 3], 3);
     moveData(&pal[x * 3], &pal[(x + 1) * 3], y * 3);
     moveData(&pal[y * 3], rgb, 3);
-
-    retrace();
     setPal();
 }
 
@@ -270,12 +268,15 @@ void main()
     }
 
     coolPal();
-    
     drawSinCos();
     getch();
     filterSinCos();
     getch();
-    do rotatePal(1, 512); while(!kbhit());
+    
+    do {
+        retrace();
+        rotatePal(1, 512);
+    } while(!kbhit());
 
     __asm {
         mov     ax, 0x03

@@ -228,8 +228,8 @@ void crossFade(int8_t dirt, uint16_t depth)
 
         for (i = 0; i <= depth; i++)
         {
+            waitRetrace();
             for (j = 0; j <= 255; j++) setRGB(j, tmp[j][0], tmp[j][1], tmp[j][2]);
-
             for (j = 0; j <= 255; j++)
             {
                 if (tmp[j][0] < dst[j][0]) tmp[j][0]++;
@@ -243,8 +243,6 @@ void crossFade(int8_t dirt, uint16_t depth)
 
                 if (inp(0x60) == 1) return;
             }
-
-            waitRetrace();
         }
     }
     else
@@ -254,8 +252,8 @@ void crossFade(int8_t dirt, uint16_t depth)
 
         for (i = 0; i <= depth; i++)
         {
+            waitRetrace();
             for (j = 0; j <= 255; j++) setRGB(j, tmp[j][0], tmp[j][1], tmp[j][2]);
-
             for (j = 0; j <= 255; j++)
             {
                 if (tmp[j][0] < src[j][0]) tmp[j][0]++;
@@ -269,8 +267,6 @@ void crossFade(int8_t dirt, uint16_t depth)
 
                 if (inp(0x60) == 1) return;
             }
-
-            waitRetrace();
         }
     }
 }

@@ -530,8 +530,8 @@ void main()
 
         computeView();
         if (showmaze) drawMaze();
-        moveData(vbuff[0], vmem, 64000);
         waitRetrace();
+        moveData(vbuff[0], vmem, 64000);
     } while (!kbarr[1]);
 
     __asm {

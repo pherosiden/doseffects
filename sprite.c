@@ -280,7 +280,6 @@ void jump()
         }
 
         for (i = 1; i <= D; i++) waitRetrace();
-
         flip(vbuff1[0], vmem);
     } while(key != 27);
 }

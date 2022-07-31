@@ -160,11 +160,12 @@ void main()
 
     do {
         n = (n + 1) % 64;
+        retrace();
         for (j = 0; j <= 159; j++)
         {
             c = 63;
             lasth = 199;
-            for (i = 31; i >=  0; i--)
+            for (i = 31; i >= 0; i--)
             {
                 limit = (56 + i) + wb[n][lb[i][j]];
                 while (lasth > limit)
@@ -193,7 +194,6 @@ void main()
             }
             heighest[j] = lasth;
         }
-        retrace();
     } while (!kbhit());
 
     __asm {

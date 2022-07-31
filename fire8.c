@@ -114,8 +114,8 @@ void main()
     do {
         for (x = 0; x < 320; x++) dbuff[x][79] = random(100) + 40;
         interpolation();
-        putFire();
         retrace();
+        putFire();
     } while(!kbhit());
 
     __asm {

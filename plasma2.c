@@ -146,14 +146,13 @@ void moveData(uint8_t *dst, uint8_t *src, uint16_t len)
     }
 }
 
-void cyclepallete()
+void cyclePallete()
 {
     uint8_t tmp[3] = {0};
 
     moveData(tmp, pal, 3);
     moveData(pal, &pal[3], 765);
     moveData(&pal[765], tmp, 3);
-    waitRetrace();
 
     __asm {
         mov     dx, 0x03C8
@@ -204,8 +203,10 @@ void main()
     setPal();
 
     do {
-        cyclepallete();
+        cyclePallete();
+        waitRetrace();
         bobPlasma(&bob1x, &bob1y);
+        waitRetrace();
         bobPlasma(&bob2x, &bob2y);
     } while (!kbhit());
 

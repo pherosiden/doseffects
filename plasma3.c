@@ -124,14 +124,13 @@ void moveData(uint8_t *dst, uint8_t *src, uint16_t len)
     }
 }
 
-void cyclepallete()
+void cyclePallete()
 {
     uint8_t tmp[3] = {0};
 
     moveData(tmp, pal, 3);
     moveData(pal, &pal[3], 762);
     moveData(&pal[762], tmp, 3);
-    waitRetrace();
 
     __asm {
         mov     dx, 0x03C8
@@ -165,7 +164,10 @@ void main()
         for (x = 0; x < 320; x++) plotPixel(x, y, FX(x, y));
     }
 
-    do cyclepallete(); while(!kbhit());
+    do {
+        waitRetrace();
+        cyclePallete();
+    } while(!kbhit());
     
     __asm {
         mov     ax, 0x03

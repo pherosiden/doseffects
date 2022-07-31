@@ -1,3 +1,8 @@
+;-------------------------------------------------;
+; ASM module for circlec.c                        ;
+; Build: wasm -zq -fp3 -mc -zcm=tasm circlea.asm  ;
+;-------------------------------------------------;
+
 .model compact, c
 .386
 .code

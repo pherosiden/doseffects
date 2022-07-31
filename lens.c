@@ -224,9 +224,9 @@ void main()
     yadd = 1;
 
     do {
-        retrace();
         flip(vbuff2, vbuff1);
         circleStretch(x - RAD, y - RAD, x, y, RAD);
+        retrace();
         flip(vbuff1, vmem);
 
         x += xadd;

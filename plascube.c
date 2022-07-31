@@ -411,7 +411,6 @@ void main()
     }
 
     do {
-        retrace();
         rotate();
 
         vs = (vs + 4) % 360;
@@ -431,6 +430,7 @@ void main()
         updatePlasma();
         clearMem();
         drawCube();
+        retrace();
         flip();
     } while(!kbhit());
 

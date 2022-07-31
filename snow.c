@@ -146,8 +146,8 @@ void snowFall()
 
     do {
         if (actflk < 320) flake[actflk++] = rand() % 320;
-        updateFlakes();
         retrace();
+        updateFlakes();
     } while(!kbhit());
 }
 

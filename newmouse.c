@@ -18,15 +18,15 @@
 #include <string.h>
 #include <conio.h>
 
-uint16_t cursor[] = {
+const uint16_t cursor[] = {
     0xFF07, 0xFE03, 0xFC01, 0xF800, 0xF000, 0xE000, 0xC000, 0x8000,
     0x0001, 0x0003, 0x0007, 0x000F, 0x001F, 0x003F, 0x007F, 0x00FF,
     0x0000, 0x0078, 0x017C, 0x0366, 0x0766, 0x0EBE, 0x1DDE, 0x1BE0,
     0x57DC, 0x4FB8, 0x5F70, 0x6EE0, 0x75C0, 0x7800, 0x3F00, 0x0000
 };
 
-int16_t hotspotx = -1;
-int16_t hotspoty = 16;
+const int16_t hotspotx = -1;
+const int16_t hotspoty = 16;
 uint8_t pal[768] = {0};
 
 uint8_t *vmem = (uint8_t*)0xA0000000L;
@@ -68,7 +68,7 @@ void printMsg(int16_t x, int16_t y, uint8_t col, char *msg)
 void main()
 {
     FILE *fp;
-    uint16_t *mask = cursor;
+    const uint16_t *mask = cursor;
 
     clearScreen();
     printMsg(1, 1, 0x0F, "NEW MOUSE POINTER - (c) 1998 by Nguyen Ngoc Van");

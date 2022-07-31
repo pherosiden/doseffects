@@ -148,8 +148,8 @@ void main()
     i = 0;
     
     do {
-        EMS2RAM(vmem, handle[i]);
         retrace();
+        EMS2RAM(vmem, handle[i]);
         if (i++ >= 14) i = 0;
     } while (!kbhit());
 

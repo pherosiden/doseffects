@@ -182,8 +182,8 @@ void main()
 
     do {
         bumpMap();
-        flip();
         retrace();
+        flip();
     } while(!kbhit());
 
     __asm {

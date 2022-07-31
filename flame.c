@@ -79,8 +79,6 @@ void main()
     readPalette();
 
     do {
-        retrace();
-        
         __asm {
             mov     cx, 16159
             lea     di, flames
@@ -107,6 +105,8 @@ void main()
             flames[101][i] = delta;
         }
 
+        retrace();
+        
         __asm {
             lea     si, flames
             mov     ax, 0xA000

@@ -98,8 +98,8 @@ void main()
     setFirePalette();
 
     do {
-        fire();
         retrace();
+        fire();
     } while (!kbhit());
 
     __asm {

@@ -146,9 +146,9 @@ void doArt()
             gy2 = (gy1 + gy2) >> 1;
         }
 
+        retrace();
         drawCurrentLine();
         updateLine();
-        retrace();        
     } while (!kbhit());
 }
 

@@ -135,11 +135,12 @@ void main()
     i = 0;
 
     do {
-        retrace();
 
         if (i > 358) i = 0;
         i += 2;
 
+        retrace();
+        
         for (y = 0; y < 30; y++)
         {
             for (x = 0; x < 90; x++)

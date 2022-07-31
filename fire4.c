@@ -128,8 +128,8 @@ void main()
             vbuff[101][i] = delta;
         }
         interpolation();
-        purgeBuf();
         retrace();
+        purgeBuf();
     } while (!kbhit());
 
     __asm {

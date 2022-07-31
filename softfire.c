@@ -507,6 +507,21 @@ void printStr(uint16_t x, uint16_t y, uint8_t col, char *msg)
     }
 }
 
+void retrace()
+{
+    __asm {
+        mov     dx, 0x03DA
+    waitH:
+        in      al, dx
+        test    al, 0x08
+        jnz     waitH
+    waitV:
+        in      al, dx
+        test    al, 0x08
+        jz      waitV
+    }
+}
+
 void main()
 {
     char key;
@@ -567,28 +582,41 @@ void main()
         }
     }
     
-    for (j = 0; j <= 115; j++) for (i = 0; i < 200; i++) flames[j][i] = 0;
+    for (j = 0; j <= 115; j++)
+    {
+        for (i = 0; i < 200; i++) flames[j][i] = 0;
+    }
 
     do {
-        for (j = 0; j <= 118; j++) for (i = 0; i < 200; i++)
+        for (j = 0; j <= 118; j++)
         {
-            k = (flames[j + 1][i] + flames[j + 2][i] + flames[j + 1][i - 1] + flames[j + 1][i + 1]) >> 2;
-            if (k > 0) k--;
-            flames[j][i] = k;
+            for (i = 0; i < 200; i++)
+            {
+                k = (flames[j + 1][i] + flames[j + 2][i] + flames[j + 1][i - 1] + flames[j + 1][i + 1]) >> 2;
+                if (k > 0) k--;
+                flames[j][i] = k;
+            }
         }
 
         for (j = 119; j <= 120; j++)
-            for (i = 0; i < 200; i++)
-                flames[j][i] = 160 * (rand() % 2) + incx;
-
-        for (j = 0; j <= 112; j++) for (i = 0; i < 200; i++)
-        switch (text[j][i])
         {
-            case 1: putPixel(i + 60, j + 50, flames[j][i]); break;
-            case 2: putPixel(i + 60, j + 50, dark[flames[j][i]][0]); break;
-            case 3: putPixel(i + 60, j + 50, dark[flames[j][i]][1]); break;
+            for (i = 0; i < 200; i++) flames[j][i] = 160 * (rand() % 2) + incx;
         }
 
+        for (j = 0; j <= 112; j++)
+        {
+            for (i = 0; i < 200; i++)
+            {
+                switch (text[j][i])
+                {
+                    case 1: putPixel(i + 60, j + 50, flames[j][i]); break;
+                    case 2: putPixel(i + 60, j + 50, dark[flames[j][i]][0]); break;
+                    case 3: putPixel(i + 60, j + 50, dark[flames[j][i]][1]); break;
+                }
+            }
+        }
+
+        retrace();
         flip(vmem);
 
         if (kbhit())
