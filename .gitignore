@@ -3,6 +3,8 @@
 *.err
 *.obj
 .vscode
+
+# Libraries files
 !wc/**
 !bc/**
 !bp/**
