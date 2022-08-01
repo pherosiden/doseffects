@@ -239,7 +239,6 @@ void main()
     printStr(1, 1, 0x0F, "THUNDER BOLT - (c) 1998 by Nguyen Ngoc Van");
     printStr(1, 2, 0x07, "Press any key to continue ...");
     getch();
-    srand(time(NULL));
 
     __asm {
         mov     ax, 0x13
@@ -254,6 +253,7 @@ void main()
         dst[i + 192].r = 63; dst[i + 192].g = 63; dst[i + 192].b = 63;
     }
     
+    srand(time(NULL));
     movePal(src, dst);
     thunderBolt();
 

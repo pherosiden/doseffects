@@ -194,7 +194,7 @@ void readFile(char *fname)
 
     while (fgets(buffer, 255, fp))
     {
-        lines[linecount] = (char*)calloc(strlen(buffer) + 1, 1);
+        lines[linecount] = (char*)calloc(strlen(buffer), 1);
         if (!lines[linecount])
         {
             setMode(0x03);
@@ -232,7 +232,7 @@ void showPageText(int16_t x, int16_t y)
 {
     int16_t i;
     int16_t len;
-    char dummpy[82] = {0};
+    char dummy[82] = {0};
 
     for (i = 0; i < 23; i++)
     {
@@ -241,10 +241,10 @@ void showPageText(int16_t x, int16_t y)
         if (len < 0) len = 0;
         if (len > 80) len = 80;
 
-        memmove(dummpy, &lines[y + i][x], len);
+        memmove(dummy, &lines[y + i][x], len);
 
-        dummpy[len] = 0;
-        printText(0, i + 1, 0x14 + (i >> 1), dummpy);
+        dummy[len] = 0;
+        printText(0, i + 1, 0x14 + (i >> 1), dummy);
     }
 }
 

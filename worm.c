@@ -44,7 +44,7 @@ void setPalette()
     int16_t i;
     outp(0x03C8, 16);
 
-    for (i = 16; i <= 255; i++)
+    for (i = 16; i < 256; i++)
     {
         outp(0x3C9, pal[i].r);
         outp(0x3C9, pal[i].g);

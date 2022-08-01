@@ -83,9 +83,9 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
 void generateLand()
 {
     int16_t i, j;
-    for (i = 0; i <= 31; i++)
+    for (i = 0; i < 32; i++)
     {
-        for (j = 0; j <= 159; j++)
+        for (j = 0; j < 160; j++)
         {
             lb[i][j] = sqrt((i * i / S31) + (j * j / S159)) * 127;
             if (lb[i][j] > 127) lb[i][j] = 127;
@@ -96,9 +96,9 @@ void generateLand()
 void generateWav()
 {
     int16_t i, j;
-    for (j = 0; j <= 63; j++)
+    for (j = 0; j < 64; j++)
     {
-        for (i = 0; i <= 127; i++)
+        for (i = 0; i < 128; i++)
         {
             r = (i + 1) * 5 * M_PI / 320;
             d = j * M_PI / 32;
@@ -144,14 +144,14 @@ void main()
     generateWav();
 
     outp(0x03C8, 0);
-    for (i = 0; i <= 31; i++)
+    for (i = 0; i < 32; i++)
     {
         outp(0x3C9, i << 1);
         outp(0x3C9, 0);
         outp(0x3C9, 0);
     }
 
-    for (i = 0; i <= 31; i++)
+    for (i = 0; i < 32; i++)
     {
         outp(0x3C9, 63);
         outp(0x3C9, i << 1);
@@ -161,7 +161,7 @@ void main()
     do {
         n = (n + 1) % 64;
         retrace();
-        for (j = 0; j <= 159; j++)
+        for (j = 0; j < 160; j++)
         {
             c = 63;
             lasth = 199;
@@ -176,7 +176,7 @@ void main()
                 }
                 c--;
             }
-            for (i = 0; i <= 31; i++)
+            for (i = 0; i < 32; i++)
             {
                 limit = (56 - i) + wb[n][lb[i][j]];
                 while (lasth > limit)

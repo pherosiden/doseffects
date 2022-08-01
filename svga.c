@@ -187,6 +187,7 @@ uint32_t    getPixel16(uint16_t, uint16_t);
 uint32_t    getPixel24(uint16_t, uint16_t);
 uint32_t    getPixel32(uint16_t, uint16_t);
 
+uint32_t    fromRGB8(uint8_t, uint8_t, uint8_t);
 uint32_t    fromRGB15(uint8_t, uint8_t, uint8_t);
 uint32_t    fromRGB16(uint8_t, uint8_t, uint8_t);
 uint32_t    fromRGB24(uint8_t, uint8_t, uint8_t);
@@ -385,7 +386,7 @@ uint8_t setVesaMode(uint16_t mode)
     case 8:
         putPixel = putPixel8;
         getPixel = getPixel8;
-        fromRGB = NULL;
+        fromRGB = fromRGB8;
         break;
 
     case 15:
@@ -879,6 +880,12 @@ uint32_t getPixel32(uint16_t x, uint16_t y)
     return color;
 }
 
+uint32_t fromRGB8(uint8_t R, uint8_t G, uint8_t B)
+{
+    //return (uint8_t)(((R / 32) << 5) + ((G / 32) << 2) + (B / 64));
+    return (uint8_t)((R * 7 / 255) << 5 + (G * 7 / 255) << 2 + (B * 3 / 255));
+}
+
 uint32_t fromRGB15(uint8_t R, uint8_t G, uint8_t B)
 {
     uint16_t val = 0;
@@ -1358,7 +1365,7 @@ void fadeMin(RGB *pal, uint8_t start, uint8_t count)
     }
 }
 
-void DisplayVesaInfo()
+void displayVesaInfo()
 {
     int16_t i = 0, j = 1;
 
@@ -2404,10 +2411,15 @@ void writeStrCHR(uint16_t x, uint16_t y, char *str, uint8_t size, uint32_t color
 }
 /*---------------------- END OF FILE SVGA.C --------------------------*/
 
-void _main()
+int main()
 {
-    initGraph(800, 600, 24);
+    if (!initGraph(800, 600, 8))
+    {
+        printf("Cannot initialize video mode!\n");
+        return 1;
+    }
     drawLine(0, 0, cmaxX, cmaxY, fromRGB(255, 255, 0));
     getch();
     closeGraph();
+    return 0;
 }

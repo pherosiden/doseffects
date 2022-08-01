@@ -22,14 +22,14 @@
 #define M_PI 3.141592f
 
 uint8_t height = 0;
+uint8_t pal[768] = {0};
 uint8_t tmap[256][256] = {0};
 uint8_t hmap[256][256] = {0};
-uint8_t pal[768] = {0};
 
 int16_t x, y, angle, dst;
+int16_t dcomp[127] = {0};
 int16_t costab[2048] = {0};
 int16_t sintab[2048] = {0};
-int16_t dcomp[127] = {0};
 
 char kbarr[128] = {0};
 
@@ -178,7 +178,7 @@ void initTables()
         sintab[i] = roundf(sin(i * M_PI / 1024) * 256);
     }
 
-    for (i = 1; i <= 127; i++) dcomp[i - 1] = 2000 / i + 100;
+    for (i = 1; i < 128; i++) dcomp[i - 1] = 2000 / i + 100;
 }
 
 void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
@@ -211,6 +211,21 @@ void clearScreen()
         xor     ax, ax
         mov     cx, 2000
         rep     stosw
+    }
+}
+
+void waitRetrace()
+{
+    __asm {
+        mov     dx, 0x03DA
+    hwait:
+        in      al, dx
+        test    al, 0x08
+        jnz     hwait
+    vwait:
+        in      al, dx
+        test    al, 0x08
+        jz      vwait
     }
 }
 
@@ -249,6 +264,7 @@ void main()
         height = hmap[y >> 8][x >> 8];
         flip(sky, vbuff);
         drawView();
+        waitRetrace();
         flip(vbuff, vmem);
 
         if (kbarr[72])
