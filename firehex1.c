@@ -191,14 +191,14 @@ void init()
     yofs = 120;
     zofs = -400;
 
-    for (k = 0; k <= 7; k++)
+    for (k = 0; k < 8; k++)
     {
         verties[k].x = verts[k][0];
         verties[k].y = verts[k][1];
         verties[k].z = verts[k][2];
     }
 
-    for (k = 0; k <= 5; k++)
+    for (k = 0; k < 6; k++)
     {
         face[k][0] = faces[k][0];
         face[k][1] = faces[k][1];
@@ -238,7 +238,7 @@ void rotate()
     int16_t k;
     VERTEX temp;
 
-    for (k = 0; k <= 7; k++)
+    for (k = 0; k < 8; k++)
     {
         temp.y = LCOS * verties[k].y - LSIN * verties[k].z;
         temp.z = LSIN * verties[k].y + LCOS * verties[k].z;
@@ -257,7 +257,7 @@ void rotate()
         points[k].z = verties[k].z + 128;
     }
 
-    for (k = 0; k <= 5; k++)
+    for (k = 0; k < 6; k++)
     {
         face[k][4] = points[face[k][0]].z + points[face[k][1]].z + points[face[k][2]].z + points[face[k][3]].z;
     }
@@ -342,7 +342,7 @@ void draw()
 {
     int16_t k;
 
-    for (k = 0; k <= 5; k++)
+    for (k = 0; k < 6; k++)
     {
         if (((points[face[k][1]].x - points[face[k][0]].x) *
             (points[face[k][0]].y - points[face[k][2]].y) -

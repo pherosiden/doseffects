@@ -306,7 +306,7 @@ void rotateCube()
     uint8_t az = 1;
 
     do {
-        for (n = 0; n <= 7; n++)
+        for (n = 0; n < 8; n++)
         {
             i = (Cosnus(ay) * points[n][0] - Sinus(ay) * points[n][2]) / DIVD;
             j = (Cosnus(az) * points[n][1] - Sinus(az) * i) / DIVD;
@@ -321,7 +321,7 @@ void rotateCube()
             pz[n] = z;
         }
 
-        for (n = 0; n <= 5; n++)
+        for (n = 0; n < 6; n++)
         {
             polyz[n] = (pz[planes[n][0]] + pz[planes[n][1]] + pz[planes[n][2]] + pz[planes[n][3]]) >> 2;
             pind[n] = n;
@@ -329,7 +329,7 @@ void rotateCube()
 
         sort(0, 5);
 
-        for (n = 0; n <= 5; n++)
+        for (n = 0; n < 6; n++)
         polygon(px[planes[pind[n]][0]], py[planes[pind[n]][0]],
                 px[planes[pind[n]][1]], py[planes[pind[n]][1]],
                 px[planes[pind[n]][2]], py[planes[pind[n]][2]],
