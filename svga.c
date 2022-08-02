@@ -145,16 +145,16 @@ typedef struct tagStroke {
 
 // RGB for palette 8/15/16/24 bits colors
 typedef struct tagRGB {
-    uint8_t     r;
-    uint8_t     g;
     uint8_t     b;
+    uint8_t     g;
+    uint8_t     r;
 } RGB;
 
 // RGBA for palette 32 bits colors
 typedef struct tagRGBA {
-    uint8_t     r;
-    uint8_t     g;
     uint8_t     b;
+    uint8_t     g;
+    uint8_t     r;
     uint8_t     a;
 } RGBA;
 
@@ -429,15 +429,11 @@ uint8_t setVesaMode(uint16_t mode)
 
 uint16_t getVesaMode()
 {
-    uint16_t val;
-
     __asm {
         mov     ax, 0x4F03
         int     0x10
-        mov     val, bx
+        mov     ax, bx
     }
-
-    return val;
 }
 
 uint8_t initGraph(uint16_t x, uint16_t y, uint8_t bitPerPixels)
@@ -589,18 +585,18 @@ void putPixel24(uint16_t x, uint16_t y, uint32_t color)
     plot:
         les     di, videoMem
         pop     di
-        mov     al, byte ptr [color]
+        mov     al, byte ptr color
         stosb
         jnc     nocarry1
         jmp     switchbank
     nocarry1:
         mov     CheckCarry, 1
-        mov     al, byte ptr [color + 1]
+        mov     al, byte ptr color[1]
         stosb
         jnc     nocarry2
         jmp     switchbank
     nocarry2:
-        mov     al, byte ptr [color + 2]
+        mov     al, byte ptr color[2]
         stosb
         jmp     done
     switchbank:
@@ -645,41 +641,30 @@ void putPixel32(uint16_t x, uint16_t y, uint32_t color)
     plot:
         les     di, videoMem
         pop     di
-        mov     al, byte ptr [color]
+        mov     al, byte ptr color
         stosb
-        mov     al, byte ptr [color + 1]
-        stosb
-        mov     al, byte ptr [color + 2]
-        stosb
+        mov     ax, word ptr color[1]
+        stosw
     }
 }
 
 uint32_t getPixel320(uint16_t x, uint16_t y)
 {
-    uint8_t val = 0;
-
     __asm {
-        push    ds
         lds     si, videoMem
         mov     bx, y
         shl     bx, 6
         add     bh, byte ptr y
         add     bx, x
         add     si, bx
+        xor     ax, ax
         lodsb
-        mov     val, al
-        pop     ds
     }
-
-    return val;
 }
 
 uint32_t getPixel8(uint16_t x, uint16_t y)
 {
-    uint8_t val = 0;
-
     __asm {
-        push    ds
         mov     ax, y
         mov     cx, bytesPerScanLine
         mul     cx
@@ -699,20 +684,14 @@ uint32_t getPixel8(uint16_t x, uint16_t y)
     plot:
         lds     si, videoMem
         pop     si
+        xor     ax, ax
         lodsb
-        mov     val, al
-        pop     ds
     }
-
-    return val;
 }
 
 uint32_t getPixel15(uint16_t x, uint16_t y)
 {
-    uint16_t val = 0;
-
     __asm {
-        push    ds
         mov     ax, y
         mov     cx, bytesPerScanLine
         mul     cx
@@ -734,20 +713,14 @@ uint32_t getPixel15(uint16_t x, uint16_t y)
     plot:
         lds     si, videoMem
         pop     si
+        xor     ax, ax
         lodsw
-        mov     val, ax
-        pop     ds
     }
-
-    return val;
 }
 
 uint32_t getPixel16(uint16_t x, uint16_t y)
 {
-    uint16_t val = 0;
-
     __asm {
-        push    ds
         mov     ax, y
         mov     cx, bytesPerScanLine
         mul     cx
@@ -769,12 +742,9 @@ uint32_t getPixel16(uint16_t x, uint16_t y)
     plot:
         lds     si, videoMem
         pop     si
+        xor     ax, ax
         lodsw
-        mov     val, ax
-        pop     ds
     }
-
-    return val;
 }
 
 uint32_t getPixel24(uint16_t x, uint16_t y)
@@ -783,7 +753,6 @@ uint32_t getPixel24(uint16_t x, uint16_t y)
     uint8_t checkCarry = 0;
     
     __asm {
-        push    ds
         mov     ax, y
         mov     cx, bytesPerScanLine
         mul     cx
@@ -807,18 +776,18 @@ uint32_t getPixel24(uint16_t x, uint16_t y)
         lds     si, videoMem
         pop     si
         lodsb
-        mov     byte ptr [color], al
+        mov     byte ptr color, al
         jnc     nocarry1
         jmp     switchbank
     nocarry1:
         mov     checkCarry, 1
         lodsb
-        mov     byte ptr [color + 1], al
+        mov     byte ptr color[1], al
         jnc     nocarry2
         jmp     switchbank
     nocarry2:
         lodsb
-        mov     byte ptr [color + 2], al
+        mov     byte ptr color[2], al
         jmp     done
     switchbank:
         mov     ax, currReadBank
@@ -835,7 +804,6 @@ uint32_t getPixel24(uint16_t x, uint16_t y)
         cmp     checkCarry, 1
         je      nocarry2
     done:
-        pop     ds
     }
 
     return color;
@@ -843,8 +811,6 @@ uint32_t getPixel24(uint16_t x, uint16_t y)
 
 uint32_t getPixel32(uint16_t x, uint16_t y)
 {
-    uint32_t color = 0;
-
     __asm {
         push    ds
         mov     ax, y
@@ -868,104 +834,143 @@ uint32_t getPixel32(uint16_t x, uint16_t y)
     plot:
         lds     si, videoMem
         pop     si
-        lodsb
-        mov     byte ptr [color], al
-        lodsb
-        mov     byte ptr [color + 1], al
-        lodsb
-        mov     byte ptr [color + 2], al
-        pop     ds
+        mov     al, [si]
+        mov     ah, [si + 1]
+        mov     dl, [si + 2]
+        xor     dh, dh
     }
-
-    return color;
 }
 
 uint32_t fromRGB8(uint8_t R, uint8_t G, uint8_t B)
 {
-    //return (uint8_t)(((R / 32) << 5) + ((G / 32) << 2) + (B / 64));
-    return (uint8_t)((R * 7 / 255) << 5 + (G * 7 / 255) << 2 + (B * 3 / 255));
+    __asm {
+        xor     ax, ax
+        xor     bx, bx
+        mov     al, B
+        mov     bl, G
+        add     ax, bx
+        add     ax, bx
+        mov     bl, R
+        add     ax, bx
+        shr     ax, 2
+        xor     dh, dh
+    }
 }
 
 uint32_t fromRGB15(uint8_t R, uint8_t G, uint8_t B)
 {
-    uint16_t val = 0;
-
     __asm {
-        xor     ah, ah
-        mov     al, R
-        shr     al, 3
-        shl     ax, 10
-        mov     bx, ax
-        xor     ah, ah
-        mov     al, G
-        shr     al, 3
-        shl     ax, 5
-        add     bx, ax
-        xor     ah, ah
         mov     al, B
-        shr     al, 3
-        add     bx, ax
-        mov     val, bx
+        mov     ah, G
+        mov     bl, R
+        shr     ah, 3
+        and     bl, 11111000b
+        shr     ax, 3
+        shr     bl, 1
+        or      ah, bl
+        xor     dx, dx
     }
-
-    return val;
 }
 
 uint32_t fromRGB16(uint8_t R, uint8_t G, uint8_t B)
 {
-    uint16_t val = 0;
-
     __asm {
-        xor     ah, ah
-        mov     al, R
-        shr     al, 3
-        shl     ax, 11
-        mov     bx, ax
-        xor     ah, ah
-        mov     al, G
-        shr     al, 2
-        shl     ax, 5
-        add     bx, ax
-        xor     ah, ah
         mov     al, B
-        shr     al, 3
-        add     bx, ax
-        mov     val, bx
+        mov     ah, G
+        shr     ah, 2
+        mov     bl, R
+        shr     ax, 3
+        and     bl, 11111000b
+        or      ah, bl
+        xor     dx, dx
     }
-
-    return val;
 }
 
 uint32_t fromRGB24(uint8_t R, uint8_t G, uint8_t B)
 {
-    uint32_t val = 0;
-
     __asm {
-        mov     al, R
-        mov     byte ptr [val + 2], al
-        mov     al, G
-        mov     byte ptr [val + 1], al
-        mov     al, [B]
-        mov     byte ptr [val], al
+        mov     al, B
+        mov     ah, G
+        mov     dl, R
+        xor     dh, dh
     }
-
-    return val;
 }
 
 uint32_t fromRGB32(uint8_t R, uint8_t G, uint8_t B)
 {
-    uint32_t val = 0;
-
-    __asm {	
-        mov     al, R
-        mov     byte ptr [val + 2], al
-        mov     al, G
-        mov     byte ptr [val + 1], al
+    __asm {
         mov     al, B
-        mov     byte ptr [val], al
+        mov     ah, G
+        mov     dl, R
+        xor     dh, dh
     }
+}
 
-    return val;
+void deRGB8(uint32_t col, RGB* rgb)
+{
+    __asm {
+        les     di, rgb
+        mov     al, byte ptr col
+        mov     ah, al
+        mov     es:[di], ax
+        mov     es:[di + 2], al
+    }
+}
+
+void deRGB15(uint32_t col, RGB* rgb)
+{
+    __asm {
+        mov     ax, word ptr col
+        mov     bx, ax
+        shl     al, 3
+        les     di, rgb
+        mov     es:[di], al
+        mov     ax, bx
+        and     bh, 1111100b
+        and     ax, 1111100000b
+        shr     ax, 2
+        add     bh, bh
+        mov     es:[di + 1], al
+        mov     es:[di + 2], bh
+    }
+}
+
+void deRGB16(uint32_t col, RGB* rgb)
+{
+    __asm {
+        mov     ax, word ptr col
+        mov     bx, ax
+        and     ax, 1111100000011111b
+        shl     al, 3
+        les     di, rgb
+        and     bx, 11111100000b
+        shl     bx, 5
+        mov     bl, al
+        mov     es:[di + 2], ah
+        mov     es:[di], bx
+    }
+}
+
+void deRGB24(uint32_t col, RGB* rgb)
+{
+    __asm {
+        les     di, rgb
+        mov     al, byte ptr col
+        mov     es:[di], al
+        mov     ax, word ptr col[1]
+        mov     es:[di + 1], ax
+    }
+}
+
+void deRGB32(uint32_t col, RGB* rgb)
+{
+    __asm {
+        les     di, rgb
+        mov     al, byte ptr col
+        mov     es:[di], al
+        mov     ax, word ptr col[1]
+        mov     es:[di + 1], ax
+    }
 }
 
 void clearTextScreen()
@@ -2411,14 +2416,14 @@ void writeStrCHR(uint16_t x, uint16_t y, char *str, uint8_t size, uint32_t color
 }
 /*---------------------- END OF FILE SVGA.C --------------------------*/
 
-int main()
+int _main()
 {
-    if (!initGraph(800, 600, 8))
+    if (!initGraph(800, 600, 32))
     {
         printf("Cannot initialize video mode!\n");
         return 1;
     }
-    drawLine(0, 0, cmaxX, cmaxY, fromRGB(255, 255, 0));
+    drawLine(0, 0, cmaxX, cmaxY, fromRGB(255, 0, 255));
     getch();
     closeGraph();
     return 0;

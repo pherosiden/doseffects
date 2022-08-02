@@ -332,9 +332,9 @@ typedef struct {
 // Palette structure
 typedef struct
 {
-    uint8_t   r;
-    uint8_t   g;
     uint8_t   b;
+    uint8_t   g;
+    uint8_t   r;
 } RGB;
 
 // RGB structure (use for VESA 2.0 setPaletteRange function)
@@ -526,22 +526,22 @@ typedef struct {
 // Rotate clip data
 typedef struct
 {
-    int32_t srcw, srch;                 // source width and height
-    int32_t dstw, dsth;                 // destination width and height
-    int32_t srcx, srcy;                 // source strart x, y
+    int32_t     srcw, srch;             // source width and height
+    int32_t     dstw, dsth;             // destination width and height
+    int32_t     srcx, srcy;             // source strart x, y
 
-    int32_t ax, ay;                     // left, right
-    int32_t bx, by;                     // top, bottom
-    int32_t cx, cy;                     // center x, y
+    int32_t     ax, ay;                 // left, right
+    int32_t     bx, by;                 // top, bottom
+    int32_t     cx, cy;                 // center x, y
 
-    int32_t boundWidth;                 // boundary width (pixels units)
-    int32_t currUp0, currUp1;           // current up
-    int32_t currDown0, currDown1;       // current down
+    int32_t     boundWidth;             // boundary width (pixels units)
+    int32_t     currUp0, currUp1;       // current up
+    int32_t     currDown0, currDown1;   // current down
 
-    int32_t yUp, yDown;                 // y top and down
+    int32_t     yUp, yDown;             // y top and down
 
-    int32_t outBound0, outBound1;       // in-bound and out-bound
-    int32_t inBound0, inBound1;         // in-bound and out-bound
+    int32_t     outBound0, outBound1;   // in-bound and out-bound
+    int32_t     inBound0, inBound1;     // in-bound and out-bound
 } ROTATE_CLIP;
 
 #pragma pack(pop)
@@ -710,9 +710,9 @@ uint32_t    pageOffset = 0;                     // page start offset (use for vi
 uint32_t    numOfPages = 0;                     // number of virtual screen page
 
 // Palette mask
+uint32_t    rpos = 0, gpos = 0, bpos = 0;
 uint32_t    rmask = 0, gmask = 0, bmask = 0;
 uint32_t    rshift = 0, gshift = 0, bshift = 0;
-uint32_t    rpos = 0, gpos = 0, bpos = 0;
 
 // Clip cordinate handle
 int32_t     cminX = 0, cminY = 0;               // min view port
@@ -730,11 +730,11 @@ int32_t     oldMaxX = 0, oldMaxY = 0;           // saved right-bottom
 
 // 3D projection
 enum        {PERSPECTIVE, PARALLELE};
-double       de = 0.0, rho = 0.0, theta = 0.0, phi = 0.0;
-double       aux1 = 0.0, aux2 = 0.0, aux3 = 0.0, aux4 = 0.0;
-double       aux5 = 0.0, aux6 = 0.0, aux7 = 0.0, aux8 = 0.0;
-double       xobs = 0.0, yobs = 0.0, zobs = 0.0;
-double       xproj = 0.0, yproj = 0.0;
+double      de = 0.0, rho = 0.0, theta = 0.0, phi = 0.0;
+double      aux1 = 0.0, aux2 = 0.0, aux3 = 0.0, aux4 = 0.0;
+double      aux5 = 0.0, aux6 = 0.0, aux7 = 0.0, aux8 = 0.0;
+double      xobs = 0.0, yobs = 0.0, zobs = 0.0;
+double      xproj = 0.0, yproj = 0.0;
 int32_t     xecran = 0, yecran = 0;
 uint8_t     projection = 0;
 
@@ -1174,22 +1174,6 @@ void initGfxLib(uint8_t type, void (*fnQuit)())
         timeRes = 100;
         cpuSpeed = 0;
     }
-
-    // Initialize random number generation
-    randSeed = time(NULL);
-    srand(randSeed);
-
-    // Initialize GFXLIB buffer
-    gfxBuff = (uint8_t*)calloc(GFX_BUFF_SIZE, 1);
-    if (!gfxBuff)
-    {
-        printf("initGfxLib: Cannot initialize GFXLIB buffer!\n");
-        exit(1);
-    }
-
-    // Filled cpu and memory info structure
-    getCpuInfo();
-    getMemoryInfo();
 }
 
 // Convert CPU ticks to microsecond
@@ -1534,12 +1518,18 @@ void closeVesaMode()
         fnSetPalette = NULL;
     }
 
-    // Free gfxBuff
+    // Free gfx font buffer
     if (gfxBuff)
     {
         free(gfxBuff);
         gfxBuff = NULL;
     }
+
+    // Reset cpu and memory info
+    haveMMX = haveSSE = have3DNow = 0;
+    memset(cpuVendor, 0, sizeof(cpuVendor));
+    memset(cpuFeatures, 0, sizeof(cpuFeatures));
+    memset(&meminfo, 0, sizeof(meminfo));
 }
 
 // Raise error message and exit program
@@ -2187,9 +2177,9 @@ uint32_t getPixel24(int32_t x, int32_t y)
         mov     esi, lfbPtr
         add     esi, eax
         lodsw
-        mov     word ptr [col], ax
+        mov     word ptr col, ax
         lodsb
-        mov     byte ptr [col + 2], al
+        mov     byte ptr col[2], al
     }
 
     return col;
@@ -2230,17 +2220,17 @@ void putPixelAdd32(int32_t x, int32_t y, uint32_t col)
         mov     edi, lfbPtr
         add     edi, eax
         mov     eax, [edi]
-        add     al, byte ptr [col]
+        add     al, byte ptr col
         jnc     bstep
         mov     al, 255
     bstep:
-        add     ah, byte ptr [col + 1]
+        add     ah, byte ptr col[1]
         jnc     gstep
         mov     ah, 255
     gstep:
         mov     ebx, eax
         shr     ebx, 16
-        add     bl, byte ptr [col + 2]
+        add     bl, byte ptr col[2]
         jnc     rstep
         mov     bl, 255
     rstep:
@@ -2266,16 +2256,16 @@ void putPixelAdd24(int32_t x, int32_t y, uint32_t col)
         mov     edi, lfbPtr
         add     edi, eax
         mov     ax, [edi]
-        add     al, byte ptr [col]
+        add     al, byte ptr col
         jnc     bstep
         mov     al, 255
     bstep:
-        add     ah, byte ptr [col + 1]
+        add     ah, byte ptr col[1]
         jnc     gstep
         mov     ah, 255
     gstep:
         mov     bl, [edi + 2]
-        add     bl, byte ptr [col + 2]
+        add     bl, byte ptr col[2]
         jnc     rstep
         mov     bl, 255
     rstep:
@@ -2299,7 +2289,7 @@ void putPixelAdd16(int32_t x, int32_t y, uint32_t col)
         mov     edi, lfbPtr
         add     edi, eax
         mov     ax, [edi]
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 1111100000011111b
         and     dx, 11111100000b
@@ -2339,7 +2329,7 @@ void putPixelAdd15(int32_t x, int32_t y, uint32_t col)
         mov     edi, lfbPtr
         add     edi, eax
         mov     ax, [edi]
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 111110000011111b
         and     dx, 1111100000b
@@ -2380,17 +2370,17 @@ void putPixelSub32(int32_t x, int32_t y, uint32_t col)
         mov     edi, lfbPtr
         add     edi, eax
         mov     eax, [edi]
-        sub     al, byte ptr [col]
+        sub     al, byte ptr col
         jnc     bstep
         xor     al, al
     bstep:
-        sub     ah, byte ptr [col + 1]
+        sub     ah, byte ptr col[1]
         jnc     gstep
         xor     ah, ah
     gstep:
         mov     ebx, eax
         shr     ebx, 16
-        sub     bl, byte ptr [col + 2]
+        sub     bl, byte ptr col[2]
         jnc     rstep
         xor     bl, bl
     rstep:
@@ -2416,16 +2406,16 @@ void putPixelSub24(int32_t x, int32_t y, uint32_t col)
         mov     edi, lfbPtr
         add     edi, eax
         mov     ax, [edi]
-        sub     al, byte ptr [col]
+        sub     al, byte ptr col
         jnc     bstep
         xor     al, al
     bstep:
-        sub     ah, byte ptr [col + 1]
+        sub     ah, byte ptr col[1]
         jnc     gstep
         xor     ah, ah
     gstep:
         mov     bl, [edi + 2]
-        sub     bl, byte ptr [col + 2]
+        sub     bl, byte ptr col[2]
         jnc     rstep
         xor     bl, bl
     rstep:
@@ -2449,7 +2439,7 @@ void putPixelSub16(int32_t x, int32_t y, uint32_t col)
         mov     edi, lfbPtr
         add     edi, eax
         mov     ax, [edi]
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 1111100000011111b
         and     dx, 11111100000b
@@ -2486,7 +2476,7 @@ void putPixelSub15(int32_t x, int32_t y, uint32_t col)
         mov     edi, lfbPtr
         add     edi, eax
         mov     ax, [edi]
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 111110000011111b
         and     dx, 1111100000b
@@ -3027,17 +3017,17 @@ void fillRectAdd32(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32
         mov         ecx, lwidth
     plot:
         mov         eax, [edi]
-        add         al, byte ptr [col]
+        add         al, byte ptr col
         jnc         bstep
         mov         al, 255
     bstep:
-        add         ah, byte ptr [col + 1]
+        add         ah, byte ptr col[1]
         jnc         gstep
         mov         ah, 255
     gstep:
         mov         ebx, eax
         shr         ebx, 16
-        add         bl, byte ptr [col + 2]
+        add         bl, byte ptr col[2]
         jnc         rstep
         mov         bl, 255
     rstep:
@@ -3095,16 +3085,16 @@ void fillRectAdd24(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32
         mov     ecx, lwidth
     plot:
         mov     ax, [edi]
-        add     al, byte ptr [col]
+        add     al, byte ptr col
         jnc     bstep
         mov     al, 255
     bstep:
-        add     ah, byte ptr [col + 1]
+        add     ah, byte ptr col[1]
         jnc     gstep
         mov     ah, 255
     gstep:
         mov     bl, [edi + 2]
-        add     bl, byte ptr [col + 2]
+        add     bl, byte ptr col[2]
         jnc     rstep
         mov     bl, 255
     rstep:
@@ -3152,7 +3142,7 @@ void fillRectAdd16(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32
         mov     ecx, lfbWidth
         sub     ecx, lwidth
         shl     ecx, 1
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 1111100000011111b
         and     dx, 11111100000b
@@ -3223,7 +3213,7 @@ void fillRectAdd15(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32
         mov     ecx, lfbWidth
         sub     ecx, lwidth
         shl     ecx, 1
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 111110000011111b
         and     dx, 1111100000b
@@ -3341,17 +3331,17 @@ void fillRectSub32(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32
         mov         ecx, lwidth
     plot:
         mov         eax, [edi]
-        sub         al, byte ptr [col]
+        sub         al, byte ptr col
         jnc         bstep
         xor         al, al
     bstep:
-        sub         ah, byte ptr [col + 1]
+        sub         ah, byte ptr col[1]
         jnc         gstep
         xor         ah, ah
     gstep:
         mov         ebx, eax
         shr         ebx, 16
-        sub         bl, byte ptr [col + 2]
+        sub         bl, byte ptr col[2]
         jnc         rstep
         xor         bl, bl
     rstep:
@@ -3409,16 +3399,16 @@ void fillRectSub24(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32
         mov     ecx, lwidth
     plot:
         mov     ax, [edi]
-        sub     al, byte ptr [col]
+        sub     al, byte ptr col
         jnc     bstep
         xor     al, al
     bstep:
-        sub     ah, byte ptr [col + 1]
+        sub     ah, byte ptr col[1]
         jnc     gstep
         xor     ah, ah
     gstep:
         mov     bl, [edi + 2]
-        sub     bl, byte ptr [col + 2]
+        sub     bl, byte ptr col[2]
         jnc     rstep
         xor     bl, bl
     rstep:
@@ -3466,7 +3456,7 @@ void fillRectSub16(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32
         mov     ecx, lfbWidth
         sub     ecx, lwidth
         shl     ecx, 1
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 1111100000011111b
         and     dx, 11111100000b
@@ -3534,7 +3524,7 @@ void fillRectSub15(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32
         mov     ecx, lfbWidth
         sub     ecx, lwidth
         shl     ecx, 1
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 111110000011111b
         and     dx, 1111100000b
@@ -3979,17 +3969,17 @@ void fillRectPatternAdd32(int32_t x1, int32_t y1, int32_t width, int32_t height,
         test        al, 1
         jz          step
         mov         ebx, [edi]
-        add         bl, byte ptr [col]
+        add         bl, byte ptr col
         jnc         bstep
         mov         bl, 255
     bstep:
-        add         bh, byte ptr [col + 1]
+        add         bh, byte ptr col[1]
         jnc         gstep
         mov         bh, 255
     gstep:
         mov         edx, ebx
         shr         edx, 16
-        add         dl, byte ptr [col + 2]
+        add         dl, byte ptr col[2]
         jnc         rstep
         mov         dl, 255
     rstep:
@@ -4061,16 +4051,16 @@ void fillRectPatternAdd24(int32_t x1, int32_t y1, int32_t width, int32_t height,
         test    al, 1
         jz      step
         mov     bx, [edi]
-        add     bl, byte ptr [col]
+        add     bl, byte ptr col
         jnc     bstep
         mov     bl, 255
     bstep:
-        add     bh, byte ptr [col + 1]
+        add     bh, byte ptr col[1]
         jnc     gstep
         mov     bh, 255
     gstep:
         mov     dl, [edi + 2]
-        add     dl, byte ptr [col + 2]
+        add     dl, byte ptr col[2]
         jnc     rstep
         mov     dl, 255
     rstep:
@@ -4122,7 +4112,7 @@ void fillRectPatternAdd16(int32_t x1, int32_t y1, int32_t width, int32_t height,
         sub     ecx, lwidth
         shl     ecx, 1
         mov     esi, pattern
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 1111100000011111b
         and     dx, 11111100000b
@@ -4207,7 +4197,7 @@ void fillRectPatternAdd15(int32_t x1, int32_t y1, int32_t width, int32_t height,
         sub     ecx, lwidth
         shl     ecx, 1
         mov     esi, pattern
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 111110000011111b
         and     dx, 1111100000b
@@ -4373,17 +4363,17 @@ void fillRectPatternSub32(int32_t x1, int32_t y1, int32_t width, int32_t height,
         test        al, 1
         jz          step
         mov         ebx, [edi]
-        sub         bl, byte ptr [col]
+        sub         bl, byte ptr col
         jnc         bstep
         xor         bl, bl
     bstep:
-        sub         bh, byte ptr [col + 1]
+        sub         bh, byte ptr col[1]
         jnc         gstep
         xor         bh, bh
     gstep:
         mov         edx, ebx
         shr         edx, 16
-        sub         dl, byte ptr [col + 2]
+        sub         dl, byte ptr col[2]
         jnc         rstep
         xor         dl, dl
     rstep:
@@ -4456,16 +4446,16 @@ void fillRectPatternSub24(int32_t x1, int32_t y1, int32_t width, int32_t height,
         test    al, 1
         jz      step
         mov     bx, [edi]
-        sub     bl, byte ptr [col]
+        sub     bl, byte ptr col
         jnc     bstep
         xor     bl, bl
     bstep:
-        sub     bh, byte ptr [col + 1]
+        sub     bh, byte ptr col[1]
         jnc     gstep
         xor     bh, bh
     gstep:
         mov     dl, [edi + 2]
-        sub     dl, byte ptr [col + 2]
+        sub     dl, byte ptr col[2]
         jnc     rstep
         xor     dl, dl
     rstep:
@@ -4517,7 +4507,7 @@ void fillRectPatternSub16(int32_t x1, int32_t y1, int32_t width, int32_t height,
         sub     ecx, lwidth
         shl     ecx, 1
         mov     esi, pattern
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 1111100000011111b
         and     dx, 11111100000b
@@ -4599,7 +4589,7 @@ void fillRectPatternSub15(int32_t x1, int32_t y1, int32_t width, int32_t height,
         sub     ecx, lwidth
         shl     ecx, 1
         mov     esi, pattern
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 111110000011111b
         and     dx, 1111100000b
@@ -6705,7 +6695,7 @@ void putSprite16(int32_t x1, int32_t y1, uint32_t key, GFX_IMAGE *img)
         jz          skip
     again:
         lodsw
-        cmp         ax, word ptr[key]
+        cmp         ax, word ptr key
         je          end
         mov         [edi], ax
     end:
@@ -6747,7 +6737,7 @@ void putSprite16(int32_t x1, int32_t y1, uint32_t key, GFX_IMAGE *img)
         mov         ecx, lwidth
     plot:
         lodsw
-        cmp         ax, word ptr[key]
+        cmp         ax, word ptr key
         je          skip
         mov         [edi], ax
     skip:
@@ -7291,7 +7281,7 @@ void putSpriteAdd16(int32_t x1, int32_t y1, uint32_t key, GFX_IMAGE *img)
         push    lwidth
     plot:
         lodsw
-        cmp     ax, word ptr[key]
+        cmp     ax, word ptr key
         je      skip
         mov     bx, [edi]
         mov     dx, bx
@@ -7385,7 +7375,7 @@ void putSpriteAdd15(int32_t x1, int32_t y1, uint32_t key, GFX_IMAGE *img)
         push    lwidth
     plot:
         lodsw
-        cmp     ax, word ptr[key]
+        cmp     ax, word ptr key
         je      skip
         mov     bx, [edi]
         mov     dx, bx
@@ -7738,7 +7728,7 @@ void putSpriteSub16(int32_t x1, int32_t y1, uint32_t key, GFX_IMAGE *img)
         push    lwidth
     plot:
         mov     ax, [esi]
-        cmp     ax, word ptr[key]
+        cmp     ax, word ptr key
         je      skip
         mov     ax, [edi]
         mov     bx, [esi]
@@ -7831,7 +7821,7 @@ void putSpriteSub15(int32_t x1, int32_t y1, uint32_t key, GFX_IMAGE *img)
         push    lwidth
     plot:
         mov     ax, [esi]
-        cmp     ax, word ptr[key]
+        cmp     ax, word ptr key
         je      skip
         mov     ax, [edi]
         mov     bx, [esi]
@@ -8171,17 +8161,17 @@ void horizLineAdd32(int32_t x, int32_t y, int32_t sx, uint32_t col)
         mov         ecx, sx
     next:
         mov         eax, [edi]
-        add         al, byte ptr [col]
+        add         al, byte ptr col
         jnc         bstep
         mov         al, 255
     bstep:
-        add         ah, byte ptr [col + 1]
+        add         ah, byte ptr col[1]
         jnc         gstep
         mov         ah, 255
     gstep:
         mov         ebx, eax
         shr         ebx, 16
-        add         bl, byte ptr [col + 2]
+        add         bl, byte ptr col[2]
         jnc         rstep
         mov         bl, 255
     rstep:
@@ -8226,16 +8216,16 @@ void horizLineAdd24(int32_t x, int32_t y, int32_t sx, uint32_t col)
         mov     ecx, sx
     next:
         mov     ax, [edi]
-        add     al, byte ptr [col]
+        add     al, byte ptr col
         jnc     bstep
         mov     al, 255
     bstep:
-        add     ah, byte ptr [col + 1]
+        add     ah, byte ptr col[1]
         jnc     gstep
         mov     ah, 255
     gstep:
         mov     bl, [edi + 2]
-        add     bl, byte ptr [col + 2]
+        add     bl, byte ptr col[2]
         jnc     rstep
         mov     bl, 255
     rstep:
@@ -8273,7 +8263,7 @@ void horizLineAdd16(int32_t x, int32_t y, int32_t sx, uint32_t col)
         shl     eax, 1
         mov     edi, lfbPtr
         add     edi, eax
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 1111100000011111b
         and     dx, 11111100000b
@@ -8329,7 +8319,7 @@ void horizLineAdd15(int32_t x, int32_t y, int32_t sx, uint32_t col)
         shl     eax, 1
         mov     edi, lfbPtr
         add     edi, eax
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 111110000011111b
         and     dx, 1111100000b
@@ -8420,17 +8410,17 @@ void horizLineSub32(int32_t x, int32_t y, int32_t sx, uint32_t col)
         mov         ecx, sx
     next:
         mov         eax, [edi]
-        sub         al, byte ptr [col]
+        sub         al, byte ptr col
         jnc         bstep
         xor         al, al
     bstep:
-        sub         ah, byte ptr [col + 1]
+        sub         ah, byte ptr col[1]
         jnc         gstep
         xor         ah, ah
     gstep:
         mov         ebx, eax
         shr         ebx, 16
-        sub         bl, byte ptr [col + 2]
+        sub         bl, byte ptr col[2]
         jnc         rstep
         xor         bl, bl
     rstep:
@@ -8475,16 +8465,16 @@ void horizLineSub24(int32_t x, int32_t y, int32_t sx, uint32_t col)
         mov     ecx, sx
     next:
         mov     ax, [edi]
-        sub     al, byte ptr [col]
+        sub     al, byte ptr col
         jnc     bstep
         xor     al, al
     bstep:
-        sub     ah, byte ptr [col + 1]
+        sub     ah, byte ptr col[1]
         jnc     gstep
         xor     ah, ah
     gstep:
         mov     bl, [edi + 2]
-        sub     bl, byte ptr [col + 2]
+        sub     bl, byte ptr col[2]
         jnc     rstep
         xor     bl, bl
     rstep:
@@ -8522,7 +8512,7 @@ void horizLineSub16(int32_t x, int32_t y, int32_t sx, uint32_t col)
         shl     eax, 1
         mov     edi, lfbPtr
         add     edi, eax
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 1111100000011111b
         and     dx, 11111100000b
@@ -8575,7 +8565,7 @@ void horizLineSub15(int32_t x, int32_t y, int32_t sx, uint32_t col)
         shl     eax, 1
         mov     edi, lfbPtr
         add     edi, eax
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 111110000011111b
         and     dx, 1111100000b
@@ -8627,7 +8617,7 @@ void vertLine8(int32_t x, int32_t y, int32_t sy, uint32_t col)
         mov     edi, lfbPtr
         add     edi, eax
         mov     ecx, sy
-        mov     al, byte ptr [col]
+        mov     al, byte ptr col
     next:
         stosb
         add     edi, cmaxX
@@ -8664,7 +8654,7 @@ void vertLine16(int32_t x, int32_t y, int32_t sy, uint32_t col)
         mov     ecx, sy
         mov     ebx, cmaxX
         shl     ebx, 1
-        mov     ax, word ptr [col]
+        mov     ax, word ptr col
     next:
         stosw
         add     edi, ebx
@@ -8782,17 +8772,17 @@ void vertLineAdd32(int32_t x, int32_t y, int32_t sy, uint32_t col)
         shl     ebx, 2
     next:
         mov     eax, [edi]
-        add     al, byte ptr [col]
+        add     al, byte ptr col
         jnc     bstep
         mov     al, 255
     bstep:
-        add     ah, byte ptr [col + 1]
+        add     ah, byte ptr col[1]
         jnc     gstep
         mov     ah, 255
     gstep:
         mov     edx, eax
         shr     edx, 16
-        add     dl, byte ptr [col + 2]
+        add     dl, byte ptr col[2]
         jnc     rstep
         mov     dl, 255
     rstep:
@@ -8839,16 +8829,16 @@ void vertLineAdd24(int32_t x, int32_t y, int32_t sy, uint32_t col)
         add     ebx, cmaxX
     next:
         mov     ax, [edi]
-        add     al, byte ptr [col]
+        add     al, byte ptr col
         jnc     bstep
         mov     al, 255
     bstep:
-        add     ah, byte ptr [col + 1]
+        add     ah, byte ptr col[1]
         jnc     gstep
         mov     ah, 255
     gstep:
         mov     dl, [edi + 2]
-        add     dl, byte ptr [col + 2]
+        add     dl, byte ptr col[2]
         jnc     rstep
         mov     dl, 255
     rstep:
@@ -8889,7 +8879,7 @@ void vertLineAdd16(int32_t x, int32_t y, int32_t sy, uint32_t col)
         mov     ebx, cmaxX
         shl     ebx, 1
         push    ebx
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 1111100000011111b
         and     dx, 11111100000b
@@ -8949,7 +8939,7 @@ void vertLineAdd15(int32_t x, int32_t y, int32_t sy, uint32_t col)
         mov     ebx, cmaxX
         shl     ebx, 1
         push    ebx
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 111110000011111b
         and     dx, 1111100000b
@@ -9012,17 +9002,17 @@ void vertLineSub32(int32_t x, int32_t y, int32_t sy, uint32_t col)
         shl     ebx, 2
     next:
         mov     eax, [edi]
-        sub     al, byte ptr [col]
+        sub     al, byte ptr col
         jnc     bstep
         xor     al, al
     bstep:
-        sub     ah, byte ptr [col + 1]
+        sub     ah, byte ptr col[1]
         jnc     gstep
         xor     ah, ah
     gstep:
         mov     edx, eax
         shr     edx, 16
-        sub     dl, byte ptr [col + 2]
+        sub     dl, byte ptr col[2]
         jnc     rstep
         xor     dl, dl
     rstep:
@@ -9069,16 +9059,16 @@ void vertLineSub24(int32_t x, int32_t y, int32_t sy, uint32_t col)
         add     ebx, cmaxX
     next:
         mov     ax, [edi]
-        sub     al, byte ptr [col]
+        sub     al, byte ptr col
         jnc     bstep
         xor     al, al
     bstep:
-        sub     ah, byte ptr [col + 1]
+        sub     ah, byte ptr col[1]
         jnc     gstep
         xor     ah, ah
     gstep:
         mov     dl, [edi + 2]
-        sub     dl, byte ptr [col + 2]
+        sub     dl, byte ptr col[2]
         jnc     rstep
         xor     dl, dl
     rstep:
@@ -9119,7 +9109,7 @@ void vertLineSub16(int32_t x, int32_t y, int32_t sy, uint32_t col)
         mov     ebx, cmaxX
         shl     ebx, 1
         push    ebx
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 1111100000011111b
         and     dx, 11111100000b
@@ -9176,7 +9166,7 @@ void vertLineSub15(int32_t x, int32_t y, int32_t sy, uint32_t col)
         mov     ebx, cmaxX
         shl     ebx, 1
         push    ebx
-        mov     bx, word ptr [col]
+        mov     bx, word ptr col
         mov     dx, bx
         and     bx, 111110000011111b
         and     dx, 1111100000b
@@ -10820,8 +10810,21 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t refreshRate)
         cmaxX   = lfbWidth - 1;
         cmaxY   = lfbHeight - 1;
 
-        // Initialize random seed
-        srand(time(NULL));
+        // Initialize random number generation
+        randSeed = time(NULL);
+        srand(randSeed);
+
+        // Initialize GFXLIB buffer
+        gfxBuff = (uint8_t*)calloc(GFX_BUFF_SIZE, 1);
+        if (!gfxBuff)
+        {
+            printf("initGfxLib: Cannot initialize GFXLIB buffer!\n");
+            exit(1);
+        }
+
+        // Filled cpu and memory info structure
+        getCpuInfo();
+        getMemoryInfo();
 
         return *modePtr;
     }
@@ -10849,24 +10852,22 @@ void setRGB(uint16_t index, uint8_t r, uint8_t g, uint8_t b)
     }
 }
 
-void getRGB(uint16_t index, uint8_t *r, uint8_t *g, uint8_t *b)
+void getRGB(uint16_t index, void *pal)
 {
     __asm {
+        mov     edi, pal
         mov     dx, 03C7h
         mov     ax, index
         out     dx, al
         add     dx, 2
         in      al, dx
         shl     al, 2
-        mov     edi, r
-        mov     [edi], al
+        mov     [edi + 2], al
         in      al, dx
         shl     al, 2
-        mov     edi, g
-        mov     [edi], al
+        mov     [edi + 1], al
         in      al, dx
         shl     al, 2
-        mov     edi, b
         mov     [edi], al
     }
 }
@@ -10878,15 +10879,15 @@ void shiftPalette(void *pal)
         mov     edi, pal
         mov     ecx, 256
     step:
-        mov     al, [edi]
-        shl     al, 2
-        mov     [edi], al
-        mov     al, [edi + 1]
-        shl     al, 2
-        mov     [edi + 1], al
         mov     al, [edi + 2]
         shl     al, 2
         mov     [edi + 2], al
+        mov     al, [edi + 1]
+        shl     al, 2
+        mov     [edi + 1], al
+        mov     al, [edi]
+        shl     al, 2
+        mov     [edi], al
         add     edi, 3
         dec     ecx
         jnz     step
@@ -10906,13 +10907,13 @@ void getPalette(void *pal)
     step:
         in      al, dx
         shl     al, 2
-        mov     [edi], al
+        mov     [edi + 2], al
         in      al, dx
         shl     al, 2
         mov     [edi + 1], al
         in      al, dx
         shl     al, 2
-        mov     [edi + 2], al
+        mov     [edi], al
         add     edi, 3
         dec     ecx
         jnz     step
@@ -10930,13 +10931,13 @@ void setPalette(void *pal)
         mov     esi, pal
         mov     ecx, 256
     step:
-        mov     al, [esi]
+        mov     al, [esi + 2]
         shr     al, 2
         out     dx, al
         mov     al, [esi + 1]
         shr     al, 2
         out     dx, al
-        mov     al, [esi + 2]
+        mov     al, [esi]
         shr     al, 2
         out     dx, al
         add     esi, 3
@@ -14709,20 +14710,21 @@ void randomBuffer(void *buff, int32_t count, int32_t range)
     if (!count || !randSeed || !range) return;
 
     __asm {
-        mov    edi, buff
-        mov    ecx, count
-        mov    ebx, randSeed
+        mov     edi, buff
+        mov     ecx, count
+        mov     ebx, randSeed
     next:
-        mov    eax, ebx
-        mul    factor
-        inc    eax
-        mov    ebx, eax
-        shr    eax, 16
-        mul    range
-        shr    eax, 16
+        mov     eax, ebx
+        mul     factor
+        inc     eax
+        mov     ebx, eax
+        shr     eax, 16
+        mul     range
+        shr     eax, 16
         stosw
-        loop   next
-        mov    randSeed, ebx
+        dec     ecx
+        jnz     next
+        mov     randSeed, ebx
     }
 }
 
