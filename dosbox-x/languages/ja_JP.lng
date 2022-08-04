@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:Japanese
 :DOSBOX-X:CODEPAGE:932
-:DOSBOX-X:VERSION:0.84.1
+:DOSBOX-X:VERSION:2022.08.0
 :DOSBOX-X:REMARK:PC-98, JEGA, DOS/V エミュレーション、または とコード ページ 932 の日本語フォントを使用して、日本語の表示と印刷を直接サポートします
 :AUTOEXEC_CONFIGFILE_HELP
 このセクションに記載の行は起動時に実行されます。
@@ -887,7 +887,7 @@ drive: はマウントされているもののうち、起動するドライブ�
 
 このコマンドの用法は以下のいずれかです:
 
-[34;1mBOOT [driveletter:][0m
+[34;1mBOOT [driveletter:] [-convertfat|-convertfatro|-noconvertfat][0m
 
 [34;1mBOOT diskimg1.img [diskimg2.img ...] [-L driveletter][0m
 
@@ -2132,17 +2132,17 @@ ASSOC [.ext[=command] ... ]
 .
 :SHELL_CMD_CHCP_HELP_LONG
 CHCP [nnn [file]]
+CHCP nnn[:[language]]
 
-  nnn     コードページ番号を指定します。
-  [file]  コードページファイルを指定します。
+  nnn        コードページ番号を指定します。
+  [file]     コードページファイルを指定します。
+  [language] 対応する言語を指定します。
 
 TrueType フォント出力への変更をサポートするコードページ:
 
-437,737,775,808,850,852,853,855,857,858,860-866,869,872,874,3021
+437,737,775,808,850,852,853,855-866,869,872,874,1250-1258,3021
 
-Windows コードページ: 1250,1251,1252,1253,1254,1255,1256,1257,1258
-
-932, 936, 949, 950 等の2バイト言語のコードページもサポートします。
+932, 936, 949, 950/951 等の2バイト言語のコードページもサポートします。
 
 カスタマイズされたコードページは、コードページファイルを提供することでサポートされます。
 
@@ -2875,6 +2875,15 @@ EMM386 エミュレーション
 :MENU:dos_ems_false
 EMS エミュレーション:無効
 .
+:MENU:DOSDiskRateMenu
+ディスク転送速度を制限する
+.
+:MENU:limit_hdd_rate
+ハードディスクのデータレートを制限する
+.
+:MENU:limit_floppy_rate
+フロッピーディスクのデータレートを制限する
+.
 :MENU:DOSWinMenu
 ホストシステムのアプリケーション
 .
@@ -2997,6 +3006,9 @@ Windowsドライブを自動マウント
 .
 :MENU:drive_bootimg
 ディスクイメージからブート
+.
+:MENU:drive_saveimg
+ディスクイメージに保存
 .
 :MENU:HelpMenu
 ヘルプ
@@ -3256,8 +3268,8 @@ DOSBox-X インスタンスを再起動
 :MENU:restartconf
 設定ファイルを用いて DOSBox-X を再起動 ...
 .
-:MENU:restartlang
-言語ファイルを用いて DOSBox-X を再起動 ...
+:MENU:loadlang
+言語ファイルの読込み...
 .
 :MENU:auto_lock_mouse
 マウスを自動ロック

@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:Simplified Chinese
 :DOSBOX-X:CODEPAGE:936
-:DOSBOX-X:VERSION:0.84.1
+:DOSBOX-X:VERSION:2022.08.0
 :DOSBOX-X:REMARK:建议将国家和代码页设为 86,936 并搭配中文字体; 或使用 chs 或 cn 中文 DOS/V 模式以直接支持中文显示和打印
 :AUTOEXEC_CONFIGFILE_HELP
 Lines in this section will be run at startup.
@@ -885,7 +885,7 @@ DOSBox-X 提供多层次的光驱模拟.
 
 此命令的语法为如下之一:
 
-[34;1mBOOT [驱动器盘符:][0m
+[34;1mBOOT [驱动器盘符:] [-convertfat|-convertfatro|-noconvertfat][0m
 
 [34;1mBOOT diskimg1.img [diskimg2.img ...] [-L 驱动器盘符][0m
 
@@ -2083,17 +2083,17 @@ ASSOC [.扩展名[=命令] ... ]
 .
 :SHELL_CMD_CHCP_HELP_LONG
 CHCP [nnn [文件]]
+CHCP nnn[:[语言]]
 
   nnn   指定代码页.
   文件  指定代码页文件.
+  语言  指定相应的语言.
 
 TrueType 字体输出方式所支持的代码页包括:
 
-437,737,775,808,850,852,853,855,857,858,860-866,869,872,874,3021
+437,737,775,808,850,852,853,855-866,869,872,874,1250-1258,3021
 
-Windows 代码页: 1250,1251,1252,1253,1254,1255,1256,1257,1258
-
-以及双字节代码页,包括: 932, 936, 949, 950
+以及双字节代码页,包括: 932, 936, 949, 950/951
 
 通过提供代码页文件支持自定义代码页.
 
@@ -2853,6 +2853,15 @@ EMM386 模拟
 :MENU:dos_ems_false
 禁用 EMS 内存模拟
 .
+:MENU:DOSDiskRateMenu
+限制磁盘传输速度
+.
+:MENU:limit_hdd_rate
+限制硬盘数据速率
+.
+:MENU:limit_floppy_rate
+限制软盘数据速率
+.
 :MENU:DOSWinMenu
 主机系统程序
 .
@@ -2975,6 +2984,9 @@ MPEG-TS + H.264
 .
 :MENU:drive_bootimg
 从磁盘镜像启动
+.
+:MENU:drive_saveimg
+保存到磁盘镜像
 .
 :MENU:HelpMenu
 帮助
@@ -3234,8 +3246,8 @@ DOS 命令
 :MENU:restartconf
 重启 DOSBox-X 并调用指定配置文件...
 .
-:MENU:restartlang
-重启 DOSBox-X 并调用指定语言文件...
+:MENU:loadlang
+加载语言文件...
 .
 :MENU:auto_lock_mouse
 自动锁定鼠标

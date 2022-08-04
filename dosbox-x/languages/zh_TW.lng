@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:Traditional Chinese
 :DOSBOX-X:CODEPAGE:950
-:DOSBOX-X:VERSION:0.84.1
+:DOSBOX-X:VERSION:2022.08.0
 :DOSBOX-X:REMARK:建議將國家和字碼頁設為 886,950 並搭配中文字型; 或使用 cht 或 tw 中文 DOS/V 模式以直接支援中文顯示和列印
 :AUTOEXEC_CONFIGFILE_HELP
 段落中的指令行會在啟動時執行.
@@ -885,7 +885,7 @@ DOSBox-X 提供多程度的光碟機模擬.
 
 此命令的語法為如下之一:
 
-[34;1mBOOT [磁碟機代號:][0m
+[34;1mBOOT [磁碟機代號:] [-convertfat|-convertfatro|-noconvertfat][0m
 
 [34;1mBOOT diskimg1.img [diskimg2.img ...] [-L 磁碟機代號][0m
 
@@ -2087,17 +2087,17 @@ ASSOC [.副檔名[=命令] ... ]
 .
 :SHELL_CMD_CHCP_HELP_LONG
 CHCP [nnn [檔案]]
+CHCP nnn[:[語言]]
 
   nnn   指定字碼頁編號.
   檔案  指定字碼頁檔案.
+  語言  指定對應的語言.
 
 在 TrueType 字型輸出方式所支援變更的字碼頁包括:
 
-437,737,775,808,850,852,853,855,857,858,860-866,869,872,874,3021
+437,737,775,808,850,852,853,855-866,869,872,874,1250-1258,3021
 
-Windows 字碼頁: 1250,1251,1252,1253,1254,1255,1256,1257,1258
-
-以及雙位元組字碼頁, 包括: 932, 936, 949, 950
+以及雙位元組字碼頁, 包括: 932, 936, 949, 950/951
 
 通過提供字碼頁檔案支援自訂字碼頁.
 
@@ -2164,7 +2164,7 @@ DX-CAPTURE [/V|/-V] [/A|/-A] [/M|/-M] [command] [options]
 
 .
 :SHELL_CMD_DEBUGBOX_HELP
-執行程式並在進入點調用偵錯工具.
+執行程式並在進入點切換到偵錯工具.
 
 .
 :SHELL_CMD_DEBUGBOX_HELP_LONG
@@ -2246,7 +2246,7 @@ To adjust the emulated CPU speed, use [31mhost+Plus[37m and [31mhost+Minus[3
 停止將剪貼簿內容貼上
 .
 :MENU:mapper_ejectpage
-傳送印表機換頁符號
+傳送印表機換頁字元
 .
 :MENU:mapper_printtext
 列印 DOS 畫面文字
@@ -2804,7 +2804,7 @@ DOS
 反轉 Y 軸
 .
 :MENU:dos_mouse_sensitivity
-敏感度
+靈敏度
 .
 :MENU:DOSVerMenu
 報告的 DOS 版本
@@ -2859,6 +2859,15 @@ EMM386 模擬
 .
 :MENU:dos_ems_false
 停用 EMS 模擬
+.
+:MENU:DOSDiskRateMenu
+限制磁碟傳輸速度
+.
+:MENU:limit_hdd_rate
+限制硬碟資料速率
+.
+:MENU:limit_floppy_rate
+限制軟碟資料速率
 .
 :MENU:DOSWinMenu
 主機系統應用程式
@@ -2983,6 +2992,9 @@ MPEG-TS + H.264
 :MENU:drive_bootimg
 從磁碟映像開機
 .
+:MENU:drive_saveimg
+儲存到磁碟映像
+.
 :MENU:HelpMenu
 說明
 .
@@ -3011,7 +3023,7 @@ DOSBox-X 支援
 顯示記錄主控台
 .
 :MENU:disable_logging
-禁用記錄輸出
+停用記錄輸出
 .
 :MENU:wait_on_error
 主控台遇到錯誤時等待
@@ -3241,8 +3253,8 @@ Turbo (快轉模式)
 :MENU:restartconf
 重開 DOSBox-X 並載入指定組態檔案...
 .
-:MENU:restartlang
-重開 DOSBox-X 並載入指定語言檔案...
+:MENU:loadlang
+載入語言檔案...
 .
 :MENU:auto_lock_mouse
 自動鎖定滑鼠

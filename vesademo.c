@@ -1386,7 +1386,7 @@ void scrollLed(const char *msg)
                     else putPixel(font->info.width + zx * (i + 2), sy + zy * (j + 2) + 4, 0);
                 }
             }
-            delay(15);
+            delay(5);
         }
         m++;
         if (m >= strlen(msg)) break;
@@ -1636,12 +1636,8 @@ int main(int argc, const char* argv[])
     char strLoading[] = "D9ang ta3i du74 lie65u a3nh PNG & BMP 32bit ma2u, vui lo2ng d9o75i mo65t la1t....";
     const int32_t numTitle = sizeof(strTitle) / sizeof(strTitle[0]);
 
-    // First message from GFXLIB
-    _clearscreen(0);
-    printf("GFXLIB initializing....\n");
-
     // init clock time and random number generation
-    initGfxLib(1, quitMessage);
+    setQuitCallback(quitMessage);
     if (!loadFont("assets/fontvn.xfn", 0)) fatalError("Cannot load font!\n");
     if (!setVesaMode(800, 600, 32, 85)) fatalError("Cannot init video mode.\n");
 

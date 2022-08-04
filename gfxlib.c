@@ -30,6 +30,7 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <float.h>
+#include <graph.h>
 
 // Enable MMX features
 #define _USE_MMX
@@ -1044,6 +1045,11 @@ void getCpuInfo()
     uint32_t    cpuinfo[4] = {0};
     char        vendor[16] = {0};
 
+    // Reset buffer
+    haveMMX = haveSSE = have3DNow = 0;
+    memset(cpuVendor, 0, sizeof(cpuVendor));
+    memset(cpuFeatures, 0, sizeof(cpuFeatures));
+    
     // Obtain the number of CPUID leaves and the vendor string.
     CPUID(cpuinfo, 0);
 
@@ -1144,23 +1150,24 @@ void getCpuInfo()
 // Get system memory status info
 void getMemoryInfo()
 {
-    MEM_INFO *pmem = &meminfo;
-    memset(pmem, 0, sizeof(MEM_INFO));
+    // Reset buffer
+    memset(&meminfo, 0, sizeof(MEM_INFO));
 
     // call DMPI function to get system memory status info
     __asm {
         mov     eax, 0500h
-        mov     edi, pmem
+        lea     edi, meminfo
         int     31h
     }
 }
 
-// Init the timer to use system time or cpu clock time
-// this is a first function call before init vesa mode
-void initGfxLib(uint8_t type, void (*fnQuit)())
+// Initialize the timer to use system time or cpu clock time
+void setTimerType(uint8_t type)
 {
+    _clearscreen(0);
+    printf("GFXLIB initializing....\n");
+
     timeType = type;
-    quitCallback = fnQuit;
 
     if (timeType)
     {
@@ -1179,7 +1186,8 @@ void initGfxLib(uint8_t type, void (*fnQuit)())
 // Convert CPU ticks to microsecond
 uint64_t ticksToMicroSec(uint64_t ticks)
 {
-    return ticks / cpuSpeed;
+    if (cpuSpeed > 0) return ticks / cpuSpeed;
+    return ticks;
 }
 
 // Get current system time (in 100ms or 1 microsecond)
@@ -1524,12 +1532,6 @@ void closeVesaMode()
         free(gfxBuff);
         gfxBuff = NULL;
     }
-
-    // Reset cpu and memory info
-    haveMMX = haveSSE = have3DNow = 0;
-    memset(cpuVendor, 0, sizeof(cpuVendor));
-    memset(cpuFeatures, 0, sizeof(cpuFeatures));
-    memset(&meminfo, 0, sizeof(meminfo));
 }
 
 // Raise error message and exit program
@@ -10818,7 +10820,7 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t refreshRate)
         gfxBuff = (uint8_t*)calloc(GFX_BUFF_SIZE, 1);
         if (!gfxBuff)
         {
-            printf("initGfxLib: Cannot initialize GFXLIB buffer!\n");
+            printf("Cannot initialize GFXLIB buffer!\n");
             exit(1);
         }
 

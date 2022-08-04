@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:Korean
 :DOSBOX-X:CODEPAGE:949
-:DOSBOX-X:VERSION:0.84.1
+:DOSBOX-X:VERSION:2022.08.0
 :DOSBOX-X:REMARK:DOS/V 에뮬레이션 또는 코드 페이지 949의 한국어 글꼴을 사용하여 한국어 표시 및 인쇄를 직접 지원합니다.
 :AUTOEXEC_CONFIGFILE_HELP
 이 섹션에 나열된 줄은 시작할 때 실행됩니다.
@@ -899,7 +899,7 @@ drive: 는 탑재된 드라이브 중에서 부팅할 드라이브를 지정합�
 
 이 명령의 사용법은 다음 중 하나입니다.
 
-[34;1mBOOT [driveletter:][0m
+[34;1mBOOT [driveletter:] [-convertfat|-convertfatro|-noconvertfat][0m
 
 [34;1mBOOT diskimg1.img [diskimg2.img ...] [-L driveletter][0m
 
@@ -2146,17 +2146,17 @@ ASSOC [.ext[=command] ... ]
 .
 :SHELL_CMD_CHCP_HELP_LONG
 CHCP [nnn [file]]
+CHCP nnn[:[language]]
 
-  nnn 코드 페이지 번호를 지정합니다.
-  [file] 코드 페이지 파일을 지정합니다.
+  nnn        코드 페이지 번호를 지정합니다.
+  [file]     코드 페이지 파일을 지정합니다.
+  [language] 해당 언어를 지정합니다.
 
 TrueType 글꼴 출력에 대한 변경을 지원하는 코드 페이지:
 
-437,737,775,808,850,852,853,855,857,858,860-866,869,872,874,3021
+437,737,775,808,850,852,853,855-866,869,872,874,1250-1258,3021
 
-윈도우즈 코드 페이지: 1250,1251,1252,1253,1254,1255,1256,1257,1258
-
-932, 936, 949, 950 등의 2바이트 언어 코드 페이지도 지원합니다.
+932, 936, 949, 950/951 등의 2바이트 언어 코드 페이지도 지원합니다.
 
 맞춤 코드 페이지는 코드 페이지 파일을 제공함으로써 지원됩니다.
 
@@ -2888,6 +2888,15 @@ EMM386 에뮬레이션
 :MENU:dos_ems_false
 EMS 에뮬레이션 : 비활성화
 .
+:MENU:DOSDiskRateMenu
+디스크 전송 속도 제한
+.
+:MENU:limit_hdd_rate
+하드 디스크 데이터 속도 제한
+.
+:MENU:limit_floppy_rate
+플로피 디스크 데이터 속도 제한
+.
 :MENU:DOSWinMenu
 호스트 시스템 응용 프로그램
 .
@@ -3010,6 +3019,9 @@ MPEG-TS + H.264
 .
 :MENU:drive_bootimg
 디스크 이미지에서 부팅
+.
+:MENU:drive_saveimg
+디스크 이미지에 저장
 .
 :MENU:HelpMenu
 도움말
@@ -3269,8 +3281,8 @@ DOSBox-X 인스턴스를 다시 시작
 :MENU:restartconf
 구성 파일을 사용하여 DOSBox-X 를 다시 부팅 ...
 .
-:MENU:restartlang
-언어 파일을 사용하여 DOSBox-X 를 다시 부팅 ...
+:MENU:loadlang
+언어 파일 로드 ...
 .
 :MENU:auto_lock_mouse
 마우스 자동 잠금

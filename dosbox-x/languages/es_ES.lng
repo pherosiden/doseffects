@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:Spanish (Spain)
 :DOSBOX-X:CODEPAGE:858
-:DOSBOX-X:VERSION:0.84.1
+:DOSBOX-X:VERSION:2022.08.0
 :DOSBOX-X:REMARK:
 :AUTOEXEC_CONFIGFILE_HELP
 Las líneas de esta sección se iniciarán al inicio.
@@ -902,7 +902,7 @@ La sintaxis de este comando es una de las siguientes:
 
 ←[34;1mBOOT diskimg1.img [diskimg2.img ...] [-L letradeunidad]←[0m
 
-←[34;1mBOOT letradeunidad:←[0m
+←[34;1mBOOT letradeunidad: [-convertfat|-convertfatro|-noconvertfat]←[0m
 
 Nota: 
 Un archivo imagen con dos puntos a la izquierda (:) inicia en modo solo lectura si la opcion "proteger contra escritura con dos puntos iniciales" esta activada.
@@ -2142,17 +2142,18 @@ Muestra o cambia el código de página DOS actual.
 
 .
 :SHELL_CMD_CHCP_HELP_LONG
-CHCP [nnn]
+CHCP [nnn [archivo]]
+CHCP nnn[:[idioma]]
 
-  nnn   Especifica un nº de código de página.
+  nnn     Especifica un nº de código de página.
+  archivo Especifica un archivo de página de códigos.
+  idioma  Especifica un idioma correspondiente.
 
 Códigos de página compatibles para la salida de fuente TrueType:
 
-437,737,775,808,850,852,853,855,857,858,860-866,869,872,874,3021
+437,737,775,808,850,852,853,855-866,869,872,874,1250-1258,3021
 
-Páginas de códigos de Windows: 1250,1251,1252,1253,1254,1255,1256,1257,1258
-
-También páginas de códigos de doble byte incluyendo 932,936,949,950.
+También páginas de códigos de doble byte incluyendo 932,936,949,950/951.
 
 Las páginas de códigos personalizadas son compatibles al proporcionar archivos de páginas de códigos.
 
@@ -2892,6 +2893,15 @@ Emulación de EMM386
 :MENU:dos_ems_false
 Desactivar emulación de EMS
 .
+:MENU:DOSDiskRateMenu
+Limitar la velocidad de transferencia del disco
+.
+:MENU:limit_hdd_rate
+Limite la tasa de datos del disco duro
+.
+:MENU:limit_floppy_rate
+Limite la velocidad de datos del disquete
+.
 :MENU:DOSWinMenu
 Aplicaciones de host
 .
@@ -3014,6 +3024,9 @@ Arrancar desde unidad
 .
 :MENU:drive_bootimg
 Arrancar desde imagen de disco
+.
+:MENU:drive_saveimg
+Guardar en imagen de disco
 .
 :MENU:HelpMenu
 Ayuda
@@ -3273,8 +3286,8 @@ Reiniciar instancia de DOSBox-X
 :MENU:restartconf
 Reiniciar DOSBox-X con archivo config...
 .
-:MENU:restartlang
-Reiniciar DOSBox-X con archivo de idioma...
+:MENU:loadlang
+Cargar archivo de idioma...
 .
 :MENU:auto_lock_mouse
 Autobloqueo de ratón

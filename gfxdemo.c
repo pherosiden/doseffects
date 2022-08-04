@@ -10,7 +10,6 @@
 /*------------------------------------------------*/
 
 #include "gfxlib.c"
-#include <graph.h>
 
 //max message lines
 #define MAX_TEXT_LINE   23
@@ -137,7 +136,11 @@ void showText(int32_t sx, int32_t sy, GFX_IMAGE *img, char *str)
 
 void runIntro()
 {
-    const int32_t tw = 3, tg = tw + 5, tu = tg + 3, to = tu + 5, ts = to + 3;
+    const int32_t tw = 3;
+    const int32_t tg = tw + 5;
+    const int32_t tu = tg + 3;
+    const int32_t to = tu + 5;
+    const int32_t ts = to + 3;
 
     GFX_IMAGE ult, utb, trn, map;
     GFX_IMAGE scr, wcb, wci, gfx, gxb;
@@ -528,7 +531,7 @@ void runLensFlare()
 
     // pre-calculate text position
     tx = (scr.mWidth - getFontWidth(str)) >> 1;
-    ty = scr.mHeight - getFontHeight(str) - 2;
+    ty = (scr.mHeight - getFontHeight(str)) - 2;
 
     do {
         //timing for FPS counter
@@ -716,9 +719,8 @@ int main()
     VBE_DRIVER_INFO	drv;
     uint32_t gray32, gray64, gray127, redcol;
 
-    _clearscreen(0);
-    printf("GFXLIB initializing....\n");
-    initGfxLib(1, runExit);
+    setTimerType(1);
+    setQuitCallback(runExit);
 
     if (!loadFont("assets/sysfont.xfn", 0)) fatalError("Cannot load system font!\n");
     if (!loadImage("assets/gfxbg5.png", &bg)) fatalError("Cannot load image:gfxbg0.png!\n");

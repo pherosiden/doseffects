@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:English (United States)
 :DOSBOX-X:CODEPAGE:437
-:DOSBOX-X:VERSION:0.84.1
+:DOSBOX-X:VERSION:2022.08.0
 :DOSBOX-X:REMARK:
 :AUTOEXEC_CONFIGFILE_HELP
 Lines in this section will be run at startup.
@@ -897,7 +897,7 @@ drive (C or D), ensure the image is already mounted by ←[34;1mIMGMOUNT←[0m c
 
 The syntax of this command is one of the following:
 
-←[34;1mBOOT [driveletter:]←[0m
+←[34;1mBOOT [driveletter:] [-convertfat|-convertfatro|-noconvertfat]←[0m
 
 ←[34;1mBOOT diskimg1.img [diskimg2.img ...] [-L driveletter]←[0m
 
@@ -2145,17 +2145,17 @@ Displays or changes the current DOS code page.
 .
 :SHELL_CMD_CHCP_HELP_LONG
 CHCP [nnn [file]]
+CHCP nnn[:[language]]
 
-  nnn   Specifies a code page number.
-  file  Specifies a code page file.
+  nnn      Specifies a code page number.
+  file     Specifies a code page file.
+  language Specifies a corresponding language.
 
 Supported code pages for changing in the TrueType font output:
 
-437,737,775,808,850,852,853,855,857,858,860-866,869,872,874,3021
+437,737,775,808,850,852,853,855-866,869,872,874,1250-1258,3021
 
-Windows code pages: 1250,1251,1252,1253,1254,1255,1256,1257,1258
-
-Also double-byte code pages including 932, 936, 949, and 950.
+Also double-byte code pages including 932, 936, 949, and 950/951.
 
 Customized code pages are supported by providing code page files.
 
@@ -2887,6 +2887,15 @@ EMM386 emulation
 :MENU:dos_ems_false
 Disable EMS emulation
 .
+:MENU:DOSDiskRateMenu
+Limit disk transfer speed
+.
+:MENU:limit_hdd_rate
+Limit hard disk data rate
+.
+:MENU:limit_floppy_rate
+Limit floppy disk data rate
+.
 :MENU:DOSWinMenu
 Host system applications
 .
@@ -3009,6 +3018,9 @@ Boot from drive
 .
 :MENU:drive_bootimg
 Boot from disk image
+.
+:MENU:drive_saveimg
+Save to disk image
 .
 :MENU:HelpMenu
 Help
@@ -3268,8 +3280,8 @@ Restart DOSBox-X instance
 :MENU:restartconf
 Restart DOSBox-X with config file...
 .
-:MENU:restartlang
-Restart DOSBox-X with language file...
+:MENU:loadlang
+Load language file...
 .
 :MENU:auto_lock_mouse
 Autolock mouse

@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:French (France)
-:DOSBOX-X:CODEPAGE:858
-:DOSBOX-X:VERSION:0.84.1
+:DOSBOX-X:CODEPAGE:859
+:DOSBOX-X:VERSION:2022.08.0
 :DOSBOX-X:REMARK:
 :AUTOEXEC_CONFIGFILE_HELP
 Les lignes de cette section seront exécutées au démarrage.
@@ -899,7 +899,7 @@ Les seules lettres de lecteur amorçables sont A, C et D. Pour le démarrage à 
 
 La syntaxe de cette commande est l'une des suivantes :
 
-←[34;1mBOOT [lettre du lecteur:]←[0m
+←[34;1mBOOT [lettre du lecteur:] [-convertfat|-convertfatro|-noconvertfat]←[0m
 
 ←[34;1mBOOT diskimg1.img [diskimg2.img ...] [-L lettre du lecteur]←[0m
 
@@ -2148,18 +2148,18 @@ Affiche ou modifie la page de code DOS actuelle.
 .
 :SHELL_CMD_CHCP_HELP_LONG
 CHCP [nnn [fichier]]
+CHCP nnn[:[langue]]
 
   nnn      Spécifie un numéro de page de code.
-  fichier  Spécifie un fichier de page de code
+  fichier  Spécifie un fichier de page de code.
+  langue   Spécifie une langue correspondante.
   
 Pages de code prises en charge pour être modifiées dans la sortie
 de la police TrueType :
 
-437,737,775,808,850,852,853,855,857,858,860-866,869,872,874,3021
+437,737,775,808,850,852,853,855-866,869,872,874,1250-1258,3021
 
-Pages de codes Windows: 1250,1251,1252,1253,1254,1255,1256,1257,1258
-
-Également des pages de code à double octet, notamment 932, 936, 949 et 950.
+Également des pages de code à double octet, notamment 932, 936, 949 et 950/951.
 
 Les pages de codes personnalisées sont prises en charge en fournissant des fichiers de pages de codes.
 
@@ -2893,6 +2893,15 @@ Activer l'émulation EMS
 :MENU:dos_ems_false
 Désactiver l'émulation EMS
 .
+:MENU:DOSDiskRateMenu
+Limiter la vitesse de transfert du disque
+.
+:MENU:limit_hdd_rate
+Limiter le débit de données du disque dur
+.
+:MENU:limit_floppy_rate
+Limiter le débit de données des disquettes
+.
 :MENU:DOSWinMenu
 Applications du système hôte
 .
@@ -3015,6 +3024,9 @@ Démarrage à partir du disque
 .
 :MENU:drive_bootimg
 Démarrage à partir d'une image disque
+.
+:MENU:drive_saveimg
+Enregistrer sur l'image disque
 .
 :MENU:HelpMenu
 Aide
@@ -3275,8 +3287,8 @@ Redémarrer DOSBox-X
 :MENU:restartconf
 Redémarrer avec un fichier de configuration...
 .
-:MENU:restartlang
-Redémarrer avec un fichier de langue...
+:MENU:loadlang
+Charger le fichier de langue...
 .
 :MENU:auto_lock_mouse
 Verrouiller la souris automatiquement

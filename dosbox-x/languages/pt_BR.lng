@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:Portuguese (Brazil)
 :DOSBOX-X:CODEPAGE:860
-:DOSBOX-X:VERSION:0.84.1
+:DOSBOX-X:VERSION:2022.08.0
 :DOSBOX-X:REMARK:
 :AUTOEXEC_CONFIGFILE_HELP
 As linhas nesta seção serão sempre executadas ao se iniciar o DOSBox-X.
@@ -194,7 +194,7 @@ Nome do idioma (opcional):
 :INTRO_MESSAGE
 Bem-vindo ao DOSBox-X, um emulador de DOS completo e livre.
 O DOSBox-X cria um console DOS que funciona como um DOS real.
-Você também pode executar o Windows 3.x e 9x/Me dentro da máquina DOS.
+Você também pode executar o Windows 3.x/9x/Me dentro da máquina DOS.
 .
 :DRIVE
 Unidade
@@ -899,7 +899,7 @@ imagem deve estar previamente montada usando o comando [34;1mIMGMOUNT[0m.
 
 A sintaxe deste comando é uma das seguintes:
 
-[34;1mBOOT [letra_da_unidade:][0m
+[34;1mBOOT [letra_da_unidade:] [-convertfat|-convertfatro|-noconvertfat][0m
 [34;1mBOOT diskimg1.img [diskimg2.img ...] [-L letra_da_unidade][0m
 
 Nota: Um arquivo de imagem com dois pontos à esquerda (:) será inicializada com
@@ -2166,17 +2166,17 @@ Exibe ou define o número da página de código ativa.
 .
 :SHELL_CMD_CHCP_HELP_LONG
 CHCP [nnn [arquivo]]
+CHCP nnn[:[idioma]]
 
-  nnn   Define um número da página de código.
+  nnn      Define um número da página de código.
   arquivo  Especifica um arquivo de página de código.
+  idioma   Especifica um idioma correspondente.
 
 Páginas de código compatíveis para a saída de fonte TrueType:
 
-437,737,775,808,850,852,853,855,857,858,860-866,869,872,874,3021
+437,737,775,808,850,852,853,855-866,869,872,874,1250-1258,3021
 
-Páginas de códigos do Windows: 1250,1251,1252,1253,1254,1255,1256,1257,1258
-
-Também páginas de códigos de duplo byte includindo 932,936,949,950.
+Também páginas de códigos de duplo byte includindo 932,936,949,950/951.
 
 As páginas de códigos personalizadas são compatíveis ao proporcionar
 arquivos de páginas de códigos.
@@ -2910,6 +2910,15 @@ Emulação de EMM386
 :MENU:dos_ems_false
 Desativar emulação de EMS
 .
+:MENU:DOSDiskRateMenu
+Limitar a velocidade de transferência do disco
+.
+:MENU:limit_hdd_rate
+Limitar a taxa de dados do disco rígido
+.
+:MENU:limit_floppy_rate
+Limitar a taxa de dados do disquete
+.
 :MENU:DOSWinMenu
 Aplicativos do sistema anfitrião
 .
@@ -3032,6 +3041,9 @@ Inicializar da unidade
 .
 :MENU:drive_bootimg
 Inicializar da imagem de disco
+.
+:MENU:drive_saveimg
+Salvar na imagem do disco
 .
 :MENU:HelpMenu
 Ajuda
@@ -3291,8 +3303,8 @@ Reiniciar instância do DOSBox-X
 :MENU:restartconf
 Reiniciar o DOSBox-X com arquivo config...
 .
-:MENU:restartlang
-Reiniciar o DOSBox-X com arquivo de idioma...
+:MENU:loadlang
+Carregar arquivo de idioma...
 .
 :MENU:auto_lock_mouse
 Travar automaticamente mouse
