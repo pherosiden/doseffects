@@ -659,6 +659,8 @@ const char *amdFeatures[][2] =
 };
 
 // Pointer functions handler
+uint32_t    (*fromRGB)(uint8_t, uint8_t, uint8_t) = NULL;
+void        (*toRGB)(uint32_t, RGB*) = NULL;
 void        (*clearScreen)(uint32_t) = NULL;
 void        (*fillRect)(int32_t, int32_t, int32_t, int32_t, uint32_t) = NULL;
 void        (*fillRectSub)(int32_t, int32_t, int32_t, int32_t, uint32_t) = NULL;
@@ -1934,21 +1936,130 @@ void displayVesaInfo()
 }
 
 // Extract rgb value to r,g,b values
-inline void toRGB(uint32_t col, uint8_t *r, uint8_t *g, uint8_t *b)
+inline void toRGB8(uint32_t col, RGB *rgb)
 {
-    *r = (uint8_t)(((col & rmask) >> rpos) << rshift);
-    *g = (uint8_t)(((col & gmask) >> gpos) << gshift);
-    *b = (uint8_t)(((col & bmask) >> bpos) << bshift);
+    __asm {
+        mov     edi, rgb
+        mov     al, byte ptr col
+        mov     ah, al
+        mov     [edi], ax
+        mov     [edi + 2], al
+    }
+}
+
+inline void toRGB15(uint32_t col, RGB *rgb)
+{
+    __asm {
+        mov     ax, word ptr col
+        mov     bx, ax
+        shl     al, 3
+        mov     edi, rgb
+        mov     [edi], al
+        mov     ax, bx
+        and     bh, 1111100b
+        and     ax, 1111100000b
+        shr     ax, 2
+        add     bh, bh
+        mov     [edi + 1], al
+        mov     [edi + 2], bh
+    }
+}
+
+inline void toRGB16(uint32_t col, RGB *rgb)
+{
+    __asm {
+        mov     ax, word ptr col
+        mov     bx, ax
+        and     ax, 1111100000011111b
+        shl     al, 3
+        mov     edi, rgb
+        and     bx, 11111100000b
+        shl     bx, 5
+        mov     bl, al
+        mov     [edi + 2], ah
+        mov     [edi], bx
+    }
+}
+
+inline void toRGB2432(uint32_t col, RGB *rgb)
+{
+    __asm {
+        mov     edi, rgb
+        mov     al, byte ptr col
+        mov     [edi], al
+        mov     ax, word ptr col[1]
+        mov     [edi + 1], ax
+    }
 }
 
 // Merge r,g,b values to rgb value
-inline uint32_t fromRGB(uint8_t r, uint8_t g, uint8_t b)
+inline uint32_t fromRGB8(uint8_t r, uint8_t g, uint8_t b)
 {
-    uint32_t tr, tg, tb;
-    tr = (((uint32_t)r >> rshift) << rpos) & rmask;
-    tg = (((uint32_t)g >> gshift) << gpos) & gmask;
-    tb = (((uint32_t)b >> bshift) << bpos) & bmask;
-    return (tr | tg | tb);
+    __asm {
+        xor     ax, ax
+        xor     bx, bx
+        mov     al, b
+        mov     bl, g
+        add     ax, bx
+        add     ax, bx
+        mov     bl, r
+        add     ax, bx
+        shr     ax, 2
+    }
+}
+
+inline uint32_t fromRGB15(uint8_t r, uint8_t g, uint8_t b)
+{
+    __asm {
+        mov     al, b
+        mov     ah, g
+        mov     bl, r
+        shr     ah, 3
+        and     bl, 11111000b
+        shr     ax, 3
+        shr     bl, 1
+        or      ah, bl
+    }
+}
+
+inline uint32_t fromRGB16(uint8_t r, uint8_t g, uint8_t b)
+{
+    __asm {
+        mov     al, b
+        mov     ah, g
+        shr     ah, 2
+        mov     bl, r
+        shr     ax, 3
+        and     bl, 11111000b
+        or      ah, bl
+    }
+}
+
+inline uint32_t fromRGB2432(uint8_t r, uint8_t g, uint8_t b)
+{
+    __asm {
+        xor     eax, eax
+        xor     ebx, ebx
+        mov     al, b
+        mov     ah, g
+        mov     bl, r
+        shl     ebx, 16
+        or      eax, ebx
+    }
+}
+
+inline uint32_t fromRGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+    __asm {
+        xor     eax, eax
+        xor     ebx, ebx
+        mov     al, b
+        mov     ah, g
+        mov     bl, r
+        mov     bh, a
+        shl     ebx, 16
+        or      eax, ebx
+    }
 }
 
 // Vertical and Horizon retrace
@@ -2046,7 +2157,7 @@ void putPixel8(int32_t x, int32_t y, uint32_t col)
     }
 }
 
-void putPixel16(int32_t x, int32_t y, uint32_t col)
+void putPixel1516(int32_t x, int32_t y, uint32_t col)
 {
     if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return;
 
@@ -2123,7 +2234,7 @@ void putPixelBob(int32_t x, int32_t y)
 // Get pixel functions
 uint32_t getPixel8(int32_t x, int32_t y)
 {
-    uint8_t col = 0;
+    //uint8_t col = 0;
 
     if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return 0;
 
@@ -2135,13 +2246,13 @@ uint32_t getPixel8(int32_t x, int32_t y)
         mov     esi, lfbPtr
         add     esi, eax
         lodsb
-        mov     col, al
+        //mov     col, al
     }
 
-    return col;
+    //return col;
 }
 
-uint32_t getPixel16(int32_t x, int32_t y)
+uint32_t getPixel1516(int32_t x, int32_t y)
 {
     uint16_t col = 0;
 
@@ -2541,7 +2652,7 @@ void clearScreen8(uint32_t col)
 #endif
 }
 
-void clearScreen16(uint32_t col)
+void clearScreen1516(uint32_t col)
 {
 #ifdef _USE_MMX    
     __asm {
@@ -2719,7 +2830,7 @@ void fillRect8(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t c
 #endif
 }
 
-void fillRect16(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col)
+void fillRect1516(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col)
 {
     int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
@@ -3743,7 +3854,7 @@ void fillRectPattern24(int32_t x1, int32_t y1, int32_t width, int32_t height, ui
     }
 }
 
-void fillRectPattern16(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col, uint8_t *pattern)
+void fillRectPattern1516(int32_t x1, int32_t y1, int32_t width, int32_t height, uint32_t col, uint8_t *pattern)
 {
     int32_t lwidth, lheight, x2, y2;
     int32_t lminX, lminY, lmaxX, lmaxY;
@@ -4822,7 +4933,7 @@ void getImage8(int32_t x1, int32_t y1, int32_t width, int32_t height, GFX_IMAGE 
 #endif    
 }
 
-void getImage16(int32_t x1, int32_t y1, int32_t width, int32_t height, GFX_IMAGE *img)
+void getImage1516(int32_t x1, int32_t y1, int32_t width, int32_t height, GFX_IMAGE *img)
 {
     void *imgData = img->mData;
     int32_t x2, y2, lwidth, lheight;
@@ -5186,7 +5297,7 @@ void putImage8(int32_t x1, int32_t y1, GFX_IMAGE *img)
 #endif
 }
 
-void putImage16(int32_t x1, int32_t y1, GFX_IMAGE *img)
+void putImage1516(int32_t x1, int32_t y1, GFX_IMAGE *img)
 {
     int32_t x2, y2, lwidth, lheight;
     int32_t lminX, lminY, lmaxX, lmaxY;
@@ -6615,7 +6726,7 @@ void putSprite8(int32_t x1, int32_t y1, uint32_t key, GFX_IMAGE *img)
 #endif
 }
 
-void putSprite16(int32_t x1, int32_t y1, uint32_t key, GFX_IMAGE *img)
+void putSprite1516(int32_t x1, int32_t y1, uint32_t key, GFX_IMAGE *img)
 {
     int32_t x2, y2, lwidth, lheight;
     int32_t lminX, lminY, lmaxX, lmaxY;
@@ -7934,7 +8045,7 @@ void horizLine8(int32_t x, int32_t y, int32_t sx, uint32_t col)
 #endif
 }
 
-void horizLine16(int32_t x, int32_t y, int32_t sx, uint32_t col)
+void horizLine1516(int32_t x, int32_t y, int32_t sx, uint32_t col)
 {
 	//check for clip-y
 	if (y > cmaxY || y < cminY) return;
@@ -8628,7 +8739,7 @@ void vertLine8(int32_t x, int32_t y, int32_t sy, uint32_t col)
     }
 }
 
-void vertLine16(int32_t x, int32_t y, int32_t sy, uint32_t col)
+void vertLine1516(int32_t x, int32_t y, int32_t sy, uint32_t col)
 {
 	//check for clip-x
 	if (x > cmaxX || x < cminX) return;
@@ -9603,7 +9714,7 @@ void scaleImage8(GFX_IMAGE *dst, GFX_IMAGE *src, int32_t smooth)
     }
 }
 
-void scaleImage16(GFX_IMAGE *dst, GFX_IMAGE *src, int32_t smooth)
+void scaleImage1516(GFX_IMAGE *dst, GFX_IMAGE *src, int32_t smooth)
 {
     // save local value
     uint32_t dstWidth  = dst->mWidth;
@@ -10672,6 +10783,8 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t refreshRate)
         switch (bitsPerPixel)
         {
         case 8:
+            toRGB               = toRGB8;
+            fromRGB             = fromRGB8;
             putPixel            = putPixel8;
             getPixel            = getPixel8;
             fillRect            = fillRect8;
@@ -10686,64 +10799,70 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t refreshRate)
             break;
 
         case 15:
-            putPixel            = putPixel16;
+            toRGB               = toRGB15;
+            fromRGB             = fromRGB15;
+            putPixel            = putPixel1516;
             putPixelAdd         = putPixelAdd15;
             putPixelSub         = putPixelSub15;
-            getPixel            = getPixel16;
-            fillRect            = fillRect16;
+            getPixel            = getPixel1516;
+            fillRect            = fillRect1516;
             fillRectAdd         = fillRectAdd15;
             fillRectSub         = fillRectSub15;
-            horizLine           = horizLine16;
+            horizLine           = horizLine1516;
             horizLineAdd        = horizLineAdd15;
             horizLineSub        = horizLineSub15;
-            vertLine            = vertLine16;
+            vertLine            = vertLine1516;
             vertLineAdd         = vertLineAdd15;
             vertLineSub         = vertLineSub15;
-            getImage            = getImage16;
-            putImage            = putImage16;
+            getImage            = getImage1516;
+            putImage            = putImage1516;
             putImageAdd         = putImageAdd15;
             putImageSub         = putImageSub15;
-            putSprite           = putSprite16;
+            putSprite           = putSprite1516;
             putSpriteAdd        = putSpriteAdd15;
             putSpriteSub        = putSpriteSub15;
-            clearScreen         = clearScreen16;
-            scaleImage          = scaleImage16;
+            clearScreen         = clearScreen1516;
+            scaleImage          = scaleImage1516;
             fadeOutImage        = fadeOutImage15;
-            fillRectPattern     = fillRectPattern16;
+            fillRectPattern     = fillRectPattern1516;
             fillRectPatternAdd  = fillRectPatternAdd15;
             fillRectPatternSub  = fillRectPatternSub15;
             break;
 
         case 16:
-            putPixel            = putPixel16;
+            toRGB               = toRGB16;
+            fromRGB             = fromRGB16;
+            putPixel            = putPixel1516;
             putPixelAdd         = putPixelAdd16;
             putPixelSub         = putPixelSub16;
-            getPixel            = getPixel16;
-            fillRect            = fillRect16;
+            getPixel            = getPixel1516;
+            fillRect            = fillRect1516;
             fillRectAdd         = fillRectAdd16;
             fillRectSub         = fillRectSub16;
-            horizLine           = horizLine16;
+            horizLine           = horizLine1516;
             horizLineAdd        = horizLineAdd16;
             horizLineSub        = horizLineSub16;
-            vertLine            = vertLine16;
+            vertLine            = vertLine1516;
             vertLineAdd         = vertLineAdd16;
             vertLineSub         = vertLineSub16;
-            getImage            = getImage16;
-            putImage            = putImage16;
+            getImage            = getImage1516;
+            putImage            = putImage1516;
             putImageAdd         = putImageAdd16;
             putImageSub         = putImageSub16;
-            putSprite           = putSprite16;
+            putSprite           = putSprite1516;
             putSpriteAdd        = putSpriteAdd16;
             putSpriteSub        = putSpriteSub16;
-            clearScreen         = clearScreen16;
-            scaleImage          = scaleImage16;
+            clearScreen         = clearScreen1516;
+            scaleImage          = scaleImage1516;
             fadeOutImage        = fadeOutImage16;
-            fillRectPattern     = fillRectPattern16;
+            fillRectPattern     = fillRectPattern1516;
             fillRectPatternAdd  = fillRectPatternAdd16;
             fillRectPatternSub  = fillRectPatternSub16;
             break;
 
         case 24:
+            toRGB               = toRGB2432;
+            fromRGB             = fromRGB2432;
             putPixel            = putPixel24;
             putPixelAdd         = putPixelAdd24;
             putPixelSub         = putPixelSub24;
@@ -10773,6 +10892,8 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t refreshRate)
             break;
 
         case 32:
+            toRGB               = toRGB2432;
+            fromRGB             = fromRGB2432;
             putPixel            = putPixel32;
             putPixelAdd         = putPixelAdd32;
             putPixelSub         = putPixelSub32;
@@ -24025,5 +24146,18 @@ int initVBE()
 
     if (val == 0x004F && !memcmp(drvInfo.VBESignature, "VESA", 4) && drvInfo.VBEVersion >= 0x0200) printf("OK!\n");
     else printf("VESA 3.0 INIT FAILED!\n");
+    return 0;
+}
+
+int main()
+{
+    uint8_t col = 0;
+    setVesaMode(800, 600, 8, 0);
+    //drawCircle(centerX, centerY, centerY - 10, fromRGB(255, 0, 0));
+    putPixel8(100, 100, 200);
+    col = getPixel8(100, 100);
+    //getch();
+    closeVesaMode();
+    printf("%u", col);
     return 0;
 }

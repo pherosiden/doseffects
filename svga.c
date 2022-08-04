@@ -853,7 +853,6 @@ uint32_t fromRGB8(uint8_t R, uint8_t G, uint8_t B)
         mov     bl, R
         add     ax, bx
         shr     ax, 2
-        xor     dh, dh
     }
 }
 
@@ -868,7 +867,6 @@ uint32_t fromRGB15(uint8_t R, uint8_t G, uint8_t B)
         shr     ax, 3
         shr     bl, 1
         or      ah, bl
-        xor     dx, dx
     }
 }
 
@@ -882,7 +880,6 @@ uint32_t fromRGB16(uint8_t R, uint8_t G, uint8_t B)
         shr     ax, 3
         and     bl, 11111000b
         or      ah, bl
-        xor     dx, dx
     }
 }
 
@@ -891,8 +888,9 @@ uint32_t fromRGB24(uint8_t R, uint8_t G, uint8_t B)
     __asm {
         mov     al, B
         mov     ah, G
-        mov     dl, R
-        xor     dh, dh
+        mov     bl, R
+        shl     ebx, 16
+        or      eax, ebx
     }
 }
 
@@ -901,8 +899,9 @@ uint32_t fromRGB32(uint8_t R, uint8_t G, uint8_t B)
     __asm {
         mov     al, B
         mov     ah, G
-        mov     dl, R
-        xor     dh, dh
+        mov     bl, R
+        shl     ebx, 16
+        or      eax, ebx
     }
 }
 
