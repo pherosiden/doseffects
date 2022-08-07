@@ -24148,16 +24148,3 @@ int initVBE()
     else printf("VESA 3.0 INIT FAILED!\n");
     return 0;
 }
-
-int main()
-{
-    uint8_t col = 0;
-    setVesaMode(800, 600, 8, 0);
-    //drawCircle(centerX, centerY, centerY - 10, fromRGB(255, 0, 0));
-    putPixel8(100, 100, 200);
-    col = getPixel8(100, 100);
-    //getch();
-    closeVesaMode();
-    printf("%u", col);
-    return 0;
-}
