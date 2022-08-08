@@ -1996,8 +1996,8 @@ inline void toRGB2432(uint32_t col, RGB *rgb)
 inline uint32_t fromRGB8(uint8_t r, uint8_t g, uint8_t b)
 {
     __asm {
-        xor     ax, ax
-        xor     bx, bx
+        xor     eax, eax
+        xor     ebx, ebx
         mov     al, b
         mov     bl, g
         add     ax, bx
@@ -2011,6 +2011,7 @@ inline uint32_t fromRGB8(uint8_t r, uint8_t g, uint8_t b)
 inline uint32_t fromRGB15(uint8_t r, uint8_t g, uint8_t b)
 {
     __asm {
+        xor     eax, eax
         mov     al, b
         mov     ah, g
         mov     bl, r
@@ -2025,6 +2026,7 @@ inline uint32_t fromRGB15(uint8_t r, uint8_t g, uint8_t b)
 inline uint32_t fromRGB16(uint8_t r, uint8_t g, uint8_t b)
 {
     __asm {
+        xor     eax, eax
         mov     al, b
         mov     ah, g
         shr     ah, 2
@@ -11122,18 +11124,12 @@ void shiftPalette(void *pal)
 {
     __asm {
         mov     edi, pal
-        mov     ecx, 256
+        mov     esi, pal
+        mov     ecx, 768
     step:
-        mov     al, [edi + 2]
+        lodsb
         shl     al, 2
-        mov     [edi + 2], al
-        mov     al, [edi + 1]
-        shl     al, 2
-        mov     [edi + 1], al
-        mov     al, [edi]
-        shl     al, 2
-        mov     [edi], al
-        add     edi, 3
+        stosb
         dec     ecx
         jnz     step
     }

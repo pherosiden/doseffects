@@ -1386,7 +1386,7 @@ void scrollLed(const char *msg)
                     else putPixel(font->info.width + zx * (i + 2), sy + zy * (j + 2) + 4, 0);
                 }
             }
-            delay(8);
+            delay(12);
         }
         m++;
         if (m >= strlen(msg)) break;
