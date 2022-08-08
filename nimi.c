@@ -99,7 +99,7 @@ void retrace()
     }
 }
 
-void drawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, unsigned long color)
+void drawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t color)
 {
     int16_t d, sign;
     int16_t x, y, dx, dy, dt, ds;
@@ -185,8 +185,8 @@ void pierra(int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t num, int16_t
     int16_t i, j, h, k, m;
     float x, y, xx , yy, dx, dy;
 
-    x = (float)x1;
-    y = (float)y1;
+    x = x1;
+    y = y1;
 
     dx = (float)(x2 - x1) / num;
     dy = (float)(y2 - y1) / num;
@@ -244,7 +244,7 @@ void main()
 
     for (i = 0; i < 1000; i++)
     {
-        sinus[i] = sin(i * (double)0.00628318530718);
+        sinus[i] = sin(i * (float)0.00628318530718);
     }
 
     __asm {

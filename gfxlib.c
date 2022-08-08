@@ -2143,46 +2143,69 @@ void restoreDrawBuffer()
 // Pixels functions
 void putPixel8(int32_t x, int32_t y, uint32_t col)
 {
-    if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return;
-
     __asm {
+        mov     ebx, x
+        cmp     ebx, cminX
+        jl      quit
+        cmp     ebx, cmaxX
+        jg      quit
         mov     eax, y
+        cmp     eax, cminY
+        jl      quit
+        cmp     eax, cmaxY
+        jg      quit
         add     eax, pageOffset
         mul     lfbWidth
-        add     eax, x
+        add     eax, ebx
         mov     edi, lfbPtr
         add     edi, eax
         mov     eax, col
         stosb
+    quit:
     }
 }
 
 void putPixel1516(int32_t x, int32_t y, uint32_t col)
 {
-    if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return;
-
     __asm {
+        mov     ebx, x
+        cmp     ebx, cminX
+        jl      quit
+        cmp     ebx, cmaxX
+        jg      quit
         mov     eax, y
+        cmp     eax, cminY
+        jl      quit
+        cmp     eax, cmaxY
+        jg      quit
         add     eax, pageOffset
         mul     lfbWidth
-        add     eax, x
+        add     eax, ebx
         shl     eax, 1
         mov     edi, lfbPtr
         add     edi, eax
         mov     eax, col
         stosw
+    quit:
     }
 }
 
 void putPixel24(int32_t x, int32_t y, uint32_t col)
 {
-    if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return;
-
     __asm {
+        mov     ebx, x
+        cmp     ebx, cminX
+        jl      quit
+        cmp     ebx, cmaxX
+        jg      quit
         mov     eax, y
+        cmp     eax, cminY
+        jl      quit
+        cmp     eax, cmaxY
+        jg      quit
         add     eax, pageOffset
         mul     lfbWidth
-        add     eax, x
+        add     eax, ebx
         mov     ebx, eax
         shl     eax, 1
         add     eax, ebx
@@ -2192,34 +2215,50 @@ void putPixel24(int32_t x, int32_t y, uint32_t col)
         stosw
         shr     eax, 16
         stosb
+    quit:
     } 
 }
 
 void putPixel32(int32_t x, int32_t y, uint32_t col)
 {
-    if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return;
-
     __asm {
+        mov     ebx, x
+        cmp     ebx, cminX
+        jl      quit
+        cmp     ebx, cmaxX
+        jg      quit
         mov     eax, y
+        cmp     eax, cminY
+        jl      quit
+        cmp     eax, cmaxY
+        jg      quit
         add     eax, pageOffset
         mul     lfbWidth
-        add     eax, x
+        add     eax, ebx
         shl     eax, 2
         mov     edi, lfbPtr
         add     edi, eax
         mov     eax, col
         stosd
+    quit:
     }
 }
 
 void putPixelBob(int32_t x, int32_t y)
 {
-    if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return;
-
     __asm {
+        mov     ebx, x
+        cmp     ebx, cminX
+        jl      quit
+        cmp     ebx, cmaxX
+        jg      quit
         mov     eax, y
+        cmp     eax, cminY
+        jl      quit
+        cmp     eax, cmaxY
+        jg      quit
         mul     lfbWidth
-        add     eax, x
+        add     eax, ebx
         mov     esi, lfbPtr
         add     esi, eax
         mov     ebx, eax
@@ -2228,107 +2267,133 @@ void putPixelBob(int32_t x, int32_t y)
         add     edi, ebx
         inc     al
         stosb
+    quit:
     }
 }
 
 // Get pixel functions
 uint32_t getPixel8(int32_t x, int32_t y)
 {
-    //uint8_t col = 0;
-
-    if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return 0;
-
     __asm {
+        mov     ebx, x
+        cmp     ebx, cminX
+        jl      quit
+        cmp     ebx, cmaxX
+        jg      quit
         mov     eax, y
+        cmp     eax, cminY
+        jl      quit
+        cmp     eax, cmaxY
+        jg      quit
         add     eax, pageOffset
         mul     lfbWidth
-        add     eax, x
+        add     eax, ebx
         mov     esi, lfbPtr
         add     esi, eax
+        xor     eax, eax
         lodsb
-        //mov     col, al
+    quit:
     }
-
-    //return col;
 }
 
 uint32_t getPixel1516(int32_t x, int32_t y)
 {
-    uint16_t col = 0;
-
-    if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return 0;
-
     __asm {
+        mov     ebx, x
+        cmp     ebx, cminX
+        jl      quit
+        cmp     ebx, cmaxX
+        jg      quit
         mov     eax, y
+        cmp     eax, cminY
+        jl      quit
+        cmp     eax, cmaxY
+        jg      quit
         add     eax, pageOffset
         mul     lfbWidth
-        add     eax, x
+        add     eax, ebx
         shl     eax, 1
         mov     esi, lfbPtr
         add     esi, eax
+        xor     eax, eax
         lodsw
-        mov     col, ax
+    quit:
     }
-
-    return col;
 }
 
 uint32_t getPixel24(int32_t x, int32_t y)
 {
-    uint32_t col = 0;
-
-    if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return 0;
-
     __asm {
+        mov     ebx, x
+        cmp     ebx, cminX
+        jl      quit
+        cmp     ebx, cmaxX
+        jg      quit
         mov     eax, y
+        cmp     eax, cminY
+        jl      quit
+        cmp     eax, cmaxY
+        jg      quit
         add     eax, pageOffset
         mul     lfbWidth
-        add     eax, x
+        add     eax, ebx
         mov     ebx, eax
         shl     eax, 1
         add     eax, ebx
         mov     esi, lfbPtr
         add     esi, eax
-        lodsw
-        mov     word ptr col, ax
-        lodsb
-        mov     byte ptr col[2], al
+        xor     eax, eax
+        xor     ebx, ebx
+        mov     ax, [esi]
+        mov     bl, [esi + 2]
+        shl     ebx, 16
+        or      eax, ebx
+    quit:
     }
-
-    return col;
 }
 
 uint32_t getPixel32(int32_t x, int32_t y)
 {
-    uint32_t col = 0;
-
-    if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return 0;
-
     __asm {
+        mov     ebx, x
+        cmp     ebx, cminX
+        jl      quit
+        cmp     ebx, cmaxX
+        jg      quit
         mov     eax, y
+        cmp     eax, cminY
+        jl      quit
+        cmp     eax, cmaxY
+        jg      quit
         add     eax, pageOffset
         mul     lfbWidth
-        add     eax, x
+        add     eax, ebx
         shl     eax, 2
         mov     esi, lfbPtr
         add     esi, eax
+        xor     eax, eax
         lodsd
-        mov     col, eax
+    quit:
     }
-
-    return col;
 }
 
 // Put pixel add with destination
 void putPixelAdd32(int32_t x, int32_t y, uint32_t col)
 {
-    if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return;
-    
     __asm {
+        mov     ebx, x
+        cmp     ebx, cminX
+        jl      quit
+        cmp     ebx, cmaxX
+        jg      quit
         mov     eax, y
+        cmp     eax, cminY
+        jl      quit
+        cmp     eax, cmaxY
+        jg      quit
         add     eax, pageOffset
         mul     lfbWidth
-        add     eax, x
+        add     eax, ebx
         shl     eax, 2
         mov     edi, lfbPtr
         add     edi, eax
@@ -2351,18 +2416,26 @@ void putPixelAdd32(int32_t x, int32_t y, uint32_t col)
         and     eax, 00FFFFh
         or      eax, ebx
         stosd
+    quit:
     }
 }
 
 void putPixelAdd24(int32_t x, int32_t y, uint32_t col)
 {
-    if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return;
-    
     __asm {
+        mov     ebx, x
+        cmp     ebx, cminX
+        jl      quit
+        cmp     ebx, cmaxX
+        jg      quit
         mov     eax, y
+        cmp     eax, cminY
+        jl      quit
+        cmp     eax, cmaxY
+        jg      quit
         add     eax, pageOffset
         mul     lfbWidth
-        add     eax, x
+        add     eax, ebx
         mov     ebx, eax
         shl     eax, 1
         add     eax, ebx
@@ -2385,19 +2458,27 @@ void putPixelAdd24(int32_t x, int32_t y, uint32_t col)
         stosw
         mov     al, bl
         stosb
+    quit:
     }
 }
 
 // 16 bits pixel use RGB 565
 void putPixelAdd16(int32_t x, int32_t y, uint32_t col)
 {
-    if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return;
-    
     __asm {
+        mov     ebx, x
+        cmp     ebx, cminX
+        jl      quit
+        cmp     ebx, cmaxX
+        jg      quit
         mov     eax, y
+        cmp     eax, cminY
+        jl      quit
+        cmp     eax, cmaxY
+        jg      quit
         add     eax, pageOffset
         mul     lfbWidth
-        add     eax, x
+        add     eax, ebx
         shl     eax, 1
         mov     edi, lfbPtr
         add     edi, eax
@@ -2425,19 +2506,27 @@ void putPixelAdd16(int32_t x, int32_t y, uint32_t col)
     rstep:
         or      ax, cx
         stosw
+    quit:
     }
 }
 
 // 15 bits pixel use RGB 555
 void putPixelAdd15(int32_t x, int32_t y, uint32_t col)
 {
-    if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return;
-    
     __asm {
+        mov     ebx, x
+        cmp     ebx, cminX
+        jl      quit
+        cmp     ebx, cmaxX
+        jg      quit
         mov     eax, y
+        cmp     eax, cminY
+        jl      quit
+        cmp     eax, cmaxY
+        jg      quit
         add     eax, pageOffset
         mul     lfbWidth
-        add     eax, x
+        add     eax, ebx
         shl     eax, 1
         mov     edi, lfbPtr
         add     edi, eax
@@ -2466,19 +2555,27 @@ void putPixelAdd15(int32_t x, int32_t y, uint32_t col)
     rstep:
         or      ax, cx
         stosw
+    quit:
     }
 }
 
 // Put pixel sub with destination
 void putPixelSub32(int32_t x, int32_t y, uint32_t col)
 {
-    if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return;
-    
     __asm {
+        mov     ebx, x
+        cmp     ebx, cminX
+        jl      quit
+        cmp     ebx, cmaxX
+        jg      quit
         mov     eax, y
+        cmp     eax, cminY
+        jl      quit
+        cmp     eax, cmaxY
+        jg      quit
         add     eax, pageOffset
         mul     lfbWidth
-        add     eax, x
+        add     eax, ebx
         shl     eax, 2
         mov     edi, lfbPtr
         add     edi, eax
@@ -2501,18 +2598,26 @@ void putPixelSub32(int32_t x, int32_t y, uint32_t col)
         and     eax, 00FFFFh
         or      eax, ebx
         stosd
+    quit:
     }
 }
 
 void putPixelSub24(int32_t x, int32_t y, uint32_t col)
 {
-    if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return;
-    
     __asm {
+        mov     ebx, x
+        cmp     ebx, cminX
+        jl      quit
+        cmp     ebx, cmaxX
+        jg      quit
         mov     eax, y
+        cmp     eax, cminY
+        jl      quit
+        cmp     eax, cmaxY
+        jg      quit
         add     eax, pageOffset
         mul     lfbWidth
-        add     eax, x
+        add     eax, ebx
         mov     ebx, eax
         shl     eax, 1
         add     eax, ebx
@@ -2535,19 +2640,27 @@ void putPixelSub24(int32_t x, int32_t y, uint32_t col)
         stosw
         mov     al, bl
         stosb
+    quit:
     }
 }
 
 // 16 bits pixel use RGB 565
 void putPixelSub16(int32_t x, int32_t y, uint32_t col)
 {
-    if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return;
-    
     __asm {
+        mov     ebx, x
+        cmp     ebx, cminX
+        jl      quit
+        cmp     ebx, cmaxX
+        jg      quit
         mov     eax, y
+        cmp     eax, cminY
+        jl      quit
+        cmp     eax, cmaxY
+        jg      quit
         add     eax, pageOffset
         mul     lfbWidth
-        add     eax, x
+        add     eax, ebx
         shl     eax, 1
         mov     edi, lfbPtr
         add     edi, eax
@@ -2572,19 +2685,27 @@ void putPixelSub16(int32_t x, int32_t y, uint32_t col)
         or      ax, cx
     rstep:
         stosw
+    quit:
     }
 }
 
 // 15 bits pixel use RGB 555
 void putPixelSub15(int32_t x, int32_t y, uint32_t col)
 {
-    if (x < cminX || y < cminY || x > cmaxX || y > cmaxY) return;
-    
     __asm {
+        mov     ebx, x
+        cmp     ebx, cminX
+        jl      quit
+        cmp     ebx, cmaxX
+        jg      quit
         mov     eax, y
+        cmp     eax, cminY
+        jl      quit
+        cmp     eax, cmaxY
+        jg      quit
         add     eax, pageOffset
         mul     lfbWidth
-        add     eax, x
+        add     eax, ebx
         shl     eax, 1
         mov     edi, lfbPtr
         add     edi, eax
@@ -2609,6 +2730,7 @@ void putPixelSub15(int32_t x, int32_t y, uint32_t col)
         or      ax, cx
     rstep:
         stosw
+    quit:
     }
 }
 

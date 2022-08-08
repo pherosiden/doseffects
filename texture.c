@@ -406,8 +406,8 @@ void scanRightSide(int16_t x1, int16_t x2, int16_t ytop, int16_t height, uint8_t
 void textureMapping()
 {
     int16_t px1, py1, px2, py2;
-    int16_t polyx1, polyx2, width;
     int16_t pxadd, pyadd, x, y;
+    int16_t polyx1, polyx2, width;
 
     if (miny < 0) miny = 0;
     if (maxy > 199) maxy = 199;
