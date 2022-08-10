@@ -715,6 +715,8 @@ int main()
     int32_t i, xc, yc;
     char sbuff[80] = {0};
     const int32_t tx = 10;
+    const int32_t mx = 20;
+    const int32_t my = 20;
 
     VBE_DRIVER_INFO	drv;
     uint32_t gray32, gray64, gray127, redcol;
@@ -750,7 +752,7 @@ int main()
     redcol = fromRGB(192, 0, 0);
 
     fillRectPatternAdd(tx, tx, xc - 19, yc - 19, gray32, ptnHatchX);
-    fillRect(20, 20, xc - 39, yc - 39, 0);
+    fillRect(mx, my, xc - 39, yc - 39, 0);
     fillRectSub(tx, yc, xc - 19, cmaxY - yc - 9, gray32);
 
     newImage(xc - 19, cmaxY - yc - 9, &txt);
@@ -808,7 +810,7 @@ int main()
     showText(tx, yc, &txt, "available. There will be more to show you later...");
     showText(tx, yc, &txt, "Starting...");
     delay(1000);
-    runBlocking(20, 20);
+    runBlocking(mx, my);
     fullSpeed = 0;
     showText(tx, yc, &txt, "----");
     showText(tx, yc, &txt, "What you saw was a combination of the command");
@@ -817,7 +819,7 @@ int main()
     showText(tx, yc, &txt, "with images has gotten very easy in GFXLIB-no");
     showText(tx, yc, &txt, "half-things anymore! Press the enter key!");
     while(!keyPressed(27));
-    runAddImage(20, 20);
+    runAddImage(mx, my);
     fullSpeed = 0;
     showText(tx, yc, &txt, "----");
     showText(tx, yc, &txt, "This was simply another flag of a draw-operation.");
@@ -827,7 +829,7 @@ int main()
     showText(tx, yc, &txt, "with an alpha map like PNG-images can contain one.");
     showText(tx, yc, &txt, "The next effect - press enter...");
     while(!keyPressed(27));
-    runCrossFade(20, 20);
+    runCrossFade(mx, my);
     fullSpeed = 0;
     showText(tx, yc, &txt, "----");
     showText(tx, yc, &txt, "This thing is called crossFading or alphaBlending.");
@@ -836,7 +838,7 @@ int main()
     showText(tx, yc, &txt, "where you can decide which image covers more of");
     showText(tx, yc, &txt, "the other. For the next, enter...");
     while(!keyPressed(27));
-    runBilinearRotateImage(20, 20);
+    runBilinearRotateImage(mx, my);
     fullSpeed = 0;
     showText(tx, yc, &txt, "----");
     showText(tx, yc, &txt, "This is an image rotation. The responsible routine");
@@ -849,7 +851,7 @@ int main()
     showText(tx, yc, &txt, "show image, check my source code for details.");
     showText(tx, yc, &txt, "Press any key...");
     while(!keyPressed(27));
-    runScaleUpImage(20, 20);
+    runScaleUpImage(mx, my);
     fullSpeed = 0;
     showText(tx, yc, &txt, "----");
     showText(tx, yc, &txt, "Much fancier than the other FX...Yeah, you see");
@@ -857,7 +859,7 @@ int main()
     showText(tx, yc, &txt, "image are doing their work here. Check the source");
     showText(tx, yc, &txt, "code to see the details. Press enter... ;)");
     while(!keyPressed(27));
-    runAntialias(20, 20);
+    runAntialias(mx, my);
     fullSpeed = 0;
     showText(tx, yc, &txt, "----");
     showText(tx, yc, &txt, "Anti-aliased lines, circles and ellipses. Possible");
@@ -865,7 +867,7 @@ int main()
     showText(tx, yc, &txt, "(just slow for show). Ideal for 3D models and the");
     showText(tx, yc, &txt, "like. Enter for the next...");
     while(!keyPressed(27));
-    runPlasmaScale(20, 20);
+    runPlasmaScale(mx, my);
     fullSpeed = 0;
     showText(tx, yc, &txt, "----");
     showText(tx, yc, &txt, "Plasma effect with high colors. This also combines");
@@ -875,7 +877,7 @@ int main()
     showText(tx, yc, &txt, "and MMX instructions to maximize speed (extremely");
     showText(tx, yc, &txt, "fast). Enter for the next...");
     while(!keyPressed(27));
-    fillRect(20, 20, xc - 39, yc - 39, 0);
+    fillRect(mx, my, xc - 39, yc - 39, 0);
     newImage(lfbWidth, lfbHeight, &scr);
     getImage(0, 0, lfbWidth, lfbHeight, &scr);
     runBumpImage();
@@ -884,7 +886,7 @@ int main()
     getImage(0, 0, lfbWidth, lfbHeight, &old);
     scaleImage(&im, &old, 0);
     putImage(0, 0, &scr);
-    putImage(20, 20, &im);
+    putImage(mx, my, &im);
     fullSpeed = 0;
     showText(tx, yc, &txt, "----");
     showText(tx, yc, &txt, "2D bump mapping effect with full screen, this");
@@ -897,7 +899,7 @@ int main()
     getImage(0, 0, lfbWidth, lfbHeight, &old);
     bilinearScaleImage(&im, &old);
     putImage(0, 0, &scr);
-    putImage(20, 20, &im);
+    putImage(mx, my, &im);
     fullSpeed = 0;
     showText(tx, yc, &txt, "----");
     showText(tx, yc, &txt, "The lens flare effect, this effect is a simulation");
