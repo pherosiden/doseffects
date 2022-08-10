@@ -1997,7 +1997,7 @@ inline uint32_t fromRGB8(uint8_t r, uint8_t g, uint8_t b)
 {
     __asm {
         xor     eax, eax
-        xor     ebx, ebx
+        xor     bx, bx
         mov     al, b
         mov     bl, g
         add     ax, bx
@@ -11124,12 +11124,18 @@ void shiftPalette(void *pal)
 {
     __asm {
         mov     edi, pal
-        mov     esi, pal
-        mov     ecx, 768
+        mov     ecx, 256
     step:
-        lodsb
+        mov     al, [edi + 2]
         shl     al, 2
-        stosb
+        mov     [edi + 2], al
+        mov     al, [edi + 1]
+        shl     al, 2
+        mov     [edi + 1], al
+        mov     al, [edi]
+        shl     al, 2
+        mov     [edi], al
+        add     edi, 3
         dec     ecx
         jnz     step
     }
@@ -16482,11 +16488,11 @@ typedef struct PNGDecoderSettings
 
 typedef enum PNGFilterStrategy
 {
-    LFS_ZERO    = 0,
-    LFS_ONE     = 1,
-    LFS_TWO     = 2,
-    LFS_THREE   = 3,
-    LFS_FOUR    = 4,
+    LFS_ZERO            = 0,
+    LFS_ONE             = 1,
+    LFS_TWO             = 2,
+    LFS_THREE           = 3,
+    LFS_FOUR            = 4,
     LFS_MINSUM,
     LFS_ENTROPY,
     LFS_BRUTE_FORCE,
@@ -24115,7 +24121,7 @@ void handleMouse(const char *fname)
 }
 
 ///////////////////// END OF GFXLIB.C ///////////////////////////////////
-int initVBE()
+int initVBE3()
 {
     VBE_FAR_CALL        fcall;
     VBE_DRIVER_INFO     drvInfo;
@@ -24159,7 +24165,7 @@ int initVBE()
     }
 
     // calculate BIOS checksum
-    for (i = 0; i != sizeof(VBE_PM_INFO_BLOCK); i++) biosCheckSum += *biosPtr++;
+    for (i = 0; i < sizeof(VBE_PM_INFO_BLOCK); i++) biosCheckSum += *biosPtr++;
     if (biosCheckSum)
     {
         printf("VESA BIOS checksum error!\n");
@@ -24167,7 +24173,7 @@ int initVBE()
     }
 
     // setup structure (provide selectors, map video mem, ...)
-    biosData = (uint8_t *)calloc(VBE_DATA_SIZE, 1);
+    biosData = (uint8_t*)calloc(VBE_DATA_SIZE, 1);
     if (!biosData) return 1;
     memset(biosData, 0, VBE_DATA_SIZE);
 

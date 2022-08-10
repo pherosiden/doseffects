@@ -655,7 +655,7 @@ void runPlasmaScale(int32_t sx, int32_t sy)
                 mov    c, bx
                 shr    bx, cl
                 and    bx, 0x00FF
-                mov    bl, byte ptr sinx[ebx]
+                mov    bl, sinx[ebx]
                 mov    si, bx
                 mov    bx, ax
                 sub    bx, x2
@@ -663,14 +663,14 @@ void runPlasmaScale(int32_t sx, int32_t sy)
                 mov    b, bx
                 shr    bx, cl
                 and    bx, 0x00FF
-                mov    dl, byte ptr sinx[ebx]
+                mov    dl, sinx[ebx]
                 mov    bx, ax
                 sub    bx, x1
                 add    bx, a
                 mov    a, bx
                 shr    bx, cl
                 and    bx, 0x00FF
-                mov    bl, byte ptr sinx[ebx]
+                mov    bl, sinx[ebx]
                 mov    ax, bx
                 add    ax, cr
                 mov    cr, bx

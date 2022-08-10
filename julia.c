@@ -103,7 +103,7 @@ void juliaSet(int32_t width, int32_t height, int32_t iters, double cre, double c
     {
         //check for exit
         if (kbhit()) return;
-
+        
         for (x = 0; x < width; x++)
         {
             //check for exit
@@ -112,7 +112,7 @@ void juliaSet(int32_t width, int32_t height, int32_t iters, double cre, double c
             //calculate the initial real and imaginary part of z, based on the pixel location and zoom and position values
             newre = 1.5 * (x - width / 2) / (0.5 * zoom * width) + mx;
             newim = 1.0 * (y - height / 2) / (0.5 * zoom * height) + my;
-
+            
             //i will represent the number of iterations
             //start the iteration process
             for (i = 1; i <= iters; i++)
@@ -160,6 +160,7 @@ void mandelbrotSet(int32_t width, int32_t height, int32_t iters, double zoom, do
         //check for exit
         if (kbhit()) return;
 
+        pi = 1.0 * (y - height / 2) / (0.5 * zoom * height) + my;
         for (x = 0; x < width; x++)
         {
             //check for exit
@@ -167,7 +168,6 @@ void mandelbrotSet(int32_t width, int32_t height, int32_t iters, double zoom, do
 
             //calculate the initial real and imaginary part of z, based on the pixel location and zoom and position values
             pr = 1.5 * (x - width / 2) / (0.5 * zoom * width) + mx;
-            pi = 1.0 * (y - height / 2) / (0.5 * zoom * height) + my;
             newre = newim = oldre = oldim = 0; //these should start at 0,0
 
             //i will represent the number of iterations

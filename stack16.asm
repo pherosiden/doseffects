@@ -1,12 +1,13 @@
 .model compact, c
 .386
 .data
-    VBE_STACK_SIZE  equ 2000h   ; VBE caller stack size
-    KERNEL_DATA_SEG equ 10h     ; kernel data segment
+    VBE_STACK_SIZE      equ 2000h   ; VBE caller stack size
+    KERNEL_DATA_SEG     equ 10h     ; kernel data segment
 
-    extern call_addr    : dword ; VBE far call address
-    extern stack_sel    : dword ; VBE caller stack selector
-    stack_offset    dd  0       ; current stack offset
+    extern call_addr : dword        ; VBE far call address
+    extern stack_sel : dword        ; VBE caller stack selector
+
+    stack_offset dd 0               ; current stack offset
 
 .code
     public VesaCall
