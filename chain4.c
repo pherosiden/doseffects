@@ -18,26 +18,12 @@
 #include <stdint.h>
 #include <conio.h>
 
+#define LOWORD(x) ((x) & 0x00FF)
+#define HIWORD(x) (((x) & 0xFF00) >> 8)
+
 uint8_t vbuff[768] = {0};
 uint8_t *vmem = (uint8_t*)0xA0000000L;
 uint8_t *tmem = (uint8_t*)0xB8000000L;
-
-uint8_t getLow(uint16_t num)
-{
-    __asm {
-        mov     ax, num
-        and     ax, 0x00FF
-    }
-}
-
-uint8_t getHigh(uint16_t num)
-{
-    __asm {
-        mov     ax, num
-        and     ax, 0xFF00
-        shr     ax, 8
-    }
-}
 
 void initChain4()
 {
@@ -71,8 +57,8 @@ void putPixel(int16_t x, int16_t y, uint8_t col)
 void moveTo(uint16_t x, uint16_t y)
 {
     uint16_t ofs = (y * 80 << 1) + x;
-    outpw(0x3D4, (getHigh(ofs) << 8) | 0x0C);
-    outpw(0x3D4, (getLow(ofs) << 8) | 0x0D);
+    outpw(0x3D4, (HIWORD(ofs) << 8) | 0x0C);
+    outpw(0x3D4, (LOWORD(ofs) << 8) | 0x0D);
 }
 
 int16_t mouseDetect()

@@ -47,6 +47,10 @@ void drawPoint(STAR p, int16_t state)
             drawLine(p.x - 4, p.y, p.x + 4, p.y, color);
             drawLine(p.x, p.y-4, p.x, p.y + 4, color);
             drawRect(p.x - 1, p.y - 1, p.x + 1, p.y + 1, color);
+            break;
+            
+        default:
+            break;
     }
 }
 

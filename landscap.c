@@ -48,55 +48,38 @@ void retrace()
 
 int16_t mouseDetect()
 {
-    int16_t val;
-
     __asm {
         xor     ax, ax
         int     0x33
         xor     al, al
-        mov     val, ax
     }
-
-    return val;
 }
 
 int16_t getMouseX()
 {
-    int16_t val;
-
     __asm {
         mov     ax, 0x03
         int     0x33
-        mov     val, cx
+        mov     ax, cx
     }
-
-    return val;
 }
 
 int16_t getMouseY()
 {
-    int16_t val;
-
     __asm {
         mov     ax, 0x03
         int     0x33
-        mov     val, dx
+        mov     ax, dx
     }
-
-    return val;
 }
 
 int16_t leftPressed()
 {
-    int16_t val;
-
     __asm {
         mov     ax, 0x03
         int     0x33
-        mov     val, bx
+        mov     ax, bx
     }
-
-    return val;
 }
 
 void mouseWindow(int16_t l, int16_t t, int16_t r, int16_t b)

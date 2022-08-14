@@ -33,7 +33,7 @@ int main()
 
     for (ofs = 0; ofs < 256; ofs++) sinx[ofs] = sin(ofs * M_PI / 128) * 127 + 128;
 
-    if (!setVesaMode(320, 240, 32, 85)) fatalError("Cannot init video mode.\n");
+    if (!setVesaMode(320, 240, 32, 0)) fatalError("Cannot init video mode.\n");
     if (!newImage(160, 120, &plasma)) fatalError("Cannot open image plasma.\n"); 
     if (!newImage(320, 240, &screen)) fatalError("Cannot open image screen.\n"); 
 
@@ -79,7 +79,7 @@ int main()
                 mov    c, bx
                 shr    bx, cl
                 and    bx, 0x00FF
-                mov    bl, byte ptr sinx[ebx]
+                mov    bl, sinx[ebx]
                 mov    si, bx
                 mov    bx, ax
                 sub    bx, x2
@@ -87,14 +87,14 @@ int main()
                 mov    b, bx
                 shr    bx, cl
                 and    bx, 0x00FF
-                mov    dl, byte ptr sinx[ebx]
+                mov    dl, sinx[ebx]
                 mov    bx, ax
                 sub    bx, x1
                 add    bx, a
                 mov    a, bx
                 shr    bx, cl
                 and    bx, 0x00FF
-                mov    bl, byte ptr sinx[ebx]
+                mov    bl, sinx[ebx]
                 mov    ax, bx
                 add    ax, cr
                 mov    cr, bx

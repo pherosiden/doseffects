@@ -114,13 +114,24 @@ uint8_t getPixel(int16_t x, int16_t y)
     }
 }
 
-void moveData(uint8_t *dst, uint8_t *src, int16_t len)
+void moveData(uint8_t *dst, uint8_t *src, uint16_t len)
 {
     __asm {
         les     di, dst
         lds     si, src
         mov     cx, len
+        test    cx, cx
+        jz      quit
+        cmp     cx, 3
+        jle     step
+        shr     cx, 2
+        rep     movsd
+        and     cx, 3
+        test    cx, cx
+        jz      quit
+    step:
         rep     movsb
+    quit:
     }
 }
 

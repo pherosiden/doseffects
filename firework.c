@@ -64,19 +64,26 @@ uint8_t     *tmem = (uint8_t*)0xB8000000L;
 
 void setPixel(int16_t x, int16_t y, uint8_t c)
 {
-    if (x < 0 || x > 319 || y < 0 || y > 199) return;
-
     __asm {
-        mov     ax, 0xA000
-        mov     es, ax
-        xor     di, di
+        mov     ax, x
+        cmp     ax, 0
+        jl      quit
+        cmp     ax, 319
+        jg      quit
         mov     bx, y
+        cmp     bx, 0
+        jl      quit
+        cmp     bx, 199
+        jg      quit
         shl     bx, 6
         add     bh, byte ptr y
-        add     bx, x
-        add     di, bx
+        add     bx, ax
+        mov     ax, 0xA000
+        mov     es, ax
+        mov     di, bx
         mov     al, c
         stosb
+    quit:
     }
 }
 

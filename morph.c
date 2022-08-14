@@ -76,20 +76,15 @@ void putPixel(int16_t x, int16_t y, uint8_t color, uint8_t *addr)
 
 uint8_t getPixel(int16_t x, int16_t y, uint8_t *addr)
 {
-    uint8_t col;
-
     __asm {
-        les     di, addr
+        lds     si, addr
         mov     bx, y
         shl     bx, 6
         add     bh, byte ptr y
         add     bx, x
-        add     di, bx
-        mov     al, es:[di]
-        mov     col, al
+        add     si, bx
+        lodsb
     }
-
-    return col;
 }
 
 void clearMem(uint8_t *mem)
@@ -211,7 +206,7 @@ void doPic()
     }
 
     fclose(fp);
-    for (i = 0; i < JUMP; i++) moveEmOut(k, 2);
+    for (i = 0; i < JUMP; i++) moveEmOut(k, 1);
     getch();
 }
 

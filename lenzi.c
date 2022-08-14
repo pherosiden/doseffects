@@ -92,16 +92,11 @@ void retrace()
 
 int16_t initMouse()
 {
-    int16_t val;
-
     __asm {	
         xor     ax, ax
         int     0x33
         xor     al, al
-        mov     val, ax
     }
-
-    return val;
 }
 
 void getMousePos(uint16_t *x, uint16_t *y, uint16_t *but)
