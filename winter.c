@@ -22,15 +22,16 @@
 #define FASTEST 360
 
 typedef struct {
-    uint8_t x, y;
-    uint16_t p;
+    int16_t x, y;
+    int16_t w, h;
 } Flakes;
 
 uint8_t *vmem = (uint8_t*)0xA0000000L;
 uint8_t *tmem = (uint8_t*)0xB8000000L;
 
 uint16_t rz = 0;
-uint8_t vbuff[64000] = {0};
+uint8_t tbuff[200][320] = {0};
+uint8_t vbuff[200][320] = {0};
 uint8_t pal[768] = {0};
 Flakes flakes[FLAKES] = {0};
 
@@ -70,13 +71,11 @@ void clearMem(uint8_t *mem)
     }
 }
 
-void flip()
+void flip(void* src)
 {
     __asm {
         les     di, vmem
-        mov     ax, seg vbuff
-        mov     ds, ax
-        xor     si, si
+        lds     si, src
         mov     cx, 16000
         rep     movsd
     }
@@ -87,15 +86,16 @@ void snowFall()
     int16_t i;
 
     do {
-        retrace();
         for (i = 0; i < FLAKES; i++)
         {
             perturb();
-            vmem[flakes[i].p] = vbuff[flakes[i].p];
-            if (flakes[i].x >= (rz & 0x0F)) flakes[i].p++;
-            if (flakes[i].y >= (rz & 0xFF)) flakes[i].p += 320;
-            vmem[flakes[i].p] = (flakes[i].y >> 5) + 240;
+            tbuff[flakes[i].h % 200][flakes[i].w % 320] = vbuff[flakes[i].h % 200][flakes[i].w % 320];
+            if (flakes[i].x >= (rz & 0x0F)) flakes[i].w++;
+            if (flakes[i].y >= (rz & 0xFF)) flakes[i].h++;
+            tbuff[flakes[i].h % 200][flakes[i].w % 320] = (flakes[i].y >> 5) + 240;
         }
+        retrace();
+        flip(tbuff[0]);
     } while (!kbhit());
 }
 
@@ -136,7 +136,7 @@ void main()
 {
     FILE *fp;
     int16_t i;
-    uint16_t s = 0;
+    uint16_t pos = 0;
 
     clearScreen();
     printStr(1, 1, 0x0F, "WINTER - (c) 1998 by Nguyen Ngoc Van");
@@ -148,17 +148,20 @@ void main()
 
     fseek(fp, 32, SEEK_SET);
     fread(pal, 1, 768, fp);
-    fread(vbuff, 1, 64000, fp);
+    fread(vbuff[0], 1, 64000, fp);
     fclose(fp);
+
+    memcpy(tbuff[0], vbuff[0], 64000);
+    memset(flakes, 0, sizeof(flakes));
 
     for (i = 0; i < FLAKES; i++)
     {
         perturb();
-        s += rz;
-
+        pos += rz;
         flakes[i].y = (((rz & 0xFF) * FASTEST) & 0xFF) + 5;
         flakes[i].x = (((rz & 0x0F) * flakes[i].y) & 0xFF) + 1;
-        flakes[i].p = s;
+        flakes[i].w = pos % 320;
+        flakes[i].h = pos / 200;
     }
 
     __asm {

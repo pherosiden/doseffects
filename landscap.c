@@ -27,7 +27,8 @@
 #define XMAX 	(320 / DENT)
 #define YMAX 	(120 / DENT)
 
-uint8_t vbuff[64000] = {0};
+uint8_t vbuff[200][320] = {0};
+uint8_t tbuff[200][320] = {0};
 uint8_t *vmem = (uint8_t*)0xA0000000L;
 uint8_t *tmem = (uint8_t*)0xB8000000L;
 
@@ -99,12 +100,13 @@ void mouseWindow(int16_t l, int16_t t, int16_t r, int16_t b)
 void putPixel(int16_t x, int16_t y, uint8_t c)
 {
     __asm {
-        les     di, vmem
+        mov     ax, seg tbuff
+        mov     es, ax
         mov     bx, y
         shl     bx, 6
         add     bh, byte ptr y
         add     bx, x
-        add     di, bx
+        mov     di, bx
         mov     al, c
         stosb
     }
@@ -113,12 +115,13 @@ void putPixel(int16_t x, int16_t y, uint8_t c)
 uint8_t getPixel(int16_t x, int16_t y)
 {
     __asm {
-        lds     si, vmem
+        mov     ax, seg tbuff
+        mov     ds, ax
         mov     bx, y
         shl     bx, 6
         add     bh, byte ptr y
         add     bx, x
-        add     si, bx
+        mov     si, bx
         lodsb
     }
 }
@@ -254,58 +257,60 @@ void subDivide(int16_t l, int16_t t, int16_t r, int16_t b)
 void generateLandscape()
 {
     FILE *fp;
-    uint16_t i;
+    int16_t i, j;
 
     fp = fopen("assets/land.map", "rb");
-    if (!fp)
-    {
-        srand(time(NULL));
-        putPixel(0, 0, random(HMAX));
-        putPixel(XMAXS - 1, 0, random(HMAX));
-        putPixel(0, YMAXS - 1, random(HMAX));
-        putPixel(XMAXS - 1, YMAXS - 1, random(HMAX));
-        subDivide(0, 0, XMAXS, YMAXS);
-        fp = fopen("assets/land.map", "wb");
-        fwrite(vmem, XMAXS * YMAXS, 1, fp);
-        fclose(fp);
-    }
+    if (fp) fread(tbuff[0], XMAXS * YMAXS, 1, fp);
     else
     {
-        fread(vmem, XMAXS * YMAXS, 1, fp);
-        fclose(fp);
+        subDivide(0, 0, XMAXS, YMAXS);
+        fp = fopen("assets/land.map", "wb");
+        fwrite(tbuff[0], XMAXS * YMAXS, 1, fp);        
     }
 
-    flip(vmem, vbuff);
+    fclose(fp);
+    flip(tbuff[0], vbuff[0]);
 
-    for (i = 0; i < XMAXS * YMAXS; i++)
+    for (i = 0; i < YMAXS; i++)
     {
-        vbuff[i] = 110 + (vbuff[i] >> 1);
-        if (vbuff[i] < 115) vbuff[i] = 115;
+        for (j = 0; j < XMAXS; j++)
+        {
+            vbuff[i][j] = 110 + (vbuff[i][j] >> 1);
+            if (vbuff[i][j] < 115) vbuff[i][j] = 115;
+        }
     }
 
-    clearMem(vmem);
+    clearMem(tbuff[0]);
 }
 
 void displayScape()
 {
-    int16_t i = 0, j = 0;
-    int16_t pi, pj, n, x;
+    uint8_t col;
+    int16_t i, j, n, x, y;
 
     do {
-        pi = i;
-        pj = j;
         i = getMouseX();
         j = getMouseY();
-        retrace();
-        for (n = 0; n < XMAX * YMAX; n++)
+        clearMem(tbuff[0]);
+        /*for (n = 0; n < XMAX * YMAX; n++)
         {
-            x = -(DENT * (n % XMAX - (XMAX >> 1) - 1) * 45) / (n / XMAX - 45) - 90;
-            if (x >= -250 && x < 60)
+            x = -(DENT * (n % XMAX - (XMAX >> 1) - 1) * 45) / (n / XMAX - 45) - 153;
+            if (x > -313 && x < -3)
             {
-                vmem[(320 * (DENT * (n / XMAX) - vbuff[(n % XMAX + pi + (n / XMAX + pj) * XMAXS) % 64000] - 3) + x) % 64000] = 0;
-                vmem[(320 * (DENT * (n / XMAX) - vbuff[(n % XMAX +  i + (n / XMAX +  j) * XMAXS) % 64000] - 3) + x) % 64000] = vbuff[(n % XMAX + i + (n / XMAX + j) * XMAXS) % 64000] - 100;
+                col = vbuff[n / XMAX + j][n % XMAX + i];
+                tbuff[DENT * (n / XMAX) - col + 202][x] = col - 100;
+            }
+        }*/
+        for (y = 0; y < YMAXS; y++)
+        {
+            for (x = 0; x < XMAXS; x++)
+            {
+                col = vbuff[(y + j) % 200][(x + i) % 320];
+                tbuff[y][x] = col - 100;
             }
         }
+        retrace();
+        flip(tbuff[0], vmem);
     } while (!kbhit() && leftPressed() != 1);
 }
 
@@ -324,6 +329,8 @@ void main()
         int     0x10
     }
 
+    clearMem(tbuff[0]);
+    clearMem(vbuff[0]);
     setPalette();
     generateLandscape();
     mouseWindow(0, 0, XMAXS - XMAX, YMAXS - YMAX);
