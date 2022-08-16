@@ -202,7 +202,7 @@ void subDivide(int16_t l, int16_t t, int16_t r, int16_t b)
     int16_t x, y;
     uint8_t c;
 
-    if (r - l < 2  && b - t < 2) return;
+    if (r - l < 2 && b - t < 2) return;
 
     x = (l + r) >> 1;
     y = (t + b) >> 1;
@@ -246,7 +246,7 @@ void generateLandscape()
     {
         for (j = 0; j < XMAXS; j++)
         {
-            vbuff[i][j] = 110 + (vbuff[i][j] >> 1);
+            vbuff[i][j] = (vbuff[i][j] >> 1) + 110;
             if (vbuff[i][j] < 115) vbuff[i][j] = 115;
         }
     }
@@ -265,11 +265,11 @@ void displayScape()
         clearMem(tbuff[0]);
         for (n = 0; n < XMAX * YMAX; n++)
         {
-            t = -(DENT * (n % XMAX - (XMAX >> 1) - 1) * 45) / (n / XMAX - 45);
-            if (t > -255 && t < 62)
+            t = -(DENT * (n % XMAX - (XMAX >> 1) - 1) * 45) / (n / XMAX - 45) - 153;
+            if (t > -317 && t < -3)
             {
                 col = vbuff[n / XMAX + y][n % XMAX + x];
-                tbuff[DENT * (n / XMAX) - col - 7][t] = col - 100;
+                tbuff[DENT * (n / XMAX) - col + 198][t] = col - 100;
             }
         }
         retrace();
