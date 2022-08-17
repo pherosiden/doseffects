@@ -96,7 +96,7 @@ void rotatePal()
         retrace();
         for (dac = 0; dac < 256; dac++)
         {
-            if ((dac + ofs) & 0xFF) setDAC((dac + ofs) & 0xFF, dac >> 3, dac >> 3, 32 + (dac >> 3));
+            if ((dac + ofs) & 0xFF) setDAC((dac + ofs) & 0xFF, dac >> 3, dac >> 3, (dac >> 3) + 32);
         }
         ofs++;
       } while(!kbhit());
