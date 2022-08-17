@@ -115,6 +115,7 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
 void drawWallFloor(uint16_t vofs, uint16_t dark)
 {
     __asm {
+        shl     dark, 8
         mov     ebx, verts
         mov     ax, seg vbuff
         mov     es, ax
@@ -409,10 +410,9 @@ void computeView()
         pass = (64L * 65536L) / height;
         hmh = HORIZ - height;
         hph = HORIZ + height;
-        dark = roundf(spacer) >> 10;
 
+        dark = roundf(spacer) >> 10;
         if (dark > 15) dark = 15;
-        dark <<= 8;
 
         if (hmh < 0)
         {
