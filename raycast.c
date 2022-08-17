@@ -188,14 +188,12 @@ void drawWallFloor(uint16_t vofs, uint16_t dark)
         add     si, ax
         shr     ecx, 10
         test    cx, cx
-        jnz     zero
-        inc     cx
-    zero:
-        cmp     cx, 16
-        jbe     no16
-        mov     cx, 16
-    no16:
-        dec     cx
+        jnz     nzero
+    nzero:
+        cmp     cx, 15
+        jbe     no15
+        mov     cx, 15
+    no15:
         shl     cx, 8
         push    si
         xor     ax, ax
@@ -289,7 +287,7 @@ void setShade()
 
     for (i = 0; i < 256; i++) shade[0][i] = i;
 
-    for (k = 0; k < 16; k++)
+    for (k = 1; k < 16; k++)
     {
         for (i = 0; i < 256; i++)
         {
@@ -414,8 +412,6 @@ void computeView()
         dark = roundf(spacer) >> 10;
 
         if (dark > 15) dark = 15;
-        else if (dark > 0) dark--;
-
         dark <<= 8;
 
         if (hmh < 0)
