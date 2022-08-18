@@ -224,6 +224,7 @@ void crossFade(int8_t dirt, uint16_t depth)
     if (dirt)
     {
         movePal(tmp, src);
+        waitRetrace();
         for (i = 0; i <= 255; i++) setRGB(i, src[i][0], src[i][1], src[i][2]);
 
         for (i = 0; i <= depth; i++)
@@ -248,6 +249,7 @@ void crossFade(int8_t dirt, uint16_t depth)
     else
     {
         movePal(tmp, dst);
+        waitRetrace();
         for (i = 0; i <= 255; i++) setRGB(i, dst[i][0], dst[i][1], dst[i][2]);
 
         for (i = 0; i <= depth; i++)

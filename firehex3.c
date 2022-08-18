@@ -27,9 +27,9 @@
 #define ZSTR -1
 #define M_PI 3.141592f
 
-#define Sinus(i)    (stab[i & 0xff])
-#define Cosus(i)    (stab[(i + 192) & 0xff])
-#define Swap(a, b)  {int16_t t = a; a = b; b = t;}
+#define SINX(i)     (stab[i & 0xff])
+#define COSX(i)     (stab[(i + 192) & 0xff])
+#define SWAP(a, b)  {int16_t t = a; a = b; b = t;}
 
 const int16_t points[][3] = {
     {-25, -25, -25}, {-25, -25, 25}, {25, -25, 25}, {25, -25, -25},
@@ -265,8 +265,8 @@ void sort(int16_t left, int16_t right)
 
         if (lo <= hi)
         {
-            Swap(polyz[lo], polyz[hi]);
-            Swap(pind[lo], pind[hi]);
+            SWAP(polyz[lo], polyz[hi]);
+            SWAP(pind[lo], pind[hi]);
 
             lo++;
             hi--;
@@ -309,15 +309,15 @@ void rotateCube()
     do {
         for (n = 0; n < 8; n++)
         {
-            i = (Cosus(ay) * points[n][0] - Sinus(ay) * points[n][2]) / DIVD;
-            j = (Cosus(az) * points[n][1] - Sinus(az) * i) / DIVD;
-            k = (Cosus(ay) * points[n][2] + Sinus(ay) * points[n][0]) / DIVD;
+            i = (COSX(ay) * points[n][0] - SINX(ay) * points[n][2]) / DIVD;
+            j = (COSX(az) * points[n][1] - SINX(az) * i) / DIVD;
+            k = (COSX(ay) * points[n][2] + SINX(ay) * points[n][0]) / DIVD;
 
-            x = (Cosus(az) * i + Sinus(az) * points[n][1]) / DIVD;
-            y = (Cosus(ax) * j + Sinus(ax) * k) / DIVD;
+            x = (COSX(az) * i + SINX(az) * points[n][1]) / DIVD;
+            y = (COSX(ax) * j + SINX(ax) * k) / DIVD;
 
-            pz[n] = (Cosus(ax) * k - Sinus(ax) * j) / DIVD + Cosus(ax) / 3;
-            px[n] = 160 + (Sinus(ax) >> 1) + (-x * DIST) / (pz[n] - DIST);
+            pz[n] = (COSX(ax) * k - SINX(ax) * j) / DIVD + COSX(ax) / 3;
+            px[n] = 160 + (SINX(ax) >> 1) + (-x * DIST) / (pz[n] - DIST);
             py[n] = 100 + (-y * DIST) / (pz[n] - DIST);
         }
 
