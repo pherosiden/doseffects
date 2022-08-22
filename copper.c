@@ -1,7 +1,15 @@
-/*--------------------------------------------------------------------------*/
-/* COPPER3 - 3 simultaneous copper bars, 79 bytes! - final version by       */
-/* Nguyen Ngoc Van 1998. Mail : siden@codedemo.net, Site : www.codedemo.net */
-/*--------------------------------------------------------------------------*/
+/*----------------------------------------------------*/
+/* Packet  : Demo & Effect                            */
+/* Effect  : Copper3                                  */
+/* Author  : Nguyen Ngoc Van                          */
+/* Memory  : Compact                                  */
+/* Heaps   : 640K                                     */
+/* Address : pherosiden@gmail.com                     */
+/* Website : http://www.codedemo.net                  */
+/* Created : 215/07/1998                              */
+/* Please sent to me any bugs or suggests.            */
+/* You can use freely this code. Have fun :)          */ 
+/*----------------------------------------------------*/
 
 #include <dos.h>
 #include <time.h>
