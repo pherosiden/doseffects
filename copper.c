@@ -9,64 +9,88 @@
 #include <stdint.h>
 #include <conio.h>
 
-uint8_t pal[1024] = {0};
-
 void main()
 {
-    __asm {
-        xor     bx, bx
-    m1:
-        push    bx
-        inc     bx
-        push    bx
-        jpo     m1
-    m2:
-        mov     ah, 8
-        mov     cx, 390
-    m3:
-        mov     dx, 03DAh
-    m4:
-        in      al, dx
-        and     al, ah
-        jnz     m4
-    m5:
-        in      al, dx
-        and     al, ah
-        jz      m5
+    int16_t pos[] = {3, 2, 2, 1, 1, 0};
 
-        mov     dl, 0C8h
-        xchg    ax, bx
-        out     dx, al
-        inc     dx
-
-        mov     si, sp
-        mov     bl, 3
-    m6:
-        lodsw
-        loop    m7
-
-        sub     [si], ax
-        cmp     word ptr pal[si], 1
-        ja      m7
-        neg     pal[si - 2]
-    m7:
-        inc     cx
-        lodsw
-        add     ax, cx
-        cmp     ax, 127
-        jbe     m8
-        xor     al, al
-    m8:
-        cmp     al, 64
-        jb      m9
-        not     al
-    m9:
-        out     dx, al
-        dec     bx
-        jpo     m6
-        mov     ah, 1
-        loop    m3
-        int     16h
-        jz      m2
+    while (!kbhit())
+    {
+        __asm {
+            mov     ah, 8
+            mov     cx, 390
+        st0:
+            mov     dx, 0x03DA
+        st1:
+            in      al, dx
+            and     al, ah
+            jnz     st1
+        st2:
+            in      al, dx
+            and     al, ah
+            jz      st2
+            mov     dx, 0x03C8
+            xor     al, al
+            out     dx, al
+            inc     dx
+            lea     si, pos
+            mov     bx, 3
+        st3:
+            lodsw
+            loop    st4
+            sub     [si], ax
+            cmp     word ptr [si], -263
+            ja      st4
+            neg     word ptr [si - 2]
+        st4:
+            inc     cx
+            lodsw
+            add     ax, cx
+            cmp     ax, 127
+            jbe     st5
+            xor     al, al
+        st5:
+            cmp     al, 63
+            jbe     st6
+            not     al
+        st6:
+            out     dx, al
+            dec     bx
+            jnz     st3
+            mov     ah, 1
+            loop    st0
+        }
     }
+
+    /*int16_t i, j, col;
+    
+    while (!kbhit())
+    {
+        for (i = 390; i > 0; i--)
+        {
+            if (i == 390)
+            {
+                while (inp(0x03DA) & 8);
+                while (!(inp(0x03DA) & 8));
+            }
+            else
+            {
+                while (inp(0x03DA) & 1);
+                while (!(inp(0x03DA) & 1));
+            }
+
+            setdac(0x03C8, 0);
+            for (j = 0; j < 3; j++)
+            {
+                if (i == 1)
+                {
+                    pos[2 * j + 1] -= pos[2 * j];
+                    if (pos[2 * j + 1] <= -263) pos[2 * j] = -pos[2 * j];
+                }
+                col = pos[2 * j + 1] + i;
+                if (col > 127) col = 0;
+                if (col > 63) col = 255 - col;
+                setdac(0x03C9, col);
+            }
+        }
+    }*/
 }
