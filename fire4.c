@@ -53,15 +53,15 @@ void interpolation()
         mov     cx, 16160
         lea     di, vbuff + 320
     lp1:
-        mov     ax, ds:[di - 2]
-        add     ax, ds:[di]
-        add     ax, ds:[di + 2]
-        add     ax, ds:[di + 320]
+        mov     ax, [di - 2]
+        add     ax, [di]
+        add     ax, [di + 2]
+        add     ax, [di + 320]
         shr     ax, 2
         jz      lp2
         sub     ax, 1
     lp2:
-        mov     ds:[di - 320], ax
+        mov     [di - 320], ax
         add     di, 2
         loop    lp1
     }
@@ -99,11 +99,11 @@ void retrace()
         mov     dx, 0x03DA
     waitH:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     waitH
     waitV:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      waitV
     }
 }

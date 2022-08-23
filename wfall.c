@@ -8,7 +8,7 @@
 /* Created : 23/04/1998                                 */
 /* Please sent to me any bugs or suggests.              */
 /* You can use freely this code. Have fun :)            */
-/* Generate .COM file: wcl -zq -6 -fp6 -ox -mt wfall.c  */
+/* Generate .COM file: wcl -zq -3 -ox -mt wfall.c       */
 /*------------------------------------------------------*/
 
 #include <dos.h>

@@ -16,11 +16,7 @@
 #include <stdint.h>
 #include <conio.h>
 
-typedef struct tagRGB {
-    uint8_t r, g, b;
-} RGB;
-
-RGB pal[256] = {0};
+uint8_t pal[256][3] = {0};
 uint8_t dbuff[320][80] = {0};
 uint8_t *tmem = (uint8_t*)0xA0000000L;
 
@@ -68,9 +64,9 @@ void makePalette()
 
     for (i = 0; i <= 63; i++)
     {
-        pal[i +   0].r = i;  pal[i +   0].g = 0; pal[i +   0].b = 0;
-        pal[i +  64].r = 63; pal[i +  64].g = i; pal[i +  64].b = 0;
-        pal[i + 128].r = 63; pal[i + 128].g = i; pal[i + 128].b = 0;
+        pal[i +   0][0] = i;  pal[i +   0][1] = 0; pal[i +   0][2] = 0;
+        pal[i +  64][0] = 63; pal[i +  64][1] = i; pal[i +  64][2] = 0;
+        pal[i + 128][0] = 63; pal[i + 128][1] = i; pal[i + 128][2] = 0;
     }
 
     __asm {
@@ -90,11 +86,11 @@ void retrace()
         mov     dx, 0x03DA
     waitV:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     waitV
     waitH:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      waitH
     }
 }

@@ -73,11 +73,11 @@ void retrace()
         mov     dx, 0x03DA
     waitV:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     waitV
     waitH:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      waitH
     }
 }
@@ -137,20 +137,18 @@ void fireBlur()
     __asm {
         mov     ax, seg vbuff
         mov     es, ax
-        mov     ds, ax
         xor     di, di
-        xor     si, si
         mov     cx, 63360
         xor     bx, bx
     lp1:
         xor     ax, ax
-        mov     bl, [di]
+        mov     bl, es:[di]
         add     ax, bx
-        mov     bl, [di + 319]
+        mov     bl, es:[di + 319]
         add     ax, bx
-        mov     bl, [di + 320]
+        mov     bl, es:[di + 320]
         add     ax, bx
-        mov     bl, [di + 321]
+        mov     bl, es:[di + 321]
         add     ax, bx
         shr     ax, 2
         and     al, al

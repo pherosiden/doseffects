@@ -31,13 +31,12 @@ inline int16_t random(int16_t x)
 void putPixel(int16_t x, int16_t y, uint8_t col)
 {
     __asm {
-        mov     ax, seg vbuff
-        mov     es, ax
+        lea     di, vbuff
         mov     bx, y
         shl     bx, 6
         add     bh, byte ptr y
         add     bx, x
-        mov     di, bx
+        add     di, bx
         mov     al, col
         stosb
     }
@@ -75,11 +74,11 @@ void retrace()
         mov     dx, 0x03DA
     waitH:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     waitH
     waitV:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      waitV
     }
 }
@@ -166,24 +165,23 @@ void doFire()
     }
 
     __asm {
-        mov     ax, seg vbuff
-        mov     es, ax
-        mov     di, 16000
+        lea     di, vbuff
+        add     di, 16000
         mov     cx, 48640
     start:
         xor     ax, ax
         xor     dx, dx
         mov     bx, di
         add     bx, 319
-        mov     al, es:[bx]
+        mov     al, [bx]
         inc     bx
-        mov     dl, es:[bx]
+        mov     dl, [bx]
         add     ax, dx
         inc     bx
-        mov     dl, es:[bx]
+        mov     dl, [bx]
         add     ax, dx
         add     bx, 319
-        mov     dl, es:[bx]
+        mov     dl, [bx]
         add     ax, dx
         sub     ax, 4
         mov     bx, 4
@@ -191,7 +189,7 @@ void doFire()
         div     bx
         cmp     al, 180
         ja    	fin
-        mov     es:[di], al
+        mov     [di], al
     fin:
         inc     di
         loop    start

@@ -74,15 +74,15 @@ void interpolation()
         mov     cx, 16159
         lea     di, dbuff + 320
     lp1:
-        mov     ax, ds:[di - 2]
-        add     ax, ds:[di]
-        add     ax, ds:[di + 2]
-        add     ax, ds:[di + 320]
+        mov     ax, [di - 2]
+        add     ax, [di]
+        add     ax, [di + 2]
+        add     ax, [di + 320]
         shr     ax, 2
         jz      lp2
         sub     ax, 1
     lp2:
-        mov     word ptr ds:[di - 320], ax
+        mov     [di - 320], ax
         add     di, 2
         loop    lp1
     }
@@ -144,13 +144,12 @@ uint8_t getPixel(int16_t x, int16_t y, uint8_t *where)
 void putPixel(int16_t x, int16_t y, uint8_t c)
 {
     __asm {
-        mov     ax, seg vbuff
-        mov     es, ax
+        lea     di, vbuff
         mov     bx, y
         shl     bx, 6
         add     bh, byte ptr y
         add     bx, x
-        mov     di, bx
+        add     di, bx
         mov     al, c
         stosb
     }
@@ -210,11 +209,11 @@ void retrace()
         mov     dx, 0x03DA
     waitH:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     waitH
     waitV:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      waitV
     }
 }

@@ -1,7 +1,15 @@
-/*--------------------------------------------*/
-/*   Smooth scrolling font                    */
-/* Compile: bcc -mt -tDc -O3 -3               */
-/*--------------------------------------------*/
+/*------------------------------------------------------*/
+/* Packet  : Demo & Effect                              */
+/* Effect  : Smooth scrolling                           */
+/* Author  : Nguyen Ngoc Van                            */
+/* Memory  : Tiny/Small/Compact                         */
+/* Address : pherosiden@gmail.com                       */
+/* Website : http://www.codedemo.net                    */
+/* Created : 22/04/1998                                 */
+/* Please sent to me any bugs or suggests.              */
+/* You can use freely this code. Have fun :)            */
+/* Generate .COM file: wcl -zq -3 -ox -mt smooth.c      */
+/*------------------------------------------------------*/
 
 #include <dos.h>
 #include <conio.h>
@@ -356,7 +364,7 @@ void main()
     makeFontsTable();
     clearSecondFontMemory();
     writeScrollTextCharacters(23);
-    while(!kbhit()) scrollMessage();
+    while (!kbhit()) scrollMessage();
     setTextMode();
     turnCursorOn();
 }

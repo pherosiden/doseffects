@@ -76,12 +76,8 @@ void fadeIn()
     __asm {
         mov     cx, 64
         mov     dx, 64
-        mov     ax, seg dst
-        mov     es, ax
-        mov     ax, seg src
-        mov     ds, ax
-        mov     si, offset src
-        mov     di, offset dst
+        lea     si, src
+        lea     di, dst
     next:
         push    cx
         push    si
@@ -95,18 +91,18 @@ void fadeIn()
         inc     bx
         cmp     al, dl
         jbe     quit
-        inc     byte ptr es:[di + bx - 1]
+        inc     byte ptr [di + bx - 1]
     quit:
         loop    cont
         push    dx
         mov     dx, 0x03DA
     waitH:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     waitH
     waitV:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      waitV
         mov     dx, 0x03C8
         xor     al, al
@@ -128,12 +124,8 @@ void fadeOut()
     __asm {
         mov     cx, 64
         mov     dx, 64
-        mov     ax, seg dst
-        mov     es, ax
-        mov     ax, seg src
-        mov     ds, ax
-        mov     si, offset src
-        mov     di, offset dst
+        lea     si, src
+        lea     di, dst
     next:
         push    cx
         push    si
@@ -146,18 +138,18 @@ void fadeOut()
         inc     bx
         cmp     al, dl
         jae     quit
-        dec     byte ptr es:[di + bx - 1]
+        dec     byte ptr [di + bx - 1]
     quit:
         loop    cont
         push    dx
         mov     dx, 0x03DA
     waitH:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     waitH
     waitV:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      waitV
         mov     dx, 0x03C8
         xor     al, al
@@ -177,9 +169,7 @@ void fadeOut()
 void fadeMax()
 {
     __asm {
-        mov     ax, seg dst
-        mov     ds, ax
-        mov     si, offset dst
+        lea     si, dst
         mov     cx, 64
     next:
         push    cx
@@ -189,17 +179,17 @@ void fadeMax()
         lodsb
         cmp     al, 63
         jae     quit
-        inc     byte ptr ds:[si - 1]
+        inc     byte ptr [si - 1]
     quit:
         loop    cont
         mov     dx, 0x03DA
     waitH:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     waitH
     waitV:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      waitV
         mov     dx, 0x03C8
         xor     al, al
@@ -217,9 +207,7 @@ void fadeMax()
 void fadeMin()
 {
     __asm {  
-        mov     ax, seg dst
-        mov     ds, ax
-        mov     si, offset dst
+        lea     si, dst
         mov     cx, 64
     next:
         push    cx
@@ -229,17 +217,17 @@ void fadeMin()
         lodsb
         test    al, al
         jbe     quit
-        dec     byte ptr ds:[si - 1]
+        dec     byte ptr [si - 1]
     quit:
         loop    cont
         mov     dx, 0x03DA
     waitH:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     waitH
     waitV:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      waitV
         mov     dx, 0x03C8
         xor     al, al
