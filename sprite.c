@@ -55,11 +55,11 @@ void waitRetrace()
         mov     dx, 0x03DA
     waitV:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     waitV
     waitH:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      waitH
     }
 }
@@ -153,7 +153,7 @@ void putFrame(uint16_t x, uint16_t y, FRAME sprt, uint8_t *mem)
         push    di
         mov     cx, ax
     line:
-        mov     bl, byte ptr [si]
+        mov     bl, [si]
         cmp     bl, B
         jnz     store
     nopaint:

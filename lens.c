@@ -25,11 +25,9 @@
 uint8_t *vmem = (uint8_t*)0xA0000000L;
 uint8_t *tmem = (uint8_t*)0xB8000000L;
 
+uint8_t pal[768] = {0};
 uint8_t vbuff1[64000] = {0};
 uint8_t vbuff2[64000] = {0};
-
-uint8_t pal[768] = {0};
-
 int16_t x, y, xadd, yadd;
 
 void clearMem(uint8_t *mem)
@@ -87,11 +85,11 @@ void retrace()
         mov     dx, 0x03DA
     waitH:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     waitH
     waitV:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      waitV
     }
 }

@@ -112,11 +112,11 @@ void retrace()
         mov     dx, 0x03DA
     wait1:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     wait1
     wait2:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      wait2
     }
 }

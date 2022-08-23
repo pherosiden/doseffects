@@ -30,11 +30,11 @@ void waitRetrace()
         mov     dx, 0x03DA
     waitH:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      waitH
     waitV:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     waitV
     }
 }

@@ -127,7 +127,7 @@ void main()
         setAddress(i);
         i += incaddr;
         if (i > 100 || i < 0) incaddr = -incaddr;
-    } while(!kbhit());
+    } while (!kbhit());
 
     for (j = 0; j <= 9; j++)
     {

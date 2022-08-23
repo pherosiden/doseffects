@@ -273,7 +273,7 @@ void scrollMessage()
         mov     dx, 0x03DA
     waitR:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      waitR
 
         // Scroll Text One Pixel To The Left

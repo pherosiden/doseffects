@@ -17,12 +17,8 @@
 #include <stdint.h>
 #include <conio.h>
 
-typedef struct {
-    uint8_t r, g, b;
-} RGB;
-
-RGB dst[256] = {0};
-RGB src[256] = {0};
+uint8_t dst[256][3] = {0};
+uint8_t src[256][3] = {0};
 
 uint8_t *vmem = (uint8_t*)0xA0000000L;
 uint8_t *tmem = (uint8_t*)0xB8000000L;
@@ -52,11 +48,11 @@ void retrace()
         mov     dx, 0x03DA
     waitH:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     waitH
     waitV:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      waitV
     }
 }
@@ -120,7 +116,7 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
     }
 }
 
-void movePal(RGB *dst, RGB *src)
+void movePal(void *dst, void *src)
 {
     __asm {
         les     di, dst
@@ -199,9 +195,9 @@ void fadeOut()
     {
         for (i = 0; i <= 255; i++)
         {
-            if (dst[i].r > 0) dst[i].r--;
-            if (dst[i].g > 0) dst[i].g--;
-            if (dst[i].b > 0) dst[i].b--;
+            if (dst[i][0] > 0) dst[i][0]--;
+            if (dst[i][1] > 0) dst[i][1]--;
+            if (dst[i][2] > 0) dst[i][2]--;
 
             if (inp(0x60) == 1) return;
         }
@@ -247,10 +243,10 @@ void main()
 
     for (i = 0; i < 64; i++)
     {
-        dst[i      ].r = 0;  dst[i      ].g = 0;  dst[i      ].b = i;
-        dst[i +  64].r = 0;  dst[i +  64].g = i;  dst[i +  64].b = 63;
-        dst[i + 128].r = i;  dst[i + 128].g = 63; dst[i + 128].b = 63;
-        dst[i + 192].r = 63; dst[i + 192].g = 63; dst[i + 192].b = 63;
+        dst[i      ][0] = 0;  dst[i      ][1] = 0;  dst[i      ][2] = i;
+        dst[i +  64][0] = 0;  dst[i +  64][1] = i;  dst[i +  64][2] = 63;
+        dst[i + 128][0] = i;  dst[i + 128][1] = 63; dst[i + 128][2] = 63;
+        dst[i + 192][0] = 63; dst[i + 192][1] = 63; dst[i + 192][2] = 63;
     }
     
     srand(time(NULL));

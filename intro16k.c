@@ -515,11 +515,11 @@ void waitRetrace()
         mov    dx, 0x03DA
     lph:
         in     al, dx
-        test   al, 0x08
+        and    al, 0x08
         jz     lph
     lpv:
         in     al, dx
-        test   al, 0x08
+        and    al, 0x08
         jnz    lpv
     }
 }

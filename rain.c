@@ -148,11 +148,11 @@ void waitRetrace()
         mov     dx, 0x03DA
     waitv:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     waitv
     waith:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      waith
     }
 }
@@ -235,7 +235,7 @@ void putFrame()
         di += 2;
     }
     
-    if (inp(0x60) == 1) theEnd();
+    if (kbhit()) theEnd();
 }
 
 inline uint32_t rotr(uint32_t value, uint8_t count)
@@ -691,5 +691,5 @@ void main()
         P006(1, 0);
         P006(1, 1);
         P006(0, 1);
-    } while (1);
+    } while (!kbhit());
 }

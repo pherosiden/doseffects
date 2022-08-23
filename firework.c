@@ -379,7 +379,6 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
     int16_t len = strlen(msg);
 
     __asm {
-        push    ds
         lds     si, msg
         les     di, tmem
         add     di, x

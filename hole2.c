@@ -117,13 +117,11 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
 void putBuffer(uint8_t *src, uint16_t dst)
 {
     __asm {
-        push    ds
         mov     es, dst
         lds     si, src
         xor     di, di
         mov     cx, 16000
         rep     movsd
-        pop     ds
     }
 }
 

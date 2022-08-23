@@ -59,7 +59,6 @@ uint8_t vbuff[200][320] = {0};
 void setPal()
 {
     __asm {
-        push    ds
         mov     dx, 0x03C8
         xor     al, al
         out     dx, al
@@ -67,7 +66,6 @@ void setPal()
         lea     si, pal
         mov     cx, 768
         rep     outsb
-        pop     ds
     }
 }
 
@@ -174,11 +172,11 @@ void retrace()
         mov     dx, 0x03DA
     waitV:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     waitV
     waitH:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      waitH
     }
 }

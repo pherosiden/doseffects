@@ -90,11 +90,11 @@ void retrace()
         mov     dx, 0x03DA
     wait1:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     wait1
     wait2:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      wait2
     }
 }
@@ -191,7 +191,7 @@ void pierra(int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t num, int16_t
     dx = (float)(x2 - x1) / num;
     dy = (float)(y2 - y1) / num;
 
-    for (m = 1; m <= num; m++)
+    for (m = 1; m <= num && !kbhit(); m++)
     {
         for (h = roundf(y - ko); h <= roundf(y + ko); h++)
         {

@@ -35,11 +35,11 @@ void retrace()
         mov     dx, 0x03DA
     waitV:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jnz     waitV
     waitH:
         in      al, dx
-        test    al, 0x08
+        and     al, 0x08
         jz      waitH
     }
 }
@@ -49,7 +49,6 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
     int16_t len = strlen(msg);
 
     __asm {
-        push    ds
         mov     ax, 0xB800
         mov     es, ax
         xor     di, di
