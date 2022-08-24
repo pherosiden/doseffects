@@ -134,12 +134,13 @@ int main()
 
     srand(time(NULL));
     
-    do {
+    while (!kbhit())
+    {
         cnt = 0;
         makeFunkyPalette();	
         lineBob(cnt);
         clearScreen(0);
-    } while (!kbhit());
+    }
     
     closeVesaMode();
     return 1;

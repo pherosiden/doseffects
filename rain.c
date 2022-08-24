@@ -111,6 +111,9 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
     uint16_t len = strlen(msg);
 
     __asm {
+        mov     cx, len
+        test    cx, cx
+        jz      quit
         mov     ax, 0xB800
         mov     es, ax
         lds     si, msg
@@ -122,11 +125,11 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
         shl     ax, 2
         add     di, ax
         mov     ah, col
-        mov     cx, len
     next:
         lodsb
         stosw
         loop    next
+    quit:
     }
 }
 
@@ -667,7 +670,8 @@ void main()
     
     memset(&vmem[320 * 100], 99, 320);    
 
-    do {
+    while (!kbhit())
+    {
         randVal = SEMILLA_INIT;
         densityAdd = DENSITY_INIT;
         P001();
@@ -691,5 +695,5 @@ void main()
         P006(1, 0);
         P006(1, 1);
         P006(0, 1);
-    } while (!kbhit());
+    }
 }

@@ -217,7 +217,7 @@ void waitForRetrace()
     while (!(inp(0x03DA) & 8));
 }
 
-void setRgbPal(uint8_t col, uint8_t r, uint8_t g, uint8_t b)
+void setRGB(uint8_t col, uint8_t r, uint8_t g, uint8_t b)
 {
     __asm {
         mov     dx, 0x03C8
@@ -378,8 +378,8 @@ void setup()
 
     for (count1 = 1; count1 <= PALSIZE; count1++)
     {
-        setRgbPal(count1, 63 - 63 * count1 / PALSIZE, 0, 0);
-        setRgbPal(PALSIZE + count1, 0, 0, 63 - 63 * count1 / PALSIZE);
+        setRGB(count1, 63 - 63 * count1 / PALSIZE, 0, 0);
+        setRGB(PALSIZE + count1, 0, 0, 63 - 63 * count1 / PALSIZE);
     }
 }
 
@@ -397,9 +397,12 @@ void clearTextMem()
 
 void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
 {
-    int16_t len = strlen(msg);
+    uint16_t len = strlen(msg);
 
     __asm {
+        mov     cx, len
+        test    cx, cx
+        jz      quit
         lds     si, msg
         mov     ax, 0xB800
         mov     es, ax
@@ -412,11 +415,11 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
         shl     bx, 2
         add     di, bx
         mov     ah, col
-        mov     cx, len
     next:
         lodsb
         stosw
         loop	next
+    quit:
     }
 }
 
@@ -429,14 +432,15 @@ void main()
 
     setup();
 
-    do {
+    while (!kbhit())
+    {
         rotateShape();
         qsort(draworder, vertices, 2, compare);
         clearScreen();
         draw2DFaces();
         waitForRetrace();
         flip();
-    } while(!kbhit());
+    }
 
     setVideoMode(0x03);
 }

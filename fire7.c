@@ -30,15 +30,10 @@
 #define MAXCOL      110
 #define M_PI        3.141592f
 
+uint8_t rgb[256][3] = {0};
 uint8_t flames[WIDTH] = {0};
 uint8_t *vmem = (uint8_t*)0xA0000000L;
 uint8_t *tmem = (uint8_t*)0xB8000000L;
-
-typedef struct tagRGB {
-    uint8_t r, g, b;
-} RGB;
-
-RGB rgb[256] = {0};
 
 void setPal()
 {
@@ -86,7 +81,7 @@ void putMsg(int16_t x, int16_t y, uint8_t col, char *msg)
     }
 }
 
-void HSI2RGB(float H, float S, float I, RGB *pal)
+void HSI2RGB(float H, float S, float I, uint8_t *pal)
 {
     float t, r, g, b;
 
@@ -96,26 +91,26 @@ void HSI2RGB(float H, float S, float I, RGB *pal)
 
     t = 63.999 * I / 2.0;
 
-    pal->r = r * t;
-    pal->g = g * t;
-    pal->b = b * t;
+    pal[0] = r * t;
+    pal[1] = g * t;
+    pal[2] = b * t;
 }
 
 void makePal()
 {
     int16_t i;
 
-    for (i = 0; i < MAXCOL; i++) HSI2RGB(4.6 - 1.5 * i / MAXCOL, i * 1.0 / MAXCOL, i * 1.0 / MAXCOL, &rgb[i]);
+    for (i = 0; i < MAXCOL; i++) HSI2RGB(4.6 - 1.5 * i / MAXCOL, i * 1.0 / MAXCOL, i * 1.0 / MAXCOL, rgb[i]);
 
     for (i = MAXCOL; i < 256; i++)
     {
-        rgb[i] = rgb[i - 1];
+        memcpy(rgb[i], rgb[i - 1], 3);
 
-        if (rgb[i].r < 63) rgb[i].r++;
-        if (rgb[i].r < 63) rgb[i].r++;
+        if (rgb[i][0] < 63) rgb[i][0]++;
+        if (rgb[i][0] < 63) rgb[i][0]++;
 
-        if (!(i % 2) && rgb[i].g < 53) rgb[i].g++;
-        if (!(i % 2) && rgb[i].b < 63) rgb[i].b++;
+        if (!(i % 2) && rgb[i][1] < 53) rgb[i][1]++;
+        if (!(i % 2) && rgb[i][2] < 63) rgb[i][2]++;
     }
 
     setPal();

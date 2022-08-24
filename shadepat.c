@@ -118,9 +118,12 @@ void clearScreen(uint8_t *mem)
 
 void printStr(int16_t x, int16_t y, uint8_t col, char *msg, uint8_t *mem)
 {
-    int16_t len = strlen(msg);
+    uint16_t len = strlen(msg);
 
     __asm {
+        mov     cx, len
+        test    cx, cx
+        jz      quit
         lds     si, msg
         les     di, mem
         add     di, x
@@ -131,11 +134,11 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg, uint8_t *mem)
         shl     bx, 2
         add     di, bx
         mov     ah, col
-        mov     cx, len
     next:
         lodsb
         stosw
         loop    next
+    quit:
     }
 }
 
@@ -201,7 +204,8 @@ void editShadeBob()
 
     getMousePos(&oldx, &oldy);
 
-    do {
+    while (!kbhit())
+    {
         getMousePos(&newx, &newy);
         
         if (newx != oldx || newy != oldy)
@@ -214,7 +218,7 @@ void editShadeBob()
             arrpos++;
             if (arrpos >= 16000) break;
         }
-    } while(!kbhit());
+    }
 
     fp = fopen("assets/path.dat", "wb");
     fwrite(&arrpos, sizeof(arrpos), 1, fp);
@@ -238,11 +242,12 @@ void playShadeBob()
     fread(points, sizeof(Point), arrmax, fp);
     fclose(fp);
 
-    do {
+    while (!kbhit())
+     {
         drawShadeBob(points[arrpos].x, points[arrpos].y);
         arrpos++;
         if (arrpos >= arrmax) arrpos = 0;
-    } while(!kbhit());
+    }
 }
 
 void main(int argc)

@@ -73,55 +73,57 @@ void clearBuffer(uint8_t *mem)
     }
 }
 
-void verticalLine(uint16_t x1, uint16_t y, int16_t len, uint8_t col)
+void verticalLine(uint16_t x1, uint16_t y, uint16_t len, uint8_t col)
 {
-    if (len <= 0) return;
-    
     __asm {
-        mov     ax, seg vbuff
-        mov     es, ax
+        mov     cx, len
+        or      cx, cx
+        jz      quit
+        lea     di, vbuff
         mov     bx, y
-        mov     cx, bx
+        mov     dx, bx
         shl     bx, 8
-        shl     cx, 6
-        add     bx, cx
+        shl     dx, 6
+        add     bx, dx
         add     bx, x1
         mov     di, bx
-        mov     cx, len
         mov     al, col
     next:
         stosb
         add     di, 319
         loop    next
+    quit:
     }
 }
 
 void ray(uint16_t a, uint16_t dx, uint16_t dy, uint16_t sx)
 {
-    int16_t miny;
-    int32_t h, y;
+    int32_t h;
+    uint16_t miny, y;
     uint16_t delx, dely, p, dt;
 
     delx = costab[a];
     dely = sintab[a];
 
-    dt = 0;
-    miny = 200;
+    dt = 1;
+    miny = 199;
     
-    do {
+    while (dt < 127)
+    {
         dx += delx;
         dy += dely;
-        dt++;
 
         h = hmap[dy >> 8][dx >> 8] - height;
         y = dcomp[dt - 1] - (h << 5) / dt + dst;
     
-        if (y < miny && y >= 0)
+        if (y <= miny)
         {
-            verticalLine(sx, y, miny - y, tmap[dy >> 8][dx >> 8]);
+            verticalLine(sx, y, miny - y + 1, tmap[dy >> 8][dx >> 8]);
             miny = y;
         }
-    } while (dt < 127);
+
+        dt++;
+    }
 }
 
 void drawView()
@@ -260,7 +262,8 @@ void main()
     outp(0x03C8, 0);
     for (i = 0; i < 768; i++) outp(0x3C9, pal[i]);
 
-    do {
+    while (!kbarr[1])
+    {
         height = hmap[y >> 8][x >> 8];
         flip(sky, vbuff);
         drawView();
@@ -284,7 +287,7 @@ void main()
         if (kbarr[30]) dst = 80;
         else if (kbarr[44]) dst = -100;
         else dst = 0;
-    } while(!kbarr[1]);
+    }
 
     __asm {
         mov     ax, 0x03

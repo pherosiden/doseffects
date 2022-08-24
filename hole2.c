@@ -93,9 +93,12 @@ void clearScreen()
 
 void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
 {
-    int16_t len = strlen(msg);
+    uint16_t len = strlen(msg);
 
     __asm {
+        mov     cx, len
+        test    cx, cx
+        jz      quit
         lds     si, msg
         les     di, tmem
         add     di, x
@@ -106,11 +109,11 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
         shl     bx, 2
         add     di, bx
         mov     ah, col
-        mov     cx, len
     next:
         lodsb
         stosw
         loop    next
+    quit:
     }
 }
 
@@ -171,7 +174,8 @@ void drawHole()
     int16_t i = 0, j = 0;
     uint8_t col;
 
-    do {
+    while (!kbhit())
+    {
         col = 19;
         inc = 2;
         j = 10;
@@ -201,7 +205,7 @@ void drawHole()
 
         putBuffer(vmem, 0xA000);
         clearBuffer();
-    } while(!kbhit());
+    }
 }
 
 void main()

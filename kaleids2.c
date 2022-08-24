@@ -36,7 +36,7 @@ void main(int argc, const char* argv[])
     CY = centerY;
     MD = CY;
 
-    do
+    while (!kbhit())
     {
         if (!mode) makeFunkyPalette();
 
@@ -83,6 +83,7 @@ void main(int argc, const char* argv[])
 
         clearScreen(0);
         if (mode) scrollPalette(0, 255, 64);
-    } while (!kbhit());
+    }
+    
     closeVesaMode();
 }

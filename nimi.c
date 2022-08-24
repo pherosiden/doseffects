@@ -18,13 +18,12 @@ int16_t roundf(float x)
 void blur()
 {
     __asm {
-        mov     ax, seg vbuff
-        mov     es, ax
-        mov     di, 320
+        lea     di, vbuff
+        add     di, 320
         mov     cx, 63360
         xor     ax, ax
         xor     bx, bx
-    lp:
+    start:
         mov     al, es:[di - 1]
         mov     bl, es:[di + 1]
         add     ax, bx
@@ -34,7 +33,7 @@ void blur()
         add     ax, bx
         shr     ax, 2
         stosb
-        loop    lp
+        loop    start
     }
 }
 
@@ -257,7 +256,8 @@ void main()
     for (i = 128; i < 192; i++) setPalette(i, 63, 63, i);
     for (i = 192; i < 256; i++) setPalette(i, 63, 63, 63);
     
-    do {
+    while (!kbhit())
+    {
         pierra(30, 30, 110, 30, 40, 5);
         pierra(70, 30, 70, 140, 30, 5);
         pierra(130, 110, 160, 90, 20, 5);
@@ -275,7 +275,7 @@ void main()
         pierra(250, 100, 270, 70, 20, 5);
         pierra(20, 170, 300, 170, 25, 5);
         pierra(300, 170, 20, 170, 25, 5);
-    } while (!kbhit());
+    }
 
     __asm {
         mov     ax, 0x03

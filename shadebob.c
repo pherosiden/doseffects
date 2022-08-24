@@ -107,9 +107,12 @@ void flip(uint8_t *src, uint8_t *dst)
 
 void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
 {
-    int16_t len = strlen(msg);
+    uint16_t len = strlen(msg);
 
     __asm {
+        mov     cx, len
+        test    cx, cx
+        jz      quit
         les     di, tmem
         lds     si, msg
         add     di, x
@@ -120,11 +123,11 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
         shl     ax, 2
         add     di, ax
         mov     ah, col
-        mov     cx, len
     next:
         lodsb
         stosw
         loop    next
+    quit:
     }
 }
 
@@ -186,7 +189,8 @@ void main()
     
     makePal();
 
-    do {
+    while (!kbhit())
+    {
         waitRetrace();
         flip(vbuff[0], vmem);
 
@@ -219,7 +223,7 @@ void main()
 
             if (kbhit()) break;
         }
-    } while (!kbhit());
+    }
 
     __asm {
         mov     ax, 0x03

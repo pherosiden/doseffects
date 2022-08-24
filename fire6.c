@@ -97,10 +97,11 @@ void main()
     srand(time(NULL));
     setFirePalette();
 
-    do {
+    while (!kbhit())
+    {
         retrace();
         fire();
-    } while (!kbhit());
+    }
 
     __asm {
         mov     ax, 0x03

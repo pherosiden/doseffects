@@ -24,12 +24,6 @@
 #define     HEIGHT  200
 #define     RAD     0.01745329
 
-typedef struct {
-    uint8_t r, g, b;
-} RGB;
-
-RGB         pal[256] = {0};
-
 double      head = 0.0;
 double      turn = 0.0;
 double      step = 0.0;
@@ -51,6 +45,7 @@ uint8_t     ceils[128][128] = {0};
 uint8_t     shade[16][256] = {0};
 uint8_t     maze[32][32] = {0};
 uint8_t     kbarr[128] = {0};
+uint8_t     pal[256][3] = {0};
 
 void (interrupt *old09)();
 
@@ -94,6 +89,9 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
     uint16_t len = strlen(msg);
 
     __asm {
+        mov     cx, len
+        test    cx, cx
+        jz      quit
         les     di, tmem
         lds     si, msg
         add     di, x
@@ -104,11 +102,11 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
         shl     bx, 2
         add     di, bx
         mov     ah, col
-        mov     cx, len
-    lp:
+    start:
         lodsb
         stosw
-        loop    lp
+        loop    start
+    quit:
     }
 }
 
@@ -292,14 +290,14 @@ void setShade()
     {
         for (i = 0; i < 256; i++)
         {
-            r = (pal[i].r >> 2) * (16 - k);
-            g = (pal[i].g >> 2) * (16 - k);
-            b = (pal[i].b >> 2) * (16 - k);
+            r = (pal[i][0] >> 2) * (16 - k);
+            g = (pal[i][1] >> 2) * (16 - k);
+            b = (pal[i][2] >> 2) * (16 - k);
 
             diff1 = 1000;
             for (j = 0; j < 256; j++)
             {
-                diff2 = abs((pal[j].r << 2) - r) + abs((pal[j].g << 2) - g) + abs((pal[j].b << 2) - b);
+                diff2 = abs((pal[j][0] << 2) - r) + abs((pal[j][1] << 2) - g) + abs((pal[j][2] << 2) - b);
                 if (diff2 < diff1)
                 {
                     diff1 = diff2;

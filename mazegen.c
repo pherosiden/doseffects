@@ -200,13 +200,14 @@ void main()
         int     0x10
     }
 
-    do {
+    while (getch() != 27)
+    {
         clearMaze();
         memset(vmem, 0, 64000);
         generateMaze(X2 >> 1, Y2 >> 1, 2, 16);
         writeBorder();
         drawMaze();
-    } while(getch() != 27);
+    }
 
     __asm {
         mov     ax, 0x03

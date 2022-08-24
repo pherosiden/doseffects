@@ -83,9 +83,8 @@ void updateFlakes()
 
         if (!vmem[flakeaddr + 319] || !vmem[flakeaddr + 320] || !vmem[flakeaddr + 321])
         {
-
-            vmem[flakeaddr] = 0;
             offs = 320;
+            vmem[flakeaddr] = 0;
 
             if (rand() % 2 == 1)
             {
@@ -144,11 +143,12 @@ void snowFall()
     actflk = 0;
     initSnow();
 
-    do {
+    while (!kbhit())
+    {
         if (actflk < 320) flake[actflk++] = rand() % 320;
         retrace();
         updateFlakes();
-    } while(!kbhit());
+    }
 }
 
 void main()

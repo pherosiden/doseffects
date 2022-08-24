@@ -305,14 +305,15 @@ void main()
     initSinCos();
     initWater();
 
-    do {
+    while (!kbhit())
+    {
         makeWater(frames);
         showWater(page);
         waitRetrace();
         flipScreen(vbuff[0], vmem);
         page ^= 1;
         frames++;
-    } while(!kbhit());
+    }
 
     ticks = GetTicks() - ticks;
 

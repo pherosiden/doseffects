@@ -89,9 +89,12 @@ void clearScreen()
 
 void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
 {
-    int16_t len = strlen(msg);
+    uint16_t len = strlen(msg);
 
     __asm {
+        mov     cx, len
+        test    cx, cx
+        jz      quit
         lds     si, msg
         les     di, tmem
         add     di, x
@@ -102,11 +105,11 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
         shl     bx, 2
         add     di, bx
         mov     ah, col
-        mov     cx, len
     next:
         lodsb
         stosw
         loop    next
+    quit:
     }
 }
 
@@ -228,9 +231,7 @@ void polygon(int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t x3, int16_t
 void motionBlur()
 {
     __asm {
-        mov     ax, seg vbuff
-        mov     es, ax
-        xor     di, di
+        lea     di, vbuff
     blur:
         xor     ah, ah
         mov     al, es:[di + 1]
@@ -306,7 +307,8 @@ void rotateCube()
     uint8_t ay = 0;
     uint8_t az = 0;
 
-    do {
+    while (!kbhit())
+    {
         for (n = 0; n < 8; n++)
         {
             i = (COSX(ay) * points[n][0] - SINX(ay) * points[n][2]) / DIVD;
@@ -342,7 +344,7 @@ void rotateCube()
         motionBlur();
         retrace();
         flip();
-    } while (!kbhit());
+    }
 }
 
 int main()

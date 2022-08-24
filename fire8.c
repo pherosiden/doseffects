@@ -107,12 +107,13 @@ void main()
     srand(time(NULL));
     makePalette();
 
-    do {
+    while (!kbhit())
+    {
         for (x = 0; x < 320; x++) dbuff[x][79] = random(100) + 40;
         interpolation();
         retrace();
         putFire();
-    } while(!kbhit());
+    }
 
     __asm {
         mov     ax, 0x03

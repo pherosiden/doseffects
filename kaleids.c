@@ -153,7 +153,7 @@ void main()
 
     makePalette();
 
-    do
+    while (!kbhit())
     {
         X1 = random(MD) + 1;
         X2 = random(MD) + 1;
@@ -196,6 +196,6 @@ void main()
             }
         }
         clearScreen(0, 0, cmaxX, cmaxY, 0);
-    } while(!kbhit());
+    }
     closeGraph();
 }

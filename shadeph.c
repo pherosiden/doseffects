@@ -84,9 +84,12 @@ void clearTextMem()
 
 void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
 {
-    int16_t len = strlen(msg);
+    uint16_t len = strlen(msg);
 
     __asm {
+        mov     cx, len
+        test    cx, cx
+        jz      quit
         les     di, tmem
         lds     si, msg
         add     di, x
@@ -97,11 +100,11 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
         shl     ax, 2
         add     di, ax
         mov     ah, col
-        mov     cx, len
-    lp:
+    next:
         lodsb
         stosw
-        loop    lp
+        loop    next
+    quit:
     }
 }
 
@@ -488,7 +491,8 @@ void main()
     beta = 0;
     gamma = 0;
 
-    do {
+    while (!kbhit())
+    {
         for (i = 0; i < nverts; i++)
         {
             xt1 = px[i];
@@ -540,7 +544,7 @@ void main()
         retrace();
         flip(vbuff[0], vmem);
         clearMem(vbuff[0]);
-    } while (!kbhit());
+    }
 
     __asm {
         mov     ax, 0x03

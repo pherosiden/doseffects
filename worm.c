@@ -17,12 +17,8 @@
 #include <stdint.h>
 #include <conio.h>
 
-typedef struct {
-    uint8_t r, g, b;
-} RGB;
-
-RGB pal[256] = {0};
-RGB tmp[16] = {0};
+uint8_t tmp[16][3] = {0};
+uint8_t pal[256][3] = {0};
 
 void waitRetrace()
 {
@@ -42,13 +38,13 @@ void waitRetrace()
 void setPalette()
 {
     int16_t i;
-    outp(0x03C8, 16);
 
+    outp(0x03C8, 16);
     for (i = 16; i < 256; i++)
     {
-        outp(0x3C9, pal[i].r);
-        outp(0x3C9, pal[i].g);
-        outp(0x3C9, pal[i].b);
+        outp(0x3C9, pal[i][0]);
+        outp(0x3C9, pal[i][1]);
+        outp(0x3C9, pal[i][2]);
     }
 }
 
@@ -66,9 +62,9 @@ void main()
     {
         for (j = 0; j < 16; j++)
         {
-            pal[(i << 4) + j].r = i << 2;
-            pal[(i << 4) + j].g = j << 1;
-            pal[(i << 4) + j].b = 63;
+            pal[(i << 4) + j][0] = i << 2;
+            pal[(i << 4) + j][1] = j << 1;
+            pal[(i << 4) + j][2] = 63;
         }
     }
 
@@ -82,9 +78,9 @@ void main()
     fclose(fp);
 
     do {
-        memcpy(tmp, &pal[16], sizeof(tmp));
-        for (i = 1; i < 16; i++) memcpy(&pal[(i - 1) << 4], &pal[i << 4], sizeof(tmp));
-        memcpy(&pal[240], tmp, sizeof(tmp));
+        memcpy(tmp[0], pal[16], sizeof(tmp));
+        for (i = 1; i < 16; i++) memcpy(pal[(i - 1) << 4], pal[i << 4], sizeof(tmp));
+        memcpy(pal[240], tmp[0], sizeof(tmp));
         waitRetrace();
         setPalette();
     } while (!kbhit());

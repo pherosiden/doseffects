@@ -40,9 +40,8 @@ inline int16_t random(int16_t x)
 void blur()
 {
     __asm {
-        mov     ax, seg vbuff
-        mov     es, ax
-        mov     di, 320
+        lea     di, vbuff
+        add     di, 320
         mov     cx, 63360
         xor     ax, ax
         xor     bx, bx
@@ -188,11 +187,12 @@ void main()
         for (i = 1; i <= 319; i++) putPixel(i, j, 0);
     }
 
-    do {
+    while (!kbhit())
+    {
         pierra();
         retrace();
         flip();
-    } while (!kbhit());
+    }
 
     __asm {
         mov     ax, 0x03

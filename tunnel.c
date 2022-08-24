@@ -1,6 +1,6 @@
 /*----------------------------------------------------*/
 /* Packet  : Demo & Effect                            */
-/* Effect  : Turnel                                   */
+/* Effect  : Tunnel Blur                              */
 /* Author  : Nguyen Ngoc Van                          */
 /* Memory  : Compact                                  */
 /* Heaps   : 640K                                     */
@@ -21,8 +21,8 @@
 
 uint8_t br = 120;
 uint8_t pal[256][3] = {0};
-int16_t tbuff[100][320] = {0};
 uint8_t vbuff[200][320] = {0};
+int16_t tbuff[100][320] = {0};
 
 uint8_t *vmem = (uint8_t*)0xA0000000L;
 uint8_t *tmem = (uint8_t*)0xB8000000L;
@@ -209,7 +209,8 @@ void showTunnel()
         }
     }
     
-    do {
+    while (!kbhit())
+    {
         for (i = 0; i < 100; i++)
         {
             x = rand() % 319;
@@ -224,7 +225,7 @@ void showTunnel()
         tunnelBlur();
         waitRetrace();
         flipScreen();
-    } while (!kbhit());
+    }
 }
 
 void main()

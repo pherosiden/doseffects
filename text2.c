@@ -198,7 +198,8 @@ void main()
     newrow = 0;
     index = 0;
 
-    do {
+    while (!kbhit())
+    {
         scrollBitmap(bitmap[0]);
         update();
         newRows(text[newrow], row, 318);
@@ -208,7 +209,7 @@ void main()
         waitRetrace();
         drawBitmap(bitmap[0]);
         index = (index + 4) % 230;
-    } while(!kbhit());
+    }
 
     deAllocMem();
 

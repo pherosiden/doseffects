@@ -148,7 +148,7 @@ void processItem(int16_t x, int16_t y, int16_t ints, int16_t dx)
 {
     int16_t part, dy;
 
-    while (ints > 0 && y < 200 && x > 0 && x < 320)
+    while (ints > 0 && y < 200 && x > 0 && x < 320 && !kbhit())
     {
         addItem(x + 1, y, (ints - 3) * 20 + 50);
         addItem(x,     y, (ints * 20) + 50);
@@ -199,7 +199,7 @@ void fadeOut()
             if (dst[i][1] > 0) dst[i][1]--;
             if (dst[i][2] > 0) dst[i][2]--;
 
-            if (inp(0x60) == 1) return;
+            if (kbhit()) return;
         }
         
         retrace();
@@ -211,7 +211,8 @@ void thunderBolt()
 {
     int16_t dx;
 
-    do {
+    while (!kbhit())
+    {
         do {
             dx = random(6) - 3;
         } while(abs(dx) <= 1);
@@ -224,7 +225,7 @@ void thunderBolt()
         fadeOut();
         movePal(dst, src);
         clearScr();
-    } while(!kbhit());
+    }
 }
 
 void main()

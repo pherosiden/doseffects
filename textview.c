@@ -15,8 +15,8 @@
 #include <stdint.h>
 #include <string.h>
 
-char **lines;
-int16_t linecount;
+char **lines = NULL;
+uint16_t linecount = 0;
 
 void setDAC(char *dac)
 {
@@ -250,13 +250,15 @@ void showPageText(int16_t x, int16_t y)
 
 void textView(char *fname)
 {
+    char key = 0;
+    char num[5] = {0};
     int16_t x = 0, y = 0;
-    char key, num[5] = {0};
 
     readFile(fname);
     drawScreen();
 
-    do {
+    while (key != 27)
+    {
         fillFrame(63, 0, 67, 0, 0x23, 32);
         sprintf(num, "%d", y + 1);
         printText(63, 0, 0x28, num);
@@ -286,7 +288,7 @@ void textView(char *fname)
         if (x < 0) x = 0;
 
         fillFrame(0, 1, 79, 23, 0x13, 32);
-    } while(key != 27);
+    }
 }
 
 void main(int argc, char *argv[])

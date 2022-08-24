@@ -26,18 +26,15 @@
 #define Swap(a, b) {int16_t t = a; a = b; b = t;}
 
 typedef struct {
-    uint8_t r, g, b;
-} RGB;
-
-typedef struct {
     int16_t x0, y0, x1, y1;
     int16_t dirx0, diry0;
     int16_t dirx1, diry1;
 } POINT;
 
 POINT point = {0};
-RGB curpal[1024] = {0};
-RGB oldpal[6][1024] = {0};
+
+uint8_t curpal[1024][3] = {0};
+uint8_t oldpal[6][1024][3] = {0};
 uint8_t vbuff[200][320] = {0};
 
 int16_t flag = 1;
@@ -97,9 +94,12 @@ void clearScreen()
 
 void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
 {
-    int16_t len = strlen(msg);
+    uint16_t len = strlen(msg);
 
     __asm {
+        mov     cx, len
+        test    cx, cx
+        jz      quit
         mov     ax, 0xB800
         mov     es, ax
         xor     di, di
@@ -112,11 +112,11 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
         shl     bx, 2
         add     di, bx
         mov     ah, col
-        mov     cx, len
     next:
         lodsb
         stosw
         loop    next
+    quit:
     }
 }
 
@@ -137,128 +137,128 @@ void setColors()
 
     for (i = 0, j = 1; j < 256; i += 4, j++)
     {
-        curpal[i + 0].r = j;
-        curpal[i + 1].r = j;
-        curpal[i + 2].r = j;
-        curpal[i + 3].r = j;
+        curpal[i + 0][0] = j;
+        curpal[i + 1][0] = j;
+        curpal[i + 2][0] = j;
+        curpal[i + 3][0] = j;
 
-        curpal[i + 0].g = 0;
-        curpal[i + 1].g = 0;
-        curpal[i + 2].g = 0;
-        curpal[i + 3].g = 0;
+        curpal[i + 0][1] = 0;
+        curpal[i + 1][1] = 0;
+        curpal[i + 2][1] = 0;
+        curpal[i + 3][1] = 0;
 
-        curpal[i + 0].b = 0;
-        curpal[i + 1].b = 0;
-        curpal[i + 2].b = 0;
-        curpal[i + 3].b = 0;
+        curpal[i + 0][2] = 0;
+        curpal[i + 1][2] = 0;
+        curpal[i + 2][2] = 0;
+        curpal[i + 3][2] = 0;
     }
 
     for (i = 0, j = 1; j < 256; i += 4, j++)
     {
-        oldpal[0][i + 0].r = 0;
-        oldpal[0][i + 1].r = 0;
-        oldpal[0][i + 2].r = 0;
-        oldpal[0][i + 3].r = 0;
+        oldpal[0][i + 0][0] = 0;
+        oldpal[0][i + 1][0] = 0;
+        oldpal[0][i + 2][0] = 0;
+        oldpal[0][i + 3][0] = 0;
 
-        oldpal[0][i + 0].g = j;
-        oldpal[0][i + 1].g = j;
-        oldpal[0][i + 2].g = j;
-        oldpal[0][i + 3].g = j;
+        oldpal[0][i + 0][1] = j;
+        oldpal[0][i + 1][1] = j;
+        oldpal[0][i + 2][1] = j;
+        oldpal[0][i + 3][1] = j;
 
-        oldpal[0][i + 0].b = 0;
-        oldpal[0][i + 1].b = 0;
-        oldpal[0][i + 2].b = 0;
-        oldpal[0][i + 3].b = 0;
+        oldpal[0][i + 0][2] = 0;
+        oldpal[0][i + 1][2] = 0;
+        oldpal[0][i + 2][2] = 0;
+        oldpal[0][i + 3][2] = 0;
     }
 
     for (i = 0, j = 1; j < 256; i += 4, j++)
     {
-        oldpal[1][i + 0].r = 0;
-        oldpal[1][i + 1].r = 0;
-        oldpal[1][i + 2].r = 0;
-        oldpal[1][i + 3].r = 0;
+        oldpal[1][i + 0][0] = 0;
+        oldpal[1][i + 1][0] = 0;
+        oldpal[1][i + 2][0] = 0;
+        oldpal[1][i + 3][0] = 0;
 
-        oldpal[1][i + 0].g = 0;
-        oldpal[1][i + 1].g = 0;
-        oldpal[1][i + 2].g = 0;
-        oldpal[1][i + 3].g = 0;
+        oldpal[1][i + 0][1] = 0;
+        oldpal[1][i + 1][1] = 0;
+        oldpal[1][i + 2][1] = 0;
+        oldpal[1][i + 3][1] = 0;
 
-        oldpal[1][i + 0].b = j;
-        oldpal[1][i + 1].b = j;
-        oldpal[1][i + 2].b = j;
-        oldpal[1][i + 3].b = j;
+        oldpal[1][i + 0][2] = j;
+        oldpal[1][i + 1][2] = j;
+        oldpal[1][i + 2][2] = j;
+        oldpal[1][i + 3][2] = j;
     }
 
     for (i = 0, j = 1; j < 256; i += 4, j++)
     {
-        oldpal[2][i + 0].r = j;
-        oldpal[2][i + 1].r = j;
-        oldpal[2][i + 2].r = j;
-        oldpal[2][i + 3].r = j;
+        oldpal[2][i + 0][0] = j;
+        oldpal[2][i + 1][0] = j;
+        oldpal[2][i + 2][0] = j;
+        oldpal[2][i + 3][0] = j;
 
-        oldpal[2][i + 0].g = j;
-        oldpal[2][i + 1].g = j;
-        oldpal[2][i + 2].g = j;
-        oldpal[2][i + 3].g = j;
+        oldpal[2][i + 0][1] = j;
+        oldpal[2][i + 1][1] = j;
+        oldpal[2][i + 2][1] = j;
+        oldpal[2][i + 3][1] = j;
 
-        oldpal[2][i + 0].b = j;
-        oldpal[2][i + 1].b = j;
-        oldpal[2][i + 2].b = j;
-        oldpal[2][i + 3].b = j;
+        oldpal[2][i + 0][2] = j;
+        oldpal[2][i + 1][2] = j;
+        oldpal[2][i + 2][2] = j;
+        oldpal[2][i + 3][2] = j;
     }
 
     for (i = 0, j = 1; j < 256; i += 4, j++)
     {
-        oldpal[3][i + 0].r = j;
-        oldpal[3][i + 1].r = j;
-        oldpal[3][i + 2].r = j;
-        oldpal[3][i + 3].r = j;
+        oldpal[3][i + 0][0] = j;
+        oldpal[3][i + 1][0] = j;
+        oldpal[3][i + 2][0] = j;
+        oldpal[3][i + 3][0] = j;
 
-        oldpal[3][i + 0].g = j;
-        oldpal[3][i + 1].g = j;
-        oldpal[3][i + 2].g = j;
-        oldpal[3][i + 3].g = j;
+        oldpal[3][i + 0][1] = j;
+        oldpal[3][i + 1][1] = j;
+        oldpal[3][i + 2][1] = j;
+        oldpal[3][i + 3][1] = j;
 
-        oldpal[3][i + 0].b = 0;
-        oldpal[3][i + 1].b = 0;
-        oldpal[3][i + 2].b = 0;
-        oldpal[3][i + 3].b = 0;
+        oldpal[3][i + 0][2] = 0;
+        oldpal[3][i + 1][2] = 0;
+        oldpal[3][i + 2][2] = 0;
+        oldpal[3][i + 3][2] = 0;
     }
 
     for (i = 0, j = 1; j < 64; i += 4, j++)
     {
-        oldpal[4][i + 0].r = j;
-        oldpal[4][i + 1].r = j;
-        oldpal[4][i + 2].r = j;
-        oldpal[4][i + 3].r = j;
+        oldpal[4][i + 0][0] = j;
+        oldpal[4][i + 1][0] = j;
+        oldpal[4][i + 2][0] = j;
+        oldpal[4][i + 3][0] = j;
 
-        oldpal[4][i + 0].g = 0;
-        oldpal[4][i + 1].g = 0;
-        oldpal[4][i + 2].g = 0;
-        oldpal[4][i + 3].g = 0;
+        oldpal[4][i + 0][1] = 0;
+        oldpal[4][i + 1][1] = 0;
+        oldpal[4][i + 2][1] = 0;
+        oldpal[4][i + 3][1] = 0;
 
-        oldpal[4][i + 0].b = j;
-        oldpal[4][i + 1].b = j;
-        oldpal[4][i + 2].b = j;
-        oldpal[4][i + 3].b = j;
+        oldpal[4][i + 0][2] = j;
+        oldpal[4][i + 1][2] = j;
+        oldpal[4][i + 2][2] = j;
+        oldpal[4][i + 3][2] = j;
     }
 
     for (i = 0, j = 1; j < 64; i += 4, j++)
     {
-        oldpal[5][i + 0].r = 0;
-        oldpal[5][i + 1].r = 0;
-        oldpal[5][i + 2].r = 0;
-        oldpal[5][i + 3].r = 0;
+        oldpal[5][i + 0][0] = 0;
+        oldpal[5][i + 1][0] = 0;
+        oldpal[5][i + 2][0] = 0;
+        oldpal[5][i + 3][0] = 0;
 
-        oldpal[5][i + 0].g = j;
-        oldpal[5][i + 1].g = j;
-        oldpal[5][i + 2].g = j;
-        oldpal[5][i + 3].g = j;
+        oldpal[5][i + 0][1] = j;
+        oldpal[5][i + 1][1] = j;
+        oldpal[5][i + 2][1] = j;
+        oldpal[5][i + 3][1] = j;
 
-        oldpal[5][i + 0].b = j;
-        oldpal[5][i + 1].b = j;
-        oldpal[5][i + 2].b = j;
-        oldpal[5][i + 3].b = j;
+        oldpal[5][i + 0][2] = j;
+        oldpal[5][i + 1][2] = j;
+        oldpal[5][i + 2][2] = j;
+        oldpal[5][i + 3][2] = j;
     }
 }
 
@@ -268,13 +268,13 @@ void changePals(int16_t k)
 
     for (i = 0; i < 256; i++)
     {
-        if (curpal[i].r < oldpal[k][i].r) setRGB(i, curpal[i].r++, curpal[i].g, curpal[i].b);
-        if (curpal[i].r > oldpal[k][i].r) setRGB(i, curpal[i].r--, curpal[i].g, curpal[i].b);
-        if (curpal[i].g < oldpal[k][i].g) setRGB(i, curpal[i].r, curpal[i].g++, curpal[i].b);
-        if (curpal[i].g > oldpal[k][i].g) setRGB(i, curpal[i].r, curpal[i].g--, curpal[i].b);
-        if (curpal[i].b < oldpal[k][i].b) setRGB(i, curpal[i].r, curpal[i].g, curpal[i].b++);
-        if (curpal[i].b > oldpal[k][i].b) setRGB(i, curpal[i].r, curpal[i].g, curpal[i].b--);
-        flag = (curpal[i].r == oldpal[k][i].r) && (curpal[i].g == oldpal[k][i].g) && (curpal[i].b == oldpal[k][i].b) ? 0 : 1;
+        if (curpal[i][0] < oldpal[k][i][0]) setRGB(i, curpal[i][0]++, curpal[i][1],   curpal[i][2]);
+        if (curpal[i][0] > oldpal[k][i][0]) setRGB(i, curpal[i][0]--, curpal[i][1],   curpal[i][2]);
+        if (curpal[i][1] < oldpal[k][i][1]) setRGB(i, curpal[i][0],   curpal[i][1]++, curpal[i][2]);
+        if (curpal[i][1] > oldpal[k][i][1]) setRGB(i, curpal[i][0],   curpal[i][1]--, curpal[i][2]);
+        if (curpal[i][2] < oldpal[k][i][2]) setRGB(i, curpal[i][0],   curpal[i][1],   curpal[i][2]++);
+        if (curpal[i][2] > oldpal[k][i][2]) setRGB(i, curpal[i][0],   curpal[i][1],   curpal[i][2]--);
+        flag = (curpal[i][0] == oldpal[k][i][0]) && (curpal[i][1] == oldpal[k][i][1]) && (curpal[i][2] == oldpal[k][i][2]) ? 0 : 1;
     }
 }
 
@@ -385,7 +385,8 @@ void main()
 
     setColors();
 
-    do {
+    while (!kbhit())
+    {
         if (!flag) var = rand() % 6;
         changePals(var);
 
@@ -458,7 +459,7 @@ void main()
 
         retrace();
         flip(vbuff[0], 0xA000);
-    } while(!kbhit());
+    }
 
     __asm {
         mov     ax, 0x03

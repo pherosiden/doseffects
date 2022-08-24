@@ -116,12 +116,12 @@ void main()
     setRGB(255, 0, 0, 0);
     memset(vbuff[199], 255, 320);
 
-    do
+    while (!kbhit())
     {
         doFire();
         waitRetrace();
         flip();
-    } while (!kbhit());
+    }
 
     memset(vbuff[199], 0, 320);
 
@@ -131,6 +131,7 @@ void main()
         waitRetrace();
         flip();
     }
+    
     __asm {
         mov     ax, 0x03
         int     0x10

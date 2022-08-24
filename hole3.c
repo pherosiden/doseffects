@@ -102,9 +102,12 @@ void clearTextMem()
 
 void putMsg(int16_t x, int16_t y, uint8_t col, char *msg)
 {
-    int16_t len = strlen(msg);
+    uint16_t len = strlen(msg);
 
     __asm {
+        mov     cx, len
+        test    cx, cx
+        jz      quit
         mov     ax, 0xB800
         mov     es, ax
         xor     di, di
@@ -117,11 +120,11 @@ void putMsg(int16_t x, int16_t y, uint8_t col, char *msg)
         shl     bx, 2
         add     di, bx
         mov     ah, col
-        mov     cx, len
     next:
         lodsb
         stosw
         loop    next
+    quit:
     }
 }
 
@@ -261,9 +264,9 @@ void polygon1(int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t x3, int16_
                 pos[y][dir1] = RANGE(tmp, minx, maxx);
             }
             y += step;
-        } while(y != y2 + step);
+        } while (y != y2 + step);
     }
-    else if(y >= ly && y <= gy) pos[y][dir1] = RANGE(x1, minx, maxx);
+    else if (y >= ly && y <= gy) pos[y][dir1] = RANGE(x1, minx, maxx);
 
     y = y2;
     step = (dir2 << 1) - 1;
@@ -277,9 +280,9 @@ void polygon1(int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t x3, int16_
                 pos[y][dir2] = RANGE(tmp, minx, maxx);
             }
             y += step;
-        } while(y != y3 + step);
+        } while (y != y3 + step);
     }
-    else if(y >= ly && y <= gy) pos[y][dir2] = RANGE(x2, minx, maxx);
+    else if (y >= ly && y <= gy) pos[y][dir2] = RANGE(x2, minx, maxx);
 
     y = y3;
     step = (dir3 << 1) - 1;
@@ -287,15 +290,15 @@ void polygon1(int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t x3, int16_
     if (y3 != y4)
     {
         do {
-            if(RANGE(y, ly, gy) == y)
+            if (RANGE(y, ly, gy) == y)
             {
                 tmp = xdiv3 * (y - y3) / ydiv3 + x3;
                 pos[y][dir3] = RANGE(tmp, minx, maxx);
             }
             y += step;
-        } while(y != y4 + step);
+        } while (y != y4 + step);
     }
-    else if(y >= ly && y <= gy) pos[y][dir3] = RANGE(x3, minx, maxx);
+    else if (y >= ly && y <= gy) pos[y][dir3] = RANGE(x3, minx, maxx);
 
     y = y4;
     step = (dir4 << 1) - 1;
@@ -310,7 +313,7 @@ void polygon1(int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t x3, int16_
                 pos[y][dir4] = RANGE(tmp, minx, maxx);
             }
             y += step;
-        } while(y != y1 + step);
+        } while (y != y1 + step);
     }
     else if (y >= ly && y <= gy) pos[y][dir4] = RANGE(x4, minx, maxx);
 
@@ -349,7 +352,7 @@ void polygon2(int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t x3, int16_
                 pos[y][dir1] = RANGE(tmp, minx, maxx);
             }
             y += step;
-        } while(y != y2 + step);
+        } while (y != y2 + step);
     }
     else if (y >= ly && y <= gy) pos[y][dir1] = RANGE(x1, minx, maxx);
 
@@ -366,7 +369,7 @@ void polygon2(int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t x3, int16_
                 pos[y][dir2] = RANGE(tmp, minx, maxx);
             }
             y += step;
-        } while(y != y3 + step);
+        } while (y != y3 + step);
     }
     else if (y >= ly && y <= gy) pos[y][dir2] = RANGE(x2, minx, maxx);
 
@@ -383,7 +386,7 @@ void polygon2(int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t x3, int16_
                 pos[y][dir3] = RANGE(tmp, minx, maxx);
             }
             y += step;
-        } while(y != y4 + step);
+        } while (y != y4 + step);
     }
     else if (y >= ly && y <= gy) pos[y][dir3] = RANGE(x3, minx, maxx);
 
@@ -400,7 +403,7 @@ void polygon2(int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t x3, int16_
                 pos[y][dir4] = RANGE(tmp, minx, maxx);
             }
             y += step;
-        } while(y != y1 + step);
+        } while (y != y1 + step);
     }
     else if (y >= ly && y <= gy) pos[y][dir4] = RANGE(x4, minx, maxx);
 
@@ -420,7 +423,7 @@ void calcSintab(uint8_t art, int16_t xo, int16_t yo, int16_t r, int16_t a)
 
     switch (art)
     {
-    case 0 :
+    case 0:
         if (x < 320 && y < 200)
         {
             px[ring][point] = x;
@@ -456,7 +459,6 @@ void drawHole(uint8_t art, uint8_t *where)
         }
     
         putPixel(where, 0, 0);
-    
         break;
 
     case 1:
@@ -464,8 +466,7 @@ void drawHole(uint8_t art, uint8_t *where)
         {
             for (po = 1; po <= 23; po++) drawLine(px[ri][po - 1], py[ri][po - 1], px[ri][po], py[ri][po], ri + 1, where);
             drawLine(px[ri][23], py[ri][23], px[ri][0], py[ri][0], ri + 1, where);
-        }
-    
+        }    
         break;
 
     case 2:
@@ -474,7 +475,6 @@ void drawHole(uint8_t art, uint8_t *where)
             for (ri = 1; ri <= 26; ri++) drawLine(px[ri - 1][po], py[ri - 1][po], px[ri][po], py[ri][po], ri + 1, where);
             drawLine(px[26][po], py[26][po], px[0][po], py[0][po], ri + 1, where);
         }
-    
         break;
 
     case 3:
@@ -489,7 +489,6 @@ void drawHole(uint8_t art, uint8_t *where)
             for (ri = 1; ri <= 26; ri++) drawLine(px[ri - 1][po], py[ri - 1][po], px[ri][po], py[ri][po], ri + 1, where);
             drawLine(px[26][po], py[26][po], px[0][po], py[0][po], ri + 1, where);
         }
-    
         break;
 
     case 4:
@@ -501,7 +500,6 @@ void drawHole(uint8_t art, uint8_t *where)
 
         for (ri = 0; ri <= 199; ri++) putPixel(where, (ri << 6) + (ri << 8), 0);
         for (ri = 0; ri <= 199; ri++) putPixel(where, (ri << 6) + (ri << 8) + 319, 0);
-        
         break;
 
     case 5:
@@ -513,7 +511,6 @@ void drawHole(uint8_t art, uint8_t *where)
 
         for (ri = 0; ri <= 199; ri++) putPixel(where, (ri << 6) + (ri << 8), 0);
         for (ri = 0; ri <= 199; ri++) putPixel(where, (ri << 6) + (ri << 8) + 319, 0);
-
         break;
     }
 }

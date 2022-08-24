@@ -89,9 +89,12 @@ void flip(uint8_t *src, uint8_t *dst)
 
 void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
 {
-    int16_t len = strlen(msg);
+    uint16_t len = strlen(msg);
 
     __asm {
+        mov     cx, len
+        test    cx, cx
+        jz      quit
         les     di, tmem
         lds     si, msg
         add     di, x
@@ -102,11 +105,11 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
         shl     bx, 2
         add     di, bx
         mov     ah, col
-        mov     cx, len
     next:
         lodsb
         stosw
         loop    next
+    quit:
     }
 }
 
@@ -592,7 +595,8 @@ void moveAround()
     topclipx = 0;
     botclipy = 199;
 
-    do {
+    while (!kbhit())
+    {
         rotatePoints(deg2, deg1, deg2);
         sortPoints();
         drawPoints();
@@ -601,7 +605,7 @@ void moveAround()
         flip(vbuff2[0], vbuff1[0]);
         deg1 = (deg1 + 1) % 360;
         deg2 = (deg2 + 1) % 360;
-    } while(!kbhit());
+    }
 }
 
 void main()

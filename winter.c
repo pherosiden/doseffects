@@ -18,7 +18,7 @@
 #include <string.h>
 #include <conio.h>
 
-#define FLAKES 1000
+#define FLAKES  1000
 #define FASTEST 360
 
 typedef struct {
@@ -85,7 +85,8 @@ void snowFall()
 {
     int16_t i;
 
-    do {
+    while (!kbhit())
+    {
         for (i = 0; i < FLAKES; i++)
         {
             perturb();
@@ -96,7 +97,7 @@ void snowFall()
         }
         retrace();
         flip(tbuff[0]);
-    } while (!kbhit());
+    }
 }
 
 void clearScreen()

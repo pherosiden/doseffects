@@ -114,7 +114,6 @@ void drawBitmap(uint8_t *mem, uint16_t ofs)
         add     di, ofs
         mov     cx, 2400
         rep     movsd
-        pop     ds
     }
 }
 
@@ -179,7 +178,8 @@ void main()
     newrow = 0;
     index = 0;
 
-    do {
+    while (!kbhit())
+    {
         scrollBitmap(bitmap[0]);
         update();
         newRows(text[newrow], row, 318);
@@ -188,7 +188,7 @@ void main()
         waitRetrace();
         drawBitmap(bitmap[0], sintab[index] * 320);
         index = (index + 2) % 100;
-    } while(!kbhit());
+    }
 
     deAllocMem();
 

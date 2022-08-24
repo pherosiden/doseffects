@@ -78,7 +78,8 @@ void main()
     srand(time(NULL));
     readPalette();
 
-    do {
+    while (!kbhit())
+    {
         __asm {
             mov     cx, 16159
             lea     di, flames
@@ -130,7 +131,7 @@ void main()
             dec     dx
             jnz     lp3
         }
-    } while (!kbhit());
+    }
 
     __asm {
         mov     ax, 0x03

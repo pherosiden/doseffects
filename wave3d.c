@@ -17,8 +17,8 @@
 #include <stdint.h>
 #include <conio.h>
 
-#define S159    25281.0
 #define S31	    961.0
+#define S159    25281.0
 #define M_PI    3.14159265f
 
 double r, d, v, a;
@@ -158,10 +158,11 @@ void main()
         outp(0x3C9, 0);
     }
 
-    do {
+    while (!kbhit())
+    {
         n = (n + 1) % 64;
         retrace();
-        for (j = 0; j < 160; j++)
+        for (j = 0; j <= 159; j++)
         {
             c = 63;
             lasth = 199;
@@ -176,7 +177,7 @@ void main()
                 }
                 c--;
             }
-            for (i = 0; i < 32; i++)
+            for (i = 0; i <= 31; i++)
             {
                 limit = (56 - i) + wb[n][lb[i][j]];
                 while (lasth > limit)
@@ -194,7 +195,7 @@ void main()
             }
             heighest[j] = lasth;
         }
-    } while (!kbhit());
+    }
 
     __asm {
         mov    ax, 0x03

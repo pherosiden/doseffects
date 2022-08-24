@@ -43,9 +43,12 @@ void clearScreen()
 
 void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
 {
-    int16_t len = strlen(msg);
+    uint16_t len = strlen(msg);
 
     __asm {
+        mov     cx, len
+        test    cx, cx
+        jz      quit
         lds     si, msg
         mov     ax, 0xb800
         mov     es, ax
@@ -58,11 +61,11 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
         shl     bx, 2
         add     di, bx
         mov     ah, col
-        mov     cx, len
     next:
         lodsb
         stosw
         loop    next
+    quit:
     }
 }
 
@@ -184,11 +187,12 @@ void main()
     p1 = 187;
     p2 = 230;
 
-    do {
+    while (!kbhit())
+    {
         waitRetrace();
         drawPlasma(0xA000);
         changeAngle();
-    } while(!kbhit());
+    }
 
     __asm {
         mov     ax, 0x03

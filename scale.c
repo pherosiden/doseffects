@@ -62,9 +62,12 @@ uint8_t getPixel(uint16_t x, uint16_t y, uint8_t *where)
 
 void putMsg(int16_t x, int16_t y, uint8_t col, char *msg)
 {
-    int16_t len = strlen(msg);
+    uint16_t len = strlen(msg);
 
     __asm {
+        mov     cx, len
+        test    cx, cx
+        jz      quit
         lds     si, msg
         les     di, tmem
         add     di, x
@@ -75,11 +78,11 @@ void putMsg(int16_t x, int16_t y, uint8_t col, char *msg)
         shl     bx, 2
         add     di, bx
         mov     ah, col
-        mov     cx, len
     next:
         lodsb
         stosw
         loop    next
+    quit:
     }
 }
 
@@ -219,7 +222,8 @@ void run()
     int16_t z = 114;
     int16_t zadd = -2;
 
-    do {
+    while (inp(0x60) != 1 && inp(0x60) != 3 && inp(0x60) != 4)
+    {
         z += zadd;
         x = (16 << 8) / z;
         y = (10 << 8) / z;
@@ -229,7 +233,7 @@ void run()
         retrace();
         flip(vbuff1, vmem);
         if (z < 16 || z > 114) zadd = -zadd;
-    } while(inp(0x60) != 1 && inp(0x60) != 3 && inp(0x60) != 4);
+    }
 }
 
 void run1()
@@ -241,7 +245,8 @@ void run1()
     int16_t vy1, vx2, vy2;
     int16_t x1, y1, x2, y2;
 
-    do {
+    while (inp(0x60) != 1 && inp(0x60) != 2 && inp(0x60) != 4)
+    {
         flip(vbuff2, vbuff1);
         if (vx1 < -50  || vx1 > 260) dir = -dir;
 
@@ -266,21 +271,22 @@ void run1()
         rectStretch(0, 0, 319, 199, x1, y1, x2, y2);
         retrace();
         flip(vbuff1, vmem);
-    } while(inp(0x60) != 1 && inp(0x60) != 2 && inp(0x60) != 4);
+    }
 }
 
 void run2()
 {
     int16_t i = 0;
 
-    do {
+    while (inp(0x60) != 1 && inp(0x60) != 2 && inp(0x60) != 3)
+    {
         flip(vbuff2, vbuff1);
         rectStretch(0, 0, 319, 199, 40, 100 - costab[i], 140, 100 + costab[i]);
         rectStretch(0, 0, 319, 199, 230 - costab[i], 50, 230 + costab[i], 150);
         retrace();
         flip(vbuff1, vmem);     
         i = (i + 6) % 256;
-    } while(inp(0x60) != 1 && inp(0x60) != 2 && inp(0x60) != 3);
+    }
 }
 
 inline int16_t roundf(float x)
@@ -314,11 +320,12 @@ void main()
     loadCEL("assets/face.cel");
     run1();
 
-    do {
+    while (inp(0x60) != 1)
+    {
         if (inp(0x60) == 2) run();
         if (inp(0x60) == 3) run1();
         if (inp(0x60) == 4) run2();
-    } while(inp(0x60) != 1);
+    }
 
     __asm {
         mov     ax, 0x03

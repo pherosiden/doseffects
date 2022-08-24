@@ -212,9 +212,8 @@ void fadeIn(uint8_t *pal)
 
     for (j = 0; j < 64; j++)
     {
-        outp(0x03C8, 0);
         retrace();
-
+        outp(0x03C8, 0);
         for (i = 0; i < 768; i++)
         {
             outp(0x3C9, tmp[i]);
@@ -229,9 +228,8 @@ void fadeOut(uint8_t *pal)
 
     for (j = 0; j < 64; j++)
     {
-        outp(0x03C8, 0);
         retrace();
-
+        outp(0x03C8, 0);
         for (i = 0; i < 768; i++)
         {
             outp(0x3C9, pal[i]);
@@ -433,7 +431,8 @@ void main()
     fadeIn(pal);
     idx = 0;
 
-    do {
+    while (!kbhit())
+    {
         __asm {
             les     di, dbuff
             mov     cx, (WIDTH + 40) * (HEIGHT + 40) / 4
@@ -545,7 +544,7 @@ void main()
             dec     dx
             jnz     next
         }
-    } while(!kbhit());
+    }
 
     fadeMax(pal);
     fadeOut(pal);

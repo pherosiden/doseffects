@@ -120,7 +120,8 @@ void main()
     srand(time(NULL));
     setFirePal();
 
-    do {
+    while (!kbhit())
+    {
         for (i = 0; i < 160; i++)
         {
             if ((rand() % 10) < 5) delta = (rand() % 2) * 255;
@@ -130,7 +131,7 @@ void main()
         interpolation();
         retrace();
         purgeBuf();
-    } while (!kbhit());
+    }
 
     __asm {
         mov     ax, 0x03

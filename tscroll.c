@@ -77,7 +77,8 @@ void scrollText()
     uint16_t ofs, pos = 0;
     uint8_t chr;
 
-    do {
+    while (!kbhit())
+    {
         chr = scrolledtext[pos];
         for (i = 0; i < 16; i++)
         {
@@ -100,7 +101,7 @@ void scrollText()
 
         pos++;
         if (pos >= strlen(scrolledtext)) pos = 0;
-    } while(!kbhit());
+    }
 }
 
 void main()

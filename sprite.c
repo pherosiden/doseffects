@@ -112,9 +112,12 @@ void clearScreen()
 
 void printText(int16_t x, int16_t y, uint8_t col, char *msg)
 {
-    int16_t len = strlen(msg);
+    uint16_t len = strlen(msg);
 
     __asm {
+        mov     cx, len
+        test    cx, cx
+        jz      quit
         lds     si, msg
         les     di, tmem
         add     di, x
@@ -125,15 +128,15 @@ void printText(int16_t x, int16_t y, uint8_t col, char *msg)
         shl     bx, 2
         add     di, bx
         mov     ah, col
-        mov     cx, len
     next:
         lodsb
         stosw
         loop    next
+    quit:
     }
 }
 
-void putFrame(uint16_t x, uint16_t y, FRAME sprt, uint8_t *mem)
+void putFrame(uint16_t x, uint16_t y, FRAME *sprt, uint8_t *mem)
 {
     __asm {
         lds     si, sprt
@@ -273,7 +276,7 @@ void jump()
             if (bubmio[i].active)
             {
                 j = bubmio[i].frame;
-                putFrame(bubmio[i].x, bubmio[i].y, frames[j], vbuff1[0]);
+                putFrame(bubmio[i].x, bubmio[i].y, &frames[j], vbuff1[0]);
                 bubmio[i].frame++;
                 if (bubmio[i].frame == 7) bubmio[i].frame = 0;
             }

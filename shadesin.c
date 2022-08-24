@@ -100,9 +100,12 @@ void clearScreen()
 
 void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
 {
-    int16_t len = strlen(msg);
+    uint16_t len = strlen(msg);
 
     __asm {
+        mov     cx, len
+        test    cx, cx
+        jz      quit
         lds     si, msg
         les     di, tmem
         add     di, x
@@ -113,11 +116,11 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
         shl     bx, 2
         add     di, bx
         mov     ah, col
-        mov     cx, len
     next:
         lodsb
         stosw
         loop    next
+    quit:
     }
 }
 
@@ -177,7 +180,7 @@ void inDraw()
         y = uy[reg + 1];
     }
 
-    if(!x && !y) return;
+    if (!x && !y) return;
 
     for (a = x - 2; a <= x + 2; a++)
     {
@@ -229,7 +232,8 @@ void main()
     clear = 17400;
     reg = 0;
 
-    do {
+    while (!kbhit() && clear)
+    {
         outDraw();
         inDraw();
         
@@ -242,7 +246,7 @@ void main()
         ry = ry + rx * 0.0001;
         clear--;
         
-    } while(!kbhit() && clear);
+    }
 
     for (y = 0; y < 100; y++)
     {
