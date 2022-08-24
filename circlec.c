@@ -1,6 +1,6 @@
 /*---------------------------------------------------------*/
-/* Demo link code c++ with asm code (see circlea.asm)      */
-/* Compile: Open Watcom C/C++                              */
+/* Demo link code c with asm module (see circlea.asm)      */
+/* Compiler: Open Watcom C/C++ 1.9                         */
 /*          wasm -zq -fp3 -mc -zcm=tasm circlea.asm        */
 /*          wcl -zq -ox -fp3 -3 -mc circlec.c circlea.obj  */
 /*---------------------------------------------------------*/
@@ -122,7 +122,7 @@ void main()
         flipScreen(vbuff3, vbuff2);
         for (i = 0; i < 38; i++) drawCircle(x, y, i);
         flipScreen(vbuff2, vmem);
-    } while(!kbhit() && btn != 1);
+    } while (!kbhit() && btn != 1);
 
     setVideoMode(0x03);
     closeMouse();

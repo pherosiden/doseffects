@@ -1,7 +1,7 @@
 /*---------------------------------------*/
 /*  FASTEST BMP LOADER (320x200x256)     */
 /* Copyright (c) 1998 by Nguyen Ngoc Van */
-/* E-mail  : pherosiden@gmail.net        */
+/* E-mail  : pherosiden@gmail.com        */
 /* Website : http://www.codedemo.net     */
 /*---------------------------------------*/
 

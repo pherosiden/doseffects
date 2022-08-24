@@ -101,7 +101,6 @@ void mouseWindow(uint16_t l, uint16_t t, uint16_t r, uint16_t b)
         mov     cx, l
         mov     dx, r
         int     0x33
-
         inc     ax
         mov     cx, t
         mov     dx, b
@@ -194,7 +193,7 @@ void main()
     do {
         getMousePos(&xpos, &ypos, &btn);
         moveTo(xpos, ypos);
-    } while(!kbhit() && btn != 1);
+    } while (!kbhit() && btn != 1);
 
     __asm {
         xor     ax, ax

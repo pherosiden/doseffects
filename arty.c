@@ -130,7 +130,8 @@ void doArt()
 {
     srand(time(NULL));
     
-    do {
+    while (!kbhit())
+    {
         eraseCurrentLine();
 
         if (incCount == 0) selectNewDelta();
@@ -149,7 +150,7 @@ void doArt()
         retrace();
         drawCurrentLine();
         updateLine();
-    } while (!kbhit());
+    }
 }
 
 void main()

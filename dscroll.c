@@ -1,6 +1,6 @@
 /*---------------------------------------------------*/
 /* Packet  : Demo & Effect                           */
-/* Effect  : scrollText Text                             */
+/* Effect  : Scroll Text                             */
 /* Author  : Nguyen Ngoc Van                         */ 
 /* Memory  : Compact                                 */
 /* Heaps   : 640K                                    */
@@ -82,7 +82,8 @@ void scrollText()
     pos = j = 0;
     len = strlen(text);
 
-    do {
+    while (!kbhit())
+    {
         c = text[pos];
 
         for (i = 0; i < YMAX; i++)
@@ -115,7 +116,7 @@ void scrollText()
         pos++;
         if (pos >= len) pos = 0;
 
-    } while (!kbhit());
+    }
 }
 
 inline int16_t roundf(float x)

@@ -242,7 +242,7 @@ void main()
         flip(vbuff3, vbuff2);
         for (i = 0; i < 38; i++) drawCircle(x, y, i);
         flip(vbuff2, vmem);
-    } while(!kbhit() && btn != 1);
+    } while (!kbhit() && btn != 1);
 
     __asm {
         xor     ax, ax

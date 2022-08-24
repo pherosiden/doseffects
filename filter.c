@@ -147,15 +147,13 @@ void shear()
 
     for (x = 0; x < 200; x++)
     {
-        if (random(256) < 128) r--;
-        else r++;
+        if (random(256) < 128) r--; else r++;
         yt[x] = r;
     }
 
     for (y = 0; y < 200; y++)
     {
-        if (random(256) < 128) r--;
-        else r++;
+        if (random(256) < 128) r--; else r++;
         for (x = 0; x < 200; x++)
         {
             dx = x + r;
@@ -174,7 +172,7 @@ void melting()
     {
         x = random(200);
         y = random(200);
-        while (y < 199 && vbuff2[y][x] <= vbuff2[y + 1][x])
+        while (y < 199 && vbuff2[y][x] < vbuff2[y + 1][x])
         {
             val = vbuff2[y][x];
             vbuff2[y][x] = vbuff2[y + 1][x];
@@ -194,7 +192,7 @@ void oilTransfer()
     {
         for (x = 0; x < 200; x++)
         {
-            memset(histo, 0, 256 * sizeof(int16_t));
+            memset(histo, 0, sizeof(histo));
 
             for (dy = y - n; dy <= y + n; dy++)
             {
@@ -279,7 +277,7 @@ void trans(uint8_t type)
 
         case 9:
             trans(0);
-            for (y = 0; y < 199; y++) for(x = 1; x <= 199; x++) vbuff2[y][x] = 63 - (vbuff2[y][x] - vbuff2[y + 1][x - 1] + 31); break;
+            for (y = 0; y < 199; y++) for(x = 1; x < 200; x++) vbuff2[y][x] = 63 - (vbuff2[y][x] - vbuff2[y + 1][x - 1] + 31); break;
 
         case 0:
             for (y = 1; y < 199; y++)

@@ -70,7 +70,7 @@ void main()
 
     for (i = 0; i < 100; i++) sint[i] = sin(i * M_PI / 24);
 
-    do
+    while (!kbhit())
     {
         for (x = 5; x < 24; x++)
         {
@@ -100,7 +100,7 @@ void main()
                 vmem[145 + x + roundf(sint[i] * ((99 - y) >> 2)) + (131 - (y - 2) / 3) * 320] = vbuff[x][y];
             }
         }
-    } while (!kbhit());
+    }
 
     __asm {
         mov     ax, 0x03
