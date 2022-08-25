@@ -46,12 +46,12 @@ void retrace()
 void clearScreen()
 {
     __asm {
-        mov    ax, 0xB800
-        mov    es, ax
-        xor    di, di
-        xor    ax, ax
-        mov    cx, 2000
-        rep    stosw
+        mov     ax, 0xB800
+        mov     es, ax
+        xor     di, di
+        xor     ax, ax
+        mov     cx, 2000
+        rep     stosw
     }
 }
 
@@ -201,7 +201,7 @@ void main()
     }
 
     __asm {
-        mov    ax, 0x03
-        int    0x10
+        mov     ax, 0x03
+        int     0x10
     }
 }

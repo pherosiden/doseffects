@@ -47,13 +47,13 @@ void loadCEL(char *file)
     fclose(fp);
 
     __asm {
-        mov    dx, 0x03C8
-        xor    al, al
-        out    dx, al
-        inc    dx
-        lea    si, pal
-        mov    cx, 768
-        rep    outsb
+        mov     dx, 0x03C8
+        xor     al, al
+        out     dx, al
+        inc     dx
+        lea     si, pal
+        mov     cx, 768
+        rep     outsb
     }
 }
 
@@ -210,31 +210,34 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
     uint16_t len = strlen(msg);
 
     __asm {
-        les	   di, tmem
-        lds	   si, msg
-        add	   di, x
-        shl	   di, 1
-        mov	   ax, y
-        shl	   ax, 5
-        add	   di, ax
-        shl	   ax, 2
-        add	   di, ax
-        mov	   ah, col
-        mov    cx, len
+        mov     cx, len
+        test    cx, cx
+        jz      quit
+        les	    di, tmem
+        lds	    si, msg
+        add	    di, x
+        shl	    di, 1
+        mov	    ax, y
+        shl	    ax, 5
+        add	    di, ax
+        shl	    ax, 2
+        add	    di, ax
+        mov	    ah, col
     next:
         lodsb
         stosw
         loop   next
+    quit:
     }
 }
 
 void clearScreen()
 {
     __asm {
-        les	   di, tmem
-        xor	   ax, ax
-        mov	   cx, 2000
-        rep	   stosw
+        les	    di, tmem
+        xor	    ax, ax
+        mov	    cx, 2000
+        rep	    stosw
     }
 }
 

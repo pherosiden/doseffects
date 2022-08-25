@@ -1,12 +1,33 @@
 # DOS Effects
-Old  DOS demo and effects with mode 13h and super vesa mode (VESA 3.0 core functions).
-Using Watcom C/C++ compiler and inline ASM code.
+Old DOS demo and effects with mode 13h and super vesa mode (VESA 3.0 core functions).
+Using Open Watcom C/C++ compiler and inline ASM code.
 
 Run program by DosBox-X at https://dosbox-x.com/. Any things contact pherosiden@gmail.com
 
 # How to build
-Before build, run envir.bat to setup path.
-Use build.bat or build32.bat to build source.
+Before build, run envir.bat to setup environment variables.
+Use build.bat (for 16bits) or build32.bat (for 32bits) to build source.
+Use buildcom.bat to generate 16bits .com files.
+
+# CEL image format
+In my examples, all image are CEL format (320x200x256 colors):
+
+      +-------------------+
+      |      Header       |
+      |     32 bytes      |
+      +-------------------+
+      |  Palette entries  |
+      |     768 bytes     |
+      +-------------------+
+      |     Raw data      |
+      |   64000 bytes     |
+      +-------------------+
+
+If you don't like images in this packet, you can use any image that
+you like (with the same size and palette colors) then convert them to
+the CEL format (use SEA 1.3 utility).
+
+I choose CEL because it's very simple ;)
 
 # Screenshots
 ![Test Image 1](screenshots/screen01.png)
