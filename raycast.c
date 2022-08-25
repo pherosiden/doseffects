@@ -409,7 +409,7 @@ void computeView()
         hmh = HORIZ - height;
         hph = HORIZ + height;
 
-        dark = roundf(spacer) >> 10;
+        dark = roundf(spacer / 1024);
         if (dark > 15) dark = 15;
 
         if (hmh < 0)
