@@ -231,8 +231,8 @@ void main()
         retrace();
         drawScreen(x, y, dist, rotate & 0x00FF, 0xA000);
     
-        rotate += dir;
         y += 128;
+        rotate += dir;
         dist += inc;
 
         if (dist == 2000 || dist == 2) inc = -inc;

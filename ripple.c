@@ -25,7 +25,7 @@
 
 uint8_t img[64000] = {0};
 uint8_t vbuff[64000] = {0};
-uint8_t sqrtab[64000] = {0};
+uint8_t sqrtab[32321] = {0};
 
 uint16_t angle = 0;
 uint8_t pal[768] = {0};
@@ -117,11 +117,11 @@ void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
 void preCalc()
 {
     int16_t x, y;
-    for (x = 0; x < 160; x++)
+    for (y = 0; y < 100; y++)
     {
-        for (y = 0; y < 100; y++)
+        for (x = 0; x < 160; x++)        
         {
-            sqrtab[(y * 161 + x) << 1] = sqrt(x * x + y * y);       
+            sqrtab[(y * 160 + x) << 1] = sqrt(x * x + y * y);       
         }
     }
 }
@@ -151,11 +151,15 @@ uint8_t getPixel(uint16_t x, uint16_t y, uint8_t *where)
     }
 }
 
-void putPixel(uint16_t ofs, uint8_t col, uint8_t *where)
+void putPixel(uint16_t x, uint16_t y, uint8_t col, uint8_t *where)
 {
     __asm {
         les     di, where
-        add     di, ofs
+        mov     bx, y
+        shl     bx, 6
+        add     bh, byte ptr y
+        add     bx, x
+        add     di, bx
         mov     al, col
         stosb
     }
@@ -165,7 +169,6 @@ void drawRipples()
 {
     int16_t x, y;
     int16_t dist, alt, xx, yy;
-    uint16_t offs = 0;
 
     for (y = 0; y < 200; y++)
     {
@@ -174,7 +177,7 @@ void drawRipples()
             xx = abs(x - 160);
             yy = abs(y - 100);
 
-            dist = sqrtab[(yy * 161 + xx) << 1];
+            dist = sqrtab[(yy * 160 + xx) << 1];
             alt = wave[dist];
 
             xx = x + alt;
@@ -183,7 +186,7 @@ void drawRipples()
             if (yy > 199) yy -= 200;
             if (yy < 0) yy += 200;
 
-            putPixel(offs++, getPixel(xx, yy, img), vbuff);
+            putPixel(x, y, getPixel(xx, yy, img), vbuff);
         }
     }
 }
