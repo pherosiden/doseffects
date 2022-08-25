@@ -57,26 +57,29 @@ void clearScreen()
 
 void printStr(int16_t x, int16_t y, uint8_t col, char *msg)
 {
-    int16_t len = strlen(msg);
+    uint16_t len = strlen(msg);
 
     __asm {
-        mov    ax, 0xB800
-        mov    es, ax
-        xor    di, di
-        lds    si, msg
-        add    di, x
-        shl    di, 1
-        mov    ax, y
-        shl    ax, 5
-        add    di, ax
-        shl    ax, 2
-        add    di, ax
-        mov    ah, col
-        mov    cx, len
+        mov     cx, len
+        test    cx, cx
+        jz      quit
+        mov     ax, 0xB800
+        mov     es, ax
+        xor     di, di
+        lds     si, msg
+        add     di, x
+        shl     di, 1
+        mov     ax, y
+        shl     ax, 5
+        add     di, ax
+        shl     ax, 2
+        add     di, ax
+        mov     ah, col
     next:
         lodsb
         stosw
-        loop   next
+        loop    next
+    quit:
     }
 }
 
@@ -112,15 +115,15 @@ void generateWav()
 void putPixel(uint16_t x, uint16_t y, uint8_t c)
 {
     __asm {
-        mov    ax, 0xA000
-        mov    es, ax
-        xor    di, di
-        mov    bx, y
-        shl    bx, 6
-        add    bh, byte ptr y
-        add    bx, x
-        add    di, bx
-        mov    al, c
+        mov     ax, 0xA000
+        mov     es, ax
+        xor     di, di
+        mov     bx, y
+        shl     bx, 6
+        add     bh, byte ptr y
+        add     bx, x
+        add     di, bx
+        mov     al, c
         stosb
     }
 }

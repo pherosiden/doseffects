@@ -75,10 +75,10 @@ void waitRetrace()
 void flipScreen(uint8_t *src, uint8_t *dst)
 {
     __asm {
-        lds    si, src
-        les    di, dst
-        mov    cx, 16000
-        rep    movsd
+        lds     si, src
+        les     di, dst
+        mov     cx, 16000
+        rep     movsd
     }
 }
 

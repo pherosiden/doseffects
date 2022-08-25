@@ -2,12 +2,13 @@
 /* Packet  : Demo & Effect                            */ 
 /* Effect  : Fire                                     */
 /* Author  : Nguyen Ngoc Van                          */
-/* Memory  : Small                                    */ 
+/* Memory  : Tiny/Small                               */ 
 /* Address : pherosiden@gmail.com                     */ 
 /* Website : http://www.codedemo.net                  */
 /* Created : 20/01/1998                               */
 /* Please sent to me any bugs or suggests.            */ 
 /* You can use freely this code. Have fun :)          */
+/* Generate .com file: wcl -3 -zq -mt -ox flame.c     */
 /*----------------------------------------------------*/
 
 #include <dos.h>
