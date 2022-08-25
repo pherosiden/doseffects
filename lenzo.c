@@ -207,16 +207,14 @@ void printGlass(int16_t x, int16_t y)
         sub     di, 20544
         mov     ax, 0xA000
         mov     es, ax
-        mov     ax, seg matrix
-        mov     ds, ax
-        mov     si, offset matrix
+        xor     si, si
         mov     ax, seg vbuff
         mov     fs, ax
         mov     ah, 64
     lp1:
         mov     cx, 64
     lp2:
-        mov     bx, [si]
+        mov     bx, matrix[si]
         add     bx, dx
         mov     al, fs:[di]
         mov     es:[bx], al

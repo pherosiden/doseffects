@@ -136,10 +136,10 @@ void drawWallFloor(uint16_t vofs, uint16_t dark)
         shl     bx, 7
         mov     si, dx
         add     si, bx
-        mov     al, [walls + si]
+        mov     al, walls[si]
         mov     si, ax
         add     si, dark
-        mov     al, [shade + si]
+        mov     al, shade[si]
         mov     es:[di], al
         add     di, WIDTH
         pop     ebx
@@ -196,18 +196,18 @@ void drawWallFloor(uint16_t vofs, uint16_t dark)
         shl     cx, 8
         push    si
         xor     ax, ax
-        mov     al, [floors + si]
+        mov     al, floors[si]
         mov     si, ax
         add     si, cx
-        mov     al, [shade + si]
+        mov     al, shade[si]
         mov     es:[di], al
         add     di, WIDTH
         rol     edi, 16
         pop     si
-        mov     al, [ceils + si]
+        mov     al, ceils[si]
         mov     si, ax
         add     si, cx
-        mov     al, [shade + si]
+        mov     al, shade[si]
         mov     es:[di], al
         sub     di, WIDTH
         ror     edi, 16

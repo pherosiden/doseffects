@@ -200,21 +200,21 @@ void main()
         int     0x10
     }
 
-    while (getch() != 27)
-    {
+    do {
         clearMaze();
         memset(vmem, 0, 64000);
         generateMaze(X2 >> 1, Y2 >> 1, 2, 16);
         writeBorder();
         drawMaze();
-    }
+    } while (getch() != 27);
 
     __asm {
         mov     ax, 0x03
         int     0x10
     }
 
-    printf("\n- Do you wish to write the maze to the MAZE.DAT file (Y/N)? ");
+    printf("\033[2J\033[1;1H");
+    printf("- Write the maze to MAZE.DAT (Y/N)? ");
     key = getch();
 
     if (key == 'Y' || key == 'y')
@@ -226,7 +226,7 @@ void main()
             fclose(fptr);
         }
 
-        printf("\nWritting complete. Any key to exit ...");
+        printf("\nDone! Any key to exit ...");
         getch();
-    }
+    }    
 }

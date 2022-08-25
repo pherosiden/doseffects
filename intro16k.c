@@ -956,7 +956,7 @@ void makeTexture()
         shl     bl, 1
         shr     bx, 1
         and     bx, 3FFFh
-        mov     al, [texture + bx]
+        mov     al, texture[bx]
         shl     al, 1
         stosb
         loop    lp2
@@ -1495,7 +1495,7 @@ void makePlasma(int16_t j, int16_t v, int16_t u)
         push    si
     lp2:
         and     si, 0xFF
-        mov     al, [sinTab + si]
+        mov     al, sinTab[si]
         add     al, 80
         shr     al, 3
         add     si, v
