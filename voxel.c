@@ -100,7 +100,7 @@ void ray(uint16_t a, uint16_t dx, uint16_t dy, uint16_t sx)
 {
     int32_t h;
     uint16_t miny, y;
-    uint16_t delx, dely, p, dt;
+    uint16_t delx, dely, dt;
 
     delx = costab[a];
     dely = sintab[a];
