@@ -77,13 +77,14 @@ void main()
     fread(MK_FP(0xA000, 0), 1, 64000, fp);
     fclose(fp);
 
-    do {
+    while (!kbhit())
+    {
         memcpy(tmp[0], pal[16], sizeof(tmp));
         for (i = 1; i < 16; i++) memcpy(pal[(i - 1) << 4], pal[i << 4], sizeof(tmp));
         memcpy(pal[240], tmp[0], sizeof(tmp));
         waitRetrace();
         setPalette();
-    } while (!kbhit());
+    }
 
     __asm {
         mov     ax, 0x03

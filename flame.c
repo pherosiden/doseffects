@@ -2,7 +2,7 @@
 /* Packet  : Demo & Effect                            */ 
 /* Effect  : Fire                                     */
 /* Author  : Nguyen Ngoc Van                          */
-/* Memory  : Tiny/Small                               */ 
+/* Memory  : Tiny                                     */ 
 /* Address : pherosiden@gmail.com                     */ 
 /* Website : http://www.codedemo.net                  */
 /* Created : 20/01/1998                               */

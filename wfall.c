@@ -2,7 +2,7 @@
 /* Packet  : Demo & Effect                              */
 /* Effect  : Water Fall                                 */
 /* Author  : Nguyen Ngoc Van                            */
-/* Memory  : Tiny/Small/Compact                         */
+/* Memory  : Tiny                                       */
 /* Address : pherosiden@gmail.com                       */
 /* Website : http://www.codedemo.net                    */
 /* Created : 23/04/1998                                 */

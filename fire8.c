@@ -2,12 +2,13 @@
 /* Packet  : Demo & Effect                           */
 /* Effect  : Fire                                    */
 /* Author  : Nguyen Ngoc Van                         */
-/* Memory  : Small                                   */ 
+/* Memory  : Tiny                                    */ 
 /* Address : pherosiden@gmail.com                    */
 /* Website : http://www.codedemo.net                 */
 /* Created : 02/02/1998                              */
 /* Please sent to me any bugs or suggests.           */
 /* You can use freely this code. Have fun :)         */
+/* Generate .com file: buildcom.bat fire8.c          */
 /*---------------------------------------------------*/
 
 #include <dos.h>
@@ -18,7 +19,6 @@
 
 uint8_t pal[256][3] = {0};
 uint8_t dbuff[320][80] = {0};
-uint8_t *tmem = (uint8_t*)0xA0000000L;
 
 int16_t random(int16_t x)
 {
@@ -29,7 +29,8 @@ int16_t random(int16_t x)
 void putPixel(int16_t x, int16_t y, uint8_t col)
 {
     __asm {
-        les     di, tmem
+        mov     ax, 0xA000
+        mov     es, ax
         mov     bx, y
         shl     bx, 6
         add     bh, byte ptr y
