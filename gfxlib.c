@@ -14473,13 +14473,8 @@ void rotateLine(uint32_t *dst, uint32_t *src, int32_t *tables, int32_t width, in
         mov     edi, dst
         mov     ebx, tables
     next:
-        mov     eax, ecx
-        shl     eax, 3
-        mov     edx, eax
-        add     eax, 8
-        add     edx, 12
-        mov     eax, [ebx + eax]
-        mov     edx, [ebx + edx]
+        mov     eax, [ebx + ecx * 8 + 8]
+        mov     edx, [ebx + ecx * 8 + 12]
         add     eax, cosy
         sub     edx, siny
         sar     eax, 1
@@ -14494,8 +14489,8 @@ void rotateLine(uint32_t *dst, uint32_t *src, int32_t *tables, int32_t width, in
         add     eax, pos
         mov     eax, [ebx + eax]
         shl     edx, 2
-        add     edx, eax
-        mov     eax, [esi + edx]
+        add     eax, edx
+        mov     eax, [esi + eax]
         mov     [edi], eax
     skip:
         add     edi, 4
