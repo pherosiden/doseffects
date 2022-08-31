@@ -2,12 +2,13 @@
 /* Packet  : Demo & Effect                           */
 /* Effect  : Fire                                    */
 /* Author  : Nguyen Ngoc Van                         */ 
-/* Memory  : Small                                   */
+/* Memory  : Tiny                                    */
 /* Address : pherosiden@gmail.com                    */
 /* Website : http://www.codedemo.net                 */
 /* Created : 27/01/1998                              */
 /* Please sent to me any bugs or suggests.           */
 /* You can use freely this code. Have fun :)         */
+/* Generate .com file: buildcom.bat fire4.c          */
 /*---------------------------------------------------*/
 #include <dos.h>
 #include <time.h>
@@ -17,7 +18,6 @@
 
 uint8_t delta = 0;
 int16_t vbuff[102][160] = {0};
-uint16_t *vmem = (uint16_t *)0xA0000000L;
 
 void setRGB(uint8_t c, uint8_t r, uint8_t g, uint8_t b)
 {
@@ -70,7 +70,9 @@ void interpolation()
 void purgeBuf()
 {
     __asm {
-        les     di, vmem
+        mov     ax, 0xA000
+        mov     es, ax
+        xor     di, di
         lea     si, vbuff
         mov     dx, 100
     l3:

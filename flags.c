@@ -23,7 +23,6 @@
 #define M_PI 3.141592f
 
 int16_t sintab[256] = {0};
-
 uint8_t vbuff[64000] = {0};
 uint8_t *vmem = (uint8_t*)0xA0000000L;
 uint8_t *tmem = (uint8_t*)0xB8000000L;

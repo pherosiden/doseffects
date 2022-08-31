@@ -161,7 +161,6 @@ void fireBlur()
         stosb
         loop    lp1
     }
-
 }
 
 inline int16_t sat(int16_t b, int16_t min, int16_t max)

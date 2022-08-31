@@ -162,7 +162,7 @@ void main()
     clearTextMem();
     putMsg(1, 1, 0x0F, "Fire Burning - (c) 1998 by Nguyen Ngoc Van");
     putMsg(1, 2, 0x07, "Control Keys");
-    putMsg(1, 3, 0x07, "Space Bar : Thow in a match");
+    putMsg(1, 3, 0x07, "Space Bar : Throw-in a match");
     putMsg(1, 4, 0x07, "W         : Water effect");
     putMsg(1, 5, 0x07, "+/-       : Increase/Decrease intensity");
     putMsg(1, 6, 0x07, "ESC       : Exit demo");
@@ -180,8 +180,7 @@ void main()
 
     for (i = 0; i <= 199; i++) for (j = 0; j < 10; j++) putPixel(j, i, i);
 
-    do
-    {
+    do {
         if (kbhit()) key = getch();
         else key = 32;
 

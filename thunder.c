@@ -19,7 +19,6 @@
 
 uint8_t dst[256][3] = {0};
 uint8_t src[256][3] = {0};
-
 uint8_t *vmem = (uint8_t*)0xA0000000L;
 uint8_t *tmem = (uint8_t*)0xB8000000L;
 
@@ -244,6 +243,9 @@ void main()
         mov     ax, 0x13
         int     0x10
     }
+
+    memset(src, 0, 768);
+    memset(dst, 0, 768);
 
     for (i = 0; i < 64; i++)
     {

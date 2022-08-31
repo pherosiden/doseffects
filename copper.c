@@ -2,7 +2,7 @@
 /* Packet  : Demo & Effect                            */
 /* Effect  : Copper3                                  */
 /* Author  : Nguyen Ngoc Van                          */
-/* Memory  : Compact                                  */
+/* Memory  : Tiny                                     */
 /* Heaps   : 640K                                     */
 /* Address : pherosiden@gmail.com                     */
 /* Website : http://www.codedemo.net                  */

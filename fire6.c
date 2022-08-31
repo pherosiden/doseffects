@@ -2,12 +2,13 @@
 /* Packet  : Demo & Effect                           */
 /* Effect  : fire                                    */
 /* Author  : Nguyen Ngoc Van                         */
-/* Memory  : Small                                   */
+/* Memory  : Tiny                                    */
 /* Address : pherosiden@gmail.com                    */
 /* Website : http://www.codedemo.net                 */
 /* Created : 30/01/1998                              */
 /* Please sent to me any bugs or suggests.           */
 /* You can use freely this code. Have fun :)         */
+/* Generate .com file: buildcom.bat fire6.c          */
 /*---------------------------------------------------*/
 
 #include <dos.h>
@@ -17,7 +18,24 @@
 #include <conio.h>
 
 uint8_t flames[330][80] = {0};
-uint8_t *vmem = (uint8_t *)0xA0000000L;
+
+void putPixel(int16_t x, int16_t y, uint8_t col)
+{
+    __asm {
+        mov     ax, 0xA000
+        mov     es, ax
+        mov     bx, y
+        shl     bx, 6
+        add     bh, byte ptr y
+        add     bx, x
+        cmp     bx, 64000
+        jae     quit
+        mov     di, bx
+        mov     al, col
+        stosb
+    quit:
+    }
+}
 
 void setRGB(uint8_t c, uint8_t r, uint8_t g, uint8_t b)
 {
@@ -65,9 +83,7 @@ void retrace()
 
 void fire()
 {
-    int16_t x, y;
-    uint8_t col;
-    uint16_t ofs;
+    int16_t x, y, col;
 
     for (x = 1; x < 330 - 1; x++)
     {
@@ -77,12 +93,7 @@ void fire()
             if (y == 77) col = (rand() % 80) + 120;
             if (col > 0) col--;
             flames[x][y] = col;
-            if (x <= 319 && y <= 199)
-            {
-				ofs = ((y - 80) << 6) + ((y - 80) << 8) + x + 64;
-				if (ofs > 63999) ofs = 63999;
-				vmem[ofs] = col;
-            }
+            if (x < 320 && y < 200) putPixel(x + 64, y - 80, col);
         }
     }
 }
