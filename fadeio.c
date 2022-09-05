@@ -1,6 +1,6 @@
 /*---------------------------------------------------*/
 /* Packet  : Demo & Effect                           */
-/* Effect  : Fade (In/Out/Min/Max)                   */ 
+/* Effect  : Fade (In/Out/Min/Max)                   */
 /* Author  : Nguyen Ngoc Van                         */
 /* Memory  : Compact                                 */
 /* Heaps   : 640K                                    */

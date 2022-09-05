@@ -1,13 +1,13 @@
 /*----------------------------------------------------*/
-/* Packet  : Demo & Effect                            */ 
-/* Effect  : Land Mapping                             */ 
+/* Packet  : Demo & Effect                            */
+/* Effect  : Land Mapping                             */
 /* Author  : Nguyen Ngoc Van                          */
 /* Memory  : Compact                                  */
-/* Heaps   : 640K                                     */ 
+/* Heaps   : 640K                                     */
 /* Address : pherosiden@gmail.com                     */
 /* Website : http://www.codedemo.net                  */
-/* Created : 12/02/1998                               */  
-/* Please sent to me any bugs or suggests.            */ 
+/* Created : 12/02/1998                               */
+/* Please sent to me any bugs or suggests.            */
 /* You can use freely this code. Have fun :)          */
 /*----------------------------------------------------*/
 

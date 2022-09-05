@@ -1,5 +1,5 @@
 /*----------------------------------------------------*/
-/* Packet  : Demo & Effect                            */ 
+/* Packet  : Demo & Effect                            */
 /* Effect  : The Hole                                 */
 /* Author  : Nguyen Ngoc Van                          */
 /* Memory  : Compact                                  */
@@ -7,7 +7,7 @@
 /* Address : pherosiden@gmail.com                     */
 /* Website : http://www.codedemo.net                  */
 /* Created : 10/02/1998                               */
-/* Please sent to me any bugs or suggests.            */ 
+/* Please sent to me any bugs or suggests.            */
 /* You can use freely this code. Have fun :)          */
 /*----------------------------------------------------*/
 

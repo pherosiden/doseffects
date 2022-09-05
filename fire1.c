@@ -1,5 +1,5 @@
 /*---------------------------------------------------*/
-/* Packet  : Demo & Effect                           */ 
+/* Packet  : Demo & Effect                           */
 /* Effect  : Fire                                    */
 /* Author  : Nguyen Ngoc Van                         */
 /* Memory  : Small                                   */

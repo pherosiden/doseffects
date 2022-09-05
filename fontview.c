@@ -1,12 +1,12 @@
 /*----------------------------------------------------*/
-/* Packet  : Demo & Effect                            */ 
+/* Packet  : Demo & Effect                            */
 /* Effect  : Fonts Viewer                             */
 /* Author  : Nguyen Ngoc Van                          */
-/* Memory  : Small                                    */ 
-/* Address : pherosiden@gmail.com                     */ 
+/* Memory  : Small                                    */
+/* Address : pherosiden@gmail.com                     */
 /* Website : http://www.codedemo.net                  */
 /* Created : 25/05/2000                               */
-/* Please sent to me any bugs or suggests.            */ 
+/* Please sent to me any bugs or suggests.            */
 /* You can use freely this code. Have fun :)          */
 /*----------------------------------------------------*/
 

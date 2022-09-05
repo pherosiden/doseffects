@@ -5,9 +5,9 @@
 /* Memory  : Small                                   */
 /* Address : pherosiden@gmail.com                    */
 /* Website : http://www.codedemo.net                 */
-/* Created : 17/11/2001                              */  
+/* Created : 17/11/2001                              */
 /* Please sent to me any bugs or suggests.           */
-/* You can use freely this code. Have fun :)         */ 
+/* You can use freely this code. Have fun :)         */
 /*---------------------------------------------------*/
 
 #include "gfxlib.c"

@@ -1,12 +1,12 @@
 /*----------------------------------------------------*/
 /* Packet  : Demo & Effect                            */
-/* Effect  : Texture Mapping                          */ 
+/* Effect  : Texture Mapping                          */
 /* Author  : Nguyen Ngoc Van                          */
 /* Memory  : Compact                                  */
 /* Heaps   : 640K                                     */
 /* Address : pherosiden@gmail.com                     */
 /* Website : http://www.codedemo.net                  */
-/* Created : 20/03/1998                               */ 
+/* Created : 20/03/1998                               */
 /* Please sent to me any bugs or suggests.            */
 /* You can use freely this code. Have fun :)          */
 /*----------------------------------------------------*/

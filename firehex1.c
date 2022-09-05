@@ -1,6 +1,6 @@
 /*----------------------------------------------------*/
 /* Packet  : Demo & Effect                            */
-/* Effect  : Motion Clear                             */ 
+/* Effect  : Motion Clear                             */
 /* Author  : Nguyen Ngoc Van                          */
 /* Memory  : Compact                                  */
 /* Heaps   : 640K                                     */

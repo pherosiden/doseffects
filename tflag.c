@@ -1,12 +1,12 @@
 /*----------------------------------------------------*/
 /* Packet  : Demo & Effect                            */
 /* Effect  : Flake                                    */
-/* Author  : Nguyen Ngoc Van                          */ 
+/* Author  : Nguyen Ngoc Van                          */
 /* Memory  : Compact                                  */
 /* Address : pherosiden@gmail.com                     */
-/* Website : http://www.codedemo.net                  */ 
+/* Website : http://www.codedemo.net                  */
 /* Created : 01/04/1998                               */
-/* Please sent to me any bugs or suggests.            */ 
+/* Please sent to me any bugs or suggests.            */
 /* You can use freely this code. Have fun :)          */
 /*----------------------------------------------------*/
 

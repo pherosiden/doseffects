@@ -1,6 +1,6 @@
 /*----------------------------------------------------*/
 /* Packet  : Demo & Effect                            */
-/* Effect  : The Lake                                 */ 
+/* Effect  : The Lake                                 */
 /* Author  : Nguyen Ngoc Van                          */
 /* Memory  : Compact                                  */
 /* Heaps   : 640K                                     */

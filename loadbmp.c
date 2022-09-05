@@ -1,13 +1,13 @@
 /*---------------------------------------------------*/
 /* Packet  : Demo & Effect                           */
-/* Title   : Loading BMP file (640x480x24b)          */  
+/* Title   : Loading BMP file (640x480x24b)          */
 /* Author  : Nguyen Ngoc Van                         */
-/* Memory  : Small                                   */  
+/* Memory  : Small                                   */
 /* Heaps   : 64K                                     */
 /* Address : siden@codedemo.net                      */
 /* Website : http://www.codedemo.net                 */
 /* Created : 28/04/1998                              */
-/* Please sent to me any bugs or suggests.           */  
+/* Please sent to me any bugs or suggests.           */
 /* You can use freely this code. Have fun :)         */
 /*---------------------------------------------------*/
 #include "svga.c"

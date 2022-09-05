@@ -2,11 +2,11 @@
 /* Packet  : Demo & Effect                            */
 /* Effect  : Pixel Morphing                           */
 /* Author  : Nguyen Ngoc Van                          */
-/* Memory  : Compact                                  */ 
+/* Memory  : Compact                                  */
 /* Heaps   : 640K                                     */
 /* Address : pherosiden@gmail.com                     */
 /* Website : http://www.codedemo.net                  */
-/* Created : 13/02/1998                               */  
+/* Created : 13/02/1998                               */
 /* Please sent to me any bugs or suggests.            */
 /* You can use freely this code. Have fun :)          */
 /*----------------------------------------------------*/

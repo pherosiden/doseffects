@@ -1,8 +1,8 @@
 /*----------------------------------------------------*/
 /* Packet  : Demo & Effect                            */
-/* Effect  : Text Scrolling                           */ 
-/* Author  : Nguyen Ngoc Van                          */ 
-/* Memory  : Compact                                  */ 
+/* Effect  : Text Scrolling                           */
+/* Author  : Nguyen Ngoc Van                          */
+/* Memory  : Compact                                  */
 /* Heaps   : 640K                                     */
 /* Address : pherosiden@gmail.com                     */
 /* Website : http://www.codedemo.net                  */

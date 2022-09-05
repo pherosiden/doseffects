@@ -4,7 +4,7 @@
 /* Author  : Nguyen Ngoc Van                      */
 /* Memory  : Compact                              */
 /* Heaps   : 640K                                 */
-/* Address : pherosiden@gmail.com                 */ 
+/* Address : pherosiden@gmail.com                 */
 /* Website : http://www.codedemo.net              */
 /* Created : 01/03/1998                           */
 /* Please sent to me any bugs or suggests.        */
@@ -197,8 +197,7 @@ void main()
         xp = random(j - 4) + 2;
         yp = random(k - 4) + 2;
 
-        do
-        {
+        do {
             xr = random(5) - 2;
             yr = random(5) - 2;
             v = random(5) - 2;

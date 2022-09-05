@@ -1,13 +1,13 @@
 /*----------------------------------------------------*/
-/* Packet  : Demo & Effect                            */   
+/* Packet  : Demo & Effect                            */
 /* Effect  : Wave 3D                                  */
-/* Author  : Nguyen Ngoc Van                          */ 
+/* Author  : Nguyen Ngoc Van                          */
 /* Memory  : Small                                    */
-/* Address : pherosiden@gmail.com                     */ 
+/* Address : pherosiden@gmail.com                     */
 /* Website : http://www.codedemo.net                  */
 /* Created : 21/04/1998                               */
-/* Please sent to me any bugs or suggests.            */ 
-/* You can use freely this code. Have fun :)          */ 
+/* Please sent to me any bugs or suggests.            */
+/* You can use freely this code. Have fun :)          */
 /*----------------------------------------------------*/
 
 #include <dos.h>

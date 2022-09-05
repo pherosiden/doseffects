@@ -1,8 +1,8 @@
 /*---------------------------------------------------*/
 /* Demo how to add an extra data into .exe file      */
-/* Packet  : Demo & Effect                           */ 
-/* Effect  : Fade (In/Out/Min/Max)                   */  
-/* Author  : Nguyen Ngoc Van                         */ 
+/* Packet  : Demo & Effect                           */
+/* Effect  : Fade (In/Out/Min/Max)                   */
+/* Author  : Nguyen Ngoc Van                         */
 /* Memory  : Compact                                 */
 /* Heaps   : 640K                                    */
 /* Address : siden@codedemo.net                      */
@@ -11,7 +11,7 @@
 /* Compile : wcl -zq -6 -ox -mc -fp6 fadeio2.c       */
 /*           copy /B fadeio2.exe+arnold.cel          */
 /* Please sent to me any bugs or suggests.           */
-/* You can use freely this code. Have fun :)         */ 
+/* You can use freely this code. Have fun :)         */
 /*---------------------------------------------------*/
 
 #include <stdio.h>

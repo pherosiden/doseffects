@@ -1,12 +1,12 @@
 /*---------------------------------------------------*/
 /* Packet  : Demo & Effect                           */
-/* Title   : Loading CEL file (640x480x256b)         */ 
+/* Title   : Loading CEL file (640x480x256b)         */
 /* Author  : Nguyen Ngoc Van                         */
 /* Memory  : Small                                   */
-/* Heaps   : 64K                                     */ 
-/* Address : siden@codedemo.net                      */ 
+/* Heaps   : 64K                                     */
+/* Address : siden@codedemo.net                      */
 /* Website : http://www.codedemo.net                 */
-/* Created : 28/04/1998                              */ 
+/* Created : 28/04/1998                              */
 /* Please sent to me any bugs or suggests.           */
 /* You can use freely this code. Have fun :)         */
 /*---------------------------------------------------*/

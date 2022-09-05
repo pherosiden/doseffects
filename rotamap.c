@@ -1,10 +1,10 @@
 /*----------------------------------------------------*/
 /* Packet  : Demo & Effect                            */
-/* Effect  : Rotate Bitmap                            */ 
+/* Effect  : Rotate Bitmap                            */
 /* Author  : Nguyen Ngoc Van                          */
 /* Memory  : Compact                                  */
-/* Heaps   : 640K                                     */ 
-/* Address : pherosiden@gmail.com                     */ 
+/* Heaps   : 640K                                     */
+/* Address : pherosiden@gmail.com                     */
 /* Website : http://www.codedemo.net                  */
 /* Created : 24/02/1998                               */
 /* Please sent to me any bugs or suggests.            */

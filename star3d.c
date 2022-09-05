@@ -1,11 +1,11 @@
 /*----------------------------------------------------*/
-/* Packet  : Demo & Effect                            */ 
+/* Packet  : Demo & Effect                            */
 /* Effect  : Star Field 3D                            */
 /* Author  : Nguyen Ngoc Van                          */
 /* Memory  : Small                                    */
 /* Address : pherosiden@gmail.com                     */
 /* Website : http://www.codedemo.net                  */
-/* Created : 12/03/1998                               */ 
+/* Created : 12/03/1998                               */
 /* Please sent to me any bugs or suggests.            */
 /* You can use freely this code. Have fun :)          */
 /*----------------------------------------------------*/

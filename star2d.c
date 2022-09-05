@@ -1,9 +1,9 @@
 /*----------------------------------------------------*/
 /* Packet  : Demo & Effect                            */
-/* Effect  : Star Field 2D                            */  
+/* Effect  : Star Field 2D                            */
 /* Author  : Nguyen Ngoc Van                          */
-/* Memory  : Small                                    */ 
-/* Address : pherosiden@gmail.com                     */  
+/* Memory  : Small                                    */
+/* Address : pherosiden@gmail.com                     */
 /* Website : http://www.codedemo.net                  */
 /* Created : 12/03/1998                               */
 /* Please sent to me any bugs or suggests.            */

@@ -1,6 +1,6 @@
 /*----------------------------------------------------*/
 /* Packet  : Demo & Effect                            */
-/* Effect  : Motion Blur                              */ 
+/* Effect  : Motion Blur                              */
 /* Author  : Nguyen Ngoc Van                          */
 /* memory  : Compact                                  */
 /* Heaps   : 640K                                     */
@@ -8,7 +8,7 @@
 /* Website : http://www.codedemo.net                  */
 /* Created : 15/02/1998                               */
 /* Please sent to me any bugs or suggests.            */
-/* You can use freely this code. Have fun :)          */ 
+/* You can use freely this code. Have fun :)          */
 /*----------------------------------------------------*/
 
 #include <dos.h>

@@ -1,11 +1,11 @@
 /*---------------------------------------------------*/
 /* Packet  : Demo & Effect                           */
 /* Effect  : Winter                                  */
-/* Author  : Nguyen Ngoc Van                         */  
-/* Memory  : Compact                                 */ 
+/* Author  : Nguyen Ngoc Van                         */
+/* Memory  : Compact                                 */
 /* Heaps   : 640K                                    */
-/* Address : pherosiden@gmail.com                    */ 
-/* Website : http://www.codedemo.net                 */ 
+/* Address : pherosiden@gmail.com                    */
+/* Website : http://www.codedemo.net                 */
 /* Created : 05/03/1998                              */
 /* Please sent to me any bugs or suggests.           */
 /* You can use freely this code. Have fun :)         */

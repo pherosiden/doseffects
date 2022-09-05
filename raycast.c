@@ -1,5 +1,5 @@
 /*-----------------------------------------------------*/
-/* Packet  : Demo & Effect                             */ 
+/* Packet  : Demo & Effect                             */
 /* Effect  : Ray-Casting                               */
 /* Author  : Nguyen Ngoc Van                           */
 /* Memory  : Compact                                   */

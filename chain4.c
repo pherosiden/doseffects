@@ -1,6 +1,6 @@
 /*---------------------------------------------------*/
 /* Packet  : Demo & Effect                           */
-/* Effect  : Chainel-4                               */  
+/* Effect  : Chain-4                                 */
 /* Author  : Nguyen Ngoc Van                         */
 /* Memory  : Compact                                 */
 /* Heaps   : 640K                                    */

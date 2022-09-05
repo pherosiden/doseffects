@@ -1,6 +1,6 @@
 /*---------------------------------------------------*/
 /* Packet  : Demo & Effect                           */
-/* Effect  : Fire                                    */ 
+/* Effect  : Fire                                    */
 /* Author  : Nguyen Ngoc Van                         */
 /* Memory  : Compact                                 */
 /* Heaps   : 640K                                    */

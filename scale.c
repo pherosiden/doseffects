@@ -1,10 +1,10 @@
 /*------------------------------------------------------------*/
 /* Packet  : Demo & Effect                                    */
-/* Effect  : Image Processing (Zoom In/Out/Scale/stretch)     */ 
+/* Effect  : Image Processing (Zoom In/Out/Scale/stretch)     */
 /* Author  : Nguyen Ngoc Van                                  */
-/* Memory  : Compact                                          */ 
+/* Memory  : Compact                                          */
 /* Heaps   : 640K                                             */
-/* Address : pherosiden@gmail.com                             */ 
+/* Address : pherosiden@gmail.com                             */
 /* Website : http://www.codedemo.net                          */
 /* Created : 12/01/1998                                       */
 /* Please sent to me any bugs or suggests.                    */

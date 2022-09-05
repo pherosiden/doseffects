@@ -3,12 +3,12 @@
 /* Effect  : Fire                                    */
 /* Author  : Nguyen Ngoc Van                         */
 /* Memory  : Compact                                 */
-/* Heaps   : 640K                                    */  
+/* Heaps   : 640K                                    */
 /* Address : pherosiden@gmail.com                    */
 /* Website : http://www.codedemo.net                 */
 /* Created : 15/01/1998                              */
 /* Please sent to me any bugs or suggests.           */
-/* You can use freely this code. Have fun :)         */ 
+/* You can use freely this code. Have fun :)         */
 /*---------------------------------------------------*/
 
 #include <dos.h>

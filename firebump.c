@@ -2,12 +2,12 @@
 /* Packet  : Demo & Effect                            */
 /* Effect  : Bump Mapping                             */
 /* Author  : Nguyen Ngoc Van                          */
-/* Memory  : Compact                                  */ 
+/* Memory  : Compact                                  */
 /* Heaps   : 640K                                     */
 /* Address : pherosiden@gmail.com                     */
-/* Website : http://www.codedemo.net                  */ 
-/* Created : 13/01/1998                               */ 
-/* Please sent to me any bugs or suggests.            */ 
+/* Website : http://www.codedemo.net                  */
+/* Created : 13/01/1998                               */
+/* Please sent to me any bugs or suggests.            */
 /* You can use freely this code. Have fun :)          */
 /*----------------------------------------------------*/
 

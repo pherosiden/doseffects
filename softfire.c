@@ -3,7 +3,7 @@
 /* Effect  : SoftFire                                 */
 /* Author  : Nguyen Ngoc Van                          */
 /* Memory  : Compact                                  */
-/* Heaps   : 640K                                     */ 
+/* Heaps   : 640K                                     */
 /* Address : pherosiden@gmail.com                     */
 /* Website : http://www.codedemo.net                  */
 /* Created : 28/04/1998                               */

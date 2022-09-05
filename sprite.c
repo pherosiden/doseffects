@@ -1,10 +1,10 @@
 /*----------------------------------------------------*/
 /* Packet  : Demo & Effect                            */
 /* Effect  : Sprite                                   */
-/* Author  : Nguyen Ngoc Van                          */ 
+/* Author  : Nguyen Ngoc Van                          */
 /* Memory  : Compact                                  */
 /* Heaps   : 640K                                     */
-/* Address : pherosiden@gmail.com                     */ 
+/* Address : pherosiden@gmail.com                     */
 /* Website : http://www.codedemo.net                  */
 /* Created : 05/03/1998                               */
 /* Please sent to me any bugs or suggests.            */

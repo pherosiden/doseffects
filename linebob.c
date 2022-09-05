@@ -1,7 +1,7 @@
 /*----------------------------------------------------*/
 /* Packet  : Demo & Effect                            */
 /* Effect  : Line Bobbing                             */
-/* Author  : Nguyen Ngoc Van                          */ 
+/* Author  : Nguyen Ngoc Van                          */
 /* Memory  : Compact                                  */
 /* Heaps   : 640K                                     */
 /* Address : pherosiden@gmail.com                     */

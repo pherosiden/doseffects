@@ -1,7 +1,7 @@
 /*---------------------------------------------------*/
 /* Packet  : Demo & Effect                           */
 /* Effect  : Scroll Text                             */
-/* Author  : Nguyen Ngoc Van                         */ 
+/* Author  : Nguyen Ngoc Van                         */
 /* Memory  : Compact                                 */
 /* Heaps   : 640K                                    */
 /* Address : siden@codedemo.net                      */

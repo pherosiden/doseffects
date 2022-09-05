@@ -1,12 +1,12 @@
 /*---------------------------------------------------*/
-/* Packet  : Demo & Effect                           */ 
+/* Packet  : Demo & Effect                           */
 /* Effect  : Cross Fade                              */
 /* Author  : Nguyen Ngoc Van                         */
 /* Memory  : Compact                                 */
 /* Heaps   : 640K                                    */
 /* Address : siden@codedemo.net                      */
 /* Website : http://www.codedemo.net                 */
-/* Created : 16/01/1998                              */ 
+/* Created : 16/01/1998                              */
 /* Please sent to me any bugs or suggests.           */
 /* You can use freely this code. Have fun :)         */
 /*---------------------------------------------------*/

@@ -18,6 +18,7 @@ int16_t dx1, dy1, dx2, dy2;
 int16_t currLine, incCount;
 uint8_t currColors = 0;
 uint8_t changeColors = 1;
+uint16_t oldTime = 0;
 
 int16_t random(int16_t x)
 {
@@ -120,12 +121,6 @@ void eraseCurrentLine()
     drawLine(xmax - lineNode[currLine].lx1, ymax - lineNode[currLine].ly1, xmax - lineNode[currLine].lx2, ymax - lineNode[currLine].ly2, 0);
 }
 
-void retrace()
-{
-    while (inp(0x03DA) & 8);
-    while (!(inp(0x03DA) & 8));
-}
-
 void doArt()
 {
     srand(time(NULL));
@@ -147,9 +142,9 @@ void doArt()
             gy2 = (gy1 + gy2) >> 1;
         }
 
-        retrace();
         drawCurrentLine();
         updateLine();
+        delay(1);
     }
 }
 

@@ -7,7 +7,7 @@
 /* Address : pherosiden@gmail.com                     */
 /* Website : http://www.codedemo.net                  */
 /* Created : 10/03/1998                               */
-/* Please sent to me any bugs or suggests.            */ 
+/* Please sent to me any bugs or suggests.            */
 /* You can use freely this code. Have fun :)          */
 /*----------------------------------------------------*/
 #include <dos.h>

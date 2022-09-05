@@ -2,11 +2,11 @@
 /* Packet  : Demo & Effect                            */
 /* Effect  : Fire                                     */
 /* Author  : Nguyen Ngoc Van                          */
-/* Memory  : Small                                    */ 
+/* Memory  : Small                                    */
 /* Address : pherosiden@gmail.com                     */
 /* Website : http://www.codedemo.net                  */
 /* Created : 02/02/1998                               */
-/* Please sent to me any bugs or suggests.            */ 
+/* Please sent to me any bugs or suggests.            */
 /* You can use freely this code. Have fun :)          */
 /*----------------------------------------------------*/
 
