@@ -1,6 +1,6 @@
 /*----------------------------------------------------*/
 /* Packet  : Demo & Effect                            */
-/* Effect  : bump mapping                             */
+/* Effect  : Bump Mapping                             */
 /* Author  : Nguyen Ngoc Van                          */
 /* Memory  : Compact                                  */
 /* Heaps   : 640K                                     */
@@ -229,7 +229,7 @@ void main()
     FILE *fp;
 
     clearTextMem();
-    printStr(1, 1, 0x0F, "bump Mapping - (c) 1998 by Nguyen Ngoc Van");
+    printStr(1, 1, 0x0F, "Bump Mapping - (c) 1998 by Nguyen Ngoc Van");
     printStr(1, 2, 0x07, "Move the mouse      : flash effect");
     printStr(1, 3, 0x07, "Any key/Left button : goodbye!!!");
     printStr(1, 4, 0x07, "Press any key to start demo");
