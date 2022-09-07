@@ -148,12 +148,7 @@ void pierra()
         for (j = 90 + roundf(y); j <= 110 + roundf(y); j++) putPixel(i, j, 255);
     }
 
-    blur();
-    blur();
-    blur();
-    blur();
-    blur();
-    blur();
+    for (i = 0; i < 8; i++) blur();
 }
 
 void main()
@@ -166,8 +161,8 @@ void main()
     }
 
     srand(time(NULL));
-    memset(randomize, 0, 19200);
-    memset(sinus, 0, 1000);
+    //memset(randomize, 0, 19200);
+    //memset(sinus, 0, 1000);
 
     for (i = 0; i < 1000; i++) sinus[i] = sin(i * 0.00628318530718);
 
