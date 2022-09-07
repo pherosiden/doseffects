@@ -18,11 +18,11 @@
 		</data>
 		<key>Resources/dosbox-x.reference.conf</key>
 		<data>
-		XAlRc/1/bop/8YJ8xM7NxxD3TWo=
+		gsQI2Q2gJ7CmIPS5nsGEgFCR89c=
 		</data>
 		<key>Resources/dosbox-x.reference.full.conf</key>
 		<data>
-		Q/xQtDNuTJDqE7HvTYwFZk+83BY=
+		Pxumvs9Ji1m6w2kyCelaOelV6rs=
 		</data>
 		<key>Resources/drivez/readme.txt</key>
 		<data>
@@ -192,41 +192,45 @@
 		<data>
 		OsK8L2q6jS/9unRZ02geXSUC1aI=
 		</data>
+		<key>Resources/languages/de_DE.lng</key>
+		<data>
+		kFcjb51yAifXfAZHCGbXSRVk1ko=
+		</data>
 		<key>Resources/languages/en_US.lng</key>
 		<data>
-		aw9FjrCfFTnp29q6roe6YBw0NOc=
+		IFManfr0VrpErhmjRze1AwBiN+E=
 		</data>
 		<key>Resources/languages/es_ES.lng</key>
 		<data>
-		Va8VFzF5sVjdghHwtyb3O7/I2fU=
+		iqaajtQh4+oSvvxsE8MtAEBXAaE=
 		</data>
 		<key>Resources/languages/fr_FR.lng</key>
 		<data>
-		O8LKcELjfephAYO0/lS08RLrozc=
+		KfoT09x6n2n3jFGiYtm35Ecj9ZI=
 		</data>
 		<key>Resources/languages/ja_JP.lng</key>
 		<data>
-		YVoaGjKqrRpreeVLv2VO0tBJxTw=
+		hnbkZlRW1Y9OqG33GWDlblKvVFc=
 		</data>
 		<key>Resources/languages/ko_KR.lng</key>
 		<data>
-		Rlz6rTsTxpBq1hZ77AgfZRdeKg0=
+		jVeXHU2MNmXlm3w56FHfTCXz35U=
 		</data>
 		<key>Resources/languages/pt_BR.lng</key>
 		<data>
-		QD0gLWyDWd/T6LXv1BSzkQEWeeE=
+		N3tAnrCI4zUsfRgrT0ai2ZKdWfc=
 		</data>
 		<key>Resources/languages/tr_TR.lng</key>
 		<data>
-		/3xWrNAxkUSQfFgdhQnXSbFhsbA=
+		RNa2VyMMtdp5vX+FXfRs32QiuBQ=
 		</data>
 		<key>Resources/languages/zh_CN.lng</key>
 		<data>
-		G1u0BXI1B66koshGfOcckaX8TGw=
+		KwkNCzeBHAm14cQ4lJQ4Man2B+4=
 		</data>
 		<key>Resources/languages/zh_TW.lng</key>
 		<data>
-		Bcd6HQlkHmnSkabU6DnUSEzHEy4=
+		uwxWR197AiMNGRc3Pz/GFnPcpZs=
 		</data>
 		<key>Resources/wqy_11pt.bdf</key>
 		<data>
@@ -750,14 +754,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			Pi7VFUCkd5HlUThFGAgvReHT5wAHY0yxEa5btKK7q40=
+			HUuVWo+lRMiz0etUGwkNcNUCmp0yLBiQkKzv9q2kTEU=
 			</data>
 		</dict>
 		<key>Resources/dosbox-x.reference.full.conf</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			8kCXRP2RVn/93fCOY49fN1nBMKOEhoaNswSNYTjscMM=
+			HGlyRcY/svLfvAlkpO3nwqIP8cDrNbwk7yRzUEkFjK0=
 			</data>
 		</dict>
 		<key>Resources/drivez/readme.txt</key>
@@ -1054,67 +1058,74 @@
 			AI/J96AV8IBn6m4hEAybPaYfI5Mj9zO868r3dRLkYtY=
 			</data>
 		</dict>
+		<key>Resources/languages/de_DE.lng</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			2geOTq+wIhfjkkqfaspW9k1FecUl9WRHyBWEySFSEho=
+			</data>
+		</dict>
 		<key>Resources/languages/en_US.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			6PyuojI14LD/ALzqK2TraA7VrvtCgYFrvOG6/TIM0ps=
+			PtsBnSGIy5vmSV7JJt71T/cOuIDCIwj7PJfnCTmvoOs=
 			</data>
 		</dict>
 		<key>Resources/languages/es_ES.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			q3yXPbjMATZG4n3W5rz3P+JshqPj6t9xW/2gFYbjj+s=
+			7IUAEq+pl94hErXiZtv/gEtdxcbmcfOAq4VFSjzxo8c=
 			</data>
 		</dict>
 		<key>Resources/languages/fr_FR.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			ItTV/d/zkwcY0vAqUUQJvbJyTLozabsB8TbQ9+8qbSA=
+			owg9uCtV+RCw19gL0WMawSuCAmJuGWdqvszKoy+ik+A=
 			</data>
 		</dict>
 		<key>Resources/languages/ja_JP.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			nIWPEsCC9N7qoc5Q9/QxkMkZZbB/Mio6q3Yncp4VwQ8=
+			Y5BalyVsCiHAIDU183siIropwN3rE3Kye7V2wXqUfZE=
 			</data>
 		</dict>
 		<key>Resources/languages/ko_KR.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			yByX6gwOtn6ttDfwwpTS/3rMnhI9RPCiN1UGvD6BlU4=
+			Vksj2ycNKNvzE7+mrF3UQAwBaNRgj1o0zL1G514U/L0=
 			</data>
 		</dict>
 		<key>Resources/languages/pt_BR.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			BJlj1xd2aoULhKTqj+yx1H8TxB/HG+LJdrjC3zFPQi4=
+			nD3B5PcNHxdSsbf5jzn3boeTYRxWg/9bzSvuSqLi1N0=
 			</data>
 		</dict>
 		<key>Resources/languages/tr_TR.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			u3Pqxmjv3P1sJdP6+fmwECPlTHcCRX+F0mllBSLkrvo=
+			JbNdpJzVt7NSN/ruFE9rpF80KNq8ymK5KHc1xtDvlFo=
 			</data>
 		</dict>
 		<key>Resources/languages/zh_CN.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			kcxCbclreDRCL/cr+4t6J7pjBLOBmD8ZeGpI6qM3ceQ=
+			aqyka+qKOMxpy6BHjJ9w4DMvB9NlV76DC+LMKGIL2dg=
 			</data>
 		</dict>
 		<key>Resources/languages/zh_TW.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			8aQBTP7DCvTAZOQE3nxdaR/MdgDvbn6s/OKCz/oBIP0=
+			7aTmOHuXXevfPLQSkgQ6snW4ZUkKfTlAfHwvwsusB3s=
 			</data>
 		</dict>
 		<key>Resources/wqy_11pt.bdf</key>
