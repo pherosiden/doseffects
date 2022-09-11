@@ -1,7 +1,7 @@
 /*--------------------------------------------------------------*/
 /*        UNIVERSITY OF TECHNOLOGY HO CHI MINH CITY             */
 /*             MAJOR OF INFORMATIC TECHNOLOGY                   */
-/*              THE PROGRAM INSTALLION TOPICS                   */
+/*            THE PROGRAM INSTALLATION TOPICS                   */
 /*             Author : NGUYEN NGOC VAN                         */
 /*              Class : 00DTH1                                  */
 /*       Student Code : 00DTH201                                */
@@ -31,7 +31,6 @@
 /* out_text_width; background        ; start_graphics         ; */
 /* detect_SVGA256; update_register   ; update_program         . */
 /*--------------------------------------------------------------*/
-#include <dir.h>
 #include <dos.h>
 #include <io.h>
 #include <ctype.h>
@@ -41,13 +40,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <graph.h>
+#include <stdint.h>
+#include <direct.h>
+#include <sys/types.h>
 
-#define VIDEO_ADDR	0xB800
-#define MASK_BG		0x08
-#define OFFSET(x,y)	( (x -1)*2 + 160*(y-1) )
-#ifndef MK_FP
-#define MK_FP(seg,ofs) ((void far*)((unsigned long)(seg) << 16 | (ofs)))
-#endif
+#define MASK_BG         0x08
+#define OFFSET(x, y)    (((x - 1) + (y - 1) * 80) << 1)
 
 #define UP		72
 #define DOWN	80
@@ -74,98 +73,80 @@
 #define RESET_FLAG 0x0072L
 #define RESET_ADR	 ((DOS_SEG << 16) | RESET_FLAG)
 
-struct text_info txtInfo;        // Current text window information
-typedef unsigned char byte;      // Data type byte
-typedef unsigned int word;       // Data type word
-typedef byte bool;               // Data type boolean
-char far *fpVRM =                // The far pointer to video memory
-(char far *)MK_FP(VIDEO_ADDR,0); // Space memory monitor
-char near *ptrSource;             // The pointer sources
-char Drive[4];                   // Symbol Drive
-byte numFiles = 0;               // Number files to read and files to write
-byte bmAvalid = 0;               // Status of the mouse
-word buffSize;                   // The szBuffer storing data
-struct tagRegs {                 // The struction storing the information
-	byte day;                     // The date of the program
-	byte month;                   // The month of the program
-	byte regs;                    // The register code
-	byte num;                     // The number of run program
-	char serial[20];              // Product code
-	char user[31];                // Register name user
-	char disk[4];                 // The disk letter
-};
+typedef struct {                 // The struction storing the information
+    uint8_t day;                     // The date of the program
+    uint8_t month;                   // The month of the program
+    uint8_t regs;                    // The register code
+    uint8_t num;                     // The number of run program
+    char serial[20];              // Product code
+    char user[31];                // Register name user
+    char disk[4];                 // The disk letter
+} REG_INFO;
 
-static char **SysInf, **SysMen;
-static char *msgWarn[1], *msgExit[1], *msgCmp[1], *msgError[2];
-word wnInfo, wnMenu;
-char key = 0, szBuff[512];
-byte msgSlc = 0, chs = 0, slc = 0, bCol = 0, bRow = 0;
+char *ptrSource;             // The pointer sources
+char szDrive[4];                   // Symbol szDrive
+uint8_t numFiles = 0;               // Number files to read and files to write
+uint8_t bmAvalid = 0;               // Status of the mouse
+uint16_t buffSize;                   // The szBuffer storing data
 
-/*-------------------------------------------------*/
-/* Function : GetTextAttr                          */
-/* Mission  : Save current attrib of the text mode */
-/* Expects  : Nothing                              */
-/* Returns  : Current color of the text mode       */
-/*-------------------------------------------------*/
-word GetTextAttr()
-{
-	gettextinfo(&txtInfo); return txtInfo.attribute;
-}
+char **sysInfo, **sysMenu;
+uint16_t infoNum, menuNum;
 
-/*-------------------------------------*/
-/* Funtion : SetCursorSize                 */
-/* Mission : Resize the cursor         */
-/* Expects : (size) The size of cursor */
-/* Returns : Nothing                   */
-/*-------------------------------------*/
-void SetCursorSize(word size)
-{
-	asm {
-		mov ah, 1
-		mov cx, size
-		int 0x10
-	}
-}
+char *msgWarn[1], *msgExit[1], *msgCmp[1], *msgError[2];
+
+char key = 0;
+char szBuff[1024];
+uint8_t msgSlc = 0, chs = 0, slc = 0;
+uint16_t bCol = 0, bRow = 0;
+uint8_t *txtMem = (uint8_t*)0xB8000000L;
 
 /*-----------------------------------*/
-/* Funtion : SetBorder               */
+/* Funtion : setBorder               */
 /* Mission : Setting border color    */
 /* Expects : (color) color of border */
 /* Returns : Nothing                 */
 /*-----------------------------------*/
-void SetBorder(byte color)
+void setBorder(uint8_t color)
 {
-	union REGS regs; regs.h.ah = 0x10; regs.h.al = 0x01;
-	regs.h.bh = color & 63; int86(0x10, &regs, &regs);
+    union REGS regs;
+    regs.h.ah = 0x10;
+    regs.h.al = 0x01;
+    regs.h.bh = color & 63;
+    int86(0x10, &regs, &regs);
 }
 
 /*-----------------------------------------------*/
-/* Funtion : PrintChar                           */
+/* Funtion : printChar                           */
 /* Mission : Write a character to cordinate x, y */
 /* Expects : (x,y) cordinate to write            */
 /*           (chr) character to write            */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void PrintChar(byte x, byte y, char chr)
+void printChar(uint8_t x, uint8_t y, char chr)
 {
-	gotoxy(x,y); putch(chr);
+    char txt[2];
+    txt[0] = chr;
+    txt[1] = '\0';
+    _settextposition(y, x);
+    _outtext(txt);
 }
 
 /*-------------------------------------------------*/
-/* Function : PrintXY                              */
+/* Function : printXY                              */
 /* Mission  : Write a character to cordinate x, y  */
 /* Expects  : (x,y) cordinate to write             */
 /*            (Chr) character to write             */
 /*            (wAttr) attrib for the character     */
 /* Returns  : Nothing                              */
 /*-------------------------------------------------*/
-void PrintXY(byte x, byte y, word wAttr, char Chr)
+void printXY(uint8_t x, uint8_t y, uint8_t attr, char chr)
 {
-	fpVRM[OFFSET(x, y)] = Chr; fpVRM[OFFSET(x, y) + 1] = wAttr;
+    txtMem[OFFSET(x, y)    ] = chr;
+    txtMem[OFFSET(x, y) + 1] = attr;
 }
 
 /*------------------------------------------------*/
-/* Funtion : WriteChar                            */
+/* Funtion : writeChar                            */
 /* Mission : Writting a character with attribute  */
 /* Expects : (x,y) cordinate to write a character */
 /*           (wAttr) attribute of character       */
@@ -173,19 +154,22 @@ void PrintXY(byte x, byte y, word wAttr, char Chr)
 /*           (Chr) symbol needs to write          */
 /* Returns : Nothing                              */
 /*------------------------------------------------*/
-void WriteChar(byte x, byte y, byte wAttr, byte bLen, char Chr)
+void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 {
-	register word rwVideoOFS;
-	register byte i;
+    uint8_t i;
+    uint16_t rwVideoOFS;
 
-	rwVideoOFS = OFFSET(x,y);
-	for(i = 1; i <= bLen; i++) {
-		poke(VIDEO_ADDR, rwVideoOFS, (wAttr << 8) + Chr); rwVideoOFS += 2;
-	}
+    rwVideoOFS = OFFSET(x, y);
+    for (i = 0; i < len; i++)
+    {
+        txtMem[rwVideoOFS    ] = chr;
+        txtMem[rwVideoOFS + 1] = attr;
+        rwVideoOFS += 2;
+    }
 }
 
 /*-----------------------------------------------*/
-/* Function : WriteVRM                           */
+/* Function : writeVRM                           */
 /* Mission  : Writing a character with attribute */
 /* Notices  : Intervention in video memory       */
 /* Expects  : (x,y) cordinate needs to writting  */
@@ -194,32 +178,46 @@ void WriteChar(byte x, byte y, byte wAttr, byte bLen, char Chr)
 /*            (fstAttr) The attr of first letter */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void WriteVRM(byte x, byte y, word txtAtr, const char *szPrmt, word fstAttr = 0)
+void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t fstAttr)
 {
-	byte i = 0, fltStop = 0, currX = x, bPos;
-	char *szTmp;
+    char *szTmp;
+    uint8_t i = 0, fltStop = 0, currX = x, bPos;
 
-	if(fstAttr) {
-		szTmp = new char[strlen(szPrmt)+1]; strcpy(szTmp, szPrmt);
-		for(;(i < strlen(szTmp) - 1) && !fltStop;)
-		if(szTmp[i++] == 126) fltStop = 1;
-		memmove(&szTmp[i-1], &szTmp[i], strlen(szTmp) - i + 1);
-		bPos = i - 1; i = 0;
-		while(szTmp[i]) {
-			fpVRM[OFFSET(x, y)] = szTmp[i++];
-			fpVRM[OFFSET(x++, y) + 1] = txtAtr;
-		}
-		PrintXY(currX + bPos, y, fstAttr, szTmp[bPos]); delete[]szTmp;
-	}
-	else {
-		while(*szPrmt) {
-			fpVRM[OFFSET(x, y)] = *szPrmt++; fpVRM[OFFSET(x++, y)+1] = txtAtr;
-		}
-	}
+    if (fstAttr)
+    {
+        szTmp = (char*)malloc(strlen(szPrmt) + 1);
+        if (!szTmp) return;
+
+        strcpy(szTmp, szPrmt);
+        for (; (i < strlen(szTmp) - 1) && !fltStop;)
+        {
+            if (szTmp[i++] == 126) fltStop = 1;
+        }
+
+        memmove(&szTmp[i - 1], &szTmp[i], strlen(szTmp) - i + 1);
+        bPos = i - 1;
+        i = 0;
+        while (szTmp[i])
+        {
+            txtMem[OFFSET(x, y)] = szTmp[i++];
+            txtMem[OFFSET(x++, y) + 1] = txtAtr;
+        }
+
+        printXY(currX + bPos, y, fstAttr, szTmp[bPos]);
+        free(szTmp);
+    }
+    else
+    {
+        while (*szPrmt)
+        {
+            txtMem[OFFSET(x, y)] = *szPrmt++;
+            txtMem[OFFSET(x++, y) + 1] = txtAtr;
+        }
+    }
 }
 
 /*-----------------------------------------------*/
-/* Function : PrintVRM                           */
+/* Function : printVRM                           */
 /* Mission  : Writing a character with attribute */
 /* Notices  : Intervention in video memory       */
 /* Expects  : (x,y) cordinate needs to writting  */
@@ -227,14 +225,18 @@ void WriteVRM(byte x, byte y, word txtAtr, const char *szPrmt, word fstAttr = 0)
 /*            (szString) the string to format    */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void PrintVRM(byte x, byte y, word wAttr, char *szString, ...)
+void printVRM(uint8_t x, uint8_t y, uint8_t wAttr, char *szString, ...)
 {
-	va_list parametres; char sortie[255]; va_start(parametres,szString);
-	vsprintf(sortie, szString, parametres); WriteVRM(x,y,wAttr,sortie);
+    char buffer[255];
+    va_list parametres;
+    va_start(parametres, szString);
+    vsprintf(buffer, szString, parametres);
+    writeVRM(x, y, wAttr, buffer, 0);
 }
 
+
 /*-----------------------------------------------*/
-/* Function : Button                             */
+/* Function : drawButton                         */
 /* Mission  : Define the button shadow           */
 /* Expects  : (x,y) cordinate needs to writting  */
 /*            (txtAttr) the attribute of a title */
@@ -243,76 +245,98 @@ void PrintVRM(byte x, byte y, word wAttr, char *szString, ...)
 /*            (fstAttr) The attr of first letter */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void Button(byte x, byte y, word txtAttr, byte bckClr, const char *szTitle, byte bType = 0, word fstAttr = 0)
+void drawButton(uint8_t x, uint8_t y, uint8_t txtAttr, uint8_t bkClr, char *szTitle, uint8_t bType, uint8_t fstAttr)
 {
-	static const char Style[4] = {16, 17, 223, 220};
-	byte bLen = strlen(szTitle);
-	word wAttr = (bckClr << 4) + 1;
+    const uint8_t wAttr = bkClr << 4;
+    const uint16_t bLen = strlen(szTitle);
+    const char styles[] = {16, 17, 223, 220};
 
-	if(bType) {
-		if(fstAttr) {
-			WriteVRM(x, y, txtAttr, szTitle, fstAttr);
-			WriteChar(x+1, y+1, wAttr, bLen - 1, Style[2]);
-			WriteChar(x+bLen-1, y, wAttr, 1, Style[3]);
-		}
-		else {
-			WriteVRM(x, y, txtAttr, szTitle);
-			WriteChar(x+1, y+1, wAttr, bLen, Style[2]);
-			WriteChar(x+bLen, y, wAttr, 1, Style[3]);
-		}
-	}
-	else {
-		if(fstAttr) {
-			WriteVRM(x, y, txtAttr, szTitle, fstAttr);
-			PrintXY(x, y, txtAttr, Style[0]);
-			PrintXY(x+bLen-2, y, txtAttr, Style[1]);
-			WriteChar(x+1, y+1, wAttr, bLen - 1, Style[2]);
-			WriteChar(x+bLen-1 , y, wAttr, 1, Style[3]);
-		}
-		else {
-			WriteVRM(x, y, txtAttr, szTitle); PrintXY(x, y, txtAttr, Style[0]);
-			PrintXY(x+bLen-1, y, txtAttr, Style[1]);
-			WriteChar(x+1, y+1, wAttr, bLen, Style[2]);
-			WriteChar(x+bLen, y, wAttr, 1, Style[3]);
-		}
-	}
+    if (bType)
+    {
+        if (fstAttr)
+        {
+            writeVRM(x, y, txtAttr, szTitle, fstAttr);
+            writeChar(x + 1, y + 1, wAttr, bLen - 1, styles[2]);
+            writeChar(x + bLen - 1, y, wAttr, 1, styles[3]);
+        }
+        else
+        {
+            writeVRM(x, y, txtAttr, szTitle, 0);
+            writeChar(x + 1, y + 1, wAttr, bLen, styles[2]);
+            writeChar(x + bLen, y, wAttr, 1, styles[3]);
+        }
+    }
+    else
+    {
+        if (fstAttr)
+        {
+            writeVRM(x, y, txtAttr, szTitle, fstAttr);
+            printXY(x, y, txtAttr, styles[0]);
+            printXY(x + bLen - 2, y, txtAttr, styles[1]);
+            writeChar(x + 1, y + 1, wAttr, bLen - 1, styles[2]);
+            writeChar(x + bLen - 1 , y, wAttr, 1, styles[3]);
+        }
+        else
+        {
+            writeVRM(x, y, txtAttr, szTitle, 0);
+            printXY(x, y, txtAttr, styles[0]);
+            printXY(x + bLen - 1, y, txtAttr, styles[1]);
+            writeChar(x + 1, y + 1, wAttr, bLen, styles[2]);
+            writeChar(x + bLen, y, wAttr, 1, styles[3]);
+        }
+    }
 }
 
 /*-----------------------------------------------*/
-/* Function : Frame                              */
+/* Function : drawFrame                          */
 /* Mission  : Draw a frame with the edge is lane */
 /* Expects  : (x1,y1) cordinate top to left      */
 /*            (x2,y2) cordinate bottom to right  */
 /* Returns  : Nothing                            */
 /*-----------------------------------------------*/
-void Frame(byte x1, byte y1, byte x2, byte y2)
+void drawFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
 {
-	register byte k;
-	PrintChar(x1, y1, 218);
-	for(k = x1 + 1; k < x2; putch(193), k++);
-	putch(191); PrintChar(x1, y2,192);
-	for(k = x1 + 1; k < x2; putch(194), k++); putch(225);
-	for(k = y1 + 1; k < y2; k++) {
-		PrintChar(x1,k,179);
-		PrintChar(x2,k,224);
-	}
+    int16_t k;
+    char txt[2];
+
+    txt[1] = '\0';
+    printChar(x1, y1, 218);
+
+    txt[0] = 193;
+    for (k = x1 + 1; k < x2; k++) _outtext(txt);
+
+    txt[0] = 191;
+    _outtext(txt);
+    printChar(x1, y2, 192);
+
+    txt[0] = 194;
+    for (k = x1 + 1; k < x2; k++) _outtext(txt);
+
+    txt[0] = 225;
+    _outtext(txt);
+
+    for (k = y1 + 1; k < y2; k++)
+    {
+        printChar(x1, k, 179);
+        printChar(x2, k, 224);
+    }
 }
 
 /*---------------------------------------------------*/
-/* Function : ChangeAttrib                           */
+/* Function : changeAttrib                           */
 /* Mission  : Chage the attribute of the area screen */
 /* Expects  : (x1,y1) cordinate top to left          */
 /*            (x2,y2) cordinate bottom to right      */
 /*            (wAttr) the attribute                  */
 /* Returns  : Nothing                                */
 /*---------------------------------------------------*/
-void ChangeAttr(byte x1, byte y1, byte x2, byte y2, word wAttr)
+void changeAttrib(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 {
-	register byte bCol, bRow;
-
-	for(bCol = x1; bCol <= x2; bCol++)
-		for(bRow = y1; bRow <= y2; bRow++)
-			pokeb(VIDEO_ADDR, OFFSET(bCol, bRow) + 1, wAttr);
+    uint8_t col, row;
+    for (col = x1; col <= x2; col++)
+    {
+        for (row = y1; row <= y2; row++) txtMem[OFFSET(col, row) + 1] = wAttr;
+    }
 }
 
 /*-----------------------------------------------*/
@@ -322,49 +346,63 @@ void ChangeAttr(byte x1, byte y1, byte x2, byte y2, word wAttr)
 /*                      = 1, text is blinking    */
 /* Return   : Nothing                            */
 /*-----------------------------------------------*/
-void isBlinking(byte doblink)
+void isBlinking(uint8_t doblink)
 {
-	union REGS regs; regs.h.ah = 0x10; regs.h.al = 0x03;
-	regs.h.bl = doblink ? 1 : 0; int86(0x10, &regs, &regs);
+    union REGS regs;
+    regs.h.ah = 0x10;
+    regs.h.al = 0x03;
+    regs.h.bl = doblink ? 1 : 0;
+    int86(0x10, &regs, &regs);
 }
 
 /*---------------------------------------------------------*/
-/* Function : ReadKey                                      */
+/* Function : readKey                                      */
 /* Mission  : Read a key from the keyboard                 */
 /* Expects  : (ch) get the key from the keyboard           */
 /* Returns  : If the key is a extend key then return code  */
 /*	           key and 0 value else return 1 value and code */
 /*---------------------------------------------------------*/
-char ReadKey(char &key)
+char readKey(char *key)
 {
-	union REGS regs; regs.h.ah = 0; int86(22, &regs, &regs);
-	if(!(regs.h.al)) {
-		key = regs.h.ah; return 0;
-	}
-	else key = regs.h.al; return 1;
+    union REGS regs;
+    regs.h.ah = 0;
+    int86(22, &regs, &regs);
+    if (!(regs.h.al))
+    {
+        *key = regs.h.ah;
+        return 0;
+    }
+
+    *key = regs.h.al;
+    return 1;
 }
 
 /*----------------------------------------------*/
-/* Function : DlgBox                            */
+/* Function : drawBox                           */
 /* Mission  : Draw a box with color and border  */
 /* Expects  : (x1,y1) cordinate top to left     */
 /*            (x2,y2) cordinate bottom to right */
 /*            (wAttr) the attribute of the box  */
 /* Returns  : Nothing                           */
 /*----------------------------------------------*/
-void DlgBox(byte x1, byte y1, byte x2, byte y2, word wAttr)
+void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 {
-	word oldAttr;
-	oldAttr = GetTextAttr(); textattr(wAttr);
-	Frame(x1, y1, x2, y2); window(x1+1, y1+1, x2-1, y2-1);
-	clrscr(); window(1, 1, 80 ,25);
-	ChangeAttr(x2+1, y1+1, x2+2, y2+1, 0x08);
-	ChangeAttr(x1+2, y2+1, x2+2, y2+1, 0x08);
-	textattr(oldAttr);
+    uint8_t oldBk = _getbkcolor();
+    uint8_t oldCol = _gettextcolor();
+    _setbkcolor(wAttr >> 4);
+    _settextcolor(wAttr & 0x0F);
+    drawFrame(x1, y1, x2, y2);
+    _settextwindow(y1 + 1, x1 + 1, y2 - 1, x2 - 1);
+    _clearscreen(_GWINDOW);
+    _settextwindow(1, 1, 25, 80);
+    changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, 0x08);
+    changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, 0x08);
+    _setbkcolor(oldBk);
+    _settextcolor(oldCol);
 }
 
 /*----------------------------------------------*/
-/* Function : DlgWin                            */
+/* Function : drawShadowBox                     */
 /* Mission  : Draw a box with shadow (very art) */
 /* Expects  : (x1,y1) cordinate top to left     */
 /*            (x2,y2) cordinate bottom to right */
@@ -372,23 +410,22 @@ void DlgBox(byte x1, byte y1, byte x2, byte y2, word wAttr)
 /*            (szTitle) the title of header     */
 /* Returns  : Nothing                           */
 /*----------------------------------------------*/
-void DlgWin(byte x1, byte y1, byte x2, byte y2, word wAttr, char *szTitle)
+void drawShadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char *szTitle)
 {
-	byte bCenter = ((x2 - x1) >> 1) - (strlen(szTitle) >> 1), bkc;
-	const char szStyle[3] = {229,252,0};
-	bkc = (wAttr << 4);
-	ChangeAttr(x2+1, y1+1, x2+2, y2+1, MASK_BG);
-	ChangeAttr(x1+2, y2+1, x2+2, y2+1, MASK_BG);
-	DlgBox(x1, y1, x2, y2, wAttr);
-	WriteChar(x1+3, y1, bkc, x2-x1-2, 32);
-	WriteVRM(x1+bCenter, y1, bkc, szTitle);
-	PrintXY(x1+2, y1, bkc, 226);
-	WriteVRM(x1,y1,bkc >> 4,szStyle);
+    const uint8_t bkc = wAttr << 4;
+    const char szStyle[] = {229, 252, 0};
+    const uint16_t bCenter = ((x2 - x1) >> 1) - (strlen(szTitle) >> 1);
+    changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, MASK_BG);
+    changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, MASK_BG);
+    drawBox(x1, y1, x2, y2, wAttr);
+    writeChar(x1 + 3, y1, bkc, x2 - x1 - 2, 32);
+    writeVRM(x1 + bCenter, y1, bkc, szTitle, 0);
+    printXY(x1 + 2, y1, bkc, 226);
+    writeVRM(x1, y1, bkc >> 4, szStyle, 0);
 }
 
-
 /*--------------------------------------------------*/
-/* Funtion : FillFrame                              */
+/* Funtion : fillFrame                              */
 /* Mission : To full the box with special character */
 /* Expects : (x1,y1) cordinate top to left          */
 /*           (x2,y2) cordinate bottom to right      */
@@ -396,109 +433,138 @@ void DlgWin(byte x1, byte y1, byte x2, byte y2, word wAttr, char *szTitle)
 /*           (chr) special character                */
 /* Returns : Nothing                                */
 /*--------------------------------------------------*/
-void FillFrame(byte x1, byte y1, byte x2, byte y2, byte wAttr, char Chr)
+void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char Chr)
 {
-	register byte i = y1;
-	for(;i <= y2;) WriteChar(x1, i++, wAttr, x2 - x1 + 1, Chr);
+    uint8_t i;
+    for (i = y1; i <= y2; i++) writeChar(x1, i, wAttr, x2 - x1 + 1, Chr);
 }
 
 /*----------------------------------*/
-/* Function : InitMouse             */
+/* Function : initMouse             */
 /* Mission  : Initialize mouse port */
 /* Expects  : Nothing               */
 /* Returns  : 1 if success. 0 fail  */
 /*----------------------------------*/
-byte InitMouse()
+uint16_t initMouse()
 {
-	union REGS regs; regs.x.ax = 0x00; int86(0x33, &regs, &regs);
-	if(regs.x.ax != 0xFFFF) return 0; regs.x.ax = 0x01;
-	int86(0x33, &regs, &regs); bmAvalid = 1; return 1;
+    union REGS regs;
+    regs.x.ax = 0x00;
+    int86(0x33, &regs, &regs);
+    if (regs.x.ax != 0xFFFF) return 0;
+    regs.x.ax = 0x01;
+    int86(0x33, &regs, &regs);
+    bmAvalid = 1;
+    return 1;
 }
 
 /*-----------------------------------------------------*/
-/* Function : ClickMouse                               */
+/* Function : clickMouse                               */
 /* Mission  : Get status button and cordinate col, row */
-/* Expects  : (bCol, bRow) cordinate of col and row    */
+/* Expects  : (col, row) cordinate of col and row      */
 /* Returns  : Value 1 : left button, 2 : right button, */
 /*            4 : center button and col, row           */
 /*-----------------------------------------------------*/
-byte ClickMouse(byte &bCol, byte &bRow)
+uint16_t clickMouse(uint16_t *col, uint16_t *row)
 {
-	union REGS regs; regs.x.ax = 0x03; int86(0x33, &regs, &regs);
-	bRow = (regs.x.dx >> 3) + 1; bCol = (regs.x.cx >> 3) + 1; return regs.x.bx;
+    union REGS regs;
+    regs.x.ax = 0x03;
+    int86(0x33, &regs, &regs);
+    *col = (regs.x.cx >> 3) + 1;
+    *row = (regs.x.dx >> 3) + 1;
+    return regs.x.bx;
 }
 
 /*-----------------------------------*/
-/* Function : HideMouse              */
+/* Function : hideMouse              */
 /* Mission  : Hide the mouse pointer */
 /* Expects  : Nothing                */
 /* Returns  : Nothing                */
 /*-----------------------------------*/
-void HideMouse()
+void hideMouse()
 {
-	union REGS regs; regs.x.ax = 0x02; int86(0x33, &regs, &regs);
+    union REGS regs;
+    regs.x.ax = 0x02;
+    int86(0x33, &regs, &regs);
 }
 
 /*--------------------------------------*/
-/* Function : ShowMouse                 */
+/* Function : showMouse                 */
 /* Mission  : Showing the mouse pointer */
 /* Expects  : Nothing                   */
 /* Returns  : Nothing                   */
 /*--------------------------------------*/
-void ShowMouse()
+void showMouse()
 {
-	union REGS regs; regs.x.ax = 0x01; int86(0x33, &regs, &regs);
+    union REGS regs;
+    regs.x.ax = 0x01;
+    int86(0x33, &regs, &regs);
 }
 
 /*--------------------------------------------*/
 /* Function : SetPos                          */
-/* Mission  : Setting the limit bCol and bRow */
+/* Mission  : Setting the limit col and row   */
 /* Expects  : Nothing                         */
 /* Returns  : Nothing                         */
 /*--------------------------------------------*/
-void SetMousePos()
+void setMousePos()
 {
-	union REGS regs; regs.x.ax = 0x07; regs.x.cx = 0; regs.x.dx = 2*320 - 8;
-	int86(0x33, &regs, &regs); regs.x.ax = 0x08; regs.x.cx = 0;
-	regs.x.dx = 200 - 8; int86(0x33, &regs, &regs); regs.x.ax = 0x1D;
-	regs.x.bx = 0; int86(0x33, &regs, &regs);
+    union REGS regs;
+    regs.x.ax = 0x07;
+    regs.x.cx = 0;
+    regs.x.dx = 2 * 320 - 8;
+    int86(0x33, &regs, &regs);
+    regs.x.ax = 0x08;
+    regs.x.cx = 0;
+    regs.x.dx = 200 - 8;
+    int86(0x33, &regs, &regs);
+    regs.x.ax = 0x1D;
+    regs.x.bx = 0;
+    int86(0x33, &regs, &regs);
 }
 
 /*------------------------------------------------*/
-/* Function : MoveMouse                           */
+/* Function : moveMouse                           */
 /* Mission  : Move mouse pointer to new cordinate */
 /* Expects  : (x, y) the new cordinate            */
 /* Returns  : Nothing                             */
 /*------------------------------------------------*/
-void MoveMouse(byte x, byte y)
+void moveMouse(uint16_t x, uint16_t y)
 {
-	union REGS regs; regs.x.ax = 0x0004; regs.x.cx = (x << 3) - 1;
-	regs.x.dx = (y << 3) - 1; int86(0x33, &regs, &regs);
+    union REGS regs;
+    regs.x.ax = 0x0004;
+    regs.x.cx = (x << 3) - 1;
+    regs.x.dx = (y << 3) - 1;
+    int86(0x33, &regs, &regs);
 }
 
 /*------------------------------------*/
-/* Function : CloseMouse              */
+/* Function : closeMouse              */
 /* Mission  : Colosing mouse fumction */
 /* Expects  : Nothing                 */
 /* Returns  : Nothing                 */
 /*------------------------------------*/
-void CloseMouse()
+void closeMouse()
 {
-	union REGS regs; HideMouse(); regs.x.ax = 0; int86(0x33, &regs, &regs);
+    union REGS regs;
+    hideMouse();
+    regs.x.ax = 0;
+    int86(0x33, &regs, &regs);
 }
 
 /*----------------------------------------------*/
-/* Function : Clear                             */
-/* Mission  : Clear the part of window          */
+/* Function : clearScreen                       */
+/* Mission  : clearScreen the part of window    */
 /* Expects  : (x1,y1) cordinate top to left     */
 /*            (x2,y2) cordinate bottom to right */
 /*            (color) color needs clear         */
 /* Returns  : Nothing                           */
 /*----------------------------------------------*/
-void Clear(byte x1, byte y1, byte x2, byte y2, byte color)
+void clearScreen(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color)
 {
-	window(x1,y1,x2,y2); textattr((color << 4));
-	clrscr(); window(1,1,80,25);
+    _settextwindow(y1, x1, y2, x2);
+    _setbkcolor(color);
+    _clearscreen(_GWINDOW);
+    _settextwindow(1, 1, 25, 80);
 }
 
 /*-----------------------------------------*/
@@ -508,179 +574,273 @@ void Clear(byte x1, byte y1, byte x2, byte y2, byte color)
 /*           (substr) The substring        */
 /* Returns : Position of substring         */
 /*-----------------------------------------*/
-int StrPos(char *str, char *szSubstr)
+int16_t strPos(char *str, char *szSubstr)
 {
-	char *ptr = strstr(str, szSubstr);
-	if(!ptr) return -1;
-	return (ptr - str);
+    char *ptr = strstr(str, szSubstr);
+    if (!ptr) return -1;
+    return ptr - str;
 }
 
 /*---------------------------------------------*/
-/* Funtion : InsertChar                        */
+/* Funtion : insertChar                        */
 /* Mission : Inserted the char into string     */
 /* Expects : (str) The string                  */
 /*           (chr) The character need inserted */
 /*           (iPos) The position inserted      */
 /* Returns : Nothing                           */
 /*---------------------------------------------*/
-void InsertChar(char *str, char chr, int iPos)
+void insertChar(char *str, char chr, int16_t iPos)
 {
-	if(iPos < 0 || iPos > strlen(str)) return;
-	*(str+iPos) = chr;
+    if (iPos < 0 || iPos >= strlen(str)) return;
+    *(str + iPos) = chr;
 }
 
 /*---------------------------------------------*/
-/* Funtion : StrDelete                         */
+/* Funtion : strDelete                         */
 /* Mission : Deleting the characters           */
 /* Expects : (str) The string main             */
 /*           (i) position to delete            */
 /*           (numchar) the number of character */
 /* Returns : Nothing                           */
 /*---------------------------------------------*/
-void StrDelete(char *str, int i, int numchar)
+void strDelete(char *str, int16_t i, int16_t num)
 {
-	if(i < 0 || i > strlen(str)) return;
-	memcpy((str+i+1), (str+i+numchar), (strlen(str)-i-1));
+    if (i < 0 || i >= strlen(str)) return;
+    memcpy(str + i + 1, str + i +num, strlen(str) - i - 1);
 }
 
 /*--------------------------------------*/
-/* Funtion : SchRepl                    */
+/* Funtion : schRepl                    */
 /* Mission : Concat the string          */
 /* Expects : (str) The string main      */
 /*           (sch) The substring        */
 /*           (repl) The char to replace */
 /* Returns : Nothing                    */
 /*--------------------------------------*/
-void SchRepl(char *str, char *sch, char repl)
+void schRepl(char *str, char *sch, char repl)
 {
-	int i;
-
-	do {
-		i = StrPos(str,sch);
-		if(i >= 0) {
-			StrDelete(str,i,strlen(sch));
-			InsertChar(str,repl,i);
-		}
-	} while(i >= 0);
+    int16_t i;
+    do {
+        i = strPos(str, sch);
+        if (i >= 0)
+        {
+            strDelete(str, i, strlen(sch));
+            insertChar(str, repl, i);
+        }
+    } while (i >= 0);
 }
 
-/*--------------------------------------------*/
-/* Funtion : Chr2Str                          */
-/* Mission : Conver the char to the string    */
-/* Expects : (chr, n) The character to conver */
-/* Returns : The pointer to string            */
-/*--------------------------------------------*/
-char *Chr2Str(char chr, char n)
+/*----------------------------------------------*/
+/* Funtion : chr2Str                            */
+/* Mission : Conver the char to the string      */
+/* Expects : (chr, n, buff) Characters convert  */
+/* Returns : The pointer to string              */
+/*----------------------------------------------*/
+void chr2Str(char chr, char n, char *str)
 {
-	char *szString = new char[3];
-	szString[0] = chr;
-	szString[1] = n;
-	szString[2] = '\0';
-	return szString;
+    str[0] = chr;
+    str[1] = n;
+    str[2] = '\0';
 }
 
 /*--------------------------------------*/
-/* Funtion : FontVNI                    */
+/* Funtion : fontVNI                    */
 /* Mission : Decode font to Vietnamese  */
 /* Expects : (str) The string to decode */
 /* Returns : Nothing                    */
 /*--------------------------------------*/
-void FontVNI(char *szPrmpt)
+void fontVNI(char *szPrmpt)
 {
-	SchRepl(szPrmpt,"a8",128);
-	SchRepl(szPrmpt,Chr2Str(128,'1'),129);
-	SchRepl(szPrmpt,Chr2Str(128,'2'),130);
-	SchRepl(szPrmpt,Chr2Str(128,'3'),131);
-	SchRepl(szPrmpt,Chr2Str(128,'4'),132);
-	SchRepl(szPrmpt,Chr2Str(128,'5'),133);
-	SchRepl(szPrmpt,"a6",134);
-	SchRepl(szPrmpt,Chr2Str(134,'1'),135);
-	SchRepl(szPrmpt,Chr2Str(134,'2'),136);
-	SchRepl(szPrmpt,Chr2Str(134,'3'),137);
-	SchRepl(szPrmpt,Chr2Str(134,'4'),138);
-	SchRepl(szPrmpt,Chr2Str(134,'5'),139);
-	SchRepl(szPrmpt,"e6",140);
-	SchRepl(szPrmpt,Chr2Str(140,'1'),141);
-	SchRepl(szPrmpt,Chr2Str(140,'2'),142);
-	SchRepl(szPrmpt,Chr2Str(140,'3'),143);
-	SchRepl(szPrmpt,Chr2Str(140,'4'),144);
-	SchRepl(szPrmpt,Chr2Str(140,'5'),145);
-	SchRepl(szPrmpt,"o7",146);
-	SchRepl(szPrmpt,Chr2Str(146,'1'),147);
-	SchRepl(szPrmpt,Chr2Str(146,'2'),148);
-	SchRepl(szPrmpt,Chr2Str(146,'3'),149);
-	SchRepl(szPrmpt,Chr2Str(146,'4'),150);
-	SchRepl(szPrmpt,Chr2Str(146,'5'),151);
-	SchRepl(szPrmpt,"o6",152);
-	SchRepl(szPrmpt,Chr2Str(152,'1'),153);
-	SchRepl(szPrmpt,Chr2Str(152,'2'),154);
-	SchRepl(szPrmpt,Chr2Str(152,'3'),155);
-	SchRepl(szPrmpt,Chr2Str(152,'4'),156);
-	SchRepl(szPrmpt,Chr2Str(152,'5'),157);
-	SchRepl(szPrmpt,"u7",158);
-	SchRepl(szPrmpt,Chr2Str(158,'1'),159);
-	SchRepl(szPrmpt,Chr2Str(158,'2'),160);
-	SchRepl(szPrmpt,Chr2Str(158,'3'),161);
-	SchRepl(szPrmpt,Chr2Str(158,'4'),162);
-	SchRepl(szPrmpt,Chr2Str(158,'5'),163);
-	SchRepl(szPrmpt,"a1",164);
-	SchRepl(szPrmpt,"a2",165);
-	SchRepl(szPrmpt,"a3",166);
-	SchRepl(szPrmpt,"a4",167);
-	SchRepl(szPrmpt,"a5",168);
-	SchRepl(szPrmpt,"e1",169);
-	SchRepl(szPrmpt,"e2",170);
-	SchRepl(szPrmpt,"e3",171);
-	SchRepl(szPrmpt,"e4",172);
-	SchRepl(szPrmpt,"e5",173);
-	SchRepl(szPrmpt,"i1",174);
-	SchRepl(szPrmpt,"i2",175);
-	SchRepl(szPrmpt,"i3",181);
-	SchRepl(szPrmpt,"i4",182);
-	SchRepl(szPrmpt,"i5",183);
-	SchRepl(szPrmpt,"o1",184);
-	SchRepl(szPrmpt,"o2",190);
-	SchRepl(szPrmpt,"o3",198);
-	SchRepl(szPrmpt,"o4",199);
-	SchRepl(szPrmpt,"o5",208);
-	SchRepl(szPrmpt,"u1",210);
-	SchRepl(szPrmpt,"u2",211);
-	SchRepl(szPrmpt,"u3",212);
-	SchRepl(szPrmpt,"u4",213);
-	SchRepl(szPrmpt,"u5",214);
-	SchRepl(szPrmpt,"y1",215);
-	SchRepl(szPrmpt,"y2",216);
-	SchRepl(szPrmpt,"y3",221);
-	SchRepl(szPrmpt,"y4",222);
-	SchRepl(szPrmpt,"y5",248);
-	SchRepl(szPrmpt,"d9",249);
-	SchRepl(szPrmpt,"D9",250);
+    char buff[4] = {0};
+    schRepl(szPrmpt, "a8", 128);
+    chr2Str(128, '1', buff);
+    schRepl(szPrmpt, buff, 129);
+    chr2Str(128, '2', buff);
+    schRepl(szPrmpt, buff, 130);
+    chr2Str(128, '3', buff);
+    schRepl(szPrmpt, buff, 131);
+    chr2Str(128, '4', buff);
+    schRepl(szPrmpt, buff, 132);
+    chr2Str(128, '5', buff);
+    schRepl(szPrmpt, buff, 133);
+    schRepl(szPrmpt, "a6", 134);
+    chr2Str(134, '1', buff);
+    schRepl(szPrmpt, buff, 135);
+    chr2Str(134, '2', buff);
+    schRepl(szPrmpt, buff, 136);
+    chr2Str(134, '3', buff);
+    schRepl(szPrmpt, buff, 137);
+    chr2Str(134, '4', buff);
+    schRepl(szPrmpt, buff, 138);
+    chr2Str(134, '5', buff);
+    schRepl(szPrmpt, buff, 139);
+    schRepl(szPrmpt, "e6", 140);
+    chr2Str(140, '1', buff);
+    schRepl(szPrmpt, buff, 141);
+    chr2Str(140, '2', buff);
+    schRepl(szPrmpt, buff, 142);
+    chr2Str(140, '3', buff);
+    schRepl(szPrmpt, buff, 143);
+    chr2Str(140, '4', buff);
+    schRepl(szPrmpt, buff, 144);
+    chr2Str(140, '5', buff);
+    schRepl(szPrmpt, buff, 145);
+    schRepl(szPrmpt, "o7", 146);
+    chr2Str(146, '1', buff);
+    schRepl(szPrmpt, buff, 147);
+    chr2Str(146, '2', buff);
+    schRepl(szPrmpt, buff, 148);
+    chr2Str(146, '3', buff);
+    schRepl(szPrmpt, buff, 149);
+    chr2Str(146, '4', buff);
+    schRepl(szPrmpt, buff, 150);
+    chr2Str(146, '5', buff);
+    schRepl(szPrmpt, buff, 151);
+    schRepl(szPrmpt, "o6", 152);
+    chr2Str(152, '1', buff);
+    schRepl(szPrmpt, buff, 153);
+    chr2Str(152, '2', buff);
+    schRepl(szPrmpt, buff, 154);
+    chr2Str(152, '3', buff);
+    schRepl(szPrmpt, buff, 155);
+    chr2Str(152, '4', buff);
+    schRepl(szPrmpt, buff, 156);
+    chr2Str(152, '5', buff);
+    schRepl(szPrmpt, buff, 157);
+    schRepl(szPrmpt, "u7", 158);
+    chr2Str(158, '1', buff);
+    schRepl(szPrmpt, buff, 159);
+    chr2Str(158, '2', buff);
+    schRepl(szPrmpt, buff, 160);
+    chr2Str(158, '3', buff);
+    schRepl(szPrmpt, buff, 161);
+    chr2Str(158, '4', buff);
+    schRepl(szPrmpt, buff, 162);
+    chr2Str(158, '5', buff);
+    schRepl(szPrmpt, buff, 163);
+    schRepl(szPrmpt, "a1", 164);
+    schRepl(szPrmpt, "a2", 165);
+    schRepl(szPrmpt, "a3", 166);
+    schRepl(szPrmpt, "a4", 167);
+    schRepl(szPrmpt, "a5", 168);
+    schRepl(szPrmpt, "e1", 169);
+    schRepl(szPrmpt, "e2", 170);
+    schRepl(szPrmpt, "e3", 171);
+    schRepl(szPrmpt, "e4", 172);
+    schRepl(szPrmpt, "e5", 173);
+    schRepl(szPrmpt, "i1", 174);
+    schRepl(szPrmpt, "i2", 175);
+    schRepl(szPrmpt, "i3", 181);
+    schRepl(szPrmpt, "i4", 182);
+    schRepl(szPrmpt, "i5", 183);
+    schRepl(szPrmpt, "o1", 184);
+    schRepl(szPrmpt, "o2", 190);
+    schRepl(szPrmpt, "o3", 198);
+    schRepl(szPrmpt, "o4", 199);
+    schRepl(szPrmpt, "o5", 208);
+    schRepl(szPrmpt, "u1", 210);
+    schRepl(szPrmpt, "u2", 211);
+    schRepl(szPrmpt, "u3", 212);
+    schRepl(szPrmpt, "u4", 213);
+    schRepl(szPrmpt, "u5", 214);
+    schRepl(szPrmpt, "y1", 215);
+    schRepl(szPrmpt, "y2", 216);
+    schRepl(szPrmpt, "y3", 221);
+    schRepl(szPrmpt, "y4", 222);
+    schRepl(szPrmpt, "y5", 248);
+    schRepl(szPrmpt, "d9", 249);
+    schRepl(szPrmpt, "D9", 250);
+}
+
+/*-----------------------------------------*/
+/* Funtion : getText                       */
+/* Mission : Get string at coordinate      */
+/* Expects : (left, top, right, bot) coord */
+/* Returns : Nothing                       */
+/*-----------------------------------------*/
+void getText(int16_t left, int16_t top, int16_t right, int16_t bot, char *dest)
+{
+    uint8_t *tmem;
+    int16_t width, height, adjust;
+
+    width = right - left + 1;
+    height = bot - top + 1;
+    adjust = 80*2 - 2*width;
+
+    left--;
+    top--;
+    tmem = txtMem + top * 80 * 2 + left * 2;
+
+    width *= 2;
+    while (height--)
+    {
+        memcpy(dest, tmem, width);
+        dest += width;
+        tmem += adjust;
+    }
+}
+
+/*-----------------------------------------*/
+/* Funtion : putText                       */
+/* Mission : Get string at coordinate      */
+/* Expects : (left, top, right, bot) coord */
+/* Returns : Nothing                       */
+/*-----------------------------------------*/
+void putText(int16_t left, int16_t top, int16_t right, int16_t bot, char *dest)
+{
+    uint8_t *tmem;
+    int16_t width, height, adjust;
+
+    width = right - left + 1;
+    height = bot - top + 1;
+    adjust = 80*2 - 2*width;
+
+    left--;
+    top--;
+    tmem = txtMem + top * 80 * 2 + left * 2;
+
+    width *= 2;
+    while (height--)
+    {
+        memcpy(tmem, dest, width);
+        dest += width;
+        tmem += adjust;
+    }
 }
 
 /*------------------------------------*/
-/* Funtion : FileDecode               */
-/* Mission : Decode files             */
+/* Funtion : decodeFile               */
+/* Mission : Decode file register.sys */
 /* Expects : (inFile) The source file */
 /*           (outFile) The dest file  */
-/* Returns : Nothing                  */
+/* Returns : Number of lines in file  */
 /*------------------------------------*/
-void FileDecode(const char *inFile, const char *outFile)
+void decodeFile(const char *inFile, const char *outFile)
 {
-	FILE *inHandle, *outHandle;
-	int c, key = 98;
+    int16_t c, key = 98;
+    FILE *inHandle, *outHandle;
+    
+    inHandle = fopen(inFile, "rb");
+    outHandle = fopen(outFile, "wb");
 
-	inHandle = fopen(inFile,"rb"); outHandle = fopen(outFile,"wb");
-	if(!inHandle || !outHandle) {
-		fprintf(stderr,"Error loading file %s. System halt.",inFile); exit(1);
-	}
-	while((c = fgetc(inHandle)) != EOF) {
-		c = c - ~key; fputc(c, outHandle);
-	}
-	fclose(inHandle); fclose(outHandle);
+    if (!inHandle || !outHandle)
+    {
+        fprintf(stderr, "Error loading file %s. System halt.", inFile);
+        exit(1);
+    }
+
+    while ((c = fgetc(inHandle)) != EOF)
+    {
+        c = c - ~key;
+        fputc(c, outHandle);
+    }
+
+    fclose(inHandle);
+    fclose(outHandle);
 }
 
 /*------------------------------------------------*/
-/* Function : GetData                             */
+/* Function : getTextFile                         */
 /* Mission  : Reading information into data array */
 /* Expects  : (inFile) the input file             */
 /*            (outFile) the output file           */
@@ -688,1169 +848,1264 @@ void FileDecode(const char *inFile, const char *outFile)
 /*            (wNumElm) the number of elements    */
 /* Returns  : Nothing                             */
 /*------------------------------------------------*/
-void GetData(const char *inFile, const char *outFile, char **&szData, word &wNumElm)
+void getTextFile(const char *inFile, const char *outFile, char ***szData, uint16_t *wNumElm)
 {
-	FILE *fp;
-	char szBuffer[100];
+    FILE *fp;
+    uint16_t elems = 0;
+    char szBuffer[102] = {0};
+    
+    decodeFile(inFile, outFile);
+    fp = fopen(outFile, "rt");
+    if (!fp)
+    {
+        fprintf(stderr, "Error open file: %s", outFile);
+        exit(1);   
+    }
 
-	FileDecode(inFile, outFile); fp = fopen(outFile,"rt");
-	while(fgets(szBuffer,99,fp)) wNumElm++;
-	if(!(szData = new char*[wNumElm])) {
-		fprintf(stderr,"Not enough memory!"); exit(1);
-	}
-	wNumElm = 0; rewind(fp);
-	while(fgets(szBuffer,99,fp)) {
-		FontVNI(szBuffer);
-		if(!(szData[wNumElm] = new char[strlen(szBuffer)+1])) {
-			fprintf(stderr,"Not enough memory at pointer %u", wNumElm); exit(1);
-		}
-		szBuffer[strlen(szBuffer)-1] = '\0'; strcpy(szData[wNumElm],szBuffer); wNumElm++;
-	}
-	fclose(fp); unlink(outFile);
+    while (fgets(szBuffer, 102, fp)) elems++;
+
+    szData[0] = (char**)malloc(elems * sizeof(char*));
+    if (!(szData[0]))
+    {
+        fprintf(stderr, "Not enough memory for count: %d\n", elems);
+        exit(1);
+    }
+
+    elems = 0;
+    rewind(fp);
+    while (fgets(szBuffer, 102, fp))
+    {
+        fontVNI(szBuffer);
+        szData[0][elems] = (char*)malloc(strlen(szBuffer) + 1);
+        if (!(szData[0][elems]))
+        {
+            fprintf(stderr, "Not enough memory at line: %u", elems);
+            exit(1);
+        }
+        szBuffer[strlen(szBuffer) - 1] = '\0';
+        strcpy(szData[0][elems], szBuffer);
+        elems++;
+    }
+
+    *wNumElm = elems;
+    fclose(fp);
+    unlink(outFile);
 }
 
 /*------------------------------------------*/
-/* Function : ReleaseData                   */
+/* Function : freeData                      */
 /* Mission  : free block memory of the data */
 /* Expects  : Nothing                       */
 /* Returns  : Nothing                       */
 /*------------------------------------------*/
-void ReleaseData()
+void freeData()
 {
-	word i;
-
-	for(i = 0; i < wnInfo; i++) delete[]SysInf[i]; delete[]SysInf;
-	for(i = 0; i < wnMenu; i++) delete[]SysMen[i]; delete[]SysMen;
-	delete[]msgExit[0]; delete[]msgCmp[0]; delete[]msgWarn[0];
-	delete[]msgError[0]; delete[]msgError[1];
-}
-
-/*----------------------------------------------*/
-/* Function : InitData                          */
-/* Mission  : Initialize parameters for program */
-/* Expects  : Nothing                           */
-/* Returns  : Nothing                           */
-/*----------------------------------------------*/
-void InitData()
-{
-	char szSource[100], szDest[100];
-
-	strcpy(szSource,"sysmenus.dll");
-	strcpy(szDest,"sysmenus.$$$");
-	GetData(szSource,szDest,SysMen,wnMenu);
-	szSource[17] = szDest[3] = NULL;
-	strcpy(szSource,"sysinfor.sys");
-	strcpy(szDest,"sysinfor.$$$");
-	GetData(szSource,szDest,SysInf,wnInfo);
-	msgWarn[0] = new char[40]; msgExit[0] = new char[40];
-	msgCmp[0] = new char[40]; msgError[0] = new char[40];
-	msgError[1] = new char[40]; strcpy(msgExit[0],SysInf[26]);
-	strcpy(msgCmp[0],SysInf[28]); strcpy(msgWarn[0],SysInf[27]);
-	strcpy(msgError[0],SysInf[32]); strcpy(msgError[1],SysInf[33]);
-	system("font on");
+    int16_t i;
+    for (i = 0; i < infoNum; i++) free(sysInfo[i]);
+    free(sysInfo);
+    for (i = 0; i < menuNum; i++) free(sysMenu[i]);
+    free(sysMenu);
+    free(msgExit[0]);
+    free(msgCmp[0]);
+    free(msgWarn[0]);
+    free(msgError[0]);
+    free(msgError[1]);
 }
 
 /*-------------------------------*/
-/* Funtion : HaltSys             */
+/* Funtion : haltSys             */
 /* Mission : Restore environment */
 /* Expects : Nothing             */
 /* Returns : Nothing             */
 /*-------------------------------*/
-void HaltSys()
+void haltSys()
 {
-	SetBorder(0x00); SetCursorSize(0x0607); textattr(0x07);
-	isBlinking(1); if(bmAvalid) CloseMouse(); clrscr();
-	ReleaseData(); system("font off");
-	exit(EXIT_SUCCESS);
-}
-
-/*--------------------------------*/
-/* Funtion : SysReboot            */
-/* Mission : Restart the computer */
-/* Expects : Nothing              */
-/* Returns : Nothing              */
-/*--------------------------------*/
-void SysReboot()
-{
-	void((far *reset_ptr)()) = (void( far *)() )BOOT_ADR;
-	*(int far *)RESET_ADR = 0;
-	(*reset_ptr)();
+    char szPath[28] = {0};
+    strcpy(szPath, sysInfo[23]);
+    strcat(szPath, "off");
+    setBorder(0x00);
+    _settextcursor(0x0607);
+    _setbkcolor(0);
+    _settextcolor(7);
+    isBlinking(1);
+    if (bmAvalid) closeMouse();
+    _clearscreen(_GWINDOW);
+    system(szPath);
+    freeData();
+    exit(EXIT_SUCCESS);
 }
 
 /*---------------------------------------------*/
-/* Funtion : FadeIN                            */
+/* Funtion : fadeIn                            */
 /* Mission : Debrightness light of the monitor */
 /* Expects : Nothing                           */
 /* Returns : Nothing                           */
 /*---------------------------------------------*/
-void FadeIN()
+void fadeIn()
 {
-	byte bPalettes[200], bDummp[200];
-   register i, j;
+    int16_t i, j;
+    uint8_t palette[200], dummy[200];
+    
+    outp(0x3C7, 0);
+    for (i = 0; i < 200; i++)
+    {
+        palette[i] = inp(0x3C9);
+        dummy[i] = palette[i];
+    }
 
-	outportb(0x3C7, 0);
-	for(i = 0; i < 200; i++) {
-		bPalettes[i] = inportb(0x3C9);
-		bDummp[i] = bPalettes[i];
-	}
-   for(j = 0; j < 60; j++) {
-		for(i = 0; i < 200; i++) if( bDummp[i] > 0 ) bDummp[i]--;
-		outportb(0x3C8, 0);
-		for(i = 0; i < 200; i++) outportb(0x3C9, bDummp[i]);
-      delay(80);
-	}
-	outportb(0x3C8, 0);
-	for(i = 0; i < 200; i++) outportb(0x3C9, bPalettes[i]);
+    for (j = 0; j < 60; j++)
+    {
+        for (i = 0; i < 200; i++) if (dummy[i] > 0) dummy[i]--;
+        outp(0x3C8, 0);
+        for (i = 0; i < 200; i++) outp(0x3C9, dummy[i]);
+        delay(1);
+    }
+    outp(0x3C8, 0);
+    for (i = 0; i < 200; i++) outp(0x3C9, palette[i]);
+}
+
+/*----------------------------------------------*/
+/* Function : initData                          */
+/* Mission  : Initialize parameters for program */
+/* Expects  : Nothing                           */
+/* Returns  : Nothing                           */
+/*----------------------------------------------*/
+void initData()
+{
+    getTextFile("sysmenu.dll", "sysmenu.$$$", &sysMenu, &menuNum);
+    getTextFile("sysinfo.sys", "sysinfo.$$$", &sysInfo, &infoNum);
+    msgWarn[0] = (char*)malloc(40);
+    msgExit[0] = (char*)malloc(40);
+    msgCmp[0] = (char*)malloc(40);
+    msgError[0] = (char*)malloc(40);
+    msgError[1] = (char*)malloc(40);
+    strcpy(msgExit[0], sysInfo[26]);
+    strcpy(msgCmp[0], sysInfo[28]);
+    strcpy(msgWarn[0], sysInfo[27]);
+    strcpy(msgError[0], sysInfo[32]);
+    strcpy(msgError[1], sysInfo[33]);
+    system("font on");
+}
+
+/*--------------------------------*/
+/* Funtion : sysReboot            */
+/* Mission : Restart the computer */
+/* Expects : Nothing              */
+/* Returns : Nothing              */
+/*--------------------------------*/
+void sysReboot()
+{
+    void((far *reset_ptr)()) = (void( far *)() )BOOT_ADR;
+    *(int far *)RESET_ADR = 0;
+    (*reset_ptr)();
 }
 
 /*---------------------------------------*/
-/* Funtion : ErrorFile                   */
+/* Funtion : errorFile                   */
 /* Mission : Display the error code      */
 /* Expects : (handle) which file error   */
 /*           (errortype) error file type */
 /* Returns : Nothing                     */
 /*---------------------------------------*/
-void ErrorFile(char *szHandle, char *szErrorType)
+void errorFile(char *szHandle, char *szErrorType)
 {
-	char error_code[60];
-	strcpy(error_code,szErrorType);
-	strcat(error_code,szHandle);
-	DlgWin(13,8,65,17,0x4F,SysInf[1]);
-	Button(33,15,0xF0,4,SysMen[3],1,0xF4);
-	WriteVRM(39-strlen(error_code)/2,10,0x4A,error_code);
-	WriteVRM(15,11,0x4F,SysInf[53]);
-	WriteVRM(15,12,0x4F,SysInf[54]);
-	WriteVRM(15,13,0x4F,SysInf[55]);
-	do {
-		if(ClickMouse(bCol, bRow) == 1) {
-			if(bRow == 15 && bCol >= 33 && bCol <= 45) {
-				HideMouse(); Clear(33,15,46,16,4);
-				WriteVRM(34,15,wATV,SysMen[3],wFLT);
-				delay(50); Button(33,15,wATV,4,SysMen[3],1,wFLT);
-				ShowMouse(); break;
-			}
-			if(bRow == 8 && bCol == 13 || bCol == 14) break;
-		}
-	} while(!kbhit()); HaltSys();
+    char errorCode[60];
+    strcpy(errorCode, szErrorType);
+    strcat(errorCode, szHandle);
+    drawShadowBox(13,8,65,17,0x4F,sysInfo[1]);
+    drawButton(33,15,0xF0,4,sysMenu[3],1,0xF4);
+    writeVRM(39-strlen(errorCode)/2,10,0x4A,errorCode, 0);
+    writeVRM(15,11,0x4F,sysInfo[53], 0);
+    writeVRM(15,12,0x4F,sysInfo[54], 0);
+    writeVRM(15,13,0x4F,sysInfo[55], 0);
+    do {
+        if(clickMouse(&bCol, &bRow) == 1) {
+            if(bRow == 15 && bCol >= 33 && bCol <= 45) {
+                hideMouse(); clearScreen(33,15,46,16,4);
+                writeVRM(34,15,wATV,sysMenu[3],wFLT);
+                delay(50); drawButton(33,15,wATV,4,sysMenu[3],1,wFLT);
+                showMouse(); break;
+            }
+            if(bRow == 8 && bCol == 13 || bCol == 14) break;
+        }
+    } while(!kbhit()); haltSys();
 }
 
 /*-------------------------------------------*/
-/* Funtion : CopyFiles                       */
+/* Funtion : copyFiles                       */
 /* Mission : Copy all files from the disk    */
 /* Expects : (szSource) The disk sources     */
 /*           (szDest) The disk target        */
 /*           (wAttr) file attribute          */
 /* Returns : 1 : If complete or 0 if failure */
 /*-------------------------------------------*/
-bool CopyFiles(char *szSource, char *szDest, word wAttr)
+uint8_t copyFiles(char *szSource, char *szDest, uint16_t wAttr)
 {
-	bool resume;
-   word entry, dir_entries;
-   struct find_t dir_entry;
-	struct find_t near *ptr_dir_entry;
-	char near  *ptr_pos;
-	int source, target, n, files;
-	size_t write_to, num_read, num_write;
-	unsigned long total_read, total_write;
-	char path[64], spec[64], str_entry[64],
-	curr_file[68], new_file[68], new_dir[64];
+    uint8_t resume;
+    uint16_t entry, dir_entries;
+    struct find_t dir_entry;
+    struct find_t *ptr_dir_entry;
+    char *ptr_pos;
+    int source, target, n, files;
+    size_t write_to, num_read, num_write;
+    unsigned long total_read, total_write;
+    char path[64], spec[64], str_entry[64],
+    curr_file[68], new_file[68], new_dir[64];
 
-	resume = 1;
-	for(entry = strlen(szSource) - 1; szSource[entry] != '\\'; entry--);
-	strcpy(path, szSource);
-	path[entry] = 0;
-	strcpy(curr_file, szSource);
-	curr_file[entry + 1] = 0;
-	strcpy(new_file, szSource);
-	new_file[entry + 1] = 0;
-	new_file[0] = szDest[0];
-	strcpy(spec, &szSource[entry+1]);
-	total_read = 0;
-	total_write = 0;
-	if(!_dos_findfirst(szSource, wAttr, &dir_entry)) {
-		do {
-			files = 0;
-			ptr_pos = ptrSource;
-			while(ptr_pos + 2*sizeof(dir_entry) < ptrSource + buffSize) {
-				memcpy(ptr_pos, &dir_entry, sizeof(dir_entry));
-				ptr_dir_entry = (find_t *)ptr_pos;
-				ptr_pos += sizeof(dir_entry);
-				curr_file[entry + 1] = '\0';
-				strcat(curr_file, dir_entry.name);
-				if(total_read == 0) {
-					if(_dos_open(curr_file, O_RDONLY, &source))
-					ErrorFile(curr_file,SysInf[17]);
-				}
-				if(_dos_read(source, ptr_pos, buffSize - (ptr_pos - ptrSource), &num_read))
-				ErrorFile(curr_file, SysInf[20]);
-				ptr_pos += num_read; total_read += num_read; files++;
-				if(total_read == dir_entry.size) {
-					_dos_close(source); total_read = 0;
-					if(_dos_findnext(&dir_entry)) break;
-				}
-				else break;
-			}
-			ptr_dir_entry = (find_t*)ptrSource;
-			ptr_pos = ptrSource + sizeof(dir_entry);
-			for(n = 0; n < files; n++) {
-				if(total_write == 0) {
-					new_file[entry + 1] = '\0';
-					strcat(new_file, ptr_dir_entry->name);
-					if(_dos_creat(new_file, ptr_dir_entry->attrib, &target))
-					ErrorFile(new_file,SysInf[17]);
-					WriteChar(30,11,0x99,33,32);
-					WriteVRM(30,11,0x9A,new_file); delay(50);
-					WriteChar(18,12,0xFF,6*numFiles++ / 14+2,219);
-					PrintVRM(50,13,0x9F,"%3d",	(numFiles % 103) > 100 ? 100 : numFiles % 103);
-				}
+    resume = 1;
+    for(entry = strlen(szSource) - 1; szSource[entry] != '\\'; entry--);
+    strcpy(path, szSource);
+    path[entry] = 0;
+    strcpy(curr_file, szSource);
+    curr_file[entry + 1] = 0;
+    strcpy(new_file, szSource);
+    new_file[entry + 1] = 0;
+    new_file[0] = szDest[0];
+    strcpy(spec, &szSource[entry+1]);
+    total_read = 0;
+    total_write = 0;
+    if(!_dos_findfirst(szSource, wAttr, &dir_entry)) {
+        do {
+            files = 0;
+            ptr_pos = ptrSource;
+            while(ptr_pos + 2*sizeof(dir_entry) < ptrSource + buffSize) {
+                memcpy(ptr_pos, &dir_entry, sizeof(dir_entry));
+                ptr_dir_entry = (struct find_t*)ptr_pos;
+                ptr_pos += sizeof(dir_entry);
+                curr_file[entry + 1] = '\0';
+                strcat(curr_file, dir_entry.name);
+                if(total_read == 0) {
+                    if(_dos_open(curr_file, O_RDONLY, &source))
+                    errorFile(curr_file,sysInfo[17]);
+                }
+                if(_dos_read(source, ptr_pos, buffSize - (ptr_pos - ptrSource), &num_read))
+                errorFile(curr_file, sysInfo[20]);
+                ptr_pos += num_read; total_read += num_read; files++;
+                if(total_read == dir_entry.size) {
+                    _dos_close(source); total_read = 0;
+                    if(_dos_findnext(&dir_entry)) break;
+                }
+                else break;
+            }
+            ptr_dir_entry = (struct find_t*)ptrSource;
+            ptr_pos = ptrSource + sizeof(dir_entry);
+            for(n = 0; n < files; n++) {
+                if(total_write == 0) {
+                    new_file[entry + 1] = '\0';
+                    strcat(new_file, ptr_dir_entry->name);
+                    if(_dos_creat(new_file, ptr_dir_entry->attrib, &target))
+                    errorFile(new_file,sysInfo[17]);
+                    writeChar(30,11,0x99,33,32);
+                    writeVRM(30,11,0x9A,new_file,0); delay(50);
+                    writeChar(18,12,0xFF,6*numFiles++ / 14+2,219);
+                    printVRM(50,13,0x9F,"%3d",	(numFiles % 103) > 100 ? 100 : numFiles % 103);
+                }
 
-				if(ptr_dir_entry->size > buffSize - (ptr_pos - ptrSource))
-					write_to = buffSize - (ptr_pos - ptrSource);
-				else write_to = ptr_dir_entry->size;
+                if(ptr_dir_entry->size > buffSize - (ptr_pos - ptrSource))
+                    write_to = buffSize - (ptr_pos - ptrSource);
+                else write_to = ptr_dir_entry->size;
 
-				if((ptr_dir_entry->size - total_write) < write_to)
-				write_to = (word)(ptr_dir_entry->size - total_write);
+                if((ptr_dir_entry->size - total_write) < write_to)
+                write_to = (uint16_t)(ptr_dir_entry->size - total_write);
 
-				if(_dos_write(target, ptr_pos, write_to, &num_write))
-				ErrorFile(new_file,SysInf[21]);
-				if(num_write != write_to) ErrorFile(new_file,SysInf[21]);
-				total_write += num_write;
-				ptr_pos += write_to;
-				if(total_write == ptr_dir_entry->size) {
-					total_write = 0;
-					_dos_setftime(target, ptr_dir_entry->wr_date, ptr_dir_entry->wr_time);
-					_dos_close(target);
-				}
-				ptr_dir_entry = (find_t *)ptr_pos; ptr_pos += sizeof(dir_entry);
-			}
-		} while(total_read || !_dos_findnext(&dir_entry));
-	}
-	sprintf(str_entry, "%s\\*.*", path);
-	if(!_dos_findfirst(str_entry,_A_SUBDIR | _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM, &dir_entry)) {
-		do {
-			if((dir_entry.attrib & _A_SUBDIR) && (dir_entry.name[0] != '.')) {
-				sprintf(str_entry, "%s\\%s\\%s", path, dir_entry.name, spec);
-				sprintf(new_dir, "%s\\%s", path, dir_entry.name);
-				new_dir[0] = szDest[0];
-				mkdir(new_dir);
-				_dos_setfileattr(new_dir, dir_entry.attrib);
-				resume = CopyFiles(str_entry, szDest, wAttr);
-			}
-		} while(resume && !_dos_findnext(&dir_entry));
-	}
-	return resume;
+                if(_dos_write(target, ptr_pos, write_to, &num_write))
+                errorFile(new_file,sysInfo[21]);
+                if(num_write != write_to) errorFile(new_file,sysInfo[21]);
+                total_write += num_write;
+                ptr_pos += write_to;
+                if(total_write == ptr_dir_entry->size) {
+                    total_write = 0;
+                    _dos_setftime(target, ptr_dir_entry->wr_date, ptr_dir_entry->wr_time);
+                    _dos_close(target);
+                }
+                ptr_dir_entry = (struct find_t*)ptr_pos;
+                ptr_pos += sizeof(dir_entry);
+            }
+        } while(total_read || !_dos_findnext(&dir_entry));
+    }
+    sprintf(str_entry, "%s\\*.*", path);
+    if(!_dos_findfirst(str_entry,_A_SUBDIR | _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM, &dir_entry)) {
+        do {
+            if((dir_entry.attrib & _A_SUBDIR) && (dir_entry.name[0] != '.')) {
+                sprintf(str_entry, "%s\\%s\\%s", path, dir_entry.name, spec);
+                sprintf(new_dir, "%s\\%s", path, dir_entry.name);
+                new_dir[0] = szDest[0];
+                mkdir(new_dir);
+                _dos_setfileattr(new_dir, dir_entry.attrib);
+                resume = copyFiles(str_entry, szDest, wAttr);
+            }
+        } while(resume && !_dos_findnext(&dir_entry));
+    }
+    return resume;
 }
 
 /*---------------------------------------*/
-/* Function : MsgBox                     */
+/* Function : messageBox                 */
 /* Mission  : Display the system message */
 /* Expects  : (x1,y1,x2,y2) coordinates  */
 /*            (szMsg) The messages array */
 /*            (n) The elements of array  */
 /* Return   : 1 or 0                     */
 /*---------------------------------------*/
-byte MsgBox(byte x1, byte y1, byte x2, byte y2, const char *szMsg[], byte n)
+uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *szMsg[], uint8_t n)
 {
-	char key = 0;
-	byte slc = 0, bCenter = x1 + (x2 - x1) / 2, i;
+    char key = 0;
+    uint8_t slc = 0, bCenter = x1 + (x2 - x1) / 2, i;
 
-	SetCursorSize(0x2020);
-	DlgWin(x1,y1,x2,y2,0x4F,SysInf[1]);
-	ShowMouse(); MoveMouse(bCenter,y2-3);
-	for(i = 0; i < n; i++)
-	WriteVRM(bCenter-strlen(szMsg[i])/2+1,y1+2+i,0x4A,szMsg[i]);
-	Button(bCenter-14,y2-2,wATV,4,SysMen[0],1,wFLT);
-	Button(bCenter+6,y2-2,_eATV,4,SysMen[2],1,_eFLT);
-	do {
-		if(ClickMouse(bCol, bRow) == 1) {
-			if(bRow == y2-2 && bCol >= bCenter-14 && bCol <= bCenter-5) {
-				HideMouse(); Button(bCenter+6,y2-2,_eATV,4,SysMen[2],1,_eFLT);
-				Clear(bCenter-14,y2-2,bCenter-3,y2-1,4);
-				WriteVRM(bCenter-13,y2-2,wATV,SysMen[0],wFLT); delay(50);
-				Button(bCenter-14,y2-2,wATV,4,SysMen[0],1,wFLT); ShowMouse();
-				slc = 0; key = ENTER;
-			}
-			if(bRow == y2-2 && bCol >= bCenter+6 && bCol <= bCenter+15) {
-				HideMouse(); Button(bCenter-14,y2-2,_eATV,4,SysMen[0],1,_eFLT);
-				Clear(bCenter+6, y2-2,bCenter+16,y2-1,4);
-				WriteVRM(bCenter+7,y2-2,wATV,SysMen[2],wFLT); delay(50);
-				Button(bCenter+6,y2-2,wATV,4,SysMen[2],1,wFLT); ShowMouse();
-				slc = 1; key = ENTER;
-			}
-			if(bRow == y1 && bCol == x1 || bCol == x1+1) {slc = 1; key = ENTER;}
-		}
-		if(kbhit()) {
-			key = getch(); if(!key) key = getch();
-			switch(toupper(key)) {
-			case LEFT :
-				Button(bCenter-14+slc*20,y2-2,_eATV,4,SysMen[slc*2],1,_eFLT);
-				if(slc <= 0) slc = 1; else slc--;
-				Button(bCenter-14+slc*20,y2-2,wATV,4,SysMen[slc*2],1,wFLT);
-				break;
-			case RIGHT :
-				Button(bCenter-14+slc*20,y2-2,_eATV,4,SysMen[slc*2],1,_eFLT);
-				if(slc >= 1) slc = 0; else slc++;
-				Button(bCenter-14+slc*20,y2-2,wATV,4,SysMen[slc*2],1,wFLT);
-				break;
-			}
-		}
-	} while(key != ENTER);
-	return slc;
+    _settextcursor(0x2020);
+    drawShadowBox(x1,y1,x2,y2,0x4F,sysInfo[1]);
+    showMouse(); moveMouse(bCenter,y2-3);
+    for(i = 0; i < n; i++)
+    writeVRM(bCenter-strlen(szMsg[i])/2+1,y1+2+i,0x4A,szMsg[i], 0);
+    drawButton(bCenter-14,y2-2,wATV,4,sysMenu[0],1,wFLT);
+    drawButton(bCenter+6,y2-2,_eATV,4,sysMenu[2],1,_eFLT);
+    do {
+        if(clickMouse(&bCol, &bRow) == 1) {
+            if(bRow == y2-2 && bCol >= bCenter-14 && bCol <= bCenter-5) {
+                hideMouse(); drawButton(bCenter+6,y2-2,_eATV,4,sysMenu[2],1,_eFLT);
+                clearScreen(bCenter-14,y2-2,bCenter-3,y2-1,4);
+                writeVRM(bCenter-13,y2-2,wATV,sysMenu[0],wFLT); delay(50);
+                drawButton(bCenter-14,y2-2,wATV,4,sysMenu[0],1,wFLT); showMouse();
+                slc = 0; key = ENTER;
+            }
+            if(bRow == y2-2 && bCol >= bCenter+6 && bCol <= bCenter+15) {
+                hideMouse(); drawButton(bCenter-14,y2-2,_eATV,4,sysMenu[0],1,_eFLT);
+                clearScreen(bCenter+6, y2-2,bCenter+16,y2-1,4);
+                writeVRM(bCenter+7,y2-2,wATV,sysMenu[2],wFLT); delay(50);
+                drawButton(bCenter+6,y2-2,wATV,4,sysMenu[2],1,wFLT); showMouse();
+                slc = 1; key = ENTER;
+            }
+            if(bRow == y1 && bCol == x1 || bCol == x1+1) {slc = 1; key = ENTER;}
+        }
+        if(kbhit()) {
+            key = getch(); if(!key) key = getch();
+            switch(toupper(key)) {
+            case LEFT :
+                drawButton(bCenter-14+slc*20,y2-2,_eATV,4,sysMenu[slc*2],1,_eFLT);
+                if(slc < 1) slc = 1; else slc--;
+                drawButton(bCenter-14+slc*20,y2-2,wATV,4,sysMenu[slc*2],1,wFLT);
+                break;
+            case RIGHT :
+                drawButton(bCenter-14+slc*20,y2-2,_eATV,4,sysMenu[slc*2],1,_eFLT);
+                if(slc > 0) slc = 0; else slc++;
+                drawButton(bCenter-14+slc*20,y2-2,wATV,4,sysMenu[slc*2],1,wFLT);
+                break;
+            }
+        }
+    } while(key != ENTER);
+    return slc;
 }
 
 /*---------------------------------------*/
-/* Function : WarnBox                    */
+/* Function : warningBox                 */
 /* Mission  : Display the system message */
 /* Expects  : (x1,y1,x2,y2) coordinates  */
 /*            (szMsg) The messages array */
 /*            (n) The elements of array  */
 /* Return   : 1 or 0                     */
 /*---------------------------------------*/
-void WarnBox(byte x1, byte y1, byte x2, byte y2, const char *szMsg[], byte n)
+void warningBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *szMsg[], uint8_t n)
 {
-	byte bCenter = x1 + (x2 - x1) / 2, i = 0,
-	bPos = bCenter - strlen(SysMen[0])/2;
-	char key;
+    uint8_t bCenter = x1 + (x2 - x1) / 2, i = 0,
+    bPos = bCenter - strlen(sysMenu[0])/2;
+    char key;
 
-	SetCursorSize(0x2020); DlgWin(x1,y1,x2,y2,0x4F,SysInf[1]);
-	for(i = 0; i < n; i++)
-	WriteVRM(bCenter-strlen(szMsg[i])/2,y1+2+i,0x4A,szMsg[i]);
-	Button(bPos,y2-2,wATV,4,SysMen[0],1,wFLT);
-	ShowMouse(); MoveMouse(bCenter,y2-3);
-	do {
-		if(ClickMouse(bCol, bRow) == 1) {
-			if(bRow == y2-2 && bCol >= bPos  && bCol <= bPos + 9) {
-				HideMouse(); Clear(bPos,y2-2,bPos+7,y2-1,4);
-				WriteVRM(bPos+1,y2-2,wATV,SysMen[0],0xF4); delay(50);
-				Button(bPos,y2-2,wATV,4,SysMen[0],1,0xF4); ShowMouse();
-				key = ENTER;
-			}
-			if(bRow == y1 && bCol == x1 || bCol == x1+1) break;
-		}
-		if(kbhit()) {
-			key = getch(); if(!key) key = getch();
-			switch(toupper(key)) {
-			case 'D':
-			case ESC : key = ENTER;
-			}
-		}
-	} while(key != ENTER);
+    _settextcursor(0x2020); drawShadowBox(x1,y1,x2,y2,0x4F,sysInfo[1]);
+    for(i = 0; i < n; i++)
+    writeVRM(bCenter-strlen(szMsg[i])/2,y1+2+i,0x4A,szMsg[i], 0);
+    drawButton(bPos,y2-2,wATV,4,sysMenu[0],1,wFLT);
+    showMouse(); moveMouse(bCenter,y2-3);
+    do {
+        if(clickMouse(&bCol, &bRow) == 1) {
+            if(bRow == y2-2 && bCol >= bPos  && bCol <= bPos + 9) {
+                hideMouse(); clearScreen(bPos,y2-2,bPos+7,y2-1,4);
+                writeVRM(bPos+1,y2-2,wATV,sysMenu[0],0xF4); delay(50);
+                drawButton(bPos,y2-2,wATV,4,sysMenu[0],1,0xF4); showMouse();
+                key = ENTER;
+            }
+            if(bRow == y1 && bCol == x1 || bCol == x1+1) break;
+        }
+        if(kbhit()) {
+            key = getch(); if(!key) key = getch();
+            switch(toupper(key)) {
+            case 'D':
+            case ESC : key = ENTER;
+            }
+        }
+    } while(key != ENTER);
 }
 
 /*--------------------------------------*/
-/* Funtion : UserCheck                  */
+/* Funtion : checkUser                  */
 /* Mission : Testing user serial number */
 /* Expects : Nothing                    */
 /* Returns : Nothing                    */
 /*--------------------------------------*/
-void UserCheck()
+void checkUser()
 {
-	char szOldName[31], szOldID[20],
-	szCurrName[31], szCurrID[20];
-	FILE *fptr;
-	tagRegs trInfo;
-	byte i = 0, j = 0, flgCorrectName = 1, flgCorrectID = 0, isASCII = 0;
+    char szOldName[31], szOldID[20],
+    szCurrName[31], szCurrID[20];
+    FILE *fptr;
+    REG_INFO trInfo;
+    uint8_t i = 0, j = 0, flgCorrectName = 1, flgCorrectID = 0, isASCII = 0;
 
-	textattr(0x1F); SetCursorSize(0x2020); clrscr();
-	FillFrame(1,1,80,25,0xF6,178);
-	DlgWin(5,3,75,23,0x5F,SysInf[2]);
-	WriteVRM(8,5,0x5A,SysInf[56]); WriteVRM(8,6,0x5A,SysInf[57]);
-	WriteVRM(8,7,0x5A,SysInf[58]); WriteVRM(8,8,0x5A,SysInf[59]);
-	WriteVRM(8,9,0x5A,SysInf[60]); WriteVRM(14,12,0x5E,SysMen[9],0x5F);
-	WriteVRM(11,11,0x5B,"çè"); WriteVRM(8,14,0x5F,SysInf[22]);
-	WriteChar(8,15,0x1F,30,32); WriteVRM(8,17,0x5F,SysInf[23]);
-	WriteChar(8,18,0x1F,30,32);
-	Button(24,21,_wATV,5,SysMen[1],1,_wFLT); WriteVRM(11,12,0x5E,"éê");
-	Button(47,21,wATV,5,SysMen[4],1,wFLT); ShowMouse(); MoveMouse(10,11);
-	slc = 0; label1: WriteVRM(14,11+slc,0x5B,SysMen[slc+8],0x5A); key = 0;
-	do {
-		if(kbhit()) {
-			key = getch(); if(!key) key = getch();
-			switch(toupper(key)) {
-			case DOWN :
-				WriteVRM(14,11+slc,0x5E,SysMen[slc+8],0x5F);
-				WriteVRM(11,11+slc,0x5E,"éê");
-				if(slc >= 1) slc = 0; else slc++;
-				WriteVRM(14,11+slc,0x5B,SysMen[slc+8],0x5A);
-				WriteVRM(11,11+slc,0x5B,"çè"); break;
-			case UP :
-				WriteVRM(14,11+slc,0x5E,SysMen[slc+8],0x5F);
-				WriteVRM(11,11+slc,0x5E,"éê");
-				if(slc <= 0) slc = 1; else slc--;
-				WriteVRM(14,11+slc,0x5B,SysMen[slc+8],0x5A);
-				WriteVRM(11,11+slc,0x5B,"çè"); break;
-			}
-		}
-		if(ClickMouse(bCol, bRow) == 1) {
-			if(bRow == 11 && bCol >= 11 && bCol <= 40) {
-				HideMouse(); WriteVRM(14,12,0x5E,SysMen[9],0x5F);
-				WriteVRM(11,12,0x5E,"éê"); delay(20);
-				WriteVRM(14,11,0x5B,SysMen[8],0x5A);
-				WriteVRM(11,11,0x5B,"çè"); ShowMouse(); slc = 0; key = TAB;
-			}
-			if(bRow == 12 && bCol >= 11 && bCol <= 55) {
-				HideMouse(); WriteVRM(14,11,0x5E,SysMen[8],0x5F);
-				WriteVRM(11,11,0x5E,"éê"); delay(20);
-				WriteVRM(14,12,0x5B,SysMen[9],0x5A);
-				WriteVRM(11,12,0x5B,"çè"); ShowMouse(); slc = 1; key = TAB;
-			}
-			if(bRow == 15 && bCol >= 8 && bCol <= 38) key = TAB;
-			if(bRow == 18 && bCol >= 8 && bCol <= 38) key = TAB;
-			if(bRow == 3 && bCol == 5 || bCol == 6) HaltSys();
-		}
-	} while(key != TAB);
-	if(slc) {
-		HideMouse(); gettext(20,10,62,17,szBuff);
-		msgSlc = MsgBox(20,10,60,16,msgExit,1);
-		if(!msgSlc) HaltSys(); HideMouse();
-		puttext(20,10,62,17,szBuff); ShowMouse(); goto label1;
-   }
-	if((fptr = fopen(/*SysInf[42]*/"register.dat","rb")) == NULL) {
-		 textattr(0x1F); SetBorder(47); SetCursorSize(0x2020);
-		 clrscr(); WriteVRM(31,10,0x4F,SysInf[11]);
-		 WriteVRM(20,12,0x1F,SysInf[19]); WriteVRM(20,13,0x1F,SysInf[25]);
-		 getch(); HaltSys();
-	}
-	fread(&trInfo,sizeof(tagRegs),1,fptr); fclose(fptr);
-	strcpy(szOldName, trInfo.user); strcpy(szOldID, trInfo.serial);
-	szCurrName[0] = '\0'; szCurrID[0] = '\0'; label2:
-	SetCursorSize(0x0B0A); gotoxy(8,15); key = i = j = slc = 0;
-	Button(24,21,wATV,5,SysMen[1],1,wFLT);
-	Button(47,21,_wATV,5,SysMen[4],1,_wFLT);
-	do {
-		if(flgCorrectName) gotoxy(8+i,15); if(flgCorrectID) gotoxy(8+j,18);
-      if(kbhit()) {
-			isASCII = ReadKey(key); if(!key) isASCII = ReadKey(key);
-			if(flgCorrectName) {
-				if((isASCII && i < 30 && key != 8 && isalpha(key)) ||
-				(key == 32 && i < 30)) {
-					szCurrName[i] = key; PrintXY(8+i,15,0x1F,key); i++;
-				}
-				if(key == 8 && i > 0) {
-					i--; PrintXY(8+i,15,0x1F,32);
-				}
-			}
-			if(key == TAB && flgCorrectName) {
-				flgCorrectName = 0; flgCorrectID = 1;
-			}
-			if(flgCorrectID) {
-				if(isASCII && j < 19 && key != 8 && key != TAB && key != ENTER) {
-					szCurrID[j] = key; PrintXY(8+j,18,0x1F,key); j++;
-				}
-				if(key == 8 && j > 0) {
-					j--; PrintXY(8+j,18,0x1F,32);
-				}
-			}
-			switch(toupper(key)) {
-			case LEFT :
-				if(!isASCII) {
-					Button(24+slc*23,21,_wATV,5,SysMen[3*slc+1],1,_wFLT);
-					if(slc <= 0) slc = 0; else slc--;
-					Button(24+slc*23,21,wATV,5,SysMen[3*slc+1],1,wFLT);
-				} break;
-			case RIGHT :
-				if(!isASCII) {
-					Button(24+slc*23,21,_wATV,5,SysMen[3*slc+1],1,_wFLT);
-					if(slc >= 1) slc = 1; else slc++;
-					Button(24+slc*23,21,wATV,5,SysMen[3*slc+1],1,wFLT);
-				}
-			}
-		}
-		if(ClickMouse(bCol, bRow) == 1) {
-			if(bRow == 21 && bCol >= 24 && bCol <= 36) {
-				HideMouse(); Button(47,21,_wATV,5,SysMen[4],1,_wFLT);
-				Clear(24,21,36,22,5); WriteVRM(25,21,wATV,SysMen[1],wFLT);
-				delay(50); Button(24,21,wATV,5,SysMen[1],1,wFLT);
-				slc = 0; ShowMouse(); key = ENTER;
-			}
-			if(bRow == 21 && bCol >= 47 && bCol <= 59) {
-				HideMouse(); Button(24,21,_wATV,5,SysMen[1],1,_wFLT);
-				Clear(47,21,59,22,5); WriteVRM(48,21,wATV,SysMen[2],wFLT);
-				delay(50); Button(47,21,wATV,5,SysMen[4],1,wFLT);
-				slc = 1; ShowMouse(); key = ENTER;
-			}
-		}
-	} while(key != ENTER);
-	if(i) szCurrName[i] = '\0'; if(j) szCurrID[j] = '\0';
-	if(!slc) {
-		if(strcmp(szOldName, szCurrName) &&
-			strcmp(szOldID, szCurrID)) {
-			HideMouse(); gettext(20,10,62,17,szBuff);
-			flgCorrectName = 1; flgCorrectID = 0;
-			WarnBox(20,10,60,16,msgWarn,1); HideMouse();
-			puttext(20,10,62,17,szBuff); WriteChar(8,15,0x1F,30,32);
-			WriteChar(8,18,0x1F,30,32); ShowMouse(); goto label2;
-		}
-		else
-		if(!strcmp(szOldName, szCurrName) &&
-			strcmp(szOldID, szCurrID)) {
-			HideMouse(); gettext(20,10,62,17,szBuff);
-			flgCorrectName = 0; flgCorrectID = 1;
-			WarnBox(20,10,60,16,msgWarn,1); HideMouse();
-			puttext(20,10,62,17,szBuff); WriteChar(8,18,0x1F,30,32);
-			ShowMouse(); goto label2;
-		}
-		else
-		if(strcmp(szOldName, szCurrName) &&
-			 !strcmp(szOldID, szCurrID)) {
-			 HideMouse(); gettext(20,10,62,17,szBuff);
-			 flgCorrectName = 1; flgCorrectID = 0;
-			 WarnBox(20,10,60,16,msgWarn,1); HideMouse();
-			 puttext(20,10,62,17,szBuff);
-			 WriteChar(8,15,0x1F,30,32); ShowMouse();
-			 goto label2;
-		 }
-	}
-	else {
-		HideMouse(); gettext(20,10,62,17,szBuff);
-		msgSlc = MsgBox(20,10,60,16,msgExit,1);
-		if(!msgSlc) HaltSys(); HideMouse(); puttext(20,10,62,17,szBuff);
-		ShowMouse(); goto label2;
-	}
+    _setbkcolor(1);
+    _settextcolor(15);
+    _settextcursor(0x2020); _clearscreen(_GWINDOW);
+    fillFrame(1,1,80,25,0xF6,178);
+    drawShadowBox(5,3,75,23,0x5F,sysInfo[2]);
+    writeVRM(8,5,0x5A,sysInfo[56], 0); writeVRM(8,6,0x5A,sysInfo[57], 0);
+    writeVRM(8,7,0x5A,sysInfo[58], 0); writeVRM(8,8,0x5A,sysInfo[59], 0);
+    writeVRM(8,9,0x5A,sysInfo[60], 0); writeVRM(14,12,0x5E,sysMenu[9],0x5F);
+    writeVRM(11,11,0x5B,"ï¿½ï¿½", 0); writeVRM(8,14,0x5F,sysInfo[22], 0);
+    writeChar(8,15,0x1F,30,32); writeVRM(8,17,0x5F,sysInfo[23], 0);
+    writeChar(8,18,0x1F,30,32);
+    drawButton(24,21,_wATV,5,sysMenu[1],1,_wFLT); writeVRM(11,12,0x5E,"ï¿½ï¿½", 0);
+    drawButton(47,21,wATV,5,sysMenu[4],1,wFLT); showMouse(); moveMouse(10,11);
+    slc = 0; label1: writeVRM(14,11+slc,0x5B,sysMenu[slc+8],0x5A); key = 0;
+    do {
+        if(kbhit()) {
+            key = getch(); if(!key) key = getch();
+            switch(toupper(key)) {
+            case DOWN :
+                writeVRM(14,11+slc,0x5E,sysMenu[slc+8],0x5F);
+                writeVRM(11,11+slc,0x5E,"ï¿½ï¿½", 0);
+                if(slc > 0) slc = 0; else slc++;
+                writeVRM(14,11+slc,0x5B,sysMenu[slc+8],0x5A);
+                writeVRM(11,11+slc,0x5B,"ï¿½ï¿½", 0); break;
+            case UP :
+                writeVRM(14,11+slc,0x5E,sysMenu[slc+8],0x5F);
+                writeVRM(11,11+slc,0x5E,"ï¿½ï¿½", 0);
+                if(slc < 1) slc = 1; else slc--;
+                writeVRM(14,11+slc,0x5B,sysMenu[slc+8],0x5A);
+                writeVRM(11,11+slc,0x5B,"ï¿½ï¿½", 0); break;
+            }
+        }
+        if(clickMouse(&bCol, &bRow) == 1) {
+            if(bRow == 11 && bCol >= 11 && bCol <= 40) {
+                hideMouse(); writeVRM(14,12,0x5E,sysMenu[9],0x5F);
+                writeVRM(11,12,0x5E,"ï¿½ï¿½", 0); delay(20);
+                writeVRM(14,11,0x5B,sysMenu[8],0x5A);
+                writeVRM(11,11,0x5B,"ï¿½ï¿½", 0); showMouse(); slc = 0; key = TAB;
+            }
+            if(bRow == 12 && bCol >= 11 && bCol <= 55) {
+                hideMouse(); writeVRM(14,11,0x5E,sysMenu[8],0x5F);
+                writeVRM(11,11,0x5E,"ï¿½ï¿½", 0); delay(20);
+                writeVRM(14,12,0x5B,sysMenu[9],0x5A);
+                writeVRM(11,12,0x5B,"ï¿½ï¿½", 0); showMouse(); slc = 1; key = TAB;
+            }
+            if(bRow == 15 && bCol >= 8 && bCol <= 38) key = TAB;
+            if(bRow == 18 && bCol >= 8 && bCol <= 38) key = TAB;
+            if(bRow == 3 && bCol == 5 || bCol == 6) haltSys();
+        }
+    } while(key != TAB);
+    if(slc) {
+        hideMouse(); getText(20,10,62,17,szBuff);
+        msgSlc = messageBox(20,10,60,16,msgExit,1);
+        if(!msgSlc) haltSys(); hideMouse();
+        putText(20,10,62,17,szBuff); showMouse(); goto label1;
+}
+    if((fptr = fopen(/*sysInfo[42]*/"register.dat","rb")) == NULL) {
+        _setbkcolor(1);
+        _settextcolor(15);
+        setBorder(47); _settextcursor(0x2020);
+        _clearscreen(_GWINDOW); writeVRM(31,10,0x4F,sysInfo[11], 0);
+        writeVRM(20,12,0x1F,sysInfo[19], 0); writeVRM(20,13,0x1F,sysInfo[25], 0);
+        getch(); haltSys();
+    }
+    fread(&trInfo,sizeof(REG_INFO),1,fptr); fclose(fptr);
+    strcpy(szOldName, trInfo.user); strcpy(szOldID, trInfo.serial);
+    szCurrName[0] = '\0'; szCurrID[0] = '\0'; label2:
+    _settextcursor(0x0B0A); _settextposition(15,8); key = i = j = slc = 0;
+    drawButton(24,21,wATV,5,sysMenu[1],1,wFLT);
+    drawButton(47,21,_wATV,5,sysMenu[4],1,_wFLT);
+    do {
+        if(flgCorrectName) _settextposition(15,8+i); if(flgCorrectID) _settextposition(18,8+j);
+        if(kbhit()) {
+            isASCII = readKey(&key); if(!key) isASCII = readKey(&key);
+            if(flgCorrectName) {
+                if((isASCII && i < 30 && key != 8 && isalpha(key)) ||
+                (key == 32 && i < 30)) {
+                    szCurrName[i] = key; printXY(8+i,15,0x1F,key); i++;
+                }
+                if(key == 8 && i > 0) {
+                    i--; printXY(8+i,15,0x1F,32);
+                }
+            }
+            if(key == TAB && flgCorrectName) {
+                flgCorrectName = 0; flgCorrectID = 1;
+            }
+            if(flgCorrectID) {
+                if(isASCII && j < 19 && key != 8 && key != TAB && key != ENTER) {
+                    szCurrID[j] = key; printXY(8+j,18,0x1F,key); j++;
+                }
+                if(key == 8 && j > 0) {
+                    j--; printXY(8+j,18,0x1F,32);
+                }
+            }
+            switch(toupper(key)) {
+            case LEFT :
+                if(!isASCII) {
+                    drawButton(24+slc*23,21,_wATV,5,sysMenu[3*slc+1],1,_wFLT);
+                    if(slc < 1) slc = 0; else slc--;
+                    drawButton(24+slc*23,21,wATV,5,sysMenu[3*slc+1],1,wFLT);
+                } break;
+            case RIGHT :
+                if(!isASCII) {
+                    drawButton(24+slc*23,21,_wATV,5,sysMenu[3*slc+1],1,_wFLT);
+                    if(slc > 0) slc = 1; else slc++;
+                    drawButton(24+slc*23,21,wATV,5,sysMenu[3*slc+1],1,wFLT);
+                }
+            }
+        }
+        if(clickMouse(&bCol, &bRow) == 1) {
+            if(bRow == 21 && bCol >= 24 && bCol <= 36) {
+                hideMouse(); drawButton(47,21,_wATV,5,sysMenu[4],1,_wFLT);
+                clearScreen(24,21,36,22,5); writeVRM(25,21,wATV,sysMenu[1],wFLT);
+                delay(50); drawButton(24,21,wATV,5,sysMenu[1],1,wFLT);
+                slc = 0; showMouse(); key = ENTER;
+            }
+            if(bRow == 21 && bCol >= 47 && bCol <= 59) {
+                hideMouse(); drawButton(24,21,_wATV,5,sysMenu[1],1,_wFLT);
+                clearScreen(47,21,59,22,5); writeVRM(48,21,wATV,sysMenu[2],wFLT);
+                delay(50); drawButton(47,21,wATV,5,sysMenu[4],1,wFLT);
+                slc = 1; showMouse(); key = ENTER;
+            }
+        }
+    } while(key != ENTER);
+    if(i) szCurrName[i] = '\0'; if(j) szCurrID[j] = '\0';
+    if(!slc) {
+        if(strcmp(szOldName, szCurrName) &&
+            strcmp(szOldID, szCurrID)) {
+            hideMouse(); getText(20,10,62,17,szBuff);
+            flgCorrectName = 1; flgCorrectID = 0;
+            warningBox(20,10,60,16,msgWarn,1); hideMouse();
+            putText(20,10,62,17,szBuff); writeChar(8,15,0x1F,30,32);
+            writeChar(8,18,0x1F,30,32); showMouse(); goto label2;
+        }
+        else
+        if(!strcmp(szOldName, szCurrName) &&
+            strcmp(szOldID, szCurrID)) {
+            hideMouse(); getText(20,10,62,17,szBuff);
+            flgCorrectName = 0; flgCorrectID = 1;
+            warningBox(20,10,60,16,msgWarn,1); hideMouse();
+            putText(20,10,62,17,szBuff); writeChar(8,18,0x1F,30,32);
+            showMouse(); goto label2;
+        }
+        else
+        if(strcmp(szOldName, szCurrName) &&
+            !strcmp(szOldID, szCurrID)) {
+            hideMouse(); getText(20,10,62,17,szBuff);
+            flgCorrectName = 1; flgCorrectID = 0;
+            warningBox(20,10,60,16,msgWarn,1); hideMouse();
+            putText(20,10,62,17,szBuff);
+            writeChar(8,15,0x1F,30,32); showMouse();
+            goto label2;
+        }
+    }
+    else {
+        hideMouse(); getText(20,10,62,17,szBuff);
+        msgSlc = messageBox(20,10,60,16,msgExit,1);
+        if(!msgSlc) haltSys(); hideMouse(); putText(20,10,62,17,szBuff);
+        showMouse(); goto label2;
+    }
 }
 
 /*------------------------------------*/
-/* Funtion : Unregister               */
+/* Funtion : showHelpFile             */
 /* Mission : Show the readme.hlp file */
 /* Expects : Nothing                  */
 /* Returns : Nothing                  */
 /*------------------------------------*/
-void Unregister()
+void showHelpFile()
 {
-	textattr(0x1F); SetBorder(63); SetCursorSize(0x2020);
-	clrscr(); FillFrame(1,1,80,25,0xF6,178);
-	DlgWin(10,3,74,22,0xBE,SysInf[3]);
-	WriteVRM(12,5,0xB0,SysInf[61]); WriteVRM(12,6,0xB0,SysInf[62]);
-	WriteVRM(12,7,0xB0,SysInf[63]); WriteVRM(12,8,0xB0,SysInf[64]);
-	WriteVRM(12,9,0xB0,SysInf[65]); WriteVRM(12,10,0xB0,SysInf[66]);
-	WriteVRM(12,11,0xB0,SysInf[67]); WriteVRM(12,12,0xB0,SysInf[68]);
-	WriteVRM(17,14,0xBC,SysInf[69]); WriteVRM(17,15,0xBC,SysInf[70]);
-	WriteVRM(17,16,0xBC,SysInf[71]); WriteVRM(12,18,0xB1,SysInf[72]);
-	Button(47,20,_wATV,11,SysMen[4],1,_wFLT);
-	Button(26,20,wATV,11,SysMen[1],1,wFLT);
-	ShowMouse(); MoveMouse(42,20); slc = chs = key = 0;
-	do {
-		if(kbhit()) {
-			key = getch(); if(!key) key = getch();
-			switch(toupper(key)) {
-			case LEFT:
-				Button(26+slc*21,20,_wATV,11,SysMen[3*slc+1],1,_wFLT);
-				if(slc <= 0) slc = 0; else slc--;
-				Button(26+slc*21,20,wATV,11,SysMen[3*slc+1],1,wFLT); break;
-			case RIGHT:
-				Button(26+slc*21,20,_wATV,11,SysMen[3*slc+1],1,_wFLT);
-				if(slc >= 1) slc = 1; else slc++;
-				Button(26+slc*21,20,wATV,11,SysMen[3*slc+1],1,wFLT); break;
-			}
-		}
-		if(ClickMouse(bCol, bRow) == 1) {
-			if(bRow == 20 && bCol >= 26 && bCol <= 38) {
-				HideMouse(); Button(47,20,_wATV,11,SysMen[4],1,_wFLT);
-				Clear(26,20,38,21,11); WriteVRM(27,20,wATV,SysMen[1],wFLT);
-				delay(50); Button(26,20,wATV,11,SysMen[1],1,wFLT);
-				ShowMouse(); slc = 0; break;
-			}
-			if(bRow == 20 && bCol >= 46 && bCol <= 59) {
-				HideMouse(); Button(26,20,_wATV,11,SysMen[1],1,_wFLT);
-				Clear(47,20,59,21,11); WriteVRM(48,20,wATV,SysMen[4],wFLT);
-				delay(50); Button(47,20,wATV,11,SysMen[4],1,wFLT);
-				ShowMouse(); slc = 1; break;
-			}
-			if(bRow == 3 && bCol == 10 || bCol == 11) HaltSys();
-		}
-	} while(key != ENTER); HideMouse(); if(slc) HaltSys();
+    _setbkcolor(1);
+    _settextcolor(15);
+    setBorder(63); _settextcursor(0x2020);
+    _clearscreen(_GWINDOW); fillFrame(1,1,80,25,0xF6,178);
+    drawShadowBox(10,3,74,22,0xBE,sysInfo[3]);
+    writeVRM(12,5,0xB0,sysInfo[61], 0); writeVRM(12,6,0xB0,sysInfo[62], 0);
+    writeVRM(12,7,0xB0,sysInfo[63], 0); writeVRM(12,8,0xB0,sysInfo[64], 0);
+    writeVRM(12,9,0xB0,sysInfo[65], 0); writeVRM(12,10,0xB0,sysInfo[66], 0);
+    writeVRM(12,11,0xB0,sysInfo[67], 0); writeVRM(12,12,0xB0,sysInfo[68], 0);
+    writeVRM(17,14,0xBC,sysInfo[69], 0); writeVRM(17,15,0xBC,sysInfo[70], 0);
+    writeVRM(17,16,0xBC,sysInfo[71], 0); writeVRM(12,18,0xB1,sysInfo[72], 0);
+    drawButton(47,20,_wATV,11,sysMenu[4],1,_wFLT);
+    drawButton(26,20,wATV,11,sysMenu[1],1,wFLT);
+    showMouse(); moveMouse(42,20); slc = chs = key = 0;
+    do {
+        if(kbhit()) {
+            key = getch(); if(!key) key = getch();
+            switch(toupper(key)) {
+            case LEFT:
+                drawButton(26+slc*21,20,_wATV,11,sysMenu[3*slc+1],1,_wFLT);
+                if(slc < 1) slc = 0; else slc--;
+                drawButton(26+slc*21,20,wATV,11,sysMenu[3*slc+1],1,wFLT); break;
+            case RIGHT:
+                drawButton(26+slc*21,20,_wATV,11,sysMenu[3*slc+1],1,_wFLT);
+                if(slc > 0) slc = 1; else slc++;
+                drawButton(26+slc*21,20,wATV,11,sysMenu[3*slc+1],1,wFLT); break;
+            }
+        }
+        if(clickMouse(&bCol, &bRow) == 1) {
+            if(bRow == 20 && bCol >= 26 && bCol <= 38) {
+                hideMouse(); drawButton(47,20,_wATV,11,sysMenu[4],1,_wFLT);
+                clearScreen(26,20,38,21,11); writeVRM(27,20,wATV,sysMenu[1],wFLT);
+                delay(50); drawButton(26,20,wATV,11,sysMenu[1],1,wFLT);
+                showMouse(); slc = 0; break;
+            }
+            if(bRow == 20 && bCol >= 46 && bCol <= 59) {
+                hideMouse(); drawButton(26,20,_wATV,11,sysMenu[1],1,_wFLT);
+                clearScreen(47,20,59,21,11); writeVRM(48,20,wATV,sysMenu[4],wFLT);
+                delay(50); drawButton(47,20,wATV,11,sysMenu[4],1,wFLT);
+                showMouse(); slc = 1; break;
+            }
+            if(bRow == 3 && bCol == 10 || bCol == 11) haltSys();
+        }
+    } while(key != ENTER); hideMouse(); if(slc) haltSys();
 }
 
-/*-----------------------------------------*/
-/* Funtion : InstallProgram                */
-/* Mission : Setup the program on computer */
-/* Expects : (Drive) the Drive to set up   */
-/* Returns : Nothing                       */
-/*-----------------------------------------*/
-void InstallProgram()
+/*--------------------------------------------*/
+/* Funtion : installProgram                   */
+/* Mission : Setup the program on computer    */
+/* Expects : (szDrive) the szDrive to set up  */
+/* Returns : Nothing                          */
+/*--------------------------------------------*/
+void installProgram()
 {
-	byte i;
-	buffSize = 3500;
+    uint8_t i;
+    buffSize = 3500;
+    ptrSource = (char*)malloc(buffSize);
 
-	if(!(ptrSource = new char[buffSize])) {
-		textattr(0x1F); SetCursorSize(0x2020); clrscr();
-		FillFrame(1,1,80,25,0xF6,178); HideMouse();
-		DlgWin(15,8,65,17,0x4F,SysInf[1]);
-		WriteVRM(27,10,0x4E,SysInf[31]); WriteVRM(17,11,0x4F,SysInf[53]);
-		WriteVRM(17,12,0x4F,SysInf[54]); WriteVRM(17,13,0x4F,SysInf[55]);
-		Button(35,15,wATV,4,SysMen[0],1,wFLT); ShowMouse();
-		do {
-			if(ClickMouse(bCol, bRow) == 1) {
-				if(bRow == 15 && bCol >= 35 && bCol <= 45) {
-					HideMouse(); Clear(35,15,46,16,4);
-					WriteVRM(36,15,wATV,SysMen[0],wFLT); delay(50);
-					Button(35,15,wATV,4,SysMen[0],1,wFLT); ShowMouse(); break;
-				}
-				if(bRow == 8 && bCol == 15 || bCol == 16) break;
-			}
-		} while(!kbhit()); HaltSys();
-	}
-	SetBorder(50); textattr(0x1F); SetCursorSize(0x2020);
-	clrscr(); FillFrame(1,1,80,25,0xF6,178);
-	DlgWin(15,6,65,17,0x9F,SysInf[4]);
-	WriteVRM(18,11,0x9F,SysInf[73]); WriteVRM(18,8,0x9F,SysInf[38]);
-	WriteVRM(18,9,0x9F,SysInf[40]); WriteChar(18,12,0x17,45,176);
-	WriteVRM(53,13,0x9F,"% ho¥n t‡t"); Button(35,15,_wATV,9,SysMen[2],1,_wFLT);
-	CopyFiles("A:\\*.*", Drive, _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM);
-	delay(500);
-	FillFrame(15,6,69,21,0xF6,178);
-	DlgWin(18,10,62,15,0x1F,SysInf[5]);
-	WriteVRM(22,12,0x1E,SysInf[41]);
-	WriteChar(22,13,0x17,37,176);
-	WriteVRM(49,14,0x1A,"% ho¥n t‡t");
-	for(i = 1; i < 38; i++) {
-		WriteChar(22,13,0x1F,i,219);
-		PrintVRM(46,14,0x1A,"%3d", 2*i + 26); delay(100);
-	}
-	FillFrame(15,6,69,21,0xF6,178); WarnBox(25,10,55,15,msgCmp,1);
-	delete[]ptrSource;
+    if (!ptrSource)
+    {
+        _setbkcolor(1);
+        _settextcolor(15);
+        _settextcursor(0x2020);
+        _clearscreen(_GWINDOW);
+        fillFrame(1,1,80,25,0xF6,178);
+        hideMouse();
+        drawShadowBox(15,8,65,17,0x4F,sysInfo[1]);
+        writeVRM(27,10,0x4E,sysInfo[31], 0); writeVRM(17,11,0x4F,sysInfo[53], 0);
+        writeVRM(17,12,0x4F,sysInfo[54], 0); writeVRM(17,13,0x4F,sysInfo[55], 0);
+        drawButton(35,15,wATV,4,sysMenu[0],1,wFLT);
+        showMouse();
+
+        do {
+            if (clickMouse(&bCol, &bRow) == 1)
+            {
+                if (bRow == 15 && bCol >= 35 && bCol <= 45)
+                {
+                    hideMouse();
+                    clearScreen(35,15,46,16,4);
+                    writeVRM(36,15,wATV,sysMenu[0],wFLT);
+                    delay(50);
+                    drawButton(35,15,wATV,4,sysMenu[0],1,wFLT);
+                    showMouse();
+                    break;
+                }
+
+                if (bRow == 8 && bCol == 15 || bCol == 16) break;
+            }
+        } while (!kbhit());
+        haltSys();
+    }
+
+    setBorder(50);
+    _setbkcolor(1);
+    _settextcolor(15);
+    _settextcursor(0x2020);
+    _clearscreen(_GWINDOW);
+    fillFrame(1,1,80,25,0xF6,178);
+    drawShadowBox(15,6,65,17,0x9F,sysInfo[4]);
+    writeVRM(18,11,0x9F,sysInfo[73], 0); writeVRM(18,8,0x9F,sysInfo[38], 0);
+    writeVRM(18,9,0x9F,sysInfo[40], 0); writeChar(18,12,0x17,45,176);
+    writeVRM(53,13,0x9F,"% hoï¿½n tï¿½t", 0); drawButton(35,15,_wATV,9,sysMenu[2],1,_wFLT);
+    copyFiles("A:\\*.*", szDrive, _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM);
+    delay(500);
+    fillFrame(15,6,69,21,0xF6,178);
+    drawShadowBox(18,10,62,15,0x1F,sysInfo[5]);
+    writeVRM(22,12,0x1E,sysInfo[41], 0);
+    writeChar(22,13,0x17,37,176);
+    writeVRM(49,14,0x1A,"% hoï¿½n tï¿½t", 0);
+    for(i = 1; i < 38; i++) {
+        writeChar(22,13,0x1F,i,219);
+        printVRM(46,14,0x1A,"%3d", 2*i + 26); delay(100);
+    }
+    fillFrame(15,6,69,21,0xF6,178); warningBox(25,10,55,15,msgCmp,1);
+    free(ptrSource);
 }
 
 /*----------------------------------------------*/
-/* Funtion : RestartProgram                     */
+/* Funtion : restartProgram                     */
 /* Mission : Showing the restart system message */
 /* Expects : Nothing                            */
 /* Returns : Nothing                            */
 /*----------------------------------------------*/
-void RestartProgram()
+void restartProgram()
 {
-	ShowMouse(); textattr(0x1F); SetCursorSize(0x2020);
-	SetBorder(50); clrscr(); FillFrame(1,1,80,25,0xF6,178);
-	DlgWin(15,8,65,15,0x4F,SysInf[6]);
-	WriteVRM(21,11,0x4A,SysMen[11],0x4B); WriteVRM(18,10,0x4F,"çè");
-	WriteVRM(21,10,0x4F,SysMen[10],0x4E); WriteVRM(18,11,0x4A,"éê");
-	Button(26,13,0xB4,4,SysMen[0],1,0xB1);
-	Button(45,13,0x9F,4,SysMen[3],1,0x94); MoveMouse(40,13);
-	slc = chs = key = 0;
-	do {
-		if(kbhit()) {
-			key = getch(); if(!key) key = getch();
-			switch(toupper(key)) {
-			case DOWN :
-				WriteVRM(21,10+slc,0x4A,SysMen[slc+10],0x4B);
-				WriteVRM(18,10+slc,0x4A,"éê");
-				if(slc >= 1) slc = 0; else slc++;
-				WriteVRM(21,10+slc,0x4F,SysMen[slc+10],0x4E);
-				WriteVRM(18,10+slc,0x4F,"çè"); break;
-			case UP :
-				WriteVRM(21,10+slc,0x4A,SysMen[slc+10],0x4B);
-				WriteVRM(18,10+slc,0x4A,"éê");
-				if(slc <= 0) slc = 1; else slc--;
-				WriteVRM(21,10+slc,0x4F,SysMen[slc+10],0x4E);
-				WriteVRM(18,10+slc,0x4F,"çè"); break;
-			case LEFT :
-				Button(26+chs*19,13,0x9F,4,SysMen[3*chs],1,0x94);
-				if(chs <= 0) chs = 0; else chs--;
-				Button(26+chs*19,13,0xB4,4,SysMen[3*chs],1,0xB1); break;
-			case RIGHT :
-				Button(26+chs*19,13,0x9F,4,SysMen[3*chs],1,0x94);
-				if(chs >= 1) chs = 1; else chs++;
-				Button(26+chs*19,13,0xB4,4,SysMen[3*chs],1,0xB1); break;
-			}
-		}
-		if(ClickMouse(bCol, bRow) == 1) {
-			if(bRow == 10 && bCol >= 18 && bCol <= 62) {
-				HideMouse(); WriteVRM(21,11,0x4A,SysMen[11],0x4B);
-				WriteVRM(18,11,0x4A,"éê"); slc = 0;
-				WriteVRM(21,10,0x4F,SysMen[10],0x4E);
-				WriteVRM(18,10,0x4F,"çè"); ShowMouse(); delay(50);
-			}
-			if(bRow == 11 && bCol >= 18 && bCol <= 61) {
-				HideMouse(); WriteVRM(21,10,0x4A,SysMen[10],0x4B);
-				WriteVRM(18,10,0x4A,"éê"); slc = 1;
-				WriteVRM(21,11,0x4F,SysMen[11],0x4E);
-				WriteVRM(18,11,0x4F,"çè"); ShowMouse(); delay(50);
-			}
-			if(bRow == 13 && bCol >= 26 && bCol <= 35) {
-				HideMouse(); Button(45,13,0x9F,4,SysMen[3],1,0x94);
-				Clear(26,13,36,14,4); WriteVRM(27,13,0xB4,SysMen[0],0xB1);
-				delay(50); Button(26,13,0xB4,4,SysMen[0],1,0xB1);
-				ShowMouse(); chs = 0; break;
-			}
-			if(bRow == 13 && bCol >= 45 && bCol <= 56) {
-				HideMouse(); Button(26,13,0x9F,4,SysMen[0],1,0x94);
-				Clear(45,13,57,14,4); WriteVRM(46,13,0xB4,SysMen[3],0xB1);
-				delay(50); Button(45,13,0xB4,4,SysMen[3],1,0xB1);
-				ShowMouse(); chs = 1; break;
-			}
-			if(bRow == 8 && bCol == 15 || bCol == 16) HaltSys();
-		}
-	} while(key != ENTER);
-	if(!chs && !slc) SysReboot();
-	else HaltSys();
+    showMouse();
+    _setbkcolor(1);
+    _settextcolor(15);
+    _settextcursor(0x2020);
+    setBorder(50);
+    _clearscreen(_GWINDOW);
+    fillFrame(1,1,80,25,0xF6,178);
+    drawShadowBox(15,8,65,15,0x4F,sysInfo[6]);
+    writeVRM(21,11,0x4A,sysMenu[11],0x4B); writeVRM(18,10,0x4F,"ï¿½ï¿½", 0);
+    writeVRM(21,10,0x4F,sysMenu[10],0x4E); writeVRM(18,11,0x4A,"ï¿½ï¿½", 0);
+    drawButton(26,13,0xB4,4,sysMenu[0],1,0xB1);
+    drawButton(45,13,0x9F,4,sysMenu[3],1,0x94); moveMouse(40,13);
+    slc = chs = key = 0;
+    do {
+        if(kbhit()) {
+            key = getch(); if(!key) key = getch();
+            switch(toupper(key)) {
+            case DOWN :
+                writeVRM(21,10+slc,0x4A,sysMenu[slc+10],0x4B);
+                writeVRM(18,10+slc,0x4A,"ï¿½ï¿½", 0);
+                if(slc > 0) slc = 0; else slc++;
+                writeVRM(21,10+slc,0x4F,sysMenu[slc+10],0x4E);
+                writeVRM(18,10+slc,0x4F,"ï¿½ï¿½", 0); break;
+            case UP :
+                writeVRM(21,10+slc,0x4A,sysMenu[slc+10],0x4B);
+                writeVRM(18,10+slc,0x4A,"ï¿½ï¿½", 0);
+                if(slc < 1) slc = 1; else slc--;
+                writeVRM(21,10+slc,0x4F,sysMenu[slc+10],0x4E);
+                writeVRM(18,10+slc,0x4F,"ï¿½ï¿½", 0); break;
+            case LEFT :
+                drawButton(26+chs*19,13,0x9F,4,sysMenu[3*chs],1,0x94);
+                if(chs < 1) chs = 0; else chs--;
+                drawButton(26+chs*19,13,0xB4,4,sysMenu[3*chs],1,0xB1); break;
+            case RIGHT :
+                drawButton(26+chs*19,13,0x9F,4,sysMenu[3*chs],1,0x94);
+                if(chs > 0) chs = 1; else chs++;
+                drawButton(26+chs*19,13,0xB4,4,sysMenu[3*chs],1,0xB1); break;
+            }
+        }
+        if(clickMouse(&bCol, &bRow) == 1) {
+            if(bRow == 10 && bCol >= 18 && bCol <= 62) {
+                hideMouse(); writeVRM(21,11,0x4A,sysMenu[11],0x4B);
+                writeVRM(18,11,0x4A,"ï¿½ï¿½", 0); slc = 0;
+                writeVRM(21,10,0x4F,sysMenu[10],0x4E);
+                writeVRM(18,10,0x4F,"ï¿½ï¿½", 0); showMouse(); delay(50);
+            }
+            if(bRow == 11 && bCol >= 18 && bCol <= 61) {
+                hideMouse(); writeVRM(21,10,0x4A,sysMenu[10],0x4B);
+                writeVRM(18,10,0x4A,"ï¿½ï¿½", 0); slc = 1;
+                writeVRM(21,11,0x4F,sysMenu[11],0x4E);
+                writeVRM(18,11,0x4F,"ï¿½ï¿½", 0); showMouse(); delay(50);
+            }
+            if(bRow == 13 && bCol >= 26 && bCol <= 35) {
+                hideMouse(); drawButton(45,13,0x9F,4,sysMenu[3],1,0x94);
+                clearScreen(26,13,36,14,4); writeVRM(27,13,0xB4,sysMenu[0],0xB1);
+                delay(50); drawButton(26,13,0xB4,4,sysMenu[0],1,0xB1);
+                showMouse(); chs = 0; break;
+            }
+            if(bRow == 13 && bCol >= 45 && bCol <= 56) {
+                hideMouse(); drawButton(26,13,0x9F,4,sysMenu[0],1,0x94);
+                clearScreen(45,13,57,14,4); writeVRM(46,13,0xB4,sysMenu[3],0xB1);
+                delay(50); drawButton(45,13,0xB4,4,sysMenu[3],1,0xB1);
+                showMouse(); chs = 1; break;
+            }
+            if(bRow == 8 && bCol == 15 || bCol == 16) haltSys();
+        }
+    } while(key != ENTER);
+    if(!chs && !slc) sysReboot();
+    else haltSys();
 }
 
 /*-------------------------------------*/
-/* Funtion : AssignDrive               */
-/* Mission : Showing the Drive message */
-/* Expects : (slc) number of Drive     */
+/* Funtion : assignDrive               */
+/* Mission : Showing the szDrive message */
+/* Expects : (slc) number of szDrive     */
 /* Returns : Nothing                   */
 /*-------------------------------------*/
-void AssignDrive(byte bSelect)
+void assignDrive(uint8_t bSelect)
 {
-	switch(bSelect) {
-		case 0 : strcpy(Drive,"B:\\"); break; case 1 : strcpy(Drive,"C:\\"); break;
-		case 2 : strcpy(Drive,"D:\\"); break; case 3 : strcpy(Drive,"E:\\");
-	}
+    switch(bSelect) {
+        case 0 : strcpy(szDrive,"B:\\"); break; case 1 : strcpy(szDrive,"C:\\"); break;
+        case 2 : strcpy(szDrive,"D:\\"); break; case 3 : strcpy(szDrive,"E:\\");
+    }
 }
 
 /*----------------------------------------*/
-/* Funtion : ChooseDrive                  */
-/* Mission : Showing choose Drive message */
+/* Funtion : chooseDrive                  */
+/* Mission : Showing choose szDrive message */
 /* Expects : Nothing                      */
 /* Returns : Nothing                      */
 /*----------------------------------------*/
-void ChooseDrive()
+void chooseDrive()
 {
-	byte i;
-	SetCursorSize(0x2020); textattr(0x1F); clrscr();
-	FillFrame(1,1,80,25,0xF6,178);
-	DlgWin(20,8,60,17,0x3F,SysInf[7]);
-	WriteVRM(31,10,0x34,SysInf[24]);
-	WriteChar(29,11,0x35,22,193);
-	for(i = 0; i < 4; i++) WriteVRM(29,12+i,0x30,SysMen[12+i],0x3A);
-	Button(46,12,wATV,3,SysMen[1],1,wFLT);
-	Button(46,15,_wATV,3,SysMen[4],1,_wFLT);
-	MoveMouse(38,11); slc = chs = 0;
-	label:
-	key = 0; WriteVRM(29,12+slc,0x3F,SysMen[12+slc],0x3E);
-	do {
-		if(ClickMouse(bCol, bRow) == 1) {
-			if(bRow == 12 && bCol >= 29 && bCol <= 41) {
-				HideMouse(); WriteVRM(29,12,0x3F,SysMen[12],0x3E);
-				if(slc != 0) WriteVRM(29,12+slc,0x30,SysMen[12+slc],0x3A);
-				ShowMouse(); slc = 0; delay(20);
-			}
-			if(bRow == 13 && bCol >= 29 && bCol <= 41) {
-				HideMouse(); WriteVRM(29,13,0x3F,SysMen[13],0x3E);
-				if(slc != 1) WriteVRM(29,12+slc,0x30,SysMen[12+slc],0x3A);
-				ShowMouse(); slc = 1; delay(20);
-			}
-			if(bRow == 14 && bCol >= 29 && bCol <= 41) {
-				HideMouse(); WriteVRM(29,14,0x3F,SysMen[14],0x3E);
-				if(slc != 2) WriteVRM(29,12+slc,0x30,SysMen[12+slc],0x3A);
-				ShowMouse(); slc = 2; delay(20);
-			}
-			if(bRow == 15 && bCol >= 29 && bCol <= 41) {
-				HideMouse(); WriteVRM(29,15,0x3F,SysMen[15],0x3E);
-				if(slc != 3) WriteVRM(29,12+slc,0x30,SysMen[12+slc],0x3A);
-				ShowMouse(); slc = 3; delay(20);
-			}
-			if(bRow == 12 && bCol >= 46 & bCol <= 57) {
-				HideMouse(); Button(46,15,_wATV,3,SysMen[4],1,_wFLT);
-				Clear(46,12,57,13,3); WriteVRM(47,12,wFLT,SysMen[1],wFLT);
-				delay(50); Button(46,12,wATV,3,SysMen[1],1,wFLT);
-				ShowMouse(); chs = 0; key = ENTER;
-			}
-			if(bRow == 15 && bCol >= 46 & bCol <= 57) {
-				HideMouse(); Button(46,12,_wATV,3,SysMen[1],1,_wFLT);
-				Clear(46,15,57,16,3); WriteVRM(47,15,wATV,SysMen[2],wFLT);
-				delay(50); Button(46,15,wATV,3,SysMen[4],1,wFLT);
-				ShowMouse(); chs = 1; key = ENTER;
-			}
-			if(bRow == 8 && bCol == 20 || bCol == 21) HaltSys();
-		}
-		if(kbhit()) {
-			key = getch(); if(!key) key = getch();
-			switch(toupper(key)) {
-			case UP:
-				WriteVRM(29,12+slc,0x30,SysMen[12+slc],0x3A);
-				if(slc <= 0) slc = 3; else slc--;
-				WriteVRM(29,12+slc,0x3F,SysMen[12+slc],0x3E); break;
-			case DOWN:
-				WriteVRM(29,12+slc,0x30,SysMen[12+slc],0x3A);
-				if(slc >= 3) slc = 0; else slc++;
-				WriteVRM(29,12+slc,0x3F,SysMen[12+slc],0x3E); break;
-			case HOME:
-				WriteVRM(29,12+slc,0x30,SysMen[12+slc],0x3A); slc = 0;
-				WriteVRM(29,12+slc,0x3F,SysMen[12+slc],0x3E); break;
-			case END:
-				WriteVRM(29,12+slc,0x30,SysMen[12+slc],0x3A); slc = 3;
-				WriteVRM(29,12+slc,0x3F,SysMen[12+slc],0x3E); break;
-			case TAB:
-			do {
-				if(kbhit()) {
-					key = getch(); if(!key) key = getch();
-					switch(toupper(key)) {
-					case UP:
-						Button(46,12+3*chs,_wATV,3,SysMen[3*chs+1],1,_wFLT);
-						if(chs <= 0) chs = 1; else chs--;
-						Button(46,12+3*chs,wATV,3,SysMen[3*chs+1],1,wFLT); break;
-					case DOWN:
-						Button(46,12+3*chs,_wATV,3,SysMen[3*chs+1],1,_wFLT);
-						if(chs >= 1) chs = 0; else chs++;
-						Button(46,12+3*chs,wATV,3,SysMen[3*chs+1],1,wFLT); break;
-					}
-				}
-				if(ClickMouse(bCol, bRow) == 1) {
-					if(bRow == 12 && bCol >= 46 & bCol <= 57) {
-						HideMouse(); Button(46,15,_wATV,3,SysMen[4],1,_wFLT);
-						Clear(46,12,57,13,3);
-						WriteVRM(47,12,wATV,SysMen[1],wFLT); delay(50);
-						Button(46,12,wATV,3,SysMen[1],1,wFLT); ShowMouse();
-						chs = 0; key = ENTER;
-					}
-					if(bRow == 15 && bCol >= 46 & bCol <= 57) {
-						HideMouse(); Button(46,12,_wATV,3,SysMen[1],1,_wFLT);
-						Clear(46,15,57,16,3);
-						WriteVRM(47,15,wATV,SysMen[4],wFLT); delay(50);
-						Button(46,15,wATV,3,SysMen[4],1,wFLT); ShowMouse();
-						chs = 1; key = ENTER;
-					}
-					if(bRow == 8 && bCol == 20 || bCol == 21) HaltSys();
-				}
-			} while(key != ENTER); break;
-			}
-		}
-	} while(key != ENTER);
-	if(!chs) AssignDrive(slc);
-	else {
-		HideMouse(); gettext(20,10,62,17,szBuff);
-		msgSlc = MsgBox(20,10,60,16,msgExit,1);
-		if(!msgSlc) HaltSys(); HideMouse();
-		puttext(20,10,62,17,szBuff); ShowMouse(); goto label;
-	}
+    uint8_t i;
+    _settextcursor(0x2020);
+    _setbkcolor(1);
+    _settextcolor(15);
+    _clearscreen(_GWINDOW);
+    fillFrame(1,1,80,25,0xF6,178);
+    drawShadowBox(20,8,60,17,0x3F,sysInfo[7]);
+    writeVRM(31,10,0x34,sysInfo[24], 0);
+    writeChar(29,11,0x35,22,193);
+    for(i = 0; i < 4; i++) writeVRM(29,12+i,0x30,sysMenu[12+i],0x3A);
+    drawButton(46,12,wATV,3,sysMenu[1],1,wFLT);
+    drawButton(46,15,_wATV,3,sysMenu[4],1,_wFLT);
+    moveMouse(38,11); slc = chs = 0;
+    label:
+    key = 0; writeVRM(29,12+slc,0x3F,sysMenu[12+slc],0x3E);
+    do {
+        if(clickMouse(&bCol, &bRow) == 1) {
+            if(bRow == 12 && bCol >= 29 && bCol <= 41) {
+                hideMouse(); writeVRM(29,12,0x3F,sysMenu[12],0x3E);
+                if(slc != 0) writeVRM(29,12+slc,0x30,sysMenu[12+slc],0x3A);
+                showMouse(); slc = 0; delay(20);
+            }
+            if(bRow == 13 && bCol >= 29 && bCol <= 41) {
+                hideMouse(); writeVRM(29,13,0x3F,sysMenu[13],0x3E);
+                if(slc != 1) writeVRM(29,12+slc,0x30,sysMenu[12+slc],0x3A);
+                showMouse(); slc = 1; delay(20);
+            }
+            if(bRow == 14 && bCol >= 29 && bCol <= 41) {
+                hideMouse(); writeVRM(29,14,0x3F,sysMenu[14],0x3E);
+                if(slc != 2) writeVRM(29,12+slc,0x30,sysMenu[12+slc],0x3A);
+                showMouse(); slc = 2; delay(20);
+            }
+            if(bRow == 15 && bCol >= 29 && bCol <= 41) {
+                hideMouse(); writeVRM(29,15,0x3F,sysMenu[15],0x3E);
+                if(slc != 3) writeVRM(29,12+slc,0x30,sysMenu[12+slc],0x3A);
+                showMouse(); slc = 3; delay(20);
+            }
+            if(bRow == 12 && bCol >= 46 & bCol <= 57) {
+                hideMouse(); drawButton(46,15,_wATV,3,sysMenu[4],1,_wFLT);
+                clearScreen(46,12,57,13,3); writeVRM(47,12,wFLT,sysMenu[1],wFLT);
+                delay(50); drawButton(46,12,wATV,3,sysMenu[1],1,wFLT);
+                showMouse(); chs = 0; key = ENTER;
+            }
+            if(bRow == 15 && bCol >= 46 & bCol <= 57) {
+                hideMouse(); drawButton(46,12,_wATV,3,sysMenu[1],1,_wFLT);
+                clearScreen(46,15,57,16,3); writeVRM(47,15,wATV,sysMenu[2],wFLT);
+                delay(50); drawButton(46,15,wATV,3,sysMenu[4],1,wFLT);
+                showMouse(); chs = 1; key = ENTER;
+            }
+            if(bRow == 8 && bCol == 20 || bCol == 21) haltSys();
+        }
+        if(kbhit()) {
+            key = getch(); if(!key) key = getch();
+            switch(toupper(key)) {
+            case UP:
+                writeVRM(29,12+slc,0x30,sysMenu[12+slc],0x3A);
+                if(slc < 1) slc = 3; else slc--;
+                writeVRM(29,12+slc,0x3F,sysMenu[12+slc],0x3E); break;
+            case DOWN:
+                writeVRM(29,12+slc,0x30,sysMenu[12+slc],0x3A);
+                if(slc >= 3) slc = 0; else slc++;
+                writeVRM(29,12+slc,0x3F,sysMenu[12+slc],0x3E); break;
+            case HOME:
+                writeVRM(29,12+slc,0x30,sysMenu[12+slc],0x3A); slc = 0;
+                writeVRM(29,12+slc,0x3F,sysMenu[12+slc],0x3E); break;
+            case END:
+                writeVRM(29,12+slc,0x30,sysMenu[12+slc],0x3A); slc = 3;
+                writeVRM(29,12+slc,0x3F,sysMenu[12+slc],0x3E); break;
+            case TAB:
+            do {
+                if(kbhit()) {
+                    key = getch(); if(!key) key = getch();
+                    switch(toupper(key)) {
+                    case UP:
+                        drawButton(46,12+3*chs,_wATV,3,sysMenu[3*chs+1],1,_wFLT);
+                        if(chs < 1) chs = 1; else chs--;
+                        drawButton(46,12+3*chs,wATV,3,sysMenu[3*chs+1],1,wFLT); break;
+                    case DOWN:
+                        drawButton(46,12+3*chs,_wATV,3,sysMenu[3*chs+1],1,_wFLT);
+                        if(chs > 0) chs = 0; else chs++;
+                        drawButton(46,12+3*chs,wATV,3,sysMenu[3*chs+1],1,wFLT); break;
+                    }
+                }
+                if(clickMouse(&bCol, &bRow) == 1) {
+                    if(bRow == 12 && bCol >= 46 & bCol <= 57) {
+                        hideMouse(); drawButton(46,15,_wATV,3,sysMenu[4],1,_wFLT);
+                        clearScreen(46,12,57,13,3);
+                        writeVRM(47,12,wATV,sysMenu[1],wFLT); delay(50);
+                        drawButton(46,12,wATV,3,sysMenu[1],1,wFLT); showMouse();
+                        chs = 0; key = ENTER;
+                    }
+                    if(bRow == 15 && bCol >= 46 & bCol <= 57) {
+                        hideMouse(); drawButton(46,12,_wATV,3,sysMenu[1],1,_wFLT);
+                        clearScreen(46,15,57,16,3);
+                        writeVRM(47,15,wATV,sysMenu[4],wFLT); delay(50);
+                        drawButton(46,15,wATV,3,sysMenu[4],1,wFLT); showMouse();
+                        chs = 1; key = ENTER;
+                    }
+                    if(bRow == 8 && bCol == 20 || bCol == 21) haltSys();
+                }
+            } while(key != ENTER); break;
+            }
+        }
+    } while(key != ENTER);
+    if(!chs) assignDrive(slc);
+    else {
+        hideMouse(); getText(20,10,62,17,szBuff);
+        msgSlc = messageBox(20,10,60,16,msgExit,1);
+        if(!msgSlc) haltSys(); hideMouse();
+        putText(20,10,62,17,szBuff); showMouse(); goto label;
+    }
 }
 
 /*----------------------------------------------------*/
-/* Funtion : UpdateProgram                            */
+/* Funtion : updateProgram                            */
 /* Mission : Deleting files crack.com and install.com */
 /* Expects : Nothing                                  */
 /* Returns : Nothing                                  */
 /*----------------------------------------------------*/
-void UpdateProgram()
+void updateProgram()
 {
-	FILE *fp;
-	tagRegs trInfo;
-	char szPath[15];
+    FILE *fp;
+    REG_INFO trInfo;
+    char szPath[15];
 
-	if(!(fp = fopen(SysInf[42],"r+b"))) {
-		textattr(0x1F); SetBorder(47); SetCursorSize(0x2020);
-		clrscr(); WriteVRM(33,10,0x4F,SysInf[11]);
-		WriteVRM(20,12,0x1F,SysInf[19]); WriteVRM(20,13,0x1F,SysInf[25]);
-		getch(); HaltSys();
-	}
-	fread(&trInfo,sizeof(tagRegs),1,fp); strcpy(trInfo.disk,Drive);
-	fseek(fp,0L,SEEK_SET); fwrite(&trInfo,sizeof(tagRegs),1,fp); fclose(fp);
-	strcpy(szPath,Drive); strcat(szPath,"crack.com"); unlink(szPath);
-	szPath[3] = '\0'; strcat(szPath,"install.exe"); unlink(szPath);
-	szPath[3] = '\0'; strcat(szPath,"guide.txt"); unlink(szPath);
+    if(!(fp = fopen(sysInfo[42],"r+b"))) {
+        _setbkcolor(1);
+        _settextcolor(15);
+        setBorder(47); _settextcursor(0x2020);
+        _clearscreen(_GWINDOW); writeVRM(33,10,0x4F,sysInfo[11], 0);
+        writeVRM(20,12,0x1F,sysInfo[19],0); writeVRM(20,13,0x1F,sysInfo[25], 0);
+        getch(); haltSys();
+    }
+    fread(&trInfo,sizeof(REG_INFO),1,fp); strcpy(trInfo.disk,szDrive);
+    fseek(fp,0L,SEEK_SET); fwrite(&trInfo,sizeof(REG_INFO),1,fp); fclose(fp);
+    strcpy(szPath,szDrive); strcat(szPath,"crack.com"); unlink(szPath);
+    szPath[3] = '\0'; strcat(szPath,"install.exe"); unlink(szPath);
+    szPath[3] = '\0'; strcat(szPath,"guide.txt"); unlink(szPath);
 }
 
 /*-------------------------------------------*/
-/* Function : GetDrive                       */
+/* Function : getDrive                       */
 /* Mission  : Return the number of the drier */
-/* Expects  : (szDrive) Serial number Drive  */
-/* Returns  : number of Drive                */
+/* Expects  : (szDrive) Serial number szDrive  */
+/* Returns  : number of szDrive                */
 /*-------------------------------------------*/
-byte GetDrive(char *szDrive)
+uint8_t getDrive(char *szDrive)
 {
-	if(!strcmp(szDrive,"B:\\")) return 2; if(!strcmp(szDrive,"C:\\")) return 3;
-	if(!strcmp(szDrive,"D:\\")) return 4; if(!strcmp(szDrive,"E:\\")) return 5;
-	return 0;
+    if(!strcmp(szDrive,"B:\\")) return 2; if(!strcmp(szDrive,"C:\\")) return 3;
+    if(!strcmp(szDrive,"D:\\")) return 4; if(!strcmp(szDrive,"E:\\")) return 5;
+    return 0;
 }
 
 /*--------------------------------------------------*/
-/* Funtion : DiskCheck                              */
-/* Mission : Checking disk space and byte available */
+/* Funtion : checkDisk                              */
+/* Mission : Checking disk space and uint8_t available */
 /* Expects : Nothing                                */
 /* Returns : Nothing                                */
 /*--------------------------------------------------*/
-void DiskCheck()
+void checkDisk()
 {
-	union REGS inRegs, outRegs;
-	unsigned long a, b, c, d;
-	byte i, bSkip = 0; SetBorder(50); textattr(0x1F);
-	SetCursorSize(0x2020); clrscr(); FillFrame(1,1,80,25,0xF6,178);
-	DlgWin(15,5,65,20,0x7F,SysInf[8]);
-	WriteVRM(18,7,0x70,SysInf[39]); WriteVRM(18,8,0x70,SysInf[40]);
-	WriteVRM(18,10,0x70,SysInf[29]); WriteVRM(53,12,0x70,"% ho¥n t‡t");
-	WriteChar(18,11,0x17,45,176);
-	Button(36,18,wATV,7,SysMen[2],1,wFLT); MoveMouse(39,17);
-	for(i = 0; i < 45 && !bSkip; i++) {
-		WriteChar(18+i,11,0x3F,1,219);
-		PrintVRM(50,12,0x70,"%3u", 2*i+12);
-		if(ClickMouse(bCol, bRow) == 1) {
-			if(bRow == 18 && bCol >= 36 && bCol <= 45) {
-				HideMouse(); Clear(36,18,45,19,7);
-				WriteVRM(37,18,wATV,SysMen[2],wATV);
-				delay(50); Button(36,18,wATV,7,SysMen[2],1,wFLT); ShowMouse();
-				bSkip = 1; break;
-			}
-		}
-		if(kbhit()) {
-			key = getch(); if(!key) key = getch();
-			switch(toupper(key)) {
-			case 'B' :
-			case ESC : bSkip = 1;
-			} break;
-		} delay(100);
-	}
-	WriteVRM(18,14,0x70,SysInf[30]);
-	WriteChar(18,15,0x17,45,176);
-	WriteVRM(53,16,0x70,"% ho¥n t‡t");
-	for(i = 0; i < 45 && !bSkip; i++) {
-		WriteChar(18+i,15,0x3F,1,219);
-		PrintVRM(50,16,0x70,"%3u", 2*i+12);
-		if(ClickMouse(bCol, bRow) == 1) {
-			if(bRow == 18 && bCol >= 36 && bCol <= 45) {
-				HideMouse(); Clear(36,18,45,19,7);
-				WriteVRM(37,18,wATV,SysMen[2],wATV);
-				delay(50); Button(36,18,wATV,7,SysMen[2],1,wFLT); ShowMouse(); break;
-			}
-		}
-		if(kbhit()) {
-			key = getch(); if(!key) key = getch();
-			switch(toupper(key)) {
-			case 'C' :
-			case ESC : break;
-			} break;
-		} delay(100);
-	}
-	inRegs.h.ah = 0x36; inRegs.h.dl = GetDrive(Drive);
-	int86(0x21,&inRegs,&outRegs);
-	if(outRegs.x.ax == 0xFFFF) {
-		DlgWin(20,9,55,15,0x4F,SysInf[1]);
-		WriteVRM(22,11,0x4F,SysInf[37]);
-		Button(33,13,wATV,4,SysMen[0],1,wFLT);
-		do {
-			if(ClickMouse(bCol, bRow) == 1) {
-				if(bRow == 13 && bCol >= 33 && bCol <= 43) {
-					HideMouse(); Clear(33,13,43,14,4);
-					WriteVRM(34,13,wATV,SysMen[0],wFLT); delay(50);
-					Button(33,13,wATV,4,SysMen[0],1,wFLT); ShowMouse(); break;
-				}
-				if(bRow == 9 && bCol == 20 || bCol == 21) break;
-			}
-		} while(!kbhit()); HaltSys();
-	}
-	a = outRegs.x.dx; b = outRegs.x.bx; c = outRegs.x.ax; d = outRegs.x.cx;
-	FillFrame(1,1,80,25,0xF6,178); DlgWin(15,9,63,16,0x9E,SysInf[9]);
-	PrintVRM(18,11,0x9F,"T›ng dung lž—ng trŒn ù¶a : %.3f MB", (float)a*c*d/1024.0/1024.0);
-	PrintVRM(18,12,0x9F,"Dung lž—ng c¾n tr™ng trŒn ù¶a : %.3f MB", (float)b*c*d/1024.0/1024.0);
-	Button(34,14,wATV,9,SysMen[0],1,wFLT);
-	MoveMouse(38,12);
-	if(((b*c*d) / 1024) <= 1024) {
-		WriteVRM(18,13,0x94,SysInf[35]);
-		do {
-			if(ClickMouse(bCol, bRow) == 1) {
-				if(bRow == 14 && bCol >= 34 && bCol <= 41) {
-					Clear(34,14,42,15,9); WriteVRM(35,14,wATV,SysMen[0],wFLT);
-					delay(50); Button(34,14,wATV,9,SysMen[0],1,wFLT); break;
-				}
-				if(bRow == 9 && bCol == 15 || bCol == 16) break;
-			}
-		} while(!kbhit()); HaltSys();
-	}
-	do {
-		if(ClickMouse(bCol, bRow) == 1) {
-			if(bRow == 14 && bCol >= 34 && bCol <= 41) {
-				HideMouse(); Clear(34,14,42,15,9);
-				WriteVRM(35,14,wATV,SysMen[0],wFLT); delay(50);
-				Button(34,14,wATV,9,SysMen[0],1,wFLT); ShowMouse(); break;
-			}
-			if(bRow == 9 && bCol == 15 || bCol == 16) break;
-		}
-	} while(!kbhit());
+    union REGS inRegs, outRegs;
+    unsigned long a, b, c, d;
+    uint8_t i, bSkip = 0; setBorder(50);
+    _setbkcolor(1);
+    _settextcolor(15);
+    _settextcursor(0x2020); _clearscreen(_GWINDOW); fillFrame(1,1,80,25,0xF6,178);
+    drawShadowBox(15,5,65,20,0x7F,sysInfo[8]);
+    writeVRM(18,7,0x70,sysInfo[39], 0); writeVRM(18,8,0x70,sysInfo[40], 0);
+    writeVRM(18,10,0x70,sysInfo[29], 0); writeVRM(53,12,0x70,"% hoï¿½n tï¿½t", 0);
+    writeChar(18,11,0x17,45,176);
+    drawButton(36,18,wATV,7,sysMenu[2],1,wFLT); moveMouse(39,17);
+    for(i = 0; i < 45 && !bSkip; i++) {
+        writeChar(18+i,11,0x3F,1,219);
+        printVRM(50,12,0x70,"%3u", 2*i+12);
+        if(clickMouse(&bCol, &bRow) == 1) {
+            if(bRow == 18 && bCol >= 36 && bCol <= 45) {
+                hideMouse(); clearScreen(36,18,45,19,7);
+                writeVRM(37,18,wATV,sysMenu[2],wATV);
+                delay(50); drawButton(36,18,wATV,7,sysMenu[2],1,wFLT); showMouse();
+                bSkip = 1; break;
+            }
+        }
+        if(kbhit()) {
+            key = getch(); if(!key) key = getch();
+            switch(toupper(key)) {
+            case 'B' :
+            case ESC : bSkip = 1;
+            } break;
+        } delay(100);
+    }
+    writeVRM(18,14,0x70,sysInfo[30], 0);
+    writeChar(18,15,0x17,45,176);
+    writeVRM(53,16,0x70,"% hoï¿½n tï¿½t", 0);
+    for(i = 0; i < 45 && !bSkip; i++) {
+        writeChar(18+i,15,0x3F,1,219);
+        printVRM(50,16,0x70,"%3u", 2*i+12);
+        if(clickMouse(&bCol, &bRow) == 1) {
+            if(bRow == 18 && bCol >= 36 && bCol <= 45) {
+                hideMouse(); clearScreen(36,18,45,19,7);
+                writeVRM(37,18,wATV,sysMenu[2],wATV);
+                delay(50); drawButton(36,18,wATV,7,sysMenu[2],1,wFLT); showMouse(); break;
+            }
+        }
+        if(kbhit()) {
+            key = getch(); if(!key) key = getch();
+            switch(toupper(key)) {
+            case 'C' :
+            case ESC : break;
+            } break;
+        } delay(100);
+    }
+    inRegs.h.ah = 0x36; inRegs.h.dl = getDrive(szDrive);
+    int86(0x21,&inRegs,&outRegs);
+    if(outRegs.x.ax == 0xFFFF) {
+        drawShadowBox(20,9,55,15,0x4F,sysInfo[1]);
+        writeVRM(22,11,0x4F,sysInfo[37], 0);
+        drawButton(33,13,wATV,4,sysMenu[0],1,wFLT);
+        do {
+            if(clickMouse(&bCol, &bRow) == 1) {
+                if(bRow == 13 && bCol >= 33 && bCol <= 43) {
+                    hideMouse(); clearScreen(33,13,43,14,4);
+                    writeVRM(34,13,wATV,sysMenu[0],wFLT); delay(50);
+                    drawButton(33,13,wATV,4,sysMenu[0],1,wFLT); showMouse(); break;
+                }
+                if(bRow == 9 && bCol == 20 || bCol == 21) break;
+            }
+        } while(!kbhit()); haltSys();
+    }
+    a = outRegs.x.dx; b = outRegs.x.bx; c = outRegs.x.ax; d = outRegs.x.cx;
+    fillFrame(1,1,80,25,0xF6,178); drawShadowBox(15,9,63,16,0x9E,sysInfo[9]);
+    printVRM(18,11,0x9F,"Tï¿½ng dung lï¿½ï¿½ng trï¿½n ï¿½ï¿½a : %.3f MB", (float)a*c*d/1024.0/1024.0);
+    printVRM(18,12,0x9F,"Dung lï¿½ï¿½ng cï¿½n trï¿½ng trï¿½n ï¿½ï¿½a : %.3f MB", (float)b*c*d/1024.0/1024.0);
+    drawButton(34,14,wATV,9,sysMenu[0],1,wFLT);
+    moveMouse(38,12);
+    if(((b*c*d) / 1024) <= 1024) {
+        writeVRM(18,13,0x94,sysInfo[35], 0);
+        do {
+            if(clickMouse(&bCol, &bRow) == 1) {
+                if(bRow == 14 && bCol >= 34 && bCol <= 41) {
+                    clearScreen(34,14,42,15,9); writeVRM(35,14,wATV,sysMenu[0],wFLT);
+                    delay(50); drawButton(34,14,wATV,9,sysMenu[0],1,wFLT); break;
+                }
+                if(bRow == 9 && bCol == 15 || bCol == 16) break;
+            }
+        } while(!kbhit()); haltSys();
+    }
+    do {
+        if(clickMouse(&bCol, &bRow) == 1) {
+            if(bRow == 14 && bCol >= 34 && bCol <= 41) {
+                hideMouse(); clearScreen(34,14,42,15,9);
+                writeVRM(35,14,wATV,sysMenu[0],wFLT); delay(50);
+                drawButton(34,14,wATV,9,sysMenu[0],1,wFLT); showMouse(); break;
+            }
+            if(bRow == 9 && bCol == 15 || bCol == 16) break;
+        }
+    } while(!kbhit());
 }
 
 /*------------------------------------*/
-/* Funtion : StartInstall             */
+/* Funtion : startInstall             */
 /* Mission : Executting the functions */
 /* Expects : Nothing                  */
 /* Returns : Nothing                  */
 /*------------------------------------*/
-void StartInstall()
+void startInstall()
 {
-	char szDisk[17];
+    char szDisk[17];
 
-	ChooseDrive(); DiskCheck(); //UserCheck();
-	InstallProgram(); UpdateProgram(); Unregister(); FadeIN();
-	strcpy(szDisk,Drive); strcat(szDisk,"TOPICS");
-	chdir(szDisk); Drive[2] = '\0'; system(Drive); system("readme");
-	RestartProgram();
+    chooseDrive(); checkDisk(); //checkUser();
+    installProgram(); updateProgram(); showHelpFile(); fadeIn();
+    strcpy(szDisk,szDrive); strcat(szDisk,"TOPICS");
+    chdir(szDisk); szDrive[2] = '\0'; system(szDrive); system("readme");
+    restartProgram();
 }
 
 /*---------------------------------------------*/
-/* Funtion : Install                           */
+/* Funtion : showInstall                       */
 /* Mission : Showing information setup program */
 /* Expects : Nothing                           */
 /* Returns : Nothing                           */
 /*---------------------------------------------*/
-void Install()
+void showInstall()
 {
-	byte i = 0, fltStop[3], found = 0, cancel = 0;
-	memset(fltStop,0,3); textattr(0x1F);
-	SetBorder(59); SetCursorSize(0x0B0A);
-	clrscr(); isBlinking(0); FillFrame(1,1,80,25,0xFE,178);
-	DlgWin(8,2,74,23,0x1F,SysInf[74]);
-	WriteVRM(13,4,0x1A,SysInf[10]);
-	WriteChar(11,5,0x1B,61,205);
-	WriteVRM(12,6,0x1B,SysInf[36]); WriteVRM(23,8,0x1F,SysInf[44]);
-	WriteVRM(23,9,0x1F,SysInf[45]); WriteVRM(23,10,0x1F,SysInf[46]);
-	WriteVRM(23,12,0x1E,SysInf[47]); WriteVRM(23,13,0x1E,SysInf[48]);
-	WriteVRM(23,14,0x1E,SysInf[49]); WriteVRM(23,16,0x1B,SysInf[50]);
-	WriteVRM(23,17,0x1B,SysInf[51]); WriteVRM(23,18,0x1B,SysInf[52]);
-	WriteChar(9,19,0x20,65,196); PrintXY(8,19,0x1F,195);
-	PrintXY(74,19,0x1F,180); WriteVRM(14,11,0x1C,SysMen[17],0x1E);
-	WriteVRM(14,15,0x1C,SysMen[18],0x1E); if(!InitMouse())
-	system(SysInf[43]); SetMousePos(); Button(24,21,wATV,1,SysMen[1],1,wFLT);
-	Button(48,21,_wATV,1,SysMen[4],1,_wFLT); label1:
-	found = cancel = 0;
-	for(i = 0; i < 3 && !found; i++) if(!fltStop[i]) found = 1;
-	if(found) {
-		i--; SetCursorSize(0x0B0A); gotoxy(15,7+4*i);
-		WriteVRM(14,7+4*i,0x1A,SysMen[16+i],0x1F); slc = i;
-	}
-	key = 0;
-	do {
-		if(kbhit()) {
-			key = getch(); if(!key) key = getch();
-			switch(toupper(key)) {
-			case UP :
-				if(!fltStop[slc]) WriteVRM(14,7+4*slc,0x1C,SysMen[16+slc],0x1E);
-				else {
-					WriteVRM(14,7+4*slc,0x1C,SysMen[16+slc],0x1E);
-					PrintXY(15,7+4*slc,0x1C,251);
-				}
-				if(slc <= 0) slc = 2; else slc--;
-				if(!fltStop[slc]) WriteVRM(14,7+4*slc,0x1A,SysMen[16+slc],0x1F);
-				else {
-					WriteVRM(14,7+4*slc,0x1A,SysMen[16+slc],0x1F);
-					PrintXY(15,7+4*slc,0x1A,251);
-				} gotoxy(15,7+4*slc); break;
-			case DOWN :
-				if(!fltStop[slc]) WriteVRM(14,7+4*slc,0x1C,SysMen[16+slc],0x1E);
-				else {
-					WriteVRM(14,7+4*slc,0x1C,SysMen[16+slc],0x1E);
-					PrintXY(15,7+4*slc,0x1C,251);
-				}
-				if(slc >= 2) slc = 0; else slc++;
-				if(!fltStop[slc]) WriteVRM(14,7+4*slc,0x1A,SysMen[16+slc],0x1F);
-				else {
-					WriteVRM(14,7+4*slc,0x1A,SysMen[16+slc],0x1F);
-					PrintXY(15,7+4*slc,0x1A,251);
-				} gotoxy(15,7+4*slc); break;
-			case HOME :
-				if(!fltStop[slc]) WriteVRM(14,7+4*slc,0x1C,SysMen[16+slc],0x1E);
-				else {
-					WriteVRM(14,7+4*slc,0x1C,SysMen[16+slc],0x1E);
-					PrintXY(15,7+4*slc,0x1C,251);
-				} slc = 0;
-				if(!fltStop[slc]) WriteVRM(14,7+4*slc,0x1A,SysMen[16+slc],0x1F);
-				else {
-					WriteVRM(14,7+4*slc,0x1A,SysMen[16+slc],0x1F);
-					PrintXY(15,7+4*slc,0x1A,251);
-				} gotoxy(15,7+4*slc); break;
-			case END :
-				if(!fltStop[slc]) WriteVRM(14,7+4*slc,0x1C,SysMen[16+slc],0x1E);
-				else {
-					WriteVRM(14,7+4*slc,0x1C,SysMen[16+slc],0x1E);
-					PrintXY(15,7+4*slc,0x1C,251);
-				} slc = 2;
-				if(!fltStop[slc]) WriteVRM(14,7+4*slc,0x1A,SysMen[16+slc],0x1F);
-				else {
-					WriteVRM(14,7+4*slc,0x1A,SysMen[16+slc],0x1F);
-					PrintXY(15,7+4*slc,0x1A,251);
-				} gotoxy(15,7+4*slc); break;
-			case LEFT :
-				Button(24+chs*24,21,_wATV,1,SysMen[3*chs+1],1,_wFLT);
-				if(chs <= 0) chs = 1; else chs--;
-				Button(24+chs*24,21,wATV,1,SysMen[3*chs+1],1,wFLT); break;
-			case RIGHT :
-				Button(24+chs*24,21,_wATV,1,SysMen[3*chs+1],1,_wFLT);
-				if(chs >= 1) chs = 0; else chs++;
-				Button(24+chs*24,21,wATV,1,SysMen[3*chs+1],1,wFLT); break;
-			}
-			if(key == 32) {
-				if(fltStop[slc]) {
-					WriteVRM(14,7+4*slc,0x1A,SysMen[16+slc],0x1F);
-					fltStop[slc] = 0;
-				} else { PrintXY(15,7+4*slc,0x1A,251); fltStop[slc] = 1; }
-			}
-		}
-		if(ClickMouse(bCol, bRow) == 1) {
-			if(bRow == 7 && bCol >= 14 && bCol <= 48) {
-				HideMouse();
-				if(!fltStop[slc]) WriteVRM(14,7+4*slc,0x1C,SysMen[16+slc],0x1E);
-				else {
-					WriteVRM(14,7+4*slc,0x1C,SysMen[16+slc],0x1E);
-					PrintXY(15,7+4*slc,0x1C,251);
-				} slc = 0;
-				if(!fltStop[slc]) {
-					WriteVRM(14,7,0x1A,SysMen[16],0x1F);
-					PrintXY(15,7,0x1A,251); fltStop[0] = 1;
-				} else { WriteVRM(14,7,0x1A,SysMen[16],0x1F); fltStop[0] = 0; }
-				gotoxy(15,7); ShowMouse(); delay(150);
-			}
-			if(bRow == 11 && bCol >= 14 && bCol <= 57) {
-				HideMouse();
-				if(!fltStop[slc]) WriteVRM(14,7+4*slc,0x1C,SysMen[16+slc],0x1E);
-				else {
-					WriteVRM(14,7+4*slc,0x1C,SysMen[16+slc],0x1E);
-					PrintXY(15,7+4*slc,0x1C,251);
-				} slc = 1;
-				if(!fltStop[slc]) {
-					WriteVRM(14,11,0x1A,SysMen[17],0x1F);
-					PrintXY(15,11,0x1A,251); fltStop[1] = 1;
-				} else { WriteVRM(14,11,0x1A,SysMen[17],0x1F); fltStop[1] = 0; }
-				gotoxy(15,11); ShowMouse(); delay(150);
-			}
-			if(bRow == 15 && bCol >= 14 && bCol <= 52) {
-				HideMouse();
-				if(!fltStop[slc]) WriteVRM(14,7+4*slc,0x1C,SysMen[16+slc],0x1E);
-				else {
-					WriteVRM(14,7+4*slc,0x1C,SysMen[16+slc],0x1E);
-					PrintXY(15,7+4*slc,0x1C,251);
-				} slc = 2;
-				if(!fltStop[slc]) {
-					WriteVRM(14,15,0x1A,SysMen[18],0x1F);
-					PrintXY(15,15,0x1A,251); fltStop[2] = 1;
-				} else { WriteVRM(14,15,0x1A,SysMen[18],0x1F); fltStop[2] = 0; }
-				gotoxy(15,15); ShowMouse(); delay(150);
-			}
-			if(bRow == 21 && bCol >= 24 && bCol <= 36) {
-				HideMouse(); Button(48,21,_wATV,1,SysMen[4],1,_wFLT);
-				Clear(24,21,37,22,1); WriteVRM(25,21,wATV,SysMen[1],wFLT);
-				delay(50); Button(24,21,wATV,1,SysMen[1],1,wFLT);
-				ShowMouse(); chs = 0; key = ENTER;
-			}
-			if(bRow == 21 && bCol >= 48 && bCol <= 60) {
-				HideMouse(); Button(24,21,_wATV,1,SysMen[1],1,_wFLT);
-				Clear(48,21,61,22,1); WriteVRM(49,21,wATV,SysMen[4],wFLT);
-				delay(50); Button(48,21,wATV,1,SysMen[4],1,wFLT);
-				ShowMouse(); chs = 1; key = ENTER;
-			}
-			if(bRow == 2 && bCol == 8 || bCol == 9) HaltSys();
-		}
-	} while(key != ENTER);
-	if(fltStop[slc]) {
-		WriteVRM(14,7+4*slc,0x1C,SysMen[16+slc],0x1E);
-		PrintXY(15,7+4*slc,0x1C,251);
-	}
-	else WriteVRM(14,7+4*slc,0x1C,SysMen[16+slc],0x1E);
-	if(!chs && !cancel) {
-		if(fltStop[1] && fltStop[2]) StartInstall();
-		else {
-			HideMouse(); gettext(20,10,63,18,szBuff);
-			msgSlc = MsgBox(20,10,61,17,msgError,2);
-			if(msgSlc) HaltSys();
-			else {
-				HideMouse(); puttext(20,10,63,18,szBuff); ShowMouse();
-				goto label1;
-			}
-		}
-	}
-	else {
-		HideMouse(); gettext(20,10,63,17,szBuff);
-		msgSlc = MsgBox(20,10,61,16,msgExit,1); if(!msgSlc) HaltSys();
-		HideMouse(); puttext(20,10,63,17,szBuff); ShowMouse(); goto label1;
-	}
+    uint8_t i = 0, fltStop[3], found = 0, cancel = 0;
+    memset(fltStop,0,3);
+    _setbkcolor(1);
+    _settextcolor(15);
+    setBorder(59);
+    _settextcursor(0x0B0A);
+    _clearscreen(_GWINDOW);
+    isBlinking(0);
+    fillFrame(1,1,80,25,0xFD,178);
+    drawShadowBox(8,2,74,23,0x1F,sysInfo[74]);
+    writeVRM(13,4,0x1A,sysInfo[10], 0);
+    writeChar(11,5,0x1B,61,205);
+    writeVRM(12,6,0x1B,sysInfo[36], 0); writeVRM(23,8,0x1F,sysInfo[44], 0);
+    writeVRM(23,9,0x1F,sysInfo[45], 0); writeVRM(23,10,0x1F,sysInfo[46], 0);
+    writeVRM(23,12,0x1E,sysInfo[47], 0); writeVRM(23,13,0x1E,sysInfo[48], 0);
+    writeVRM(23,14,0x1E,sysInfo[49], 0); writeVRM(23,16,0x1B,sysInfo[50], 0);
+    writeVRM(23,17,0x1B,sysInfo[51], 0); writeVRM(23,18,0x1B,sysInfo[52], 0);
+    writeChar(9,19,0x1F,65,196);
+    printXY(8,19,0x1F,195);
+    printXY(74,19,0x1F,180);
+    writeVRM(14,11,0x1C,sysMenu[17],0x1E);
+    writeVRM(14,15,0x1C,sysMenu[18],0x1E);
+    
+    if (!initMouse()) system(sysInfo[43]);
+    setMousePos();
+    
+    drawButton(24,21,wATV,1,sysMenu[1],1,wFLT);
+    drawButton(48,21,_wATV,1,sysMenu[4],1,_wFLT);
+    
+    label1:
+    found = cancel = 0;
+    for (i = 0; i < 3 && !found; i++) if(!fltStop[i]) found = 1;
+    if(found) {
+        i--; _settextcursor(0x0B0A); _settextposition(7+4*i,15);
+        writeVRM(14,7+4*i,0x1A,sysMenu[16+i],0x1F); slc = i;
+    }
+    key = 0;
+    do {
+        if(kbhit()) {
+            key = getch(); if(!key) key = getch();
+            switch(toupper(key)) {
+            case UP :
+                if(!fltStop[slc]) writeVRM(14,7+4*slc,0x1C,sysMenu[16+slc],0x1E);
+                else {
+                    writeVRM(14,7+4*slc,0x1C,sysMenu[16+slc],0x1E);
+                    printXY(15,7+4*slc,0x1C,251);
+                }
+                if(slc < 1) slc = 2; else slc--;
+                if(!fltStop[slc]) writeVRM(14,7+4*slc,0x1A,sysMenu[16+slc],0x1F);
+                else {
+                    writeVRM(14,7+4*slc,0x1A,sysMenu[16+slc],0x1F);
+                    printXY(15,7+4*slc,0x1A,251);
+                } _settextposition(7+4*slc, 15); break;
+            case DOWN :
+                if(!fltStop[slc]) writeVRM(14,7+4*slc,0x1C,sysMenu[16+slc],0x1E);
+                else {
+                    writeVRM(14,7+4*slc,0x1C,sysMenu[16+slc],0x1E);
+                    printXY(15,7+4*slc,0x1C,251);
+                }
+                if(slc >= 2) slc = 0; else slc++;
+                if(!fltStop[slc]) writeVRM(14,7+4*slc,0x1A,sysMenu[16+slc],0x1F);
+                else {
+                    writeVRM(14,7+4*slc,0x1A,sysMenu[16+slc],0x1F);
+                    printXY(15,7+4*slc,0x1A,251);
+                } _settextposition(7+4*slc,15); break;
+            case HOME :
+                if(!fltStop[slc]) writeVRM(14,7+4*slc,0x1C,sysMenu[16+slc],0x1E);
+                else {
+                    writeVRM(14,7+4*slc,0x1C,sysMenu[16+slc],0x1E);
+                    printXY(15,7+4*slc,0x1C,251);
+                } slc = 0;
+                if(!fltStop[slc]) writeVRM(14,7+4*slc,0x1A,sysMenu[16+slc],0x1F);
+                else {
+                    writeVRM(14,7+4*slc,0x1A,sysMenu[16+slc],0x1F);
+                    printXY(15,7+4*slc,0x1A,251);
+                } _settextposition(7+4*slc,15); break;
+            case END :
+                if(!fltStop[slc]) writeVRM(14,7+4*slc,0x1C,sysMenu[16+slc],0x1E);
+                else {
+                    writeVRM(14,7+4*slc,0x1C,sysMenu[16+slc],0x1E);
+                    printXY(15,7+4*slc,0x1C,251);
+                } slc = 2;
+                if(!fltStop[slc]) writeVRM(14,7+4*slc,0x1A,sysMenu[16+slc],0x1F);
+                else {
+                    writeVRM(14,7+4*slc,0x1A,sysMenu[16+slc],0x1F);
+                    printXY(15,7+4*slc,0x1A,251);
+                } _settextposition(7+4*slc,15); break;
+            case LEFT :
+                drawButton(24+chs*24,21,_wATV,1,sysMenu[3*chs+1],1,_wFLT);
+                if(chs < 1) chs = 1; else chs--;
+                drawButton(24+chs*24,21,wATV,1,sysMenu[3*chs+1],1,wFLT); break;
+            case RIGHT :
+                drawButton(24+chs*24,21,_wATV,1,sysMenu[3*chs+1],1,_wFLT);
+                if(chs > 0) chs = 0; else chs++;
+                drawButton(24+chs*24,21,wATV,1,sysMenu[3*chs+1],1,wFLT); break;
+            }
+            if(key == 32) {
+                if(fltStop[slc]) {
+                    writeVRM(14,7+4*slc,0x1A,sysMenu[16+slc],0x1F);
+                    fltStop[slc] = 0;
+                } else { printXY(15,7+4*slc,0x1A,251); fltStop[slc] = 1; }
+            }
+        }
+        if(clickMouse(&bCol, &bRow) == 1) {
+            if(bRow == 7 && bCol >= 14 && bCol <= 48) {
+                hideMouse();
+                if(!fltStop[slc]) writeVRM(14,7+4*slc,0x1C,sysMenu[16+slc],0x1E);
+                else {
+                    writeVRM(14,7+4*slc,0x1C,sysMenu[16+slc],0x1E);
+                    printXY(15,7+4*slc,0x1C,251);
+                } slc = 0;
+                if(!fltStop[slc]) {
+                    writeVRM(14,7,0x1A,sysMenu[16],0x1F);
+                    printXY(15,7,0x1A,251); fltStop[0] = 1;
+                } else { writeVRM(14,7,0x1A,sysMenu[16],0x1F); fltStop[0] = 0; }
+                _settextposition(7,15); showMouse(); delay(150);
+            }
+            if(bRow == 11 && bCol >= 14 && bCol <= 57) {
+                hideMouse();
+                if(!fltStop[slc]) writeVRM(14,7+4*slc,0x1C,sysMenu[16+slc],0x1E);
+                else {
+                    writeVRM(14,7+4*slc,0x1C,sysMenu[16+slc],0x1E);
+                    printXY(15,7+4*slc,0x1C,251);
+                } slc = 1;
+                if(!fltStop[slc]) {
+                    writeVRM(14,11,0x1A,sysMenu[17],0x1F);
+                    printXY(15,11,0x1A,251); fltStop[1] = 1;
+                } else { writeVRM(14,11,0x1A,sysMenu[17],0x1F); fltStop[1] = 0; }
+                _settextposition(11,15); showMouse(); delay(150);
+            }
+            if(bRow == 15 && bCol >= 14 && bCol <= 52) {
+                hideMouse();
+                if(!fltStop[slc]) writeVRM(14,7+4*slc,0x1C,sysMenu[16+slc],0x1E);
+                else {
+                    writeVRM(14,7+4*slc,0x1C,sysMenu[16+slc],0x1E);
+                    printXY(15,7+4*slc,0x1C,251);
+                } slc = 2;
+                if(!fltStop[slc]) {
+                    writeVRM(14,15,0x1A,sysMenu[18],0x1F);
+                    printXY(15,15,0x1A,251); fltStop[2] = 1;
+                } else { writeVRM(14,15,0x1A,sysMenu[18],0x1F); fltStop[2] = 0; }
+                _settextposition(15,15); showMouse(); delay(150);
+            }
+            if(bRow == 21 && bCol >= 24 && bCol <= 36) {
+                hideMouse(); drawButton(48,21,_wATV,1,sysMenu[4],1,_wFLT);
+                clearScreen(24,21,37,22,1); writeVRM(25,21,wATV,sysMenu[1],wFLT);
+                delay(50); drawButton(24,21,wATV,1,sysMenu[1],1,wFLT);
+                showMouse(); chs = 0; key = ENTER;
+            }
+            if(bRow == 21 && bCol >= 48 && bCol <= 60) {
+                hideMouse(); drawButton(24,21,_wATV,1,sysMenu[1],1,_wFLT);
+                clearScreen(48,21,61,22,1); writeVRM(49,21,wATV,sysMenu[4],wFLT);
+                delay(50); drawButton(48,21,wATV,1,sysMenu[4],1,wFLT);
+                showMouse(); chs = 1; key = ENTER;
+            }
+            if(bRow == 2 && bCol == 8 || bCol == 9) haltSys();
+        }
+    } while(key != ENTER);
+    if(fltStop[slc]) {
+        writeVRM(14,7+4*slc,0x1C,sysMenu[16+slc],0x1E);
+        printXY(15,7+4*slc,0x1C,251);
+    }
+    else writeVRM(14,7+4*slc,0x1C,sysMenu[16+slc],0x1E);
+    if(!chs && !cancel) {
+        if(fltStop[1] && fltStop[2]) startInstall();
+        else {
+            hideMouse(); getText(20,10,63,18,szBuff);
+            msgSlc = messageBox(20,10,61,17,msgError,2);
+            if(msgSlc) haltSys();
+            else {
+                hideMouse(); putText(20,10,63,18,szBuff); showMouse();
+                goto label1;
+            }
+        }
+    }
+    else {
+        hideMouse();
+        getText(20,10,63,17,szBuff);
+        msgSlc = messageBox(20,10,61,16,msgExit,1);
+        if (!msgSlc) haltSys();
+        hideMouse();
+        putText(20,10,63,17,szBuff);
+        showMouse();
+        goto label1;
+    }
 }
 
 /*-------------------------------------------*/
@@ -1861,7 +2116,10 @@ void Install()
 /*-------------------------------------------*/
 void main()
 {
-	InitData(); Install();
+    _setvideomode(_TEXTC80);
+    initData();
+    showInstall();
+    _setvideomode(_DEFAULTMODE);
 }
 /*-------------------------------------------------------------------------*/
 /*------------------END OF SOURCES FILE PROGRAM----------------------------*/

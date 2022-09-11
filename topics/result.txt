@@ -1,2 +1,2 @@
-**** Result of the test :  . Serial number : 123 ****
-Total : 6.3 Marks . Comment : Average
+**** Result of the test :  . Serial number : 00dth1 ****
+Total : 3.8 Marks . Comment : Weak

@@ -9,7 +9,7 @@
 #include <graph.h>
 
 #define MASK_BG         0x08
-#define OFFSET(x, y)    (2 * (x - 1) + 160 * (y - 1))
+#define OFFSET(x, y)    (((x - 1) + 80 * (y - 1)) << 1)
 
 #define LEFT    75
 #define RIGHT   77
@@ -43,10 +43,10 @@ uint8_t *txtMem = (uint8_t*)0xB8000000L;
 /*-----------------------------------*/
 void setBorder(uint8_t color)
 {
-	union REGS regs;
+    union REGS regs;
     regs.h.ah = 0x10;
     regs.h.al = 0x01;
-	regs.h.bh = color & 63;
+    regs.h.bh = color & 63;
     int86(0x10, &regs, &regs);
 }
 
@@ -62,7 +62,7 @@ void printChar(uint8_t x, uint8_t y, char chr)
     char txt[2];
     txt[0] = chr;
     txt[1] = '\0';
-	_settextposition(y, x);
+    _settextposition(y, x);
     _outtext(txt);
 }
 
@@ -76,7 +76,7 @@ void printChar(uint8_t x, uint8_t y, char chr)
 /*-------------------------------------------------*/
 void printXY(uint8_t x, uint8_t y, uint8_t attr, char chr)
 {
-	txtMem[OFFSET(x, y)    ] = chr;
+    txtMem[OFFSET(x, y)    ] = chr;
     txtMem[OFFSET(x, y) + 1] = attr;
 }
 
@@ -91,16 +91,16 @@ void printXY(uint8_t x, uint8_t y, uint8_t attr, char chr)
 /*------------------------------------------------*/
 void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 {
-	uint8_t i;
+    uint8_t i;
     uint16_t rwVideoOFS;
-	
-	rwVideoOFS = OFFSET(x, y);
-	for (i = 0; i < len; i++)
+
+    rwVideoOFS = OFFSET(x, y);
+    for (i = 0; i < len; i++)
     {
         txtMem[rwVideoOFS    ] = chr;
         txtMem[rwVideoOFS + 1] = attr;
         rwVideoOFS += 2;
-	}
+    }
 }
 
 /*-----------------------------------------------*/
@@ -115,40 +115,40 @@ void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 /*-----------------------------------------------*/
 void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t fstAttr)
 {
-	char *szTmp;
+    char *szTmp;
     uint8_t i = 0, fltStop = 0, currX = x, bPos;
-	
-	if (fstAttr)
+
+    if (fstAttr)
     {
-		szTmp = (char*)malloc(strlen(szPrmt) + 1);
+        szTmp = (char*)malloc(strlen(szPrmt) + 1);
         if (!szTmp) return;
 
         strcpy(szTmp, szPrmt);
-		for (; (i < strlen(szTmp) - 1) && !fltStop;)
+        for (; (i < strlen(szTmp) - 1) && !fltStop;)
         {
-		    if (szTmp[i++] == 126) fltStop = 1;
+            if (szTmp[i++] == 126) fltStop = 1;
         }
 
-		memmove(&szTmp[i - 1], &szTmp[i], strlen(szTmp) - i + 1);
-		bPos = i - 1;
+        memmove(&szTmp[i - 1], &szTmp[i], strlen(szTmp) - i + 1);
+        bPos = i - 1;
         i = 0;
-		while (szTmp[i])
+        while (szTmp[i])
         {
-			txtMem[OFFSET(x, y)] = szTmp[i++];
-			txtMem[OFFSET(x++, y) + 1] = txtAtr;
-		}
-
-		printXY(currX + bPos, y, fstAttr, szTmp[bPos]);
-        free(szTmp);
-	}
-	else
-    {
-		while (*szPrmt)
-        {
-			txtMem[OFFSET(x, y)] = *szPrmt++;
+            txtMem[OFFSET(x, y)] = szTmp[i++];
             txtMem[OFFSET(x++, y) + 1] = txtAtr;
-		}
-	}
+        }
+
+        printXY(currX + bPos, y, fstAttr, szTmp[bPos]);
+        free(szTmp);
+    }
+    else
+    {
+        while (*szPrmt)
+        {
+            txtMem[OFFSET(x, y)] = *szPrmt++;
+            txtMem[OFFSET(x++, y) + 1] = txtAtr;
+        }
+    }
 }
 
 /*-----------------------------------------------*/
@@ -162,45 +162,45 @@ void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t 
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
 void drawButton(uint8_t x, uint8_t y, uint8_t txtAttr, uint8_t bkClr, const char *szTitle, uint8_t bType, uint8_t fstAttr)
-{	
-	const uint8_t wAttr = bkClr << 4;
-	const uint16_t bLen = strlen(szTitle);
-	const char styles[] = {16, 17, 223, 220};
+{
+    const uint8_t wAttr = bkClr << 4;
+    const uint16_t bLen = strlen(szTitle);
+    const char styles[] = {16, 17, 223, 220};
 
-	if (bType)
+    if (bType)
     {
-		if (fstAttr)
+        if (fstAttr)
         {
-			writeVRM(x, y, txtAttr, szTitle, fstAttr);
-			writeChar(x + 1, y + 1, wAttr, bLen - 1, styles[2]);
-			writeChar(x + bLen - 1, y, wAttr, 1, styles[3]);
-		}
-		else
+            writeVRM(x, y, txtAttr, szTitle, fstAttr);
+            writeChar(x + 1, y + 1, wAttr, bLen - 1, styles[2]);
+            writeChar(x + bLen - 1, y, wAttr, 1, styles[3]);
+        }
+        else
         {
-			writeVRM(x, y, txtAttr, szTitle, 0);
-			writeChar(x + 1, y + 1, wAttr, bLen, styles[2]);
-			writeChar(x + bLen, y, wAttr, 1, styles[3]);
-		}
-	}
-	else
+            writeVRM(x, y, txtAttr, szTitle, 0);
+            writeChar(x + 1, y + 1, wAttr, bLen, styles[2]);
+            writeChar(x + bLen, y, wAttr, 1, styles[3]);
+        }
+    }
+    else
     {
-		if (fstAttr)
+        if (fstAttr)
         {
-			writeVRM(x, y, txtAttr, szTitle, fstAttr);
-			printXY(x, y, txtAttr, styles[0]);
-			printXY(x + bLen - 2, y, txtAttr, styles[1]);
-			writeChar(x + 1, y + 1, wAttr, bLen - 1, styles[2]);
-			writeChar(x + bLen - 1 , y, wAttr, 1, styles[3]);
-		}
-		else
-        {
-			writeVRM(x, y, txtAttr, szTitle, 0);
+            writeVRM(x, y, txtAttr, szTitle, fstAttr);
             printXY(x, y, txtAttr, styles[0]);
-			printXY(x + bLen - 1, y, txtAttr, styles[1]);
-			writeChar(x + 1, y + 1, wAttr, bLen, styles[2]);
-			writeChar(x + bLen, y, wAttr, 1, styles[3]);
-		}
-	}
+            printXY(x + bLen - 2, y, txtAttr, styles[1]);
+            writeChar(x + 1, y + 1, wAttr, bLen - 1, styles[2]);
+            writeChar(x + bLen - 1 , y, wAttr, 1, styles[3]);
+        }
+        else
+        {
+            writeVRM(x, y, txtAttr, szTitle, 0);
+            printXY(x, y, txtAttr, styles[0]);
+            printXY(x + bLen - 1, y, txtAttr, styles[1]);
+            writeChar(x + 1, y + 1, wAttr, bLen, styles[2]);
+            writeChar(x + bLen, y, wAttr, 1, styles[3]);
+        }
+    }
 }
 
 /*-----------------------------------------------*/
@@ -212,30 +212,30 @@ void drawButton(uint8_t x, uint8_t y, uint8_t txtAttr, uint8_t bkClr, const char
 /*-----------------------------------------------*/
 void drawFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
 {
-	int16_t k;
+    int16_t k;
     char txt[2];
-    
+
     txt[1] = '\0';
     printChar(x1, y1, 218);
 
     txt[0] = 193;
-	for (k = x1 + 1; k < x2; k++) _outtext(txt);
+    for (k = x1 + 1; k < x2; k++) _outtext(txt);
 
     txt[0] = 191;
     _outtext(txt);
     printChar(x1, y2, 192);
 
     txt[0] = 194;
-	for (k = x1 + 1; k < x2; k++) _outtext(txt);
+    for (k = x1 + 1; k < x2; k++) _outtext(txt);
 
     txt[0] = 225;
     _outtext(txt);
 
-	for (k = y1 + 1; k < y2; k++)
+    for (k = y1 + 1; k < y2; k++)
     {
-		printChar(x1, k, 179);
-		printChar(x2, k, 224);
-	}
+        printChar(x1, k, 179);
+        printChar(x2, k, 224);
+    }
 }
 
 /*---------------------------------------------------*/
@@ -248,10 +248,10 @@ void drawFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
 /*---------------------------------------------------*/
 void changeAttrib(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 {
-	uint8_t col, row;
-	for (col = x1; col <= x2; col++)
+    uint8_t col, row;
+    for (col = x1; col <= x2; col++)
     {
-		for (row = y1; row <= y2; row++) txtMem[OFFSET(col, row) + 1] = wAttr;
+        for (row = y1; row <= y2; row++) txtMem[OFFSET(col, row) + 1] = wAttr;
     }
 }
 
@@ -264,10 +264,10 @@ void changeAttrib(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 /*-----------------------------------------------*/
 void isBlinking(uint8_t doblink)
 {
-	union REGS regs;
+    union REGS regs;
     regs.h.ah = 0x10;
     regs.h.al = 0x03;
-	regs.h.bl = doblink ? 1 : 0;
+    regs.h.bl = doblink ? 1 : 0;
     int86(0x10, &regs, &regs);
 }
 
@@ -281,18 +281,18 @@ void isBlinking(uint8_t doblink)
 /*----------------------------------------------*/
 void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 {
-	int16_t oldBk = _getbkcolor();
-	int16_t oldCol = _gettextcolor();
+    uint8_t oldBk = _getbkcolor();
+    uint8_t oldCol = _gettextcolor();
     _setbkcolor(wAttr >> 4);
     _settextcolor(wAttr & 0x0F);
-	drawFrame(x1, y1, x2, y2);
+    drawFrame(x1, y1, x2, y2);
     _settextwindow(y1 + 1, x1 + 1, y2 - 1, x2 - 1);
-	_clearscreen(_GWINDOW);
+    _clearscreen(_GWINDOW);
     _settextwindow(1, 1, 25, 80);
-	changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, 0x08);
-	changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, 0x08);
-	_setbkcolor(oldBk);
-	_settextcolor(oldCol);
+    changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, 0x08);
+    changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, 0x08);
+    _setbkcolor(oldBk);
+    _settextcolor(oldCol);
 }
 
 /*----------------------------------------------*/
@@ -307,15 +307,15 @@ void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 void drawShadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char *szTitle)
 {
     const uint8_t bkc = wAttr << 4;
-	const char szStyle[] = {229, 252, 0};
-	const uint16_t bCenter = ((x2 - x1) >> 1) - (strlen(szTitle) >> 1);
-	changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, MASK_BG);
-	changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, MASK_BG);
-	drawBox(x1, y1, x2, y2, wAttr);
-	writeChar(x1 + 3, y1, bkc, x2 - x1 - 2, 32);
-	writeVRM(x1 + bCenter, y1, bkc, szTitle, 0);
-	printXY(x1 + 2, y1, bkc, 226);
-	writeVRM(x1, y1, bkc >> 4, szStyle, 0);
+    const char szStyle[] = {229, 252, 0};
+    const uint16_t bCenter = ((x2 - x1) >> 1) - (strlen(szTitle) >> 1);
+    changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, MASK_BG);
+    changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, MASK_BG);
+    drawBox(x1, y1, x2, y2, wAttr);
+    writeChar(x1 + 3, y1, bkc, x2 - x1 - 2, 32);
+    writeVRM(x1 + bCenter, y1, bkc, szTitle, 0);
+    printXY(x1 + 2, y1, bkc, 226);
+    writeVRM(x1, y1, bkc >> 4, szStyle, 0);
 }
 
 /*--------------------------------------------------*/
@@ -329,8 +329,8 @@ void drawShadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr
 /*--------------------------------------------------*/
 void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char Chr)
 {
-	uint8_t i = y1;
-	for (;i <= y2;) writeChar(x1, i++, wAttr, x2 - x1 + 1, Chr);
+    uint8_t i;
+    for (i = y1; i <= y2; i++) writeChar(x1, i, wAttr, x2 - x1 + 1, Chr);
 }
 
 /*----------------------------------*/
@@ -341,12 +341,12 @@ void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, ch
 /*----------------------------------*/
 uint16_t initMouse()
 {
-	union REGS regs;
+    union REGS regs;
     regs.x.ax = 0x00;
     int86(0x33, &regs, &regs);
-	if (regs.x.ax != 0xFFFF) return 0;
+    if (regs.x.ax != 0xFFFF) return 0;
     regs.x.ax = 0x01;
-	int86(0x33, &regs, &regs);
+    int86(0x33, &regs, &regs);
     bmAvalid = 1;
     return 1;
 }
@@ -360,10 +360,10 @@ uint16_t initMouse()
 /*-----------------------------------------------------*/
 uint16_t clickMouse(uint16_t *col, uint16_t *row)
 {
-	union REGS regs;
+    union REGS regs;
     regs.x.ax = 0x03;
     int86(0x33, &regs, &regs);
-	*col = (regs.x.cx >> 3) + 1;
+    *col = (regs.x.cx >> 3) + 1;
     *row = (regs.x.dx >> 3) + 1;
     return regs.x.bx;
 }
@@ -376,7 +376,7 @@ uint16_t clickMouse(uint16_t *col, uint16_t *row)
 /*-----------------------------------*/
 void hideMouse()
 {
-	union REGS regs;
+    union REGS regs;
     regs.x.ax = 0x02;
     int86(0x33, &regs, &regs);
 }
@@ -389,7 +389,7 @@ void hideMouse()
 /*--------------------------------------*/
 void showMouse()
 {
-	union REGS regs;
+    union REGS regs;
     regs.x.ax = 0x01;
     int86(0x33, &regs, &regs);
 }
@@ -402,17 +402,17 @@ void showMouse()
 /*--------------------------------------------*/
 void setMousePos()
 {
-	union REGS regs;
+    union REGS regs;
     regs.x.ax = 0x07;
     regs.x.cx = 0;
     regs.x.dx = 2 * 320 - 8;
-	int86(0x33, &regs, &regs);
+    int86(0x33, &regs, &regs);
     regs.x.ax = 0x08;
     regs.x.cx = 0;
-	regs.x.dx = 200 - 8;
+    regs.x.dx = 200 - 8;
     int86(0x33, &regs, &regs);
     regs.x.ax = 0x1D;
-	regs.x.bx = 0;
+    regs.x.bx = 0;
     int86(0x33, &regs, &regs);
 }
 
@@ -424,10 +424,10 @@ void setMousePos()
 /*------------------------------------------------*/
 void moveMouse(uint16_t x, uint16_t y)
 {
-	union REGS regs;
+    union REGS regs;
     regs.x.ax = 0x0004;
     regs.x.cx = (x << 3) - 1;
-	regs.x.dx = (y << 3) - 1;
+    regs.x.dx = (y << 3) - 1;
     int86(0x33, &regs, &regs);
 }
 
@@ -439,7 +439,7 @@ void moveMouse(uint16_t x, uint16_t y)
 /*------------------------------------*/
 void closeMouse()
 {
-	union REGS regs;
+    union REGS regs;
     hideMouse();
     regs.x.ax = 0;
     int86(0x33, &regs, &regs);
@@ -455,9 +455,9 @@ void closeMouse()
 /*----------------------------------------------*/
 void clearScreen(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color)
 {
-	_settextwindow(y1, x1, y2, x2);
+    _settextwindow(y1, x1, y2, x2);
     _setbkcolor(color);
-	_clearscreen(_GWINDOW);
+    _clearscreen(_GWINDOW);
     _settextwindow(1, 1, 25, 80);
 }
 
@@ -470,9 +470,9 @@ void clearScreen(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color)
 /*-----------------------------------------*/
 int16_t strPos(char *str, char *szSubstr)
 {
-	char *ptr = strstr(str, szSubstr);
-	if (!ptr) return -1;
-	return ptr - str;
+    char *ptr = strstr(str, szSubstr);
+    if (!ptr) return -1;
+    return ptr - str;
 }
 
 /*---------------------------------------------*/
@@ -485,8 +485,8 @@ int16_t strPos(char *str, char *szSubstr)
 /*---------------------------------------------*/
 void insertChar(char *str, char chr, int16_t iPos)
 {
-	if (iPos < 0 || iPos >= strlen(str)) return;
-	*(str + iPos) = chr;
+    if (iPos < 0 || iPos >= strlen(str)) return;
+    *(str + iPos) = chr;
 }
 
 /*---------------------------------------------*/
@@ -499,8 +499,8 @@ void insertChar(char *str, char chr, int16_t iPos)
 /*---------------------------------------------*/
 void strDelete(char *str, int16_t i, int16_t num)
 {
-	if (i < 0 || i >= strlen(str)) return;
-	memcpy(str + i + 1, str + i +num, strlen(str) - i - 1);
+    if (i < 0 || i >= strlen(str)) return;
+    memcpy(str + i + 1, str + i +num, strlen(str) - i - 1);
 }
 
 /*--------------------------------------*/
@@ -513,15 +513,15 @@ void strDelete(char *str, int16_t i, int16_t num)
 /*--------------------------------------*/
 void schRepl(char *str, char *sch, char repl)
 {
-	int16_t i;
-	do {
-		i = strPos(str, sch);
-		if (i >= 0)
+    int16_t i;
+    do {
+        i = strPos(str, sch);
+        if (i >= 0)
         {
-			strDelete(str, i, strlen(sch));
-			insertChar(str, repl, i);
-		}
-	} while (i >= 0);
+            strDelete(str, i, strlen(sch));
+            insertChar(str, repl, i);
+        }
+    } while (i >= 0);
 }
 
 /*----------------------------------------------*/
@@ -532,9 +532,9 @@ void schRepl(char *str, char *sch, char repl)
 /*----------------------------------------------*/
 void chr2Str(char chr, char n, char *str)
 {
-	str[0] = chr;
-	str[1] = n;
-	str[2] = '\0';
+    str[0] = chr;
+    str[1] = n;
+    str[2] = '\0';
 }
 
 /*--------------------------------------*/
@@ -546,135 +546,136 @@ void chr2Str(char chr, char n, char *str)
 void fontVNI(char *szPrmpt)
 {
     char buff[4] = {0};
-	schRepl(szPrmpt, "a8", 128);
+    schRepl(szPrmpt, "a8", 128);
     chr2Str(128, '1', buff);
-	schRepl(szPrmpt, buff, 129);
+    schRepl(szPrmpt, buff, 129);
     chr2Str(128, '2', buff);
-	schRepl(szPrmpt, buff, 130);
+    schRepl(szPrmpt, buff, 130);
     chr2Str(128, '3', buff);
-	schRepl(szPrmpt, buff, 131);
+    schRepl(szPrmpt, buff, 131);
     chr2Str(128, '4', buff);
-	schRepl(szPrmpt, buff, 132);
+    schRepl(szPrmpt, buff, 132);
     chr2Str(128, '5', buff);
-	schRepl(szPrmpt, buff, 133);
-	schRepl(szPrmpt, "a6", 134);
+    schRepl(szPrmpt, buff, 133);
+    schRepl(szPrmpt, "a6", 134);
     chr2Str(134, '1', buff);
-	schRepl(szPrmpt, buff, 135);
+    schRepl(szPrmpt, buff, 135);
     chr2Str(134, '2', buff);
-	schRepl(szPrmpt, buff, 136);
+    schRepl(szPrmpt, buff, 136);
     chr2Str(134, '3', buff);
-	schRepl(szPrmpt, buff, 137);
+    schRepl(szPrmpt, buff, 137);
     chr2Str(134, '4', buff);
-	schRepl(szPrmpt, buff, 138);
+    schRepl(szPrmpt, buff, 138);
     chr2Str(134, '5', buff);
-	schRepl(szPrmpt, buff, 139);
-	schRepl(szPrmpt, "e6", 140);
+    schRepl(szPrmpt, buff, 139);
+    schRepl(szPrmpt, "e6", 140);
     chr2Str(140, '1', buff);
-	schRepl(szPrmpt, buff, 141);
+    schRepl(szPrmpt, buff, 141);
     chr2Str(140, '2', buff);
-	schRepl(szPrmpt, buff, 142);
+    schRepl(szPrmpt, buff, 142);
     chr2Str(140, '3', buff);
-	schRepl(szPrmpt, buff, 143);
+    schRepl(szPrmpt, buff, 143);
     chr2Str(140, '4', buff);
-	schRepl(szPrmpt, buff, 144);
+    schRepl(szPrmpt, buff, 144);
     chr2Str(140, '5', buff);
-	schRepl(szPrmpt, buff, 145);
-	schRepl(szPrmpt, "o7", 146);
+    schRepl(szPrmpt, buff, 145);
+    schRepl(szPrmpt, "o7", 146);
     chr2Str(146, '1', buff);
-	schRepl(szPrmpt, buff, 147);
+    schRepl(szPrmpt, buff, 147);
     chr2Str(146, '2', buff);
-	schRepl(szPrmpt, buff, 148);
+    schRepl(szPrmpt, buff, 148);
     chr2Str(146, '3', buff);
-	schRepl(szPrmpt, buff, 149);
+    schRepl(szPrmpt, buff, 149);
     chr2Str(146, '4', buff);
-	schRepl(szPrmpt, buff, 150);
+    schRepl(szPrmpt, buff, 150);
     chr2Str(146, '5', buff);
-	schRepl(szPrmpt, buff, 151);
-	schRepl(szPrmpt, "o6", 152);
+    schRepl(szPrmpt, buff, 151);
+    schRepl(szPrmpt, "o6", 152);
     chr2Str(152, '1', buff);
-	schRepl(szPrmpt, buff, 153);
+    schRepl(szPrmpt, buff, 153);
     chr2Str(152, '2', buff);
-	schRepl(szPrmpt, buff, 154);
+    schRepl(szPrmpt, buff, 154);
     chr2Str(152, '3', buff);
-	schRepl(szPrmpt, buff, 155);
+    schRepl(szPrmpt, buff, 155);
     chr2Str(152, '4', buff);
-	schRepl(szPrmpt, buff, 156);
+    schRepl(szPrmpt, buff, 156);
     chr2Str(152, '5', buff);
-	schRepl(szPrmpt, buff, 157);
-	schRepl(szPrmpt, "u7", 158);
+    schRepl(szPrmpt, buff, 157);
+    schRepl(szPrmpt, "u7", 158);
     chr2Str(158, '1', buff);
-	schRepl(szPrmpt, buff, 159);
+    schRepl(szPrmpt, buff, 159);
     chr2Str(158, '2', buff);
-	schRepl(szPrmpt, buff, 160);
+    schRepl(szPrmpt, buff, 160);
     chr2Str(158, '3', buff);
-	schRepl(szPrmpt, buff, 161);
+    schRepl(szPrmpt, buff, 161);
     chr2Str(158, '4', buff);
-	schRepl(szPrmpt, buff, 162);
+    schRepl(szPrmpt, buff, 162);
     chr2Str(158, '5', buff);
-	schRepl(szPrmpt, buff, 163);
-	schRepl(szPrmpt, "a1", 164);
-	schRepl(szPrmpt, "a2", 165);
-	schRepl(szPrmpt, "a3", 166);
-	schRepl(szPrmpt, "a4", 167);
-	schRepl(szPrmpt, "a5", 168);
-	schRepl(szPrmpt, "e1", 169);
-	schRepl(szPrmpt, "e2", 170);
-	schRepl(szPrmpt, "e3", 171);
-	schRepl(szPrmpt, "e4", 172);
-	schRepl(szPrmpt, "e5", 173);
-	schRepl(szPrmpt, "i1", 174);
-	schRepl(szPrmpt, "i2", 175);
-	schRepl(szPrmpt, "i3", 181);
-	schRepl(szPrmpt, "i4", 182);
-	schRepl(szPrmpt, "i5", 183);
-	schRepl(szPrmpt, "o1", 184);
-	schRepl(szPrmpt, "o2", 190);
-	schRepl(szPrmpt, "o3", 198);
-	schRepl(szPrmpt, "o4", 199);
-	schRepl(szPrmpt, "o5", 208);
-	schRepl(szPrmpt, "u1", 210);
-	schRepl(szPrmpt, "u2", 211);
-	schRepl(szPrmpt, "u3", 212);
-	schRepl(szPrmpt, "u4", 213);
-	schRepl(szPrmpt, "u5", 214);
-	schRepl(szPrmpt, "y1", 215);
-	schRepl(szPrmpt, "y2", 216);
-	schRepl(szPrmpt, "y3", 221);
-	schRepl(szPrmpt, "y4", 222);
-	schRepl(szPrmpt, "y5", 248);
-	schRepl(szPrmpt, "d9", 249);
-	schRepl(szPrmpt, "D9", 250);
+    schRepl(szPrmpt, buff, 163);
+    schRepl(szPrmpt, "a1", 164);
+    schRepl(szPrmpt, "a2", 165);
+    schRepl(szPrmpt, "a3", 166);
+    schRepl(szPrmpt, "a4", 167);
+    schRepl(szPrmpt, "a5", 168);
+    schRepl(szPrmpt, "e1", 169);
+    schRepl(szPrmpt, "e2", 170);
+    schRepl(szPrmpt, "e3", 171);
+    schRepl(szPrmpt, "e4", 172);
+    schRepl(szPrmpt, "e5", 173);
+    schRepl(szPrmpt, "i1", 174);
+    schRepl(szPrmpt, "i2", 175);
+    schRepl(szPrmpt, "i3", 181);
+    schRepl(szPrmpt, "i4", 182);
+    schRepl(szPrmpt, "i5", 183);
+    schRepl(szPrmpt, "o1", 184);
+    schRepl(szPrmpt, "o2", 190);
+    schRepl(szPrmpt, "o3", 198);
+    schRepl(szPrmpt, "o4", 199);
+    schRepl(szPrmpt, "o5", 208);
+    schRepl(szPrmpt, "u1", 210);
+    schRepl(szPrmpt, "u2", 211);
+    schRepl(szPrmpt, "u3", 212);
+    schRepl(szPrmpt, "u4", 213);
+    schRepl(szPrmpt, "u5", 214);
+    schRepl(szPrmpt, "y1", 215);
+    schRepl(szPrmpt, "y2", 216);
+    schRepl(szPrmpt, "y3", 221);
+    schRepl(szPrmpt, "y4", 222);
+    schRepl(szPrmpt, "y5", 248);
+    schRepl(szPrmpt, "d9", 249);
+    schRepl(szPrmpt, "D9", 250);
 }
 
 /*------------------------------------*/
 /* Funtion : decodeFile               */
-/* Mission : Decode file sysinfor.sys */
+/* Mission : Decode file register.sys */
 /* Expects : (inFile) The source file */
 /*           (outFile) The dest file  */
 /* Returns : Number of lines in file  */
 /*------------------------------------*/
 void decodeFile(const char *inFile, const char *outFile)
 {
-	int16_t c, key = 98;
+    int16_t c, key = 98;
     FILE *inHandle, *outHandle;
-	
-	inHandle = fopen(inFile, "rb");
+    
+    sysNum = 0;
+    inHandle = fopen(inFile, "rb");
     outHandle = fopen(outFile, "wb");
 
-	if (!inHandle || !outHandle)
+    if (!inHandle || !outHandle)
     {
-		fprintf(stderr, "Error loading file %s. System halt.", inFile);
+        fprintf(stderr, "Error loading file %s. System halt.", inFile);
         exit(1);
-	}
+    }
 
-	while ((c = fgetc(inHandle)) != EOF)
+    while ((c = fgetc(inHandle)) != EOF)
     {
-		//c = c - ~key;
+        c = c - ~key;
         fputc(c, outHandle);
-        if (c == '\n') sysNum++;
-	}
+        if (c == 266) sysNum++;
+    }
 
-	fclose(inHandle);
+    fclose(inHandle);
     fclose(outHandle);
 }
 
@@ -689,34 +690,34 @@ void decodeFile(const char *inFile, const char *outFile)
 /*------------------------------------------------*/
 void getText(const char *inFile, const char *outFile)
 {
-	FILE *fp;
-	char szBuffer[102];
+    FILE *fp;
+    char szBuffer[102];
 
-	decodeFile(inFile, outFile);
-	sysInfo = (char**)malloc(sysNum * sizeof(char*));
-	if (!sysInfo)
+    decodeFile(inFile, outFile);
+    sysInfo = (char**)malloc(sysNum * sizeof(char*));
+    if (!sysInfo)
     {
-		fprintf(stderr, "Not enough memory!");
+        fprintf(stderr, "Not enough memory for count: %d\n", sysNum);
         exit(1);
-	}
+    }
 
-	sysNum = 0;
-    fp = fopen(inFile, "rt");
-	while (fgets(szBuffer, 102, fp))
+    sysNum = 0;
+    fp = fopen(outFile, "rt");
+    while (fgets(szBuffer, 102, fp))
     {
-		fontVNI(szBuffer);
+        fontVNI(szBuffer);
         sysInfo[sysNum] = (char*)malloc(strlen(szBuffer) + 1);
-		if (!sysInfo)
+        if (!sysInfo)
         {
-			fprintf(stderr, "Not enough memory at line: %u", sysNum);
+            fprintf(stderr, "Not enough memory at line: %u", sysNum);
             exit(1);
-		}
-		szBuffer[strlen(szBuffer) - 1] = '\0';
+        }
+        szBuffer[strlen(szBuffer) - 1] = '\0';
         strcpy(sysInfo[sysNum], szBuffer);
-		sysNum++;
-	}
+        sysNum++;
+    }
 
-	fclose(fp);
+    fclose(fp);
     unlink(outFile);
 }
 
@@ -729,7 +730,7 @@ void getText(const char *inFile, const char *outFile)
 void releaseData()
 {
     int16_t i = 0;
-	for (; i < sysNum; i++) free(sysInfo[i]);
+    for (i = 0; i < sysNum; i++) free(sysInfo[i]);
     free(sysInfo);
 }
 
@@ -741,19 +742,19 @@ void releaseData()
 /*-------------------------------*/
 void haltSys()
 {
-	char szPath[28] = {0};
+    char szPath[28] = {0};
     strcpy(szPath, sysInfo[23]);
-	strcat(szPath, "off");
+    strcat(szPath, "off");
     setBorder(0x00);
     _settextcursor(0x0607);
-	_setbkcolor(0);
-	_settextcolor(7);
+    _setbkcolor(0);
+    _settextcolor(7);
     isBlinking(1);
-	if (bmAvalid) closeMouse();
+    if (bmAvalid) closeMouse();
     _clearscreen(_GWINDOW);
     system(szPath);
     releaseData();
-	exit(EXIT_SUCCESS);
+    exit(EXIT_SUCCESS);
 }
 
 /*---------------------------------------------*/
@@ -764,25 +765,25 @@ void haltSys()
 /*---------------------------------------------*/
 void fadeIn()
 {
-	int16_t i, j;
-    uint8_t bPalettes[200], bDummp[200];
-	
-	outp(0x3C7, 0);
-	for (i = 0; i < 200; i++)
+    int16_t i, j;
+    uint8_t palette[200], dummy[200];
+    
+    outp(0x3C7, 0);
+    for (i = 0; i < 200; i++)
     {
-		bPalettes[i] = inp(0x3C9);
-		bDummp[i] = bPalettes[i];
-	}
+        palette[i] = inp(0x3C9);
+        dummy[i] = palette[i];
+    }
 
-	for (j = 0; j < 60; j++)
+    for (j = 0; j < 60; j++)
     {
-		for (i = 0; i < 200; i++) if (bDummp[i] > 0) bDummp[i]--;
-		outp(0x3C8, 0);
-		for (i = 0; i < 200; i++) outp(0x3C9, bDummp[i]);
-		delay(1);
-	}
-	outp(0x3C8, 0);
-	for (i = 0; i < 200; i++) outp(0x3C9, bPalettes[i]);
+        for (i = 0; i < 200; i++) if (dummy[i] > 0) dummy[i]--;
+        outp(0x3C8, 0);
+        for (i = 0; i < 200; i++) outp(0x3C9, dummy[i]);
+        delay(1);
+    }
+    outp(0x3C8, 0);
+    for (i = 0; i < 200; i++) outp(0x3C9, palette[i]);
 }
 
 /*----------------------------------------------*/
@@ -793,10 +794,9 @@ void fadeIn()
 /*----------------------------------------------*/
 void initData()
 {
-    int16_t i = 0;
-	char szPath[32];
-    getText("register.txt", "register.$$$");
-	strcpy(szPath, sysInfo[23]);
+    char szPath[32];
+    getText("register.sys", "register.$$$");
+    strcpy(szPath, sysInfo[23]);
     strcat(szPath, "on");
     system(szPath);
 }
@@ -809,61 +809,61 @@ void initData()
 /*---------------------------------*/
 void registerForm()
 {
-	FILE *fptr;
-	REG_INFO tmp;
-	char szCurrName[25], szCurrID[20], *szName;
-	uint8_t flgName = 1, flgID = 1;
+    FILE *fptr;
+    REG_INFO tmp;
+    char szCurrName[25], szCurrID[20], *szName;
+    uint8_t flgName = 1, flgID = 1;
 
-	drawShadowBox(20, 8, 60, 14, 0x1F, "Input Serial Number");
-	writeVRM(23, 10, 0x1F, sysInfo[5], 0);
+    drawShadowBox(20, 8, 60, 15, 0x1F, sysInfo[27]);
+    writeVRM(23, 10, 0x1F, sysInfo[5], 0);
     writeVRM(23, 12, 0x1F, sysInfo[6], 0);
-	writeChar(36, 10, 0x4A, 24, 32);
+    writeChar(36, 10, 0x4A, 24, 32);
     writeChar(36, 12, 0x4A, 24, 32);
 
     fptr = fopen(sysInfo[21], "r+b");
-	if (!fptr)
+    if (!fptr)
     {
-		fprintf(stderr, sysInfo[22]);
+        fprintf(stderr, sysInfo[22]);
         haltSys();
-	}
+    }
 
-	fread(&tmp, sizeof(REG_INFO), 1, fptr);
+    fread(&tmp, sizeof(REG_INFO), 1, fptr);
     _settextcursor(0x0B0A);
-	szCurrName[0] = 25;
-	_settextposition(10, 36);
-	_setbkcolor(4);
-	_settextcolor(10);
+    szCurrName[0] = 25;
+    _settextposition(10, 36);
+    _setbkcolor(4);
+    _settextcolor(10);
     szName = cgets(szCurrName);
-	if (strcmp(tmp.user, szName))
+    if (strcmp(tmp.user, szName))
     {
-		writeChar(36, 10, 0x4F, 24, 32);
+        writeChar(36, 10, 0x4F, 24, 32);
         writeVRM(36, 10, 0x4F, sysInfo[7], 0);
         flgName = 0;
-	}
+    }
 
-	_settextposition(12, 36);
+    _settextposition(12, 36);
     szCurrID[0] = 20;
     szName = cgets(szCurrID);
-	if (strcmp(szName, sysInfo[11]))
+    if (strcmp(szName, sysInfo[11]))
     {
-		writeChar(36, 12, 0x4F, 24, 32);
+        writeChar(36, 12, 0x4F, 24, 32);
         writeVRM(36, 12, 0x4F, sysInfo[8], 0);
         flgID = 0;
-	}
+    }
 
-	if (flgName && flgID)
+    if (flgName && flgID)
     {
-		writeVRM(30, 13, 0x1A, sysInfo[9], 0);
+        writeVRM(30, 14, 0x1A, sysInfo[9], 0);
         tmp.regs = 1;
         rewind(fptr);
-		fwrite(&tmp, sizeof(REG_INFO), 1, fptr);
+        fwrite(&tmp, sizeof(REG_INFO), 1, fptr);
         fclose(fptr);
-	}
-	else
+    }
+    else
     {
-		writeVRM(30, 13, 0x1A, sysInfo[10], 0);
+        writeVRM(30, 14, 0x1A, sysInfo[10], 0);
         fclose(fptr);
-	}
+    }
 }
 
 /*-------------------------------------*/
@@ -874,70 +874,70 @@ void registerForm()
 /*-------------------------------------*/
 void menuRegister()
 {
-	char key;
-	uint16_t pos = 0, col = 0, row = 0;
+    char key;
+    uint16_t pos = 0, col = 0, row = 0;
 
-	initMouse();
+    initMouse();
     drawButton(22, 20, wATV, 5, sysInfo[25], 1, wFLT);
-	drawButton(47, 20, _wATV, 5, sysInfo[26], 1, _wFLT);
+    drawButton(47, 20, _wATV, 5, sysInfo[26], 1, _wFLT);
 
-	do {
-		if (kbhit())
+    do {
+        if (kbhit())
         {
-			key = getch();
+            key = getch();
             if (!key) key = getch();
-			switch (toupper(key))
+            switch (toupper(key))
             {
-			case LEFT:
-				drawButton(22 + pos * 25, 20, _wATV, 5, sysInfo[25 + pos], 1, _wFLT);
-				if (pos == 0) pos = 1; else pos--;
-				drawButton(22 + pos * 25, 20, wATV, 5, sysInfo[25 + pos], 1, wFLT);
+            case LEFT:
+                drawButton(22 + pos * 25, 20, _wATV, 5, sysInfo[25 + pos], 1, _wFLT);
+                if (pos == 0) pos = 1; else pos--;
+                drawButton(22 + pos * 25, 20, wATV, 5, sysInfo[25 + pos], 1, wFLT);
                 break;
-			case RIGHT:
-				drawButton(22 + pos * 25, 20, _wATV, 5, sysInfo[25 + pos], 1, _wFLT);
-				if (pos > 0) pos = 0; else pos++;
-				drawButton(22 + pos * 25, 20, wATV, 5, sysInfo[25+pos], 1, wFLT);
+            case RIGHT:
+                drawButton(22 + pos * 25, 20, _wATV, 5, sysInfo[25 + pos], 1, _wFLT);
+                if (pos > 0) pos = 0; else pos++;
+                drawButton(22 + pos * 25, 20, wATV, 5, sysInfo[25 + pos], 1, wFLT);
                 break;
-			}
-		}
+            }
+        }
 
-		if (clickMouse(&col, &row) == 1)
+        if (clickMouse(&col, &row) == 1)
         {
-			if (row == 20 && col >= 22 && col <= 33)
+            if (row == 20 && col >= 22 && col <= 33)
             {
-				hideMouse();
+                hideMouse();
                 drawButton(47, 20, _wATV, 5, sysInfo[26], 1, _wFLT);
-				clearScreen(22, 20, 34, 21, 5);
+                clearScreen(22, 20, 34, 21, 5);
                 writeVRM(23, 20, wATV, sysInfo[25], wFLT);
-				delay(50);
+                delay(50);
                 drawButton(22, 20, wATV, 5, sysInfo[25], 1, wFLT);
-				showMouse();
+                showMouse();
                 pos = 0;
                 key = ENTER;
-			}
-			if (row == 20 && col >= 47 && col <= 57)
+            }
+            if (row == 20 && col >= 47 && col <= 57)
             {
-				hideMouse();
+                hideMouse();
                 drawButton(22, 20, _wATV, 5, sysInfo[25], 1, _wFLT);
-				clearScreen(47, 20, 58, 21, 5);
+                clearScreen(47, 20, 58, 21, 5);
                 writeVRM(48, 20, wATV, sysInfo[26], wFLT);
-				delay(50);
+                delay(50);
                 drawButton(47, 20, wATV, 5, sysInfo[26], 1, wFLT);
-				showMouse();
+                showMouse();
                 pos = 1;
                 key = ENTER;
-			}
-			if (col == 3 || col == 4 && row == 2) key = ENTER;
-		}
-	} while (key != ENTER);
+            }
+            if (col == 3 || col == 4 && row == 2) key = ENTER;
+        }
+    } while (key != ENTER);
 
-	if (!pos)
+    if (!pos)
     {
-		registerForm();
+        registerForm();
         _settextcursor(0x2020);
         getch();
         fadeIn();
-	}
+    }
 }
 
 /*--------------------------------------------------*/
@@ -949,26 +949,26 @@ void menuRegister()
 void startRegister()
 {
     _setbkcolor(1);
-	_settextcolor(15);
+    _settextcolor(15);
     setBorder(55);
     _settextcursor(0x2020);
     _clearscreen(_GWINDOW);
-	isBlinking(0);
+    isBlinking(0);
     fillFrame(1, 1, 80, 25, 0xFD, 178);
-	drawShadowBox(3, 3, 77, 22, 0x5F, sysInfo[0]);
-	writeVRM(8, 5, 0x5E, sysInfo[1], 0);
+    drawShadowBox(3, 3, 77, 22, 0x5F, sysInfo[0]);
+    writeVRM(8, 5, 0x5E, sysInfo[1], 0);
     writeVRM(15, 6, 0x5E, sysInfo[2], 0);
-	writeVRM(5, 8, 0x5F, sysInfo[3], 0);
+    writeVRM(5, 8, 0x5F, sysInfo[3], 0);
     writeVRM(5, 9, 0x5F, sysInfo[4], 0);
-	writeVRM(5, 10, 0x5F, sysInfo[12], 0);
+    writeVRM(5, 10, 0x5F, sysInfo[12], 0);
     writeVRM(5, 11, 0x5F, sysInfo[13], 0);
-	writeVRM(15, 12, 0x5A, sysInfo[14], 0);
+    writeVRM(15, 12, 0x5A, sysInfo[14], 0);
     writeVRM(15, 13, 0x5A, sysInfo[15], 0);
-	writeVRM(15, 14, 0x5A, sysInfo[16], 0);
+    writeVRM(15, 14, 0x5A, sysInfo[16], 0);
     writeVRM(5, 15, 0x5F, sysInfo[17], 0);
-	writeVRM(5, 16, 0x5F, sysInfo[18], 0);
+    writeVRM(5, 16, 0x5F, sysInfo[18], 0);
     writeVRM(5, 17, 0x5F, sysInfo[19], 0);
-	writeVRM(7, 18, 0x5E, sysInfo[20], 0);
+    writeVRM(7, 18, 0x5E, sysInfo[20], 0);
     menuRegister();
 }
 
@@ -980,20 +980,20 @@ void startRegister()
 /*----------------------------------------*/
 uint8_t isRegister()
 {
-	FILE *fptr;
-	REG_INFO tmp;
+    FILE *fptr;
+    REG_INFO tmp;
 
     fptr = fopen(sysInfo[21], "rb");
-	if (!fptr)
+    if (!fptr)
     {
-		fprintf(stderr, sysInfo[22]);
+        fprintf(stderr, sysInfo[22]);
         getch();
         haltSys();
-	}
+    }
 
-	fread(&tmp, sizeof(REG_INFO), 1, fptr);
+    fread(&tmp, sizeof(REG_INFO), 1, fptr);
     fclose(fptr);
-	return tmp.regs ? 1 : 0;
+    return tmp.regs ? 1 : 0;
 }
 
 /*--------------------------------------*/
@@ -1004,49 +1004,50 @@ uint8_t isRegister()
 /*--------------------------------------*/
 void checkLicense()
 {
-	FILE *fptr;
-	REG_INFO tmp;
-	char szPath[31];
+    FILE *fptr;
+    REG_INFO tmp;
+    char szPath[31];
     struct dosdate_t da;
 
-	_dos_getdate(&da);
-	strcpy(szPath, sysInfo[24]);
-	if (!(fptr = fopen(sysInfo[21], "rb")))
+    _dos_getdate(&da);
+    strcpy(szPath, sysInfo[24]);
+    fptr = fopen(sysInfo[21], "rb");
+    if (!fptr)
     {
-		fprintf(stderr, sysInfo[22]);
+        fprintf(stderr, sysInfo[22]);
         getch();
         haltSys();
-	}
+    }
 
-	fread(&tmp, sizeof(REG_INFO), 1, fptr);
+    fread(&tmp, sizeof(REG_INFO), 1, fptr);
     fclose(fptr);
-	strcat(szPath, tmp.disk);
+    strcat(szPath, tmp.disk);
 
-	if ((tmp.num >= 100) && !tmp.regs)
+    if ((tmp.num >= 100) && !tmp.regs)
     {
-		system(szPath);
+        system(szPath);
         haltSys();
-	}
+    }
 
-	if (tmp.month == da.month)
+    if (tmp.month == da.month)
     {
-		if ((da.day - tmp.day) >= 7)
+        if ((da.day - tmp.day) >= 7)
         {
-			system(szPath);
+            system(szPath);
             haltSys();
-		}
-	}
-	else
+        }
+    }
+    else
     {
-		if (((da.day + 31) - tmp.day) >= 7)
+        if (((da.day + 31) - tmp.day) >= 7)
         {
-			system(szPath);
+            system(szPath);
             haltSys();
-		}
-	}
+        }
+    }
 }
 
-int main(int argc, char *argv[])
+void main()
 {
     _setvideomode(_TEXTC80);
     initData();

@@ -59,12 +59,19 @@ char *get_disk(void);
 void set_cursor(byte, byte);
 void set_border_color(byte);
 void end_program(void);
+void exit_program(void);
 void topics_information(void);
 void program_keys(void);
 void about_author(void);
 void registers(void);
 void to_file(void);
 void to_printer(void);
+void menu_popup_register(void);
+void menu_popup_algorithm(void);
+void menu_popup_graphic(void);
+void menu_popup_help(void);
+void from_file(void);
+void menu_bar(void);
 
 // Nut bam loi va lom
 void button(int x1, int y1, int x2, int y2, int type)
@@ -130,7 +137,7 @@ void start_graphics()
 //   disk_letter = (char *)malloc(30*sizeof(char));
 //   disk_letter = get_disk();
   // strcat(disk_letter, "TOPICS\\GRAPHICS");
-   initgraph(&graph_driver, &graph_mode, /*disk_letter*/"d:\\borlandc\\bgi");
+   initgraph(&graph_driver, &graph_mode, /*disk_letter*/"c:\\bc\\bgi");
    error_code = graphresult();
    if( error_code != grOk ) {
       clrscr();
@@ -1302,14 +1309,14 @@ char *get_disk()
 	return driver;
 }
 
-char read_key(char &ch)
+char read_key(char *ch)
 {
 	union REGS regs;
 	regs.h.ah = 0; int86(22, &regs, &regs);
 	if(!(regs.h.al)) {
-		ch = regs.h.ah; return 0;
+		*ch = regs.h.ah; return 0;
 	}
-	else ch = regs.h.al; return 1;
+	else *ch = regs.h.al; return 1;
 }
 
 void DrawCursor(int x, int y, int color)
@@ -1330,8 +1337,8 @@ void ReadString(int x, int y, char *szPrmpt, int color)
 	DrawCursor(x-textwidth("M"), y, color);
 	do {
 		while(!kbhit()) DrawCursor(i*textwidth("M")+x-textwidth("M"), y, random(14)+1);
-		isasc = read_key(key);
-		if(!key) isasc = toupper(read_key(key));
+		isasc = read_key(&key);
+		if(!key) isasc = toupper(read_key(&key));
 		if(key == 8 && i > 0) {
 			setcolor(0); i--;
 			szOut[0] = szPrmpt[i];
@@ -1356,17 +1363,6 @@ void main()
 //   if( check_register() == -1 ) check_period();
 	char st[50];
 	start_graphics();
-	//mouse();
-	//main_menu();
-   box(1, 1, 319, 199, 1);
-	box(320/2-100,200/2-30,320/2+100,200/2+30,1);
-	/*outtext_shadow(320/2-100+20,200/2-30+8,2,4,15,"Please enter your password");
-	outtext_shadow(320/2-100+10,200/2-30+25,2,4,13,"Your password:");
-	ReadString(320/2-100+95,200/2-30+25,st,10);
-	outtext_shadow(10,10,2,4,11,st);*/
-	settextstyle(0,0,2);
-   setcolor(12);
-	outtextxy(10,10,"Cac chuong trinh truyen hinh toi nay");
-	getchar();
-	closegraph();
+	mouse();
+	main_menu();
 }
