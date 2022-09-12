@@ -42,15 +42,15 @@ Xin ba5n vui lo2ng d9o75i trong mo65t va2i gia6y nu74a.
 D9ang ca65p ca1c tri2nh d9ie62u khie63n
 C:\WINDOWS\register.dat
 A:\TOPICS\DRIVERS\mouse.com
-Í SVGA256.BGI    Í EGAVGA.BGI
-Í LITT.CHR       Í TRIP.CHR
-Í SANS.CHR       Í GOTH.CHR
-Í TRANFROM.EXE   Í PROCPICT.EXE
-Í PROCDIR.EXE    Í KARAOKE.EXE
-Í ALGORITH.EXE   Í CHECKINF.EXE
-Í QUESTION.DAT   Í LOADFONT.COM
-Í VRD.EXE        Í PICTBMP16.BMP
-Í DIRECT.DRV     Í RELEASE.SYS
+ï¿½ SVGA256.BGI    ï¿½ EGAVGA.BGI
+ï¿½ LITT.CHR       ï¿½ TRIP.CHR
+ï¿½ SANS.CHR       ï¿½ GOTH.CHR
+ï¿½ TRANFROM.EXE   ï¿½ PROCPICT.EXE
+ï¿½ PROCDIR.EXE    ï¿½ KARAOKE.EXE
+ï¿½ ALGORITH.EXE   ï¿½ CHECKINF.EXE
+ï¿½ QUESTION.DAT   ï¿½ LOADFONT.COM
+ï¿½ VRD.EXE        ï¿½ PICTBMP16.BMP
+ï¿½ DIRECT.DRV     ï¿½ RELEASE.SYS
 Co1 lo64i ca2i d9a85t. Xin go4 mo65t phi1m ba61t ky2 d9e63 thoa1t
 Vui lo2ng lie6n he65 vo71i ta1c gia3 d9e63 nha65n d9u7o75c phie6n
 ba3n mo71i nha61t. Ca1m o7n ba5n d9a4 cho5n chu7o7ng tri2nh !

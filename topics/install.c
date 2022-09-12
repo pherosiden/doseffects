@@ -27,7 +27,7 @@
 /* write_OFFS    ; box_shadow        ; fill_frame             ; */
 /* repliacte     ; get_page          ; get_pos                ; */
 /* putch_XY      ; frame             ; box                    ; */
-/* fadeOut        ; introduction      ; out_text_shade         ; */
+/* fadeOut        ; introduction      ; out_text_shade        ; */
 /* out_text_width; background        ; start_graphics         ; */
 /* detect_SVGA256; update_register   ; update_program         . */
 /*--------------------------------------------------------------*/
@@ -48,54 +48,56 @@
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + (y - 1) * 80) << 1)
 
-#define UP		72
-#define DOWN	80
-#define HOME	71
-#define END		79
-#define TAB		9
-#define ESC		27
-#define LEFT	75
-#define RIGHT	77
-#define ENTER	13
-#define SPACE	32
+#define UP              72
+#define DOWN            80
+#define HOME            71
+#define END             79
+#define TAB             9
+#define ESC             27
+#define LEFT            75
+#define RIGHT           77
+#define ENTER           13
+#define SPACE           32
 
-#define wATV	0xF0
-#define wFLT	0xFC
-#define _wATV	0x78
-#define _wFLT	0x74
-#define _eATV	0xE7
-#define _eFLT	0xE6
+#define wATV            0xF0
+#define wFLT            0xFC
+#define _wATV           0x78
+#define _wFLT           0x74
+#define _eATV           0xE7
+#define _eFLT           0xE6
 
-#define BOOT_SEG   0xFFFFL
-#define BOOT_OFF   0x0000L
-#define BOOT_ADR   ((BOOT_SEG << 16) | BOOT_OFF)
-#define DOS_SEG	 0x0040L
-#define RESET_FLAG 0x0072L
-#define RESET_ADR	 ((DOS_SEG << 16) | RESET_FLAG)
+#define BOOT_SEG        0xFFFFL
+#define BOOT_OFF        0x0000L
+#define BOOT_ADR        ((BOOT_SEG << 16) | BOOT_OFF)
+#define DOS_SEG	        0x0040L
+#define RESET_FLAG      0x0072L
+#define RESET_ADR	    ((DOS_SEG << 16) | RESET_FLAG)
 
-typedef struct {                 // The struction storing the information
-    uint8_t day;                     // The date of the program
-    uint8_t month;                   // The month of the program
-    uint8_t regs;                    // The register code
-    uint8_t num;                     // The number of run program
-    char serial[20];              // Product code
-    char user[31];                // Register name user
-    char disk[4];                 // The disk letter
+typedef struct {        // The struction storing the information
+    uint8_t day;        // The date of the program
+    uint8_t month;      // The month of the program
+    uint8_t regs;       // The register code
+    uint8_t num;        // The number of run program
+    char serial[20];    // Product code
+    char user[31];      // Register name user
+    char disk[4];       // The disk letter
 } REG_INFO;
 
-char *ptrSource;             // The pointer sources
-char szDrive[4];                   // Symbol szDrive
-uint8_t numFiles = 0;               // Number files to read and files to write
-uint8_t bmAvalid = 0;               // Status of the mouse
-uint16_t buffSize;                   // The szBuffer storing data
+char *ptrSource;        // The pointer sources
+char szDrive[4];        // Drive letter
+
+uint8_t numFiles = 0;   // Number files to read and files to write
+uint8_t bmAvalid = 0;   // Status of the mouse
+uint16_t buffSize;      // The data buffer size
 
 char **sysInfo, **sysMenu;
 uint16_t infoNum, menuNum;
 
-char *msgWarn[1], *msgExit[1], *msgCmp[1], *msgError[2];
+char *msgWarn[1], *msgExit[1];
+char *msgCmp[1], *msgError[2];
 
 char key = 0;
-char szBuff[1024];
+char szScreen[1000] = {0};
 uint8_t msgSlc = 0, chs = 0, slc = 0;
 uint16_t bCol = 0, bRow = 0;
 uint8_t *txtMem = (uint8_t*)0xB8000000L;
@@ -767,11 +769,9 @@ void getText(int16_t left, int16_t top, int16_t right, int16_t bot, char *dest)
     height = bot - top + 1;
     adjust = (80 - width) << 1;
 
-    left--;
-    top--;
-    tmem = txtMem + ((80 * top + left) << 1);
-
     width <<= 1;
+    tmem = txtMem + OFFSET(left, top);
+    
     while (height--)
     {
         memcpy(dest, tmem, width);
@@ -795,11 +795,9 @@ void putText(int16_t left, int16_t top, int16_t right, int16_t bot, char *src)
     height = bot - top + 1;
     adjust = (80 - width) << 1;
 
-    left--;
-    top--;
-    tmem = txtMem + ((80 * top + left) << 1);
-
     width <<= 1;
+    tmem = txtMem + OFFSET(left, top);
+    
     while (height--)
     {
         memcpy(tmem, src, width);
@@ -920,9 +918,6 @@ void freeData()
 /*-------------------------------*/
 void haltSys()
 {
-    char szPath[28] = {0};
-    strcpy(szPath, sysInfo[23]);
-    strcat(szPath, "off");
     setBorder(0x00);
     _settextcursor(0x0607);
     _setbkcolor(0);
@@ -930,7 +925,7 @@ void haltSys()
     setBlinking(1);
     if (bmAvalid) closeMouse();
     _clearscreen(_GWINDOW);
-    system(szPath);
+    system("font off");
     freeData();
     exit(EXIT_SUCCESS);
 }
@@ -1412,11 +1407,11 @@ void checkUser()
     if (slc)
     {
         hideMouse();
-        getText(20, 10, 62, 17, szBuff);
+        getText(20, 10, 62, 17, szScreen);
         msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
         if (!msgSlc) haltSys();
         hideMouse();
-        putText(20, 10, 62, 17, szBuff);
+        putText(20, 10, 62, 17, szScreen);
         showMouse();
         goto label1;
     }
@@ -1557,12 +1552,12 @@ void checkUser()
         if (strcmp(szOldName, szCurrName) && strcmp(szOldID, szCurrID))
         {
             hideMouse();
-            getText(20, 10, 62, 17, szBuff);
+            getText(20, 10, 62, 17, szScreen);
             flgCorrectName = 1;
             flgCorrectID = 0;
             warningBox(20, 10, 60, 16, msgWarn, 1);
             hideMouse();
-            putText(20, 10, 62, 17, szBuff);
+            putText(20, 10, 62, 17, szScreen);
             writeChar(8, 15, 0x1F, 30, 32);
             writeChar(8, 18, 0x1F, 30, 32);
             showMouse();
@@ -1571,12 +1566,12 @@ void checkUser()
         else if (!strcmp(szOldName, szCurrName) && strcmp(szOldID, szCurrID))
         {
             hideMouse();
-            getText(20, 10, 62, 17, szBuff);
+            getText(20, 10, 62, 17, szScreen);
             flgCorrectName = 0;
             flgCorrectID = 1;
             warningBox(20, 10, 60, 16, msgWarn, 1);
             hideMouse();
-            putText(20, 10, 62, 17, szBuff);
+            putText(20, 10, 62, 17, szScreen);
             writeChar(8, 18, 0x1F, 30, 32);
             showMouse();
             goto label2;
@@ -1584,12 +1579,12 @@ void checkUser()
         else if (strcmp(szOldName, szCurrName) && !strcmp(szOldID, szCurrID))
         {
             hideMouse();
-            getText(20, 10, 62, 17, szBuff);
+            getText(20, 10, 62, 17, szScreen);
             flgCorrectName = 1;
             flgCorrectID = 0;
             warningBox(20, 10, 60, 16, msgWarn, 1);
             hideMouse();
-            putText(20, 10, 62, 17, szBuff);
+            putText(20, 10, 62, 17, szScreen);
             writeChar(8, 15, 0x1F, 30, 32);
             showMouse();
             goto label2;
@@ -1598,11 +1593,11 @@ void checkUser()
     else
     {
         hideMouse();
-        getText(20, 10, 62, 17, szBuff);
+        getText(20, 10, 62, 17, szScreen);
         msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
         if (!msgSlc) haltSys();
         hideMouse();
-        putText(20, 10, 62, 17, szBuff);
+        putText(20, 10, 62, 17, szScreen);
         showMouse();
         goto label2;
     }
@@ -2103,11 +2098,11 @@ void chooseDrive()
     else
     {
         hideMouse();
-        getText(20, 10, 62, 17, szBuff);
+        getText(20, 10, 62, 17, szScreen);
         msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
         if (!msgSlc) haltSys();
         hideMouse();
-        putText(20, 10, 62, 17, szBuff);
+        putText(20, 10, 62, 17, szScreen);
         showMouse();
         goto label;
     }
@@ -2384,7 +2379,9 @@ void startInstall()
 /*---------------------------------------------*/
 void showInstall()
 {
-    uint8_t i = 0, fltStop[3], found = 0, cancel = 0;
+    uint8_t fltStop[3] = {0};
+    uint8_t i = 0, found = 0, cancel = 0;
+
     memset(fltStop, 0, 3);
     _setbkcolor(1);
     _settextcolor(15);
@@ -2431,9 +2428,9 @@ void showInstall()
     }
 
     key = 0;
-
     do {
-        if(kbhit()) {
+        if (kbhit())
+        {
             key = getch();
             if (!key) key = getch();
             switch (toupper(key))
@@ -2535,7 +2532,7 @@ void showInstall()
             }
         }
 
-        if (clickMouse(&bCol,  &bRow) == 1)
+        if (clickMouse(&bCol, &bRow) == 1)
         {
             if (bRow == 7 && bCol >= 14 && bCol <= 48)
             {
@@ -2661,14 +2658,14 @@ void showInstall()
         else
         {
             hideMouse();
-            getText(20, 10, 63, 18, szBuff);
+            getText(20, 10, 63, 18, szScreen);
             
             msgSlc = messageBox(20, 10, 61, 17, msgError, 2);
             if (msgSlc) haltSys();
             else
             {
                 hideMouse();
-                putText(20, 10, 63, 18, szBuff);
+                putText(20, 10, 63, 18, szScreen);
                 showMouse();
                 goto label1;
             }
@@ -2677,11 +2674,11 @@ void showInstall()
     else
     {
         hideMouse();
-        getText(20, 10, 63, 17, szBuff);
+        getText(20, 10, 63, 17, szScreen);
         msgSlc = messageBox(20, 10, 61, 16, msgExit, 1);
         if (!msgSlc) haltSys();
         hideMouse();
-        putText(20, 10, 63, 17, szBuff);
+        putText(20, 10, 63, 17, szScreen);
         showMouse();
         goto label1;
     }
