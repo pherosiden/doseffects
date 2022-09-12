@@ -37,7 +37,7 @@ uint8_t *txtMem = (uint8_t*)0xB8000000L;
 
 /*-----------------------------------*/
 /* Funtion : setBorder               */
-/* Mission : Setting border color    */
+/* Purpose : Setting border color    */
 /* Expects : (color) color of border */
 /* Returns : Nothing                 */
 /*-----------------------------------*/
@@ -52,7 +52,7 @@ void setBorder(uint8_t color)
 
 /*-----------------------------------------------*/
 /* Funtion : printChar                           */
-/* Mission : Write a character to cordinate x, y */
+/* Purpose : Write a character to cordinate x, y */
 /* Expects : (x,y) cordinate to write            */
 /*           (chr) character to write            */
 /* Returns : Nothing                             */
@@ -68,7 +68,7 @@ void printChar(uint8_t x, uint8_t y, char chr)
 
 /*-------------------------------------------------*/
 /* Function : printXY                              */
-/* Mission  : Write a character to cordinate x, y  */
+/* Purpose  : Write a character to cordinate x, y  */
 /* Expects  : (x,y) cordinate to write             */
 /*            (Chr) character to write             */
 /*            (wAttr) attrib for the character     */
@@ -82,7 +82,7 @@ void printXY(uint8_t x, uint8_t y, uint8_t attr, char chr)
 
 /*------------------------------------------------*/
 /* Funtion : writeChar                            */
-/* Mission : Writting a character with attribute  */
+/* Purpose : Writting a character with attribute  */
 /* Expects : (x,y) cordinate to write a character */
 /*           (wAttr) attribute of character       */
 /*           (bLen) length area                   */
@@ -105,7 +105,7 @@ void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 
 /*-----------------------------------------------*/
 /* Function : writeVRM                           */
-/* Mission  : Writing a character with attribute */
+/* Purpose  : Writing a character with attribute */
 /* Notices  : Intervention in video memory       */
 /* Expects  : (x,y) cordinate needs to writting  */
 /*            (txtAttr) The attribute of string  */
@@ -124,13 +124,14 @@ void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t 
         if (!szTmp) return;
 
         strcpy(szTmp, szPrmt);
-        for (; (i < strlen(szTmp) - 1) && !fltStop;)
+        for (i = 0; (i < strlen(szTmp) - 1) && !fltStop; i++)
         {
-            if (szTmp[i++] == 126) fltStop = 1;
+            if (szTmp[i] == 126) fltStop = 1;
         }
 
         memmove(&szTmp[i - 1], &szTmp[i], strlen(szTmp) - i + 1);
         bPos = i - 1;
+
         i = 0;
         while (szTmp[i])
         {
@@ -153,7 +154,7 @@ void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t 
 
 /*-----------------------------------------------*/
 /* Function : drawButton                         */
-/* Mission  : Define the button shadow           */
+/* Purpose  : Define the button shadow           */
 /* Expects  : (x,y) cordinate needs to writting  */
 /*            (txtAttr) the attribute of a title */
 /*            (szTitle) the string to format     */
@@ -205,7 +206,7 @@ void drawButton(uint8_t x, uint8_t y, uint8_t txtAttr, uint8_t bkClr, const char
 
 /*-----------------------------------------------*/
 /* Function : drawFrame                          */
-/* Mission  : Draw a frame with the edge is lane */
+/* Purpose  : Draw a frame with the edge is lane */
 /* Expects  : (x1,y1) cordinate top to left      */
 /*            (x2,y2) cordinate bottom to right  */
 /* Returns  : Nothing                            */
@@ -240,7 +241,7 @@ void drawFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
 
 /*---------------------------------------------------*/
 /* Function : changeAttrib                           */
-/* Mission  : Chage the attribute of the area screen */
+/* Purpose  : Chage the attribute of the area screen */
 /* Expects  : (x1,y1) cordinate top to left          */
 /*            (x2,y2) cordinate bottom to right      */
 /*            (wAttr) the attribute                  */
@@ -256,13 +257,13 @@ void changeAttrib(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 }
 
 /*-----------------------------------------------*/
-/* Function : isBlinking                         */
-/* Mission  : Redefine bits 7 in the text attrib */
+/* Function : setBlinking                        */
+/* Purpose  : Redefine bits 7 in the text attrib */
 /* Expects  : (doblink) = 0, back color is light */
 /*                      = 1, text is blinking    */
 /* Return   : Nothing                            */
 /*-----------------------------------------------*/
-void isBlinking(uint8_t doblink)
+void setBlinking(uint8_t doblink)
 {
     union REGS regs;
     regs.h.ah = 0x10;
@@ -273,7 +274,7 @@ void isBlinking(uint8_t doblink)
 
 /*----------------------------------------------*/
 /* Function : drawBox                           */
-/* Mission  : Draw a box with color and border  */
+/* Purpose  : Draw a box with color and border  */
 /* Expects  : (x1,y1) cordinate top to left     */
 /*            (x2,y2) cordinate bottom to right */
 /*            (wAttr) the attribute of the box  */
@@ -297,7 +298,7 @@ void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 
 /*----------------------------------------------*/
 /* Function : drawShadowBox                     */
-/* Mission  : Draw a box with shadow (very art) */
+/* Purpose  : Draw a box with shadow (very art) */
 /* Expects  : (x1,y1) cordinate top to left     */
 /*            (x2,y2) cordinate bottom to right */
 /*            (wAttr) the attribute of the box  */
@@ -320,7 +321,7 @@ void drawShadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr
 
 /*--------------------------------------------------*/
 /* Funtion : fillFrame                              */
-/* Mission : To full the box with special character */
+/* Purpose : To full the box with special character */
 /* Expects : (x1,y1) cordinate top to left          */
 /*           (x2,y2) cordinate bottom to right      */
 /*           (wAttr) special character color        */
@@ -335,7 +336,7 @@ void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, ch
 
 /*----------------------------------*/
 /* Function : initMouse             */
-/* Mission  : Initialize mouse port */
+/* Purpose  : Initialize mouse port */
 /* Expects  : Nothing               */
 /* Returns  : 1 if success. 0 fail  */
 /*----------------------------------*/
@@ -353,7 +354,7 @@ uint16_t initMouse()
 
 /*-----------------------------------------------------*/
 /* Function : clickMouse                               */
-/* Mission  : Get status button and cordinate col, row */
+/* Purpose  : Get status button and cordinate col, row */
 /* Expects  : (col, row) cordinate of col and row      */
 /* Returns  : Value 1 : left button, 2 : right button, */
 /*            4 : center button and col, row           */
@@ -370,7 +371,7 @@ uint16_t clickMouse(uint16_t *col, uint16_t *row)
 
 /*-----------------------------------*/
 /* Function : hideMouse              */
-/* Mission  : Hide the mouse pointer */
+/* Purpose  : Hide the mouse pointer */
 /* Expects  : Nothing                */
 /* Returns  : Nothing                */
 /*-----------------------------------*/
@@ -383,7 +384,7 @@ void hideMouse()
 
 /*--------------------------------------*/
 /* Function : showMouse                 */
-/* Mission  : Showing the mouse pointer */
+/* Purpose  : Showing the mouse pointer */
 /* Expects  : Nothing                   */
 /* Returns  : Nothing                   */
 /*--------------------------------------*/
@@ -396,7 +397,7 @@ void showMouse()
 
 /*--------------------------------------------*/
 /* Function : SetPos                          */
-/* Mission  : Setting the limit col and row   */
+/* Purpose  : Setting the limit col and row   */
 /* Expects  : Nothing                         */
 /* Returns  : Nothing                         */
 /*--------------------------------------------*/
@@ -418,7 +419,7 @@ void setMousePos()
 
 /*------------------------------------------------*/
 /* Function : moveMouse                           */
-/* Mission  : Move mouse pointer to new cordinate */
+/* Purpose  : Move mouse pointer to new cordinate */
 /* Expects  : (x, y) the new cordinate            */
 /* Returns  : Nothing                             */
 /*------------------------------------------------*/
@@ -433,7 +434,7 @@ void moveMouse(uint16_t x, uint16_t y)
 
 /*------------------------------------*/
 /* Function : closeMouse              */
-/* Mission  : Colosing mouse fumction */
+/* Purpose  : Colosing mouse fumction */
 /* Expects  : Nothing                 */
 /* Returns  : Nothing                 */
 /*------------------------------------*/
@@ -447,7 +448,7 @@ void closeMouse()
 
 /*----------------------------------------------*/
 /* Function : clearScreen                       */
-/* Mission  : clearScreen the part of window    */
+/* Purpose  : clearScreen the part of window    */
 /* Expects  : (x1,y1) cordinate top to left     */
 /*            (x2,y2) cordinate bottom to right */
 /*            (color) color needs clear         */
@@ -463,7 +464,7 @@ void clearScreen(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color)
 
 /*-----------------------------------------*/
 /* Funtion : strPos                        */
-/* Mission : Getting position of substring */
+/* Purpose : Getting position of substring */
 /* Expects : (str) The string main         */
 /*           (substr) The substring        */
 /* Returns : Position of substring         */
@@ -477,7 +478,7 @@ int16_t strPos(char *str, char *szSubstr)
 
 /*---------------------------------------------*/
 /* Funtion : insertChar                        */
-/* Mission : Inserted the char into string     */
+/* Purpose : Inserted the char into string     */
 /* Expects : (str) The string                  */
 /*           (chr) The character need inserted */
 /*           (iPos) The position inserted      */
@@ -491,7 +492,7 @@ void insertChar(char *str, char chr, int16_t iPos)
 
 /*---------------------------------------------*/
 /* Funtion : strDelete                         */
-/* Mission : Deleting the characters           */
+/* Purpose : Deleting the characters           */
 /* Expects : (str) The string main             */
 /*           (i) position to delete            */
 /*           (numchar) the number of character */
@@ -505,7 +506,7 @@ void strDelete(char *str, int16_t i, int16_t num)
 
 /*--------------------------------------*/
 /* Funtion : schRepl                    */
-/* Mission : Concat the string          */
+/* Purpose : Concat the string          */
 /* Expects : (str) The string main      */
 /*           (sch) The substring        */
 /*           (repl) The char to replace */
@@ -526,7 +527,7 @@ void schRepl(char *str, char *sch, char repl)
 
 /*----------------------------------------------*/
 /* Funtion : chr2Str                            */
-/* Mission : Conver the char to the string      */
+/* Purpose : Conver the char to the string      */
 /* Expects : (chr, n, buff) Characters convert  */
 /* Returns : The pointer to string              */
 /*----------------------------------------------*/
@@ -539,7 +540,7 @@ void chr2Str(char chr, char n, char *str)
 
 /*--------------------------------------*/
 /* Funtion : fontVNI                    */
-/* Mission : Decode font to Vietnamese  */
+/* Purpose : Decode font to Vietnamese  */
 /* Expects : (str) The string to decode */
 /* Returns : Nothing                    */
 /*--------------------------------------*/
@@ -648,14 +649,15 @@ void fontVNI(char *szPrmpt)
 
 /*------------------------------------*/
 /* Funtion : decodeFile               */
-/* Mission : Decode file register.sys */
+/* Purpose : Decode file register.sys */
 /* Expects : (inFile) The source file */
 /*           (outFile) The dest file  */
 /* Returns : Number of lines in file  */
 /*------------------------------------*/
-void decodeFile(const char *inFile, const char *outFile)
+uint16_t decodeFile(const char *inFile, const char *outFile)
 {
     int16_t c, key = 98;
+    uint16_t linesCount = 0;
     FILE *inHandle, *outHandle;
     
     sysNum = 0;
@@ -672,16 +674,17 @@ void decodeFile(const char *inFile, const char *outFile)
     {
         c = c - ~key;
         fputc(c, outHandle);
-        if (c == 266) sysNum++;
+        if (c == 266) linesCount++;
     }
 
     fclose(inHandle);
     fclose(outHandle);
+    return linesCount;
 }
 
 /*------------------------------------------------*/
 /* Function : getText                             */
-/* Mission  : Reading information into data array */
+/* Purpose  : Reading information into data array */
 /* Expects  : (inFile) the input file             */
 /*            (outFile) the output file           */
 /*            (szData) the array data             */
@@ -693,11 +696,11 @@ void getText(const char *inFile, const char *outFile)
     FILE *fp;
     char szBuffer[102];
 
-    decodeFile(inFile, outFile);
+    sysNum = decodeFile(inFile, outFile);
     sysInfo = (char**)malloc(sysNum * sizeof(char*));
     if (!sysInfo)
     {
-        fprintf(stderr, "Not enough memory for count: %d\n", sysNum);
+        fprintf(stderr, "Not enough memory: %d\n", sysNum);
         exit(1);
     }
 
@@ -723,7 +726,7 @@ void getText(const char *inFile, const char *outFile)
 
 /*------------------------------------------*/
 /* Function : releaseData                   */
-/* Mission  : free block memory of the data */
+/* Purpose  : free block memory of the data */
 /* Expects  : Nothing                       */
 /* Returns  : Nothing                       */
 /*------------------------------------------*/
@@ -736,7 +739,7 @@ void releaseData()
 
 /*-------------------------------*/
 /* Funtion : haltSys             */
-/* Mission : Restore environment */
+/* Purpose : Restore environment */
 /* Expects : Nothing             */
 /* Returns : Nothing             */
 /*-------------------------------*/
@@ -749,7 +752,7 @@ void haltSys()
     _settextcursor(0x0607);
     _setbkcolor(0);
     _settextcolor(7);
-    isBlinking(1);
+    setBlinking(1);
     if (bmAvalid) closeMouse();
     _clearscreen(_GWINDOW);
     system(szPath);
@@ -759,7 +762,7 @@ void haltSys()
 
 /*---------------------------------------------*/
 /* Funtion : fadeIn                            */
-/* Mission : Debrightness light of the monitor */
+/* Purpose : Debrightness light of the monitor */
 /* Expects : Nothing                           */
 /* Returns : Nothing                           */
 /*---------------------------------------------*/
@@ -788,7 +791,7 @@ void fadeIn()
 
 /*----------------------------------------------*/
 /* Function : initData                          */
-/* Mission  : Initialize parameters for program */
+/* Purpose  : Initialize parameters for program */
 /* Expects  : Nothing                           */
 /* Returns  : Nothing                           */
 /*----------------------------------------------*/
@@ -803,7 +806,7 @@ void initData()
 
 /*---------------------------------*/
 /* Function : registerForm         */
-/* Mission  : Starting registering */
+/* Purpose  : Starting registering */
 /* Expects  : Nothing              */
 /* Returns  : Nothing              */
 /*---------------------------------*/
@@ -868,7 +871,7 @@ void registerForm()
 
 /*-------------------------------------*/
 /* Funtion : menuRegister              */
-/* Mission : Show register form        */
+/* Purpose : Show register form        */
 /* Expects : Nothing                   */
 /* Returns : Nothing                   */
 /*-------------------------------------*/
@@ -942,7 +945,7 @@ void menuRegister()
 
 /*--------------------------------------------------*/
 /* Funtion : startRegister                          */
-/* Mission : Showing the menu startRegister message */
+/* Purpose : Showing the menu startRegister message */
 /* Expects : Nothing                                */
 /* Returns : Nothing                                */
 /*--------------------------------------------------*/
@@ -953,7 +956,7 @@ void startRegister()
     setBorder(55);
     _settextcursor(0x2020);
     _clearscreen(_GWINDOW);
-    isBlinking(0);
+    setBlinking(0);
     fillFrame(1, 1, 80, 25, 0xFD, 178);
     drawShadowBox(3, 3, 77, 22, 0x5F, sysInfo[0]);
     writeVRM(8, 5, 0x5E, sysInfo[1], 0);
@@ -974,7 +977,7 @@ void startRegister()
 
 /*----------------------------------------*/
 /* Funtion : isRegister                   */
-/* Mission : Checking value of regsiter   */
+/* Purpose : Checking value of regsiter   */
 /* Expects : Nothing                      */
 /* Returns : Value 0 if not startRegister */
 /*----------------------------------------*/
@@ -998,7 +1001,7 @@ uint8_t isRegister()
 
 /*--------------------------------------*/
 /* Funtion : checkLicense               */
-/* Mission : Checking the period in use */
+/* Purpose : Checking the period in use */
 /* Expects : Nothing                    */
 /* Returns : Nothing                    */
 /*--------------------------------------*/
