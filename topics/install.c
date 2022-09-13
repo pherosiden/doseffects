@@ -1105,8 +1105,7 @@ uint8_t copyFiles(char *szSource, char *szDest, uint16_t wAttr)
                 {
                     newFile[i + 1] = '\0';
                     strcat(newFile, ptrEntries->name);
-                    if (_dos_creat(newFile, ptrEntries->attrib, &target))
-                    errorFile(newFile, sysInfo[17]);
+                    if (_dos_creat(newFile, ptrEntries->attrib, &target)) errorFile(newFile, sysInfo[17]);
                     writeChar(30, 11, 0x99, 33, 32);
                     writeVRM(30, 11, 0x9A, newFile, 0);
                     delay(50);
@@ -1304,8 +1303,10 @@ void checkLicense()
 {
     FILE *fptr;
     REG_INFO regInfo;
-    char szOldName[31], szOldID[20], szCurrName[31], szCurrID[20];
-    uint8_t i = 0, j = 0, flgCorrectName = 1, flgCorrectID = 0, isASCII = 0;
+    char szOldName[31], szOldID[20];
+    char szCurrName[31], szCurrID[20];
+    uint8_t flgCorrectName = 1, flgCorrectID = 0;
+    uint8_t i = 0, j = 0, isASCII = 0;
 
     _setbkcolor(1);
     _settextcolor(15);
@@ -1319,13 +1320,11 @@ void checkLicense()
     writeVRM(8, 8, 0x5A, sysInfo[59], 0);
     writeVRM(8, 9, 0x5A, sysInfo[60], 0);
     writeVRM(14, 12, 0x5E, sysMenu[9], 0x5F);
-    //writeVRM(11, 11, 0x5B, "[x]", 0);
     writeVRM(8, 14, 0x5F, sysInfo[22], 0);
     writeChar(8, 15, 0x1F, 30, 32);
     writeVRM(8, 17, 0x5F, sysInfo[23], 0);
     writeChar(8, 18, 0x1F, 30, 32);
     drawButton(24, 21, _wATV, 5, sysMenu[1], 1, _wFLT);
-    //writeVRM(11, 12, 0x5E, "[ ]", 0);
     drawButton(47, 21, wATV, 5, sysMenu[4], 1, wFLT);
     showMouse();
     moveMouse(10, 11);
@@ -1345,18 +1344,14 @@ void checkLicense()
             {
             case DOWN:
                 writeVRM(14, 11 + slc, 0x5E, sysMenu[slc + 8], 0x5F);
-                //writeVRM(11, 11 + slc, 0x5E, "[x]", 0);
                 if (slc > 0) slc = 0; else slc++;
                 writeVRM(14, 11 + slc, 0x5B, sysMenu[slc + 8], 0x5A);
-                //writeVRM(11, 11 + slc, 0x5B, "[ ]", 0);
                 break;
 
             case UP:
                 writeVRM(14, 11 + slc, 0x5E, sysMenu[slc + 8], 0x5F);
-                //writeVRM(11, 11 + slc, 0x5E, "[x]", 0);
                 if (slc < 1) slc = 1; else slc--;
                 writeVRM(14, 11 + slc, 0x5B, sysMenu[slc + 8], 0x5A);
-                //writeVRM(11, 11 + slc, 0x5B, "[ ]", 0);
                 break;
             }
         }
@@ -1367,10 +1362,8 @@ void checkLicense()
             {
                 hideMouse();
                 writeVRM(14, 12, 0x5E, sysMenu[9], 0x5F);
-                //writeVRM(11, 12, 0x5E, "[x]", 0);
                 delay(20);
                 writeVRM(14, 11, 0x5B, sysMenu[8], 0x5A);
-                //writeVRM(11, 11, 0x5B, "[ ]", 0);
                 showMouse();
                 slc = 0;
                 key = TAB;
@@ -1380,10 +1373,8 @@ void checkLicense()
             {
                 hideMouse();
                 writeVRM(14, 11, 0x5E, sysMenu[8], 0x5F);
-                //writeVRM(11, 11, 0x5E, "[x]", 0);
                 delay(20);
                 writeVRM(14, 12, 0x5B, sysMenu[9], 0x5A);
-                //writeVRM(11, 12, 0x5B, "[ ]", 0);
                 showMouse();
                 slc = 1;
                 key = TAB;
@@ -2686,16 +2677,8 @@ void showInstall()
 /*-------------------------------------------*/
 void main()
 {
-    int i = 0;
     _setvideomode(_TEXTC80);
     initData();
     showInstall();
     _setvideomode(_DEFAULTMODE);
-    /*FILE *fp = fopen("test.txt", "wt");
-    fputc(231, fp);
-    fputc(232, fp);
-    fputc('\n',     fp);
-    fputc(233, fp);
-    fputc(234, fp);
-    fclose(fp);*/
 }
