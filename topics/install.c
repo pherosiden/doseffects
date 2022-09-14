@@ -45,6 +45,7 @@
 #include <direct.h>
 #include <sys/types.h>
 
+#define SCR_WIDTH       80
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + (y - 1) * 80) << 1)
 
@@ -86,7 +87,7 @@ typedef struct {        // The struction storing the information
 char *ptrSource;        // The pointer sources
 char szDrive[4];        // Drive letter
 
-uint8_t numFiles = 0;   // Number files to read and files to write
+uint16_t totalFiles = 0; // Number files to read and files to write
 uint8_t bmAvalid = 0;   // Status of the mouse
 uint16_t buffSize;      // The data buffer size
 
@@ -763,16 +764,18 @@ void fontVNI(char *szPrmpt)
 /*----------------------------------------------*/
 void getScreenText(int16_t x, int16_t y, int16_t width, int16_t height, void *buff)
 {
+    uint16_t bytes;
     uint16_t *src, *dst;
 
+    bytes = width << 1;
     dst = (uint16_t*)buff;
     src = (uint16_t*)&txtMem[OFFSET(x, y)];
     
     while (height--)
     {
-        memcpy(dst, src, width << 1);
+        memcpy(dst, src, bytes);
         dst += width;
-        src += 80;
+        src += SCR_WIDTH;
     }
 }
 
@@ -785,16 +788,18 @@ void getScreenText(int16_t x, int16_t y, int16_t width, int16_t height, void *bu
 /*----------------------------------------------*/
 void putScreenText(int16_t x, int16_t y, int16_t width, int16_t height, void *buff)
 {
+    uint16_t bytes;
     uint16_t *src, *dst;
 
+    bytes = width << 1;
     src = (uint16_t*)buff;
     dst = (uint16_t*)&txtMem[OFFSET(x, y)];
     
     while (height--)
     {
-        memcpy(dst, src, width << 1);
+        memcpy(dst, src, bytes);
         src += width;
-        dst += 80;
+        dst += SCR_WIDTH;
     }
 }
 
@@ -1026,72 +1031,63 @@ void errorFile(char *szHandle, char *szErrorType)
     haltSys();
 }
 
-/*-------------------------------------------*/
-/* Funtion : copyFiles                       */
-/* Purpose : Copy all files from the disk    */
-/* Expects : (szSource) The disk sources     */
-/*           (szDest) The disk target        */
-/*           (wAttr) file attribute          */
-/* Returns : 1 : If complete or 0 if failure */
-/*-------------------------------------------*/
-uint8_t copyFiles(char *szSource, char *szDest, uint16_t wAttr)
+/*---------------------------------------------*/
+/* Funtion : copyFiles                         */
+/* Purpose : Copy all files from the disk      */
+/* Expects : (szSourceDir) sources directory   */
+/*           (szDestDir) destination directory */
+/*           (wAttr) file attribute            */
+/* Returns : 1 for success                     */
+/*           0 for failure                     */
+/*---------------------------------------------*/
+void copyFiles(char *szSourceDir, char *szDestDir, uint16_t wAttr)
 {
-    uint8_t resume;
-    
     struct find_t entries;
     struct find_t *ptrEntries;
     
     char *ptrPos = NULL;
-    int source, target, files, i, n;
+    int srcHandle, dstHandle;
+    uint16_t numFiles, i, n;
     
-    size_t writeSize, numRead, numWrite;
-    size_t totalRead, totalWrite;
-
-    char path[64], spec[64], entry[64];
+    unsigned long totalReads = 0, totalWrites = 0;
+    size_t writeSize = 0, numReads = 0, numWrites = 0;
+    
+    char srcPath[64], srcExt[64], srcDir[64];
     char curFile[68], newFile[68], newDir[64];
 
-    resume = 1;
-    for (i = strlen(szSource) - 1; szSource[i] != '\\'; i--);
-    strcpy(path, szSource);
-    path[i] = '\0';
-    strcpy(curFile, szSource);
-    curFile[i + 1] = '\0';
-    strcpy(newFile, szSource);
-    newFile[i + 1] = '\0';
-    newFile[0] = szDest[0];
-    strcpy(spec, &szSource[i+1]);
+    for (i = strlen(szSourceDir) - 1; szSourceDir[i] != '\\'; i--);
 
-    totalRead = 0;
-    totalWrite = 0;
-    
-    if (!_dos_findfirst(szSource, wAttr, &entries))
+    strcpy(srcPath, szSourceDir);
+    srcPath[i] = '\0';
+    strcpy(srcExt, &szSourceDir[i + 1]);
+
+    if (!_dos_findfirst(szSourceDir, wAttr, &entries))
     {
         do {
-            files = 0;
+            numFiles = 0;
             ptrPos = ptrSource;
             while (ptrPos + 2 * sizeof(entries) < ptrSource + buffSize)
             {
                 memcpy(ptrPos, &entries, sizeof(entries));
                 ptrEntries = (struct find_t*)ptrPos;
                 ptrPos += sizeof(entries);
-                curFile[i + 1] = '\0';
-                strcat(curFile, entries.name);
+                sprintf(curFile, "%s\\%s", srcPath, entries.name);
                 
-                if (totalRead == 0)
+                if (totalReads == 0)
                 {
-                    if (_dos_open(curFile, O_RDONLY, &source)) errorFile(curFile, sysInfo[17]);
+                    if (_dos_open(curFile, O_RDONLY, &srcHandle)) errorFile(curFile, sysInfo[17]);
                 }
 
-                if (_dos_read(source, ptrPos, buffSize - (ptrPos - ptrSource), &numRead)) errorFile(curFile, sysInfo[20]);
+                if (_dos_read(srcHandle, ptrPos, buffSize - (ptrPos - ptrSource), &numReads)) errorFile(curFile, sysInfo[20]);
 
-                ptrPos += numRead;
-                totalRead += numRead;
-                files++;
+                ptrPos += numReads;
+                totalReads += numReads;
+                numFiles++;
                 
-                if (totalRead == entries.size)
+                if (totalReads == entries.size)
                 {
-                    _dos_close(source);
-                    totalRead = 0;
+                    _dos_close(srcHandle);
+                    totalReads = 0;
                     if (_dos_findnext(&entries)) break;
                 }
                 else break;
@@ -1099,61 +1095,58 @@ uint8_t copyFiles(char *szSource, char *szDest, uint16_t wAttr)
 
             ptrEntries = (struct find_t*)ptrSource;
             ptrPos = ptrSource + sizeof(entries);
-            for (n = 0; n < files; n++)
+
+            for (n = 0; n < numFiles; n++)
             {
-                if (totalWrite == 0)
+                if (totalWrites == 0)
                 {
-                    newFile[i + 1] = '\0';
-                    strcat(newFile, ptrEntries->name);
-                    if (_dos_creat(newFile, ptrEntries->attrib, &target)) errorFile(newFile, sysInfo[17]);
-                    writeChar(30, 11, 0x99, 33, 32);
-                    writeVRM(30, 11, 0x9A, newFile, 0);
+                    sprintf(newFile, "%s\\%s", szDestDir, ptrEntries->name);
+                    if (_dos_creat(newFile, ptrEntries->attrib, &dstHandle)) errorFile(newFile, sysInfo[17]);
+                    writeChar(30, 11, 0x19, 33, 32);
+                    writeVRM(30, 11, 0x1E, newFile, 0);
                     delay(50);
-                    writeChar(18, 12, 0xFF, 6 * numFiles++ / 14 + 2, 219);
-                    printVRM(50, 13, 0x9F, "%3d", (numFiles % 103) > 100 ? 100 : numFiles % 103);
+                    writeChar(18, 12, 0xFF, 6 * totalFiles++ / 14 + 2, 219);
+                    printVRM(50, 13, 0x1F, "%3d", (totalFiles % 103) > 100 ? 100 : totalFiles % 103);
                 }
 
                 if (ptrEntries->size > buffSize - (ptrPos - ptrSource)) writeSize = buffSize - (ptrPos - ptrSource);
                 else writeSize = ptrEntries->size;
 
-                if ((ptrEntries->size - totalWrite) < writeSize) writeSize = ptrEntries->size - totalWrite;
+                if ((ptrEntries->size - totalWrites) < writeSize) writeSize = ptrEntries->size - totalWrites;
 
-                if (_dos_write(target, ptrPos, writeSize, &numWrite)) errorFile(newFile, sysInfo[21]);
-                if (numWrite != writeSize) errorFile(newFile,sysInfo[21]);
+                if (_dos_write(dstHandle, ptrPos, writeSize, &numWrites)) errorFile(newFile, sysInfo[21]);
+                if (numWrites != writeSize) errorFile(newFile, sysInfo[21]);
 
-                totalWrite += numWrite;
+                totalWrites += numWrites;
                 ptrPos += writeSize;
 
-                if (totalWrite == ptrEntries->size)
+                if (totalWrites == ptrEntries->size)
                 {
-                    totalWrite = 0;
-                    _dos_setftime(target, ptrEntries->wr_date, ptrEntries->wr_time);
-                    _dos_close(target);
+                    totalWrites = 0;
+                    _dos_setftime(dstHandle, ptrEntries->wr_date, ptrEntries->wr_time);
+                    _dos_close(dstHandle);
                 }
 
                 ptrEntries = (struct find_t*)ptrPos;
                 ptrPos += sizeof(entries);
             }
-        } while (totalRead || !_dos_findnext(&entries));
+        } while (totalReads || !_dos_findnext(&entries));
     }
 
-    sprintf(entry, "%s\\*.*", path);
-    if (!_dos_findfirst(entry, _A_SUBDIR | _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM, &entries))
+    sprintf(srcDir, "%s\\*.*", srcPath, srcExt);
+    if (!_dos_findfirst(srcDir, _A_SUBDIR | _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM, &entries))
     {
         do {
             if ((entries.attrib & _A_SUBDIR) && (entries.name[0] != '.'))
             {
-                sprintf(entry, "%s\\%s\\%s", path, entries.name, spec);
-                sprintf(newDir, "%s\\%s", path, entries.name);
-                newDir[0] = szDest[0];
+                sprintf(srcDir, "%s\\%s\\%s", srcPath, entries.name, srcExt);
+                sprintf(newDir, "%s\\%s", szDestDir, entries.name);
                 mkdir(newDir);
                 _dos_setfileattr(newDir, entries.attrib);
-                resume = copyFiles(entry, szDest, wAttr);
+                copyFiles(srcDir, newDir, wAttr);
             }
-        } while (resume && !_dos_findnext(&entries));
+        } while (!_dos_findnext(&entries));
     }
-
-    return resume;
 }
 
 /*---------------------------------------*/
@@ -1732,14 +1725,14 @@ void installProgram()
     _settextcursor(0x2020);
     _clearscreen(_GWINDOW);
     fillFrame(1, 1, 80, 25, 0xF6, 178);
-    drawShadowBox(15, 6, 65, 17, 0x9F, sysInfo[4]);
-    writeVRM(18, 11, 0x9F, sysInfo[73], 0);
-    writeVRM(18, 8, 0x9F, sysInfo[38], 0);
-    writeVRM(18, 9, 0x9F, sysInfo[40], 0);
+    drawShadowBox(15, 6, 65, 17, 0x1F, sysInfo[4]);
+    writeVRM(18, 11, 0x1F, sysInfo[73], 0);
+    writeVRM(18, 8, 0x1F, sysInfo[38], 0);
+    writeVRM(18, 9, 0x1F, sysInfo[40], 0);
     writeChar(18, 12, 0x17, 45, 176);
-    writeVRM(53, 13, 0x9F, sysInfo[174], 0);
+    writeVRM(53, 13, 0x1F, sysInfo[174], 0);
     drawButton(35, 15, _wATV, 9, sysMenu[2], 1, _wFLT);
-    copyFiles("A:\\*.*", szDrive, _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM);
+    copyFiles("c:\\topics\\*.*", "c:\\install", _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM);
     delay(500);
     fillFrame(15, 6, 69, 21, 0xF6, 178);
     drawShadowBox(18, 10, 62, 15, 0x1F, sysInfo[5]);
@@ -2342,7 +2335,7 @@ void startInstall()
 
     chooseDrive();
     checkDiskSpace();
-    checkLicense();
+    //checkLicense();
     installProgram();
     updateProgram();
     showHelpFile();
