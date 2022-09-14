@@ -84,12 +84,11 @@ typedef struct {        // The struction storing the information
     char disk[4];       // The disk letter
 } REG_INFO;
 
-char *ptrSource;        // The pointer sources
 char szDrive[4];        // Drive letter
 
+uint16_t numFiles = 0;
 uint16_t totalFiles = 0; // Number files to read and files to write
 uint8_t bmAvalid = 0;   // Status of the mouse
-uint16_t buffSize;      // The data buffer size
 
 char **sysInfo, **sysMenu;
 uint16_t infoNum, menuNum;
@@ -102,6 +101,10 @@ char szScreen[1000] = {0};
 uint8_t msgSlc = 0, chs = 0, slc = 0;
 uint16_t bCol = 0, bRow = 0;
 uint8_t *txtMem = (uint8_t*)0xB8000000L;
+
+uint8_t *copyBuff;
+size_t segBuff;
+size_t bytesCount;
 
 /*-----------------------------------*/
 /* Funtion : setBorder               */
@@ -896,15 +899,24 @@ void getTextFile(const char *inFile, const char *outFile, char ***szData, uint16
 void freeData()
 {
     int16_t i;
+
     for (i = 0; i < infoNum; i++) free(sysInfo[i]);
     free(sysInfo);
+
     for (i = 0; i < menuNum; i++) free(sysMenu[i]);
     free(sysMenu);
+
     free(msgExit[0]);
     free(msgCmp[0]);
     free(msgWarn[0]);
     free(msgError[0]);
     free(msgError[1]);
+
+    if (segBuff)
+    {
+        _dos_freemem(segBuff);
+        segBuff = 0;
+    }
 }
 
 /*-------------------------------*/
@@ -1032,7 +1044,83 @@ void errorFile(char *szHandle, char *szErrorType)
 }
 
 /*---------------------------------------------*/
-/* Funtion : copyFiles                         */
+/* Funtion : countTotalFile                    */
+/* Purpose : Count total files from directory  */
+/* Expects : (szDir) sources directory         */
+/* Returns : Number of files in directory      */
+/*---------------------------------------------*/
+void countTotalFiles(char *szDir)
+{
+    size_t i = 0;
+    struct find_t entries;
+    char srcPath[64], srcExt[64], srcDir[64];
+
+    for (i = strlen(szDir) - 1; szDir[i] != '\\'; i--);
+
+    strcpy(srcPath, szDir);
+    srcPath[i] = '\0';
+    strcpy(srcExt, &szDir[i + 1]);
+
+    if (!_dos_findfirst(szDir, _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM, &entries))
+    {
+        do {
+            totalFiles++;
+        } while (!_dos_findnext(&entries));
+    }
+
+    sprintf(srcDir, "%s\\*.*", srcPath);
+    if (!_dos_findfirst(srcDir, _A_SUBDIR | _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM, &entries))
+    {
+        do {
+            if ((entries.attrib & _A_SUBDIR) && (entries.name[0] != '.'))
+            {
+                sprintf(srcDir, "%s\\%s\\%s", srcPath, entries.name, srcExt);
+                countTotalFiles(srcDir);
+            }
+        } while (!_dos_findnext(&entries));
+    }
+}
+
+/*---------------------------------------------*/
+/* Funtion : copyFile                          */
+/* Purpose : Copy file from source to dest     */
+/* Expects : (szSrc) sources file path         */
+/*           (szDst) destination file path     */
+/*           (fileInfo) file attributes        */
+/* Returns : 1 for success                     */
+/*           0 for failure                     */
+/*---------------------------------------------*/
+uint8_t copyFile(char *szSrc, char *szDst, struct find_t *fileInfo)
+{
+    int srcHandle, dstHandle;
+    size_t numBytes = bytesCount;
+    
+    if (_dos_open(szSrc, O_RDONLY, &srcHandle)) errorFile(szSrc, sysInfo[17]);
+    if (_dos_creat(szDst, fileInfo->attrib, &dstHandle)) errorFile(szDst, sysInfo[17]);
+
+    while (numBytes)
+    {
+        if (_dos_read(srcHandle, copyBuff, numBytes, &numBytes))
+        {
+            _dos_close(srcHandle);
+            return 0;
+        }
+
+        if (_dos_write(dstHandle, copyBuff, numBytes, &numBytes))
+        {
+            _dos_close(dstHandle);
+            return 0;
+        }
+    }
+
+    _dos_setftime(dstHandle, fileInfo->wr_date, fileInfo->wr_time);
+    _dos_close(srcHandle);
+    _dos_close(dstHandle);
+    return 1;
+}
+
+/*---------------------------------------------*/
+/* Funtion : processDir                      */
 /* Purpose : Copy all files from the disk      */
 /* Expects : (szSourceDir) sources directory   */
 /*           (szDestDir) destination directory */
@@ -1040,17 +1128,10 @@ void errorFile(char *szHandle, char *szErrorType)
 /* Returns : 1 for success                     */
 /*           0 for failure                     */
 /*---------------------------------------------*/
-void copyFiles(char *szSourceDir, char *szDestDir, uint16_t wAttr)
+void processDir(char *szSourceDir, char *szDestDir)
 {
+    int16_t i;
     struct find_t entries;
-    struct find_t *ptrEntries;
-    
-    char *ptrPos = NULL;
-    int srcHandle, dstHandle;
-    uint16_t numFiles, i, n;
-    
-    unsigned long totalReads = 0, totalWrites = 0;
-    size_t writeSize = 0, numReads = 0, numWrites = 0;
     
     char srcPath[64], srcExt[64], srcDir[64];
     char curFile[68], newFile[68], newDir[64];
@@ -1061,79 +1142,23 @@ void copyFiles(char *szSourceDir, char *szDestDir, uint16_t wAttr)
     srcPath[i] = '\0';
     strcpy(srcExt, &szSourceDir[i + 1]);
 
-    if (!_dos_findfirst(szSourceDir, wAttr, &entries))
+    if (!_dos_findfirst(szSourceDir, _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM, &entries))
     {
         do {
-            numFiles = 0;
-            ptrPos = ptrSource;
-            while (ptrPos + 2 * sizeof(entries) < ptrSource + buffSize)
-            {
-                memcpy(ptrPos, &entries, sizeof(entries));
-                ptrEntries = (struct find_t*)ptrPos;
-                ptrPos += sizeof(entries);
-                sprintf(curFile, "%s\\%s", srcPath, entries.name);
-                
-                if (totalReads == 0)
-                {
-                    if (_dos_open(curFile, O_RDONLY, &srcHandle)) errorFile(curFile, sysInfo[17]);
-                }
+            sprintf(curFile, "%s\\%s", srcPath, entries.name);
+            sprintf(newFile, "%s\\%s", szDestDir, entries.name);
+            if (!copyFile(curFile, newFile, &entries)) errorFile(newFile, sysInfo[21]);
 
-                if (_dos_read(srcHandle, ptrPos, buffSize - (ptrPos - ptrSource), &numReads)) errorFile(curFile, sysInfo[20]);
-
-                ptrPos += numReads;
-                totalReads += numReads;
-                numFiles++;
-                
-                if (totalReads == entries.size)
-                {
-                    _dos_close(srcHandle);
-                    totalReads = 0;
-                    if (_dos_findnext(&entries)) break;
-                }
-                else break;
-            }
-
-            ptrEntries = (struct find_t*)ptrSource;
-            ptrPos = ptrSource + sizeof(entries);
-
-            for (n = 0; n < numFiles; n++)
-            {
-                if (totalWrites == 0)
-                {
-                    sprintf(newFile, "%s\\%s", szDestDir, ptrEntries->name);
-                    if (_dos_creat(newFile, ptrEntries->attrib, &dstHandle)) errorFile(newFile, sysInfo[17]);
-                    writeChar(30, 11, 0x19, 33, 32);
-                    writeVRM(30, 11, 0x1E, newFile, 0);
-                    delay(50);
-                    writeChar(18, 12, 0xFF, 6 * totalFiles++ / 14 + 2, 219);
-                    printVRM(50, 13, 0x1F, "%3d", (totalFiles % 103) > 100 ? 100 : totalFiles % 103);
-                }
-
-                if (ptrEntries->size > buffSize - (ptrPos - ptrSource)) writeSize = buffSize - (ptrPos - ptrSource);
-                else writeSize = ptrEntries->size;
-
-                if ((ptrEntries->size - totalWrites) < writeSize) writeSize = ptrEntries->size - totalWrites;
-
-                if (_dos_write(dstHandle, ptrPos, writeSize, &numWrites)) errorFile(newFile, sysInfo[21]);
-                if (numWrites != writeSize) errorFile(newFile, sysInfo[21]);
-
-                totalWrites += numWrites;
-                ptrPos += writeSize;
-
-                if (totalWrites == ptrEntries->size)
-                {
-                    totalWrites = 0;
-                    _dos_setftime(dstHandle, ptrEntries->wr_date, ptrEntries->wr_time);
-                    _dos_close(dstHandle);
-                }
-
-                ptrEntries = (struct find_t*)ptrPos;
-                ptrPos += sizeof(entries);
-            }
-        } while (totalReads || !_dos_findnext(&entries));
+            numFiles++;
+            writeChar(30, 11, 0x19, 33, 32);
+            writeVRM(30, 11, 0x1E, newFile, 0);
+            writeChar(18, 12, 0xFF, 45 * (1.0 * numFiles / totalFiles), 219);
+            printVRM(50, 13, 0x1F, "%3d", (int16_t)(100 * (1.0 * numFiles / totalFiles)));
+            delay(50);
+        } while (!_dos_findnext(&entries));
     }
 
-    sprintf(srcDir, "%s\\*.*", srcPath, srcExt);
+    sprintf(srcDir, "%s\\*.*", srcPath);
     if (!_dos_findfirst(srcDir, _A_SUBDIR | _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM, &entries))
     {
         do {
@@ -1143,7 +1168,7 @@ void copyFiles(char *szSourceDir, char *szDestDir, uint16_t wAttr)
                 sprintf(newDir, "%s\\%s", szDestDir, entries.name);
                 mkdir(newDir);
                 _dos_setfileattr(newDir, entries.attrib);
-                copyFiles(srcDir, newDir, wAttr);
+                processDir(srcDir, newDir);
             }
         } while (!_dos_findnext(&entries));
     }
@@ -1313,9 +1338,11 @@ void checkLicense()
     writeVRM(8, 8, 0x5A, sysInfo[59], 0);
     writeVRM(8, 9, 0x5A, sysInfo[60], 0);
     writeVRM(14, 12, 0x5E, sysMenu[9], 0x5F);
+    writeVRM(11, 11, 0x5B, sysMenu[20], 0);
     writeVRM(8, 14, 0x5F, sysInfo[22], 0);
     writeChar(8, 15, 0x1F, 30, 32);
     writeVRM(8, 17, 0x5F, sysInfo[23], 0);
+    writeVRM(11, 12, 0x5E, sysMenu[21], 0);
     writeChar(8, 18, 0x1F, 30, 32);
     drawButton(24, 21, _wATV, 5, sysMenu[1], 1, _wFLT);
     drawButton(47, 21, wATV, 5, sysMenu[4], 1, wFLT);
@@ -1337,14 +1364,18 @@ void checkLicense()
             {
             case DOWN:
                 writeVRM(14, 11 + slc, 0x5E, sysMenu[slc + 8], 0x5F);
+                writeVRM(11, 11 + slc, 0x5E, sysMenu[21], 0);
                 if (slc > 0) slc = 0; else slc++;
                 writeVRM(14, 11 + slc, 0x5B, sysMenu[slc + 8], 0x5A);
+                writeVRM(11, 11 + slc, 0x5B, sysMenu[20], 0);
                 break;
 
             case UP:
                 writeVRM(14, 11 + slc, 0x5E, sysMenu[slc + 8], 0x5F);
+                writeVRM(11, 11 + slc, 0x5E, sysMenu[21], 0);
                 if (slc < 1) slc = 1; else slc--;
                 writeVRM(14, 11 + slc, 0x5B, sysMenu[slc + 8], 0x5A);
+                writeVRM(11, 11 + slc, 0x5B, sysMenu[20], 0);
                 break;
             }
         }
@@ -1355,8 +1386,10 @@ void checkLicense()
             {
                 hideMouse();
                 writeVRM(14, 12, 0x5E, sysMenu[9], 0x5F);
+                writeVRM(11, 11, 0x5E, sysMenu[21], 0);
                 delay(20);
                 writeVRM(14, 11, 0x5B, sysMenu[8], 0x5A);
+                writeVRM(11, 12, 0x5B, sysMenu[20], 0);
                 showMouse();
                 slc = 0;
                 key = TAB;
@@ -1366,8 +1399,10 @@ void checkLicense()
             {
                 hideMouse();
                 writeVRM(14, 11, 0x5E, sysMenu[8], 0x5F);
+                writeVRM(11, 11, 0x5E, sysMenu[21], 0);
                 delay(20);
                 writeVRM(14, 12, 0x5B, sysMenu[9], 0x5A);
+                writeVRM(11, 12, 0x5B, sysMenu[20], 0);
                 showMouse();
                 slc = 1;
                 key = TAB;
@@ -1592,23 +1627,24 @@ void showHelpFile()
     _settextcursor(0x2020);
     _clearscreen(_GWINDOW);
     fillFrame(1, 1, 80, 25, 0xF6, 178);
-    drawShadowBox(10, 3, 74, 22, 0xBE, sysInfo[3]);
-    writeVRM(12, 5, 0xB0, sysInfo[61], 0);
-    writeVRM(12, 6, 0xB0, sysInfo[62], 0);
-    writeVRM(12, 7, 0xB0, sysInfo[63], 0);
-    writeVRM(12, 8, 0xB0, sysInfo[64], 0);
-    writeVRM(12, 9, 0xB0, sysInfo[65], 0);
-    writeVRM(12, 10, 0xB0, sysInfo[66], 0);
-    writeVRM(12, 11, 0xB0, sysInfo[67], 0);
-    writeVRM(12, 12, 0xB0, sysInfo[68], 0);
-    writeVRM(17, 14, 0xBC, sysInfo[69], 0);
-    writeVRM(17, 15, 0xBC, sysInfo[70], 0);
-    writeVRM(17, 16, 0xBC, sysInfo[71], 0);
-    writeVRM(12, 18, 0xB1, sysInfo[72], 0);
-    drawButton(47, 20, _wATV, 11, sysMenu[4], 1, _wFLT);
-    drawButton(26, 20, wATV, 11, sysMenu[1], 1, wFLT);
+    drawShadowBox(10, 3, 74, 22, 0x3E, sysInfo[3]);
+    writeVRM(12, 5, 0x30, sysInfo[61], 0);
+    writeVRM(12, 6, 0x30, sysInfo[62], 0);
+    writeVRM(12, 7, 0x30, sysInfo[63], 0);
+    writeVRM(12, 8, 0x30, sysInfo[64], 0);
+    writeVRM(12, 9, 0x30, sysInfo[65], 0);
+    writeVRM(12, 10, 0x30, sysInfo[66], 0);
+    writeVRM(12, 11, 0x30, sysInfo[67], 0);
+    writeVRM(12, 12, 0x30, sysInfo[68], 0);
+    writeVRM(17, 14, 0x3C, sysInfo[69], 0);
+    writeVRM(17, 15, 0x3C, sysInfo[70], 0);
+    writeVRM(17, 16, 0x3C, sysInfo[71], 0);
+    writeVRM(12, 18, 0x31, sysInfo[72], 0);
+    drawButton(47, 20, _wATV, 3, sysMenu[4], 1, _wFLT);
+    drawButton(26, 20, wATV, 3, sysMenu[1], 1, wFLT);
     showMouse();
     moveMouse(42, 20);
+
     slc = chs = key = 0;
 
     do {
@@ -1620,15 +1656,15 @@ void showHelpFile()
             switch (toupper(key))
             {
             case LEFT:
-                drawButton(26 + slc * 21, 20, _wATV, 11, sysMenu[3 * slc + 1], 1, _wFLT);
+                drawButton(26 + slc * 21, 20, _wATV, 3, sysMenu[3 * slc + 1], 1, _wFLT);
                 if (slc < 1) slc = 0; else slc--;
-                drawButton(26 + slc * 21, 20, wATV, 11, sysMenu[3 * slc + 1], 1, wFLT);
+                drawButton(26 + slc * 21, 20, wATV, 3, sysMenu[3 * slc + 1], 1, wFLT);
                 break;
 
             case RIGHT:
-                drawButton(26 + slc * 21, 20, _wATV, 11, sysMenu[3 * slc + 1], 1, _wFLT);
+                drawButton(26 + slc * 21, 20, _wATV, 3, sysMenu[3 * slc + 1], 1, _wFLT);
                 if (slc > 0) slc = 1; else slc++;
-                drawButton(26 + slc * 21, 20, wATV, 11, sysMenu[3 * slc + 1], 1, wFLT);
+                drawButton(26 + slc * 21, 20, wATV, 3, sysMenu[3 * slc + 1], 1, wFLT);
                 break;
             }
         }
@@ -1638,11 +1674,11 @@ void showHelpFile()
             if (bRow == 20 && bCol >= 26 && bCol <= 38)
             {
                 hideMouse();
-                drawButton(47, 20, _wATV, 11, sysMenu[4], 1, _wFLT);
+                drawButton(47, 20, _wATV, 3, sysMenu[4], 1, _wFLT);
                 clearScreen(26, 20, 38, 21, 11);
                 writeVRM(27, 20, wATV, sysMenu[1], wFLT);
                 delay(50);
-                drawButton(26, 20, wATV, 11, sysMenu[1], 1, wFLT);
+                drawButton(26, 20, wATV, 3, sysMenu[1], 1, wFLT);
                 showMouse();
                 slc = 0;
                 break;
@@ -1651,11 +1687,11 @@ void showHelpFile()
             if (bRow == 20 && bCol >= 46 && bCol <= 59)
             {
                 hideMouse();
-                drawButton(26, 20, _wATV, 11, sysMenu[1], 1, _wFLT);
+                drawButton(26, 20, _wATV, 3, sysMenu[1], 1, _wFLT);
                 clearScreen(47, 20, 59, 21, 11);
                 writeVRM(48, 20, wATV, sysMenu[4], wFLT);
                 delay(50);
-                drawButton(47, 20, wATV, 11, sysMenu[4], 1, wFLT);
+                drawButton(47, 20, wATV, 3, sysMenu[4], 1, wFLT);
                 showMouse();
                 slc = 1;
                 break;
@@ -1679,46 +1715,49 @@ void installProgram()
 {
     uint8_t i;
 
-    buffSize = 3500;
-    ptrSource = (char*)malloc(buffSize);
-
-    if (!ptrSource)
+    if (_dos_allocmem(0xffff, &segBuff))
     {
-        _setbkcolor(1);
-        _settextcolor(15);
-        _settextcursor(0x2020);
-        _clearscreen(_GWINDOW);
-        fillFrame(1, 1, 80, 25, 0xF6, 178);
-        hideMouse();
-        drawShadowBox(15, 8, 65, 17, 0x4F, sysInfo[1]);
-        writeVRM(27, 10, 0x4E, sysInfo[31], 0);
-        writeVRM(17, 11, 0x4F, sysInfo[53], 0);
-        writeVRM(17, 12, 0x4F, sysInfo[54], 0);
-        writeVRM(17, 13, 0x4F, sysInfo[55], 0);
-        drawButton(35, 15, wATV, 4, sysMenu[0], 1, wFLT);
-        showMouse();
+        bytesCount = segBuff;
+        if (_dos_allocmem(bytesCount, &segBuff))
+        {
+            _setbkcolor(1);
+            _settextcolor(15);
+            _settextcursor(0x2020);
+            _clearscreen(_GWINDOW);
+            fillFrame(1, 1, 80, 25, 0xF6, 178);
+            hideMouse();
+            drawShadowBox(15, 8, 65, 17, 0x4F, sysInfo[1]);
+            writeVRM(27, 10, 0x4E, sysInfo[31], 0);
+            writeVRM(17, 11, 0x4F, sysInfo[53], 0);
+            writeVRM(17, 12, 0x4F, sysInfo[54], 0);
+            writeVRM(17, 13, 0x4F, sysInfo[55], 0);
+            drawButton(35, 15, wATV, 4, sysMenu[0], 1, wFLT);
+            showMouse();
 
-        do {
-            if (clickMouse(&bCol, &bRow) == 1)
-            {
-                if (bRow == 15 && bCol >= 35 && bCol <= 45)
+            do {
+                if (clickMouse(&bCol, &bRow) == 1)
                 {
-                    hideMouse();
-                    clearScreen(35, 15, 46, 16, 4);
-                    writeVRM(36, 15, wATV, sysMenu[0], wFLT);
-                    delay(50);
-                    drawButton(35, 15, wATV, 4, sysMenu[0], 1, wFLT);
-                    showMouse();
-                    break;
+                    if (bRow == 15 && bCol >= 35 && bCol <= 45)
+                    {
+                        hideMouse();
+                        clearScreen(35, 15, 46, 16, 4);
+                        writeVRM(36, 15, wATV, sysMenu[0], wFLT);
+                        delay(50);
+                        drawButton(35, 15, wATV, 4, sysMenu[0], 1, wFLT);
+                        showMouse();
+                        break;
+                    }
+
+                    if (bRow == 8 && bCol == 15 || bCol == 16) break;
                 }
+            } while (!kbhit());
 
-                if (bRow == 8 && bCol == 15 || bCol == 16) break;
-            }
-        } while (!kbhit());
-
-        haltSys();
+            haltSys();            
+        }
     }
 
+    copyBuff = (uint8_t*)MK_FP(segBuff, 0);
+    
     setBorder(50);
     _setbkcolor(1);
     _settextcolor(15);
@@ -1731,8 +1770,9 @@ void installProgram()
     writeVRM(18, 9, 0x1F, sysInfo[40], 0);
     writeChar(18, 12, 0x17, 45, 176);
     writeVRM(53, 13, 0x1F, sysInfo[174], 0);
-    drawButton(35, 15, _wATV, 9, sysMenu[2], 1, _wFLT);
-    copyFiles("c:\\topics\\*.*", "c:\\install", _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM);
+    drawButton(35, 15, _wATV, 1, sysMenu[2], 1, _wFLT);
+    countTotalFiles("C:\\TOPICS\\*.*");
+    processDir("C:\\TOPICS\\*.*", "C:\\INSTALL");
     delay(500);
     fillFrame(15, 6, 69, 21, 0xF6, 178);
     drawShadowBox(18, 10, 62, 15, 0x1F, sysInfo[5]);
@@ -1743,13 +1783,14 @@ void installProgram()
     for (i = 1; i < 38; i++)
     {
         writeChar(22, 13, 0x1F, i, 219);
-        printVRM(46, 14, 0x1A, "%3d", 2*i + 26);
+        printVRM(46, 14, 0x1A, "%3d", 2 * i + 26);
         delay(100);
     }
 
     fillFrame(15, 6, 69, 21, 0xF6, 178);
     warningBox(25, 10, 55, 15, msgCmp, 1);
-    free(ptrSource);
+    _dos_freemem(segBuff);
+    segBuff = 0;
 }
 
 /*----------------------------------------------*/
@@ -1769,9 +1810,9 @@ void restartProgram()
     fillFrame(1, 1, 80, 25, 0xF6, 178);
     drawShadowBox(15, 8, 65, 15, 0x4F, sysInfo[6]);
     writeVRM(21, 11, 0x4A, sysMenu[11], 0x4B);
-    writeVRM(18, 10, 0x4F, "[ ]", 0);
+    writeVRM(18, 10, 0x4F, sysMenu[20], 0);
     writeVRM(21, 10, 0x4F, sysMenu[10], 0x4E);
-    writeVRM(18, 11, 0x4A, "[ ]", 0);
+    writeVRM(18, 11, 0x4A, sysMenu[21], 0);
     drawButton(26, 13, 0xB4, 4, sysMenu[0], 1, 0xB1);
     drawButton(45, 13, 0x9F, 4, sysMenu[3], 1, 0x94);
     moveMouse(40, 13);
@@ -1786,17 +1827,17 @@ void restartProgram()
             {
             case DOWN:
                 writeVRM(21, 10 + slc, 0x4A, sysMenu[slc + 10], 0x4B);
-                writeVRM(18, 10 + slc, 0x4A, "[ ]", 0);
+                writeVRM(18, 10 + slc, 0x4A, sysMenu[21], 0);
                 if (slc > 0) slc = 0; else slc++;
                 writeVRM(21, 10 + slc, 0x4F, sysMenu[slc + 10], 0x4E);
-                writeVRM(18, 10 + slc, 0x4F, "[ ]", 0);
+                writeVRM(18, 10 + slc, 0x4F, sysMenu[20], 0);
                 break;
             case UP:
                 writeVRM(21, 10 + slc, 0x4A, sysMenu[slc + 10], 0x4B);
-                writeVRM(18, 10 + slc, 0x4A, "[ ]", 0);
+                writeVRM(18, 10 + slc, 0x4A, sysMenu[21], 0);
                 if (slc < 1) slc = 1; else slc--;
                 writeVRM(21, 10 + slc, 0x4F, sysMenu[slc + 10], 0x4E);
-                writeVRM(18, 10 + slc, 0x4F, "[ ]", 0);
+                writeVRM(18, 10 + slc, 0x4F, sysMenu[20], 0);
                 break;
             case LEFT:
                 drawButton(26 + chs * 19, 13, 0x9F, 4, sysMenu[3 * chs], 1, 0x94);
@@ -1818,9 +1859,9 @@ void restartProgram()
                 slc = 0;
                 hideMouse();
                 writeVRM(21, 11, 0x4A, sysMenu[11], 0x4B);
-                writeVRM(18, 11, 0x4A, "[ ]", 0);
+                writeVRM(18, 11, 0x4A, sysMenu[21], 0);
                 writeVRM(21, 10, 0x4F, sysMenu[10], 0x4E);
-                writeVRM(18, 10, 0x4F, "[ ]", 0);
+                writeVRM(18, 10, 0x4F, sysMenu[20], 0);
                 showMouse();
                 delay(50);
             }
@@ -1830,9 +1871,9 @@ void restartProgram()
                 slc = 1;
                 hideMouse();
                 writeVRM(21, 10, 0x4A, sysMenu[10], 0x4B);
-                writeVRM(18, 10, 0x4A, "[ ]", 0);
+                writeVRM(18, 10, 0x4A, sysMenu[21], 0);
                 writeVRM(21, 11, 0x4F, sysMenu[11], 0x4E);
-                writeVRM(18, 11, 0x4F, "[ ]", 0);
+                writeVRM(18, 11, 0x4F, sysMenu[20], 0);
                 showMouse();
                 delay(50);
             }
@@ -2335,9 +2376,9 @@ void startInstall()
 
     chooseDrive();
     checkDiskSpace();
-    //checkLicense();
+    checkLicense();
     installProgram();
-    updateProgram();
+    //updateProgram();
     showHelpFile();
     fadeOut();
     strcpy(szDisk, szDrive);

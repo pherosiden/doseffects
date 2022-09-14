@@ -6,10 +6,10 @@
   ~D9a8ng ky1  
   B~a1o ca1o  
   ~La2m la5i  
-зи ~Va6ng, to6i d9o62ng y1 (Ne6n du2ng)
-йк ~Kho6ng, to6i kho6ng d9o62ng y1 (Ke61t thu1c ca2i d9a85t)
-зи ~Va6ng! To6i muo61n kho73i d9o65ng la5i ma1y ti1nh ngay
-йк ~Kho6ng!! To6i se4 kho73i d9o65ng la5i ma1y ti1nh sau
+~Va6ng, to6i d9o62ng y1 (Ne6n du2ng)
+~Kho6ng, to6i kho6ng d9o62ng y1 (Ke61t thu1c ca2i d9a85t)
+~Va6ng! To6i muo61n kho73i d9o65ng la5i ma1y ti1nh ngay
+~Kho6ng!! To6i se4 kho73i d9o65ng la5i ma1y ti1nh sau
 жэ ~D9i4a me62m B
 гд D9~i4a cu71ng C
 гд D9i4~a cu71ng D
@@ -18,3 +18,5 @@
 [ ] Ca1c t~a65p tin chu7o7ng tri2nh chi1nh (Ye6u ca62u)
 [ ] Ca1c ta65p tin ~du74 lie65u chi1nh (Ye6u ca62u)
   ~D9a8ng ky1  
+зи
+йк
