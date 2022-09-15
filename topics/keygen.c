@@ -1,3 +1,30 @@
+/*------------------------------------------------------*/
+/*      UNIVERSITY OF TECHNOLOGY HO CHI MINH CITY       */
+/*          THE INFORMATIC TECHNOLOGY BRANCH            */
+/*               THE CRACKING PROGRAM FILE              */
+/*            Author : NGUYEN NGOC VAN                  */
+/*             Class : 00DTH1                           */
+/*      Student Code : 00DTH201                         */
+/*            Course : 2000 - 2005                      */
+/*     Writting date : 24/10/2001                       */
+/*       Last Update : 12/11/2001                       */
+/*------------------------------------------------------*/
+/*       Environment : Borland C++ Ver 3.1 Application  */
+/*       Source file : CRACK.CPP                        */
+/*           Compile : BCC -mt CRACK.CPP                */
+/*            Linker : EXE2BIN CRACK.EXE CRACK.COM      */
+/*      Momery Model : Tiny                             */
+/*       Call To Run : CRACK (none project file)        */
+/*------------------------------------------------------*/
+/*         THE MAIN FUNCTIONS SUPPORT SOURCES           */
+/*------------------------------------------------------*/
+/* showing_menu_user; set_cursor_size; set_border_color;*/
+/* get_text_color   ; get_back_color ; set_attrib      ;*/
+/* box_shadow       ; fill_frame     ; replicate       ;*/
+/* write_char       ; replicate      ; write_VRAM      ;*/
+/* exit_program     ; execute_user   ; button          ;*/
+/* do_blinking      ; write_XY       ; frame           ;*/
+/*------------------------------------------------------*/
 #include <dos.h>
 #include <io.h>
 #include <stdio.h>
@@ -7,35 +34,38 @@
 #include <stdint.h>
 #include <string.h>
 #include <graph.h>
+#include <time.h>
 
+#define SCR_WIDTH       80
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + 80 * (y - 1)) << 1)
 
-#define LEFT    75
-#define RIGHT   77
-#define ENTER   13
+#define KEY_UP		    72
+#define KEY_DOWN	    80
+#define KEY_ENTER	    13
+#define KEY_SPACER	    32
+#define KEY_ESC	        27
 
-#define wATV    0xF0
-#define wFLT    0xFC
-#define _wATV   0x78
-#define _wFLT   0x74
+#define ATV 	        0xF0
+#define FLT 	        0xFC
+#define _ATV 	        0x78
+#define _FLT 	        0x75
 
 typedef struct {            // Struction information
     uint8_t     day;        // The date of the program
     uint8_t     month;      // The month of the program
+    uint16_t    year;       // The year of the program
     uint8_t     regs;       // The register code
     uint8_t     num;        // The number of run program
+    uint8_t     key;        // Random key
     char        serial[20]; // License code
     char        user[31];   // User name
-    char        disk[4];    // The disk letter
+    char        path[33];   // The installation path
+    char        magic[33];  // Random characters
 } REG_INFO;
 
-char CDKey[20];             // Product code
-char szUserName[31];        // Registers name user
-
+char scrBuff[1500] = {0};   // Screen buffer
 uint8_t bmAvalid = 0;       // Status of the mouse
-char **sysInfo = NULL;      // Text message
-uint16_t sysNum = 0;        // Message count
 uint8_t *txtMem = (uint8_t*)0xB8000000L;
 
 /*-----------------------------------*/
@@ -273,6 +303,28 @@ void setBlinking(uint8_t doblink)
     regs.h.al = 0x03;
     regs.h.bl = doblink ? 1 : 0;
     int86(0x10, &regs, &regs);
+}
+
+/*---------------------------------------------------------*/
+/* Function : readKey                                      */
+/* Purpose  : Read a key from the keyboard                 */
+/* Expects  : (ch) get the key from the keyboard           */
+/* Returns  : If the key is a extend key then return code  */
+/*	          key and 0 value else return 1 value and code */
+/*---------------------------------------------------------*/
+char readKey(char *key)
+{
+    union REGS regs;
+    regs.h.ah = 0;
+    int86(22, &regs, &regs);
+    if (!(regs.h.al))
+    {
+        *key = regs.h.ah;
+        return 0;
+    }
+
+    *key = regs.h.al;
+    return 1;
 }
 
 /*----------------------------------------------*/
@@ -650,36 +702,156 @@ void fontVNI(char *szPrmpt)
     schRepl(szPrmpt, "D9", 250);
 }
 
-
-/*---------------------------------*/
-/* Function : GetSerialNumber      */
-/* Mission  : Getting the ID user  */
-/* Expects  : Nothing              */
-/* Returns  : Nothing              */
-/*---------------------------------*/
-void GetSerialNumber()
+/*----------------------------------------------*/
+/* Funtion : getScreenText                      */
+/* Purpose : Get string at coordinate           */
+/* Expects : (x, y, width, height) screen coord */
+/*           buff the buffer to store data      */
+/* Returns : Nothing                            */
+/*----------------------------------------------*/
+void getScreenText(int16_t x, int16_t y, int16_t width, int16_t height, void *buff)
 {
-	FILE *fptr;
-	tagInfo tmp;
-	struct date da;
-	uint8_t col = 0, row = 0;
+    uint16_t bytes;
+    uint16_t *src, *dst;
 
-	if(!(fptr = fopen("register.dat", "wb"))) HaltSys();
-	getdate(&da); tmp.day = da.da_day; tmp.month = da.da_mon;
-	tmp.regs = 0; tmp.num = 0; strcpy(tmp.serial, CDKey);
-	strcpy(tmp.user, szUserName); strcpy(tmp.disk, "C:\\");
-	fwrite(&tmp,sizeof(tagInfo),1,fptr); fclose(fptr);
-	do {
-		if(ClickMouse(col, row) == 1) {
-			if(row == 10 && col >= 51 && col <= 62) {
-				HideMouse(); drawButton(51,8,_ATV,3,"   ~L�y m�   ",0,_FLT);
-				clearScreen(51,10,64,11,3); writeVRM(52,10,ATV,"   ~Ch�m d�t   ",FLT);
-				delay(50); drawButton(51,10,ATV,3,"   ~Ch�m d�t   ",0,FLT);
-				HaltSys();
-			}
-			if((col == 15 || col == 16) && row == 6) HaltSys();
-		}
-	} while(!kbhit()); HaltSys();
+    bytes = width << 1;
+    dst = (uint16_t*)buff;
+    src = (uint16_t*)&txtMem[OFFSET(x, y)];
+    
+    while (height--)
+    {
+        memcpy(dst, src, bytes);
+        dst += width;
+        src += SCR_WIDTH;
+    }
+}
+
+/*----------------------------------------------*/
+/* Funtion : putScreenText                      */
+/* Purpose : Get string at coordinate           */
+/* Expects : (x, y, width, height) screen coord */
+/*           buff the buffer to store data      */
+/* Returns : Nothing                            */
+/*----------------------------------------------*/
+void putScreenText(int16_t x, int16_t y, int16_t width, int16_t height, void *buff)
+{
+    uint16_t bytes;
+    uint16_t *src, *dst;
+
+    bytes = width << 1;
+    src = (uint16_t*)buff;
+    dst = (uint16_t*)&txtMem[OFFSET(x, y)];
+    
+    while (height--)
+    {
+        memcpy(dst, src, bytes);
+        src += width;
+        dst += SCR_WIDTH;
+    }
+}
+
+/*-------------------------------*/
+/* Funtion : cleanup             */
+/* Mission : Restore environment */
+/* Expects : Nothing             */
+/* Returns : Nothing             */
+/*-------------------------------*/
+void cleanup()
+{
+    setBorder(0x00);
+    _settextcolor(0x0607);
+    _setbkcolor(0);
+    _settextcolor(7);
+    setBlinking(1);
+    if (bmAvalid) closeMouse();
+    _clearscreen(_GCLEARSCREEN);
+    system("font off");
+}
+
+/*---------------------------------------*/
+/* Function : validUserName              */
+/* Mission  : Check user name is valid   */
+/* Expects  : (szUserName) the user name */
+/* Returns  : 1 for ok                   */
+/*            0 for invalid              */
+/*---------------------------------------*/
+uint8_t validUserName(char *szUserName)
+{
+    uint16_t i = 0, len = 0;
+
+    len = strlen(szUserName);
+    if (!len) return 0;
+
+    i = 0;
+    while (isspace(szUserName[i++]));
+    if (i >= len) return 0;
+
+    for (i = 0; i != len; i++)
+    {
+        if (!isalpha(szUserName[i]) && !isspace(szUserName[i])) return 0;
+    }
+
+    return 1;
+}
+
+/*-----------------------------------------------*/
+/* Function : genSerialNumber                    */
+/* Mission  : Generate product installation key  */
+/* Expects  : (szUserName) input user name       */
+/*             (CDKey) output product key        */
+/* Returns  : Nothing                            */
+/*-----------------------------------------------*/
+void genSerialNumber(char *szUserName, char *CDKey)
+{
+    char cKey = 0;
+    FILE *fptr;
+    REG_INFO tmp;
+    struct dosdate_t da;
+    uint16_t col = 0, row = 0;
+    uint16_t i = 0, k = 0, len = 0;
+
+    memset(CDKey, 0, sizeof(CDKey));
+    
+    i = 0;
+    do {
+        cKey = 48 + (rand() % 49);
+        if (isdigit(cKey) || isupper(cKey)) CDKey[i++] = cKey;
+    } while (i < 19);
+    
+    CDKey[i] = '\0';
+
+    for (i = 0; i < strlen(CDKey) - 1; i++)
+    {
+        if (!((i + 1) % 5)) CDKey[i] = 45;
+    }
+
+    fptr = fopen("register.dat", "wb");
+    if (!fptr) return;
+
+    _dos_getdate(&da);
+    tmp.day = da.day;
+    tmp.month = da.month;
+    tmp.year = da.year;
+    tmp.regs = 0;
+    tmp.num = 0;
+    tmp.key = 90 + (rand() % 10);
+
+    len = strlen(CDKey);
+    for (i = 0; i < len; i++) tmp.serial[i] = CDKey[i] + tmp.key;
+    
+    len = strlen(szUserName);
+    for (i = 0; i < len; i++) tmp.user[i] = szUserName[i] + tmp.key;
+
+    for (i = 0; i < sizeof(tmp.magic); i += 2)
+    {
+        k = rand() % strlen(szUserName);
+        tmp.magic[i] = k;
+        tmp.magic[i + 1] = szUserName[k] + tmp.key;
+    }
+
+    strcpy(tmp.path, "C:\\TOPICS");
+    fwrite(&tmp, sizeof(REG_INFO), 1, fptr);
+    fclose(fptr);
 }
 
 /*-------------------------------------------------*/
@@ -690,150 +862,313 @@ void GetSerialNumber()
 /*-------------------------------------------------*/
 void startCracking()
 {
+    char cKey = 0;
+    char CDKey[20] = {0};
+    char szUserName[31] = {0};
+
     char *szMenu[] = {
         "   ~La61y ma4   ",
-        "  ~Cha61m du71t  ",
+        "  ~Ke61t thu1c  ",
         "  ~Tro75 giu1p  "
     };
-    
-	char cKey;
-	uint8_t bSlc = 0, isASCII = 1, bCurrCol = 0, bCol = 0, bRow = 0, i;
 
-	for(i = 0; i < 3; i++) fontVNI(szMenu[i]);
-	_settextcursor(0x0B0A); drawButton(51,8,ATV,3,szMenu[0],0,FLT);
-	drawButton(51,10,_ATV,3,szMenu[1],1,_FLT); MoveMouse(35,10);
-	drawButton(51,12,_ATV,3,szMenu[2],1,_FLT);
-	writeChar(18,9,0x1A,30,32); textattr(0x1A);
-	do {
-		gotoxy(18+bCurrCol,9);
-		if(kbhit()) {
-			isASCII = ReadKey(cKey);
-			if(!cKey) isASCII = ReadKey(cKey);
-			if((isASCII && bCurrCol < 30 && cKey != 8 && isalpha(cKey)) ||
-				(cKey == 32 && bCurrCol < 30)) {
-				szUserName[bCurrCol] = cKey;
-				PrintXY(18+bCurrCol,9,0x1A,cKey); bCurrCol++;
-			}
-			if(cKey == 8 && bCurrCol > 0) {
-				bCurrCol--; PrintXY(18+bCurrCol,9,0x1A,32);
-			}
-			switch(cKey) {
-				case UP :
-					if(!isASCII) {
-						drawButton(51,8+bSlc*2,_ATV,3,szMenu[bSlc],1,_FLT);
-						if(bSlc <= 0) bSlc = 2; else bSlc--;
-						drawButton(51,8+bSlc*2,ATV,3,szMenu[bSlc],0,FLT);
-					} break;
-				case DOWN :
-					if(!isASCII) {
-						drawButton(51,8+bSlc*2,_ATV,3,szMenu[bSlc],1,_FLT);
-						if(bSlc >= 2) bSlc = 0; else bSlc++;
-						drawButton(51,8+bSlc*2,ATV,3,szMenu[bSlc],0,FLT);
-					}
-			}
-		}
-		if(ClickMouse(bCol, bRow) == 1) {
-			if(bRow == 8 && bCol >= 51 && bCol <= 62) {
-				HideMouse(); drawButton(51,8+bSlc*2,_ATV,3,szMenu[bSlc],1,_FLT);
-				bSlc = 0; clearScreen(51,8+bSlc*2,64,9,3);
-				writeVRM(52,8+bSlc*2,ATV,szMenu[bSlc],FLT); delay(50);
-				drawButton(51,8+bSlc*2,ATV,3,szMenu[bSlc],0,FLT); ShowMouse();
-				cKey = ENTER;
-			}
-			if(bRow == 10 && bCol >= 51 && bCol <= 62) {
-				HideMouse(); drawButton(51,8+bSlc*2,_ATV,3,szMenu[bSlc],1,_FLT);
-				bSlc = 1; clearScreen(51,8+bSlc*2,64,11,3);
-				writeVRM(52,8+bSlc*2,ATV,szMenu[bSlc],FLT); delay(50);
-				drawButton(51,8+bSlc*2,ATV,3,szMenu[bSlc],0,FLT); ShowMouse();
-				cKey = ENTER;
-			}
-			if(bRow == 12 && bCol >= 51 && bCol <= 62) {
-				char *MsgHelp[] = {
-				"Hu7o71ng da64n la61y ma4 so61",
-				"Ba5n ca62n nha65p te6n cu3a ba5n va2o o6 thu71 nha61t va2 nha61n",
-				"nu1t la61y ma4 o73 phi1a be6n tra1i. Ba5n se4 nha65n d9u7o75c ma4",
-				"so61 ca2i d9a85t o73 o6 thu71 hai be6n du7o71i. Ba5n co1 the63 ghi",
-				"ma4 so61 na2y va2o gia61y  d9e63 tie61n ha2nh ca2i d9a85t chu7o7ng",
-				"tri2nh. Nha61n va2o nu1t tra1i cu2ng d9e63 thoa1t.", "  ~D9o62ng y1  "};
-				uint8_t bCol, bRow, i;
-				char *buffer = new char[512];
-				for(i = 0; i < 7; i++) fontVNI(MsgHelp[i]);
-				drawButton(51,8+bSlc*2,_ATV,3,szMenu[bSlc],1,_FLT); bSlc = 2;
-				clearScreen(51,8+bSlc*2,64,13,3);
-				writeVRM(52,8+bSlc*2,ATV,szMenu[bSlc],FLT); delay(50);
-				drawButton(51,8+bSlc*2,ATV,3,szMenu[bSlc],0,FLT); HideMouse();
-				gettext(15,6,67,17,buffer);
-				shadowBox(15,6,65,16,0x5F,MsgHelp[0]); writeVRM(17,8,0x5E,MsgHelp[1]);
-				writeVRM(17,9,0x5E,MsgHelp[2]); writeVRM(17,10,0x5E,MsgHelp[3]);
-				writeVRM(17,11,0x5E,MsgHelp[4]); writeVRM(17,12,0x5E,MsgHelp[5]);
-				drawButton(36,14,ATV,5,MsgHelp[6],1,FLT); ShowMouse(); _settextcursor(0x2020);
-				do {
-					if(ClickMouse(bCol, bRow) == 1) {
-						if(bRow == 14 && bCol >= 36 && bCol <= 45) {
-							HideMouse(); clearScreen(36,14,46,15,5);
-							writeVRM(37,14,ATV,MsgHelp[6],FLT); delay(50);
-							drawButton(36,14,ATV,5,MsgHelp[6],1,FLT); break;
-						}
-					}
-				} while(!kbhit()); _settextcursor(0x0B0A);
-				puttext(15,6,67,17,buffer); ShowMouse(); delete[]buffer;
-			}
-			if(bRow == 6 && (bCol == 15 || bCol == 16)) HaltSys();
-		}
-		szUserName[bCurrCol] = NULL;
-	} while(cKey != ENTER || !szUserName[0]);
-	if(!bSlc) {
-		_settextcursor(0x2020); writeVRM(18,12,0x1A,CDKey); GetSerialNumber();
-	} else HaltSys();
+    char *szHelp[] = {
+        "Hu7o71ng da64n la61y ma4 so61",
+        "Ba5n ca62n nha65p te6n cu3a ba5n va2o o6 thu71 nha61t va2 nha61n",
+        "nu1t La61y ma4 o73 phi1a be6n pha3i. Ba5n se4 nha65n d9u7o75c ma4",
+        "so61 ca2i d9a85t o73 o6 thu71 hai be6n du7o71i. Ba5n co1 the63 ghi",
+        "ma4 so61 na2y va2o gia61y  d9e63 tie61n ha2nh ca2i d9a85t chu7o7ng",
+        "tri2nh. Nha61n va2o nu1t Ke61t thu1c d9e63 thoa1t.",
+        "  ~D9o62ng y1  ",
+        "Te6n kho6ng ho75p le65!"
+    };
+        
+    uint16_t k = 0, i = 0;
+    uint16_t bCol = 0, bRow = 0;
+    uint8_t bSlc = 0, isASCII = 1, noUserName = 0;
+    
+    for (i = 0; i < sizeof(szMenu) / sizeof(szMenu[0]); i++) fontVNI(szMenu[i]);
+    for (i = 0; i < sizeof(szHelp) / sizeof(szHelp[0]); i++) fontVNI(szHelp[i]);
+
+    memset(szUserName, 0, sizeof(szUserName));
+    _settextcursor(0x0B0A);
+    drawButton(51, 8, ATV, 3, szMenu[0], 0, FLT);
+    drawButton(51, 10, _ATV, 3, szMenu[1], 1, _FLT);
+    moveMouse(35, 10);
+    drawButton(51, 12, _ATV, 3, szMenu[2], 1, _FLT);
+    writeChar(18, 9, 0x1A, 30, 32);
+    _setbkcolor(1);
+    _settextcolor(10);
+
+    do {
+        _settextposition(9, 18 + k);
+
+        if (kbhit())
+        {
+            if (noUserName)
+            {
+                noUserName = 0;
+                writeChar(18, 9, 0x1A, 30, 32);
+            }
+
+            isASCII = readKey(&cKey);
+            if (!cKey) isASCII = readKey(&cKey);
+            
+            if ((isASCII && k < 30 && cKey != 8 && isalpha(cKey)) || (cKey == 32 && k < 30))
+            {
+                szUserName[k] = cKey;
+                printXY(18 + k, 9, 0x1A, cKey);
+                k++;
+            }
+
+            if (cKey == 8 && k > 0)
+            {
+                k--;
+                printXY(18 + k, 9, 0x1A, 32);
+            }
+
+            szUserName[k] = '\0';
+
+            switch (cKey)
+            {
+            case KEY_UP:
+                if (!isASCII)
+                {
+                    drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
+                    if (bSlc < 1) bSlc = 2; else bSlc--;
+                    drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
+                }
+                break;
+            case KEY_DOWN:
+                if (!isASCII)
+                {
+                    drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
+                    if (bSlc > 1) bSlc = 0; else bSlc++;
+                    drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
+                }
+                break;
+            case KEY_ENTER:
+                switch (bSlc)
+                {
+                case 0:
+                    hideMouse();
+                    drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
+                    bSlc = 0;
+                    clearScreen(51, 8 + bSlc * 2, 64, 9, 3);
+                    writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
+                    delay(50);
+                    drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
+                    showMouse();
+                    
+                    if (!validUserName(szUserName))
+                    {
+                        noUserName = 1;
+                        _settextcursor(0x0B0A);
+                        writeVRM(18, 9, 0x1C, szHelp[7], 0);
+                    }
+                    else
+                    {
+                        _settextcursor(0x2020);
+                        genSerialNumber(szUserName, CDKey);
+                        writeVRM(18, 12, 0x1A, CDKey, 0);
+                    }
+                    break;
+                case 1:
+                    hideMouse();
+                    drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
+                    bSlc = 1;
+                    clearScreen(51, 8 + bSlc * 2, 64, 11, 3);
+                    writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
+                    delay(50);
+                    drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
+                    showMouse();
+                    return;
+                case 2:
+                    drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
+                    bSlc = 2;
+                    clearScreen(51, 8 + bSlc * 2, 64, 13, 3);
+                    writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
+                    delay(50);
+                    drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
+                    hideMouse();
+                    getScreenText(15, 6, 53, 12, scrBuff);
+                    shadowBox(15, 6, 65, 16, 0x5F, szHelp[0]);
+                    writeVRM(17, 8, 0x5E, szHelp[1], 0);
+                    writeVRM(17, 9, 0x5E, szHelp[2], 0);
+                    writeVRM(17, 10, 0x5E, szHelp[3], 0);
+                    writeVRM(17, 11, 0x5E, szHelp[4], 0);
+                    writeVRM(17, 12, 0x5E, szHelp[5], 0);
+                    drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
+                    showMouse();
+                    _settextcursor(0x2020);
+
+                    do {
+                        if (kbhit())
+                        {
+                            readKey(&cKey);
+                            if ((cKey == KEY_ENTER) || (cKey == KEY_SPACER) || (cKey == KEY_ESC))
+                            {
+                                hideMouse();
+                                clearScreen(36, 14, 46, 15, 5);
+                                writeVRM(37, 14, ATV, szHelp[6], FLT);
+                                delay(50);
+                                drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
+                                break;
+                            }
+
+                            if ((clickMouse(&bCol, &bRow) == 1) && (bRow == 14 && bCol >= 36 && bCol <= 45))
+                            {
+                                hideMouse();
+                                clearScreen(36, 14, 46, 15, 5);
+                                writeVRM(37, 14, ATV, szHelp[6], FLT);
+                                delay(50);
+                                drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
+                                break;
+                            }
+                        }
+                    } while (1);
+
+                    while (kbhit()) getch();
+                    _settextcursor(0x0B0A);
+                    putScreenText(15, 6, 53, 12, scrBuff);
+                    showMouse();
+                    break;
+                }
+                break;
+            }
+        }
+
+        if (clickMouse(&bCol, &bRow) == 1)
+        {
+            if (bRow == 8 && bCol >= 51 && bCol <= 62)
+            {
+                hideMouse();
+                drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
+                bSlc = 0;
+                clearScreen(51, 8 + bSlc * 2, 64, 9, 3);
+                writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
+                delay(50);
+                drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
+                showMouse();
+                
+                if (!validUserName(szUserName))
+                {
+                    noUserName = 1;
+                    _settextcursor(0x0B0A);
+                    writeVRM(18, 9, 0x1C, szHelp[7], 0);
+                }
+                else
+                {
+                    _settextcursor(0x2020);
+                    genSerialNumber(szUserName, CDKey);
+                    writeVRM(18, 12, 0x1A, CDKey, 0);
+                }
+            }
+
+            if (bRow == 10 && bCol >= 51 && bCol <= 62)
+            {
+                hideMouse();
+                drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
+                bSlc = 1;
+                clearScreen(51, 8 + bSlc * 2, 64, 11, 3);
+                writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
+                delay(50);
+                drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
+                showMouse();
+                return;
+            }
+
+            if (bRow == 12 && bCol >= 51 && bCol <= 62)
+            {
+                drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
+                bSlc = 2;
+                clearScreen(51, 8 + bSlc * 2, 64, 13, 3);
+                writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
+                delay(50);
+                drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
+                hideMouse();
+                getScreenText(15, 6, 53, 12, scrBuff);
+                shadowBox(15, 6, 65, 16, 0x5F, szHelp[0]);
+                writeVRM(17, 8, 0x5E, szHelp[1], 0);
+                writeVRM(17, 9, 0x5E, szHelp[2], 0);
+                writeVRM(17, 10, 0x5E, szHelp[3], 0);
+                writeVRM(17, 11, 0x5E, szHelp[4], 0);
+                writeVRM(17, 12, 0x5E, szHelp[5], 0);
+                drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
+                showMouse();
+                _settextcursor(0x2020);
+
+                do {
+                    if (kbhit())
+                    {
+                        isASCII = readKey(&cKey);
+                        if (!cKey) isASCII = readKey(&cKey);
+
+                        if ((cKey == KEY_ENTER) || (cKey == KEY_SPACER))
+                        {
+                            hideMouse();
+                            clearScreen(36, 14, 46, 15, 5);
+                            writeVRM(37, 14, ATV, szHelp[6], FLT);
+                            delay(50);
+                            drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
+                            break;
+                        }
+                    }
+
+                    if (clickMouse(&bCol, &bRow) == 1)
+                    {
+                        if (bRow == 14 && bCol >= 36 && bCol <= 45)
+                        {
+                            hideMouse();
+                            clearScreen(36, 14, 46, 15, 5);
+                            writeVRM(37, 14, ATV, szHelp[6], FLT);
+                            delay(50);
+                            drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
+                            break;
+                        }
+                    }
+                } while (!kbhit());
+
+                _settextcursor(0x0B0A);
+                putScreenText(15, 6, 53, 12, scrBuff);
+                showMouse();
+            }
+        }
+    } while (1);
 }
 
 void main()
 {
-	char cKey = 0;
-    char *szMenu[] = {
-        "Ma4 so61 ca2i d9a85t",
-        "Nha65p te6n cu3a ba5n",
-        "So61 ca2i d9a85t",
-        "mouse.com",
-        "font.com on"
-    };
-	
     int16_t i = 0;
+    char cKey = 0;
+    char *szMenu[] = {
+        "La61y ma4 ca2i d9a85t",
+        "Nha65p te6n cu3a ba5n",
+        "Ma4 so61 ca2i d9a85t",
+    };
     
     _setvideomode(_TEXTC80);
-	system(szMenu[4]);
-	for (i = 0; i < 3; i++) fontVNI(szMenu[i]);
+
+    system("font on");
+    for (i = 0; i < 3; i++) fontVNI(szMenu[i]);
     
     _setbkcolor(1);
     _settextcolor(15);
     setBorder(30);
-	_settextcursor(0x0B0A);
+    _settextcursor(0x0B0A);
     _clearscreen(_GWINDOW);
     setBlinking(0);
-	fillFrame(1,1,80,25,0x7D,178);
-	shadowBox(15,6,65,14,0x3F,szMenu[0]);
-	writeVRM(18,8,0x3F,szMenu[1], 0);
-	writeVRM(18,11,0x3F,szMenu[2], 0);
+    fillFrame(1,1,80,25,0x7D,178);
+    shadowBox(15,6,65,14,0x3F,szMenu[0]);
+    writeVRM(18,8,0x3F,szMenu[1], 0);
+    writeVRM(18,11,0x3F,szMenu[2], 0);
     writeChar(18,12,0x1A,30,32);
 
-	if (!initMouse()) system(szMenu[3]);
+    if (!initMouse()) system("mouse");
 
-	i = 0;
     setMousePos();
     srand(time(NULL));
-    
-	do {
-		cKey = 48 + (rand() % 49);
-		if (isdigit(cKey) || isupper(cKey)) CDKey[i++] = cKey;
-	} while (i < 19);
-    
-    CDKey[i] = '\0';
-
-	for (i = 0; i < strlen(CDKey) - 1; i++)
-    {
-	    if (!((i + 1) % 5)) CDKey[i] = 45;
-    }
-
     startCracking();
+    cleanup();
     _setvideomode(_DEFAULTMODE);
 }

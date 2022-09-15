@@ -1312,12 +1312,12 @@ void warningBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *szMsg[], u
 }
 
 /*--------------------------------------*/
-/* Funtion : checkLicense               */
+/* Funtion : checkProductKey            */
 /* Purpose : Testing user serial number */
 /* Expects : Nothing                    */
 /* Returns : Nothing                    */
 /*--------------------------------------*/
-void checkLicense()
+void checkProductKey()
 {
     FILE *fptr;
     REG_INFO regInfo;
@@ -2376,7 +2376,7 @@ void startInstall()
 
     chooseDrive();
     checkDiskSpace();
-    checkLicense();
+    checkProductKey();
     installProgram();
     updateProgram();
     showHelpFile();
