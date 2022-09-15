@@ -40,8 +40,8 @@ Chu7o7ng tri2nh d9ang che1p ca1c ta65p tin ca62n thie61t
 Chu7o7ng tri2nh d9ang kie63m tra o63 d9i4a cu71ng cu3a ba5n
 Xin ba5n vui lo2ng d9o75i trong mo65t va2i gia6y nu74a.
 D9ang ca65p ca1c tri2nh d9ie62u khie63n
-C:\WINDOWS\register.dat
-A:\TOPICS\DRIVERS\mouse.com
+register.dat
+DRIVERS\mouse.com
  SVGA256.BGI     EGAVGA.BGI
  LITT.CHR        TRIP.CHR
  SANS.CHR        GOTH.CHR

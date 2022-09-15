@@ -408,7 +408,7 @@ void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 }
 
 /*----------------------------------------------*/
-/* Function : drawShadowBox                     */
+/* Function : shadowBox                         */
 /* Purpose  : Draw a box with shadow (very art) */
 /* Expects  : (x1,y1) cordinate top to left     */
 /*            (x2,y2) cordinate bottom to right */
@@ -416,7 +416,7 @@ void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 /*            (szTitle) the title of header     */
 /* Returns  : Nothing                           */
 /*----------------------------------------------*/
-void drawShadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char *szTitle)
+void shadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char *szTitle)
 {
     const uint8_t bkc = wAttr << 4;
     const char szStyle[] = {229, 252, 0};
@@ -1017,7 +1017,7 @@ void errorFile(char *szHandle, char *szErrorType)
     char errorCode[60];
     strcpy(errorCode, szErrorType);
     strcat(errorCode, szHandle);
-    drawShadowBox(13, 8, 65, 17, 0x4F, sysInfo[1]);
+    shadowBox(13, 8, 65, 17, 0x4F, sysInfo[1]);
     drawButton(33, 15, 0xF0, 4, sysMenu[3], 1, 0xF4);
     writeVRM(39 - strlen(errorCode) / 2, 10, 0x4A, errorCode, 0);
     writeVRM(15, 11, 0x4F, sysInfo[53], 0);
@@ -1044,12 +1044,12 @@ void errorFile(char *szHandle, char *szErrorType)
 }
 
 /*---------------------------------------------*/
-/* Funtion : countTotalFile                    */
+/* Funtion : countFiles                        */
 /* Purpose : Count total files from directory  */
 /* Expects : (szDir) sources directory         */
 /* Returns : Number of files in directory      */
 /*---------------------------------------------*/
-void countTotalFiles(char *szDir)
+void countFiles(char *szDir)
 {
     size_t i = 0;
     struct find_t entries;
@@ -1075,7 +1075,7 @@ void countTotalFiles(char *szDir)
             if ((entries.attrib & _A_SUBDIR) && (entries.name[0] != '.'))
             {
                 sprintf(srcDir, "%s\\%s\\%s", srcPath, entries.name, srcExt);
-                countTotalFiles(srcDir);
+                countFiles(srcDir);
             }
         } while (!_dos_findnext(&entries));
     }
@@ -1120,7 +1120,7 @@ uint8_t copyFile(char *szSrc, char *szDst, struct find_t *fileInfo)
 }
 
 /*---------------------------------------------*/
-/* Funtion : processDir                      */
+/* Funtion : processDir                        */
 /* Purpose : Copy all files from the disk      */
 /* Expects : (szSourceDir) sources directory   */
 /*           (szDestDir) destination directory */
@@ -1130,7 +1130,7 @@ uint8_t copyFile(char *szSrc, char *szDst, struct find_t *fileInfo)
 /*---------------------------------------------*/
 void processDir(char *szSourceDir, char *szDestDir)
 {
-    int16_t i;
+    size_t i;
     struct find_t entries;
     
     char srcPath[64], srcExt[64], srcDir[64];
@@ -1189,8 +1189,9 @@ uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *szMsg[]
     int16_t bCenter = x1 + (x2 - x1) / 2;
 
     _settextcursor(0x2020);
-    drawShadowBox(x1, y1, x2, y2, 0x4F, sysInfo[1]);
-    showMouse(); moveMouse(bCenter, y2 - 3);
+    shadowBox(x1, y1, x2, y2, 0x4F, sysInfo[1]);
+    showMouse();
+    moveMouse(bCenter, y2 - 3);
     
     for (i = 0; i < n; i++) writeVRM(bCenter - strlen(szMsg[i]) / 2 + 1, y1 + 2 + i, 0x4A, szMsg[i], 0);
     drawButton(bCenter - 14, y2 - 2, wATV, 4, sysMenu[0], 1, wFLT);
@@ -1236,7 +1237,6 @@ uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *szMsg[]
         {
             key = getch();
             if (!key) key = getch();
-
             switch (toupper(key))
             {
             case LEFT:
@@ -1273,7 +1273,7 @@ void warningBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *szMsg[], u
     const int16_t bPos = bCenter - strlen(sysMenu[0]) / 2;
     
     _settextcursor(0x2020);
-    drawShadowBox(x1, y1, x2, y2, 0x4F, sysInfo[1]);
+    shadowBox(x1, y1, x2, y2, 0x4F, sysInfo[1]);
 
     for (i = 0; i < n; i++) writeVRM(bCenter - strlen(szMsg[i]) / 2, y1 + 2 + i, 0x4A, szMsg[i], 0);
     
@@ -1331,7 +1331,7 @@ void checkLicense()
     _settextcursor(0x2020);
     _clearscreen(_GWINDOW);
     fillFrame(1, 1, 80, 25, 0xF6, 178);
-    drawShadowBox(5, 3, 75, 23, 0x5F, sysInfo[2]);
+    shadowBox(5, 3, 75, 23, 0x5F, sysInfo[2]);
     writeVRM(8, 5, 0x5A, sysInfo[56], 0);
     writeVRM(8, 6, 0x5A, sysInfo[57], 0);
     writeVRM(8, 7, 0x5A, sysInfo[58], 0);
@@ -1359,7 +1359,6 @@ void checkLicense()
         {
             key = getch();
             if (!key) key = getch();
-
             switch (toupper(key))
             {
             case DOWN:
@@ -1627,7 +1626,7 @@ void showHelpFile()
     _settextcursor(0x2020);
     _clearscreen(_GWINDOW);
     fillFrame(1, 1, 80, 25, 0xF6, 178);
-    drawShadowBox(10, 3, 74, 22, 0x3E, sysInfo[3]);
+    shadowBox(10, 3, 74, 22, 0x3E, sysInfo[3]);
     writeVRM(12, 5, 0x30, sysInfo[61], 0);
     writeVRM(12, 6, 0x30, sysInfo[62], 0);
     writeVRM(12, 7, 0x30, sysInfo[63], 0);
@@ -1652,7 +1651,6 @@ void showHelpFile()
         {
             key = getch();
             if (!key) key = getch();
-
             switch (toupper(key))
             {
             case LEFT:
@@ -1726,7 +1724,7 @@ void installProgram()
             _clearscreen(_GWINDOW);
             fillFrame(1, 1, 80, 25, 0xF6, 178);
             hideMouse();
-            drawShadowBox(15, 8, 65, 17, 0x4F, sysInfo[1]);
+            shadowBox(15, 8, 65, 17, 0x4F, sysInfo[1]);
             writeVRM(27, 10, 0x4E, sysInfo[31], 0);
             writeVRM(17, 11, 0x4F, sysInfo[53], 0);
             writeVRM(17, 12, 0x4F, sysInfo[54], 0);
@@ -1764,18 +1762,18 @@ void installProgram()
     _settextcursor(0x2020);
     _clearscreen(_GWINDOW);
     fillFrame(1, 1, 80, 25, 0xF6, 178);
-    drawShadowBox(15, 6, 65, 17, 0x1F, sysInfo[4]);
+    shadowBox(15, 6, 65, 17, 0x1F, sysInfo[4]);
     writeVRM(18, 11, 0x1F, sysInfo[73], 0);
     writeVRM(18, 8, 0x1F, sysInfo[38], 0);
     writeVRM(18, 9, 0x1F, sysInfo[40], 0);
     writeChar(18, 12, 0x17, 45, 176);
     writeVRM(53, 13, 0x1F, sysInfo[174], 0);
     drawButton(35, 15, _wATV, 1, sysMenu[2], 1, _wFLT);
-    countTotalFiles("C:\\TOPICS\\*.*");
+    countFiles("C:\\TOPICS\\*.*");
     processDir("C:\\TOPICS\\*.*", "C:\\INSTALL");
     delay(500);
     fillFrame(15, 6, 69, 21, 0xF6, 178);
-    drawShadowBox(18, 10, 62, 15, 0x1F, sysInfo[5]);
+    shadowBox(18, 10, 62, 15, 0x1F, sysInfo[5]);
     writeVRM(22, 12, 0x1E, sysInfo[41], 0);
     writeChar(22, 13, 0x17, 37, 176);
     writeVRM(49, 14, 0x1A, sysInfo[174], 0);
@@ -1789,6 +1787,7 @@ void installProgram()
 
     fillFrame(15, 6, 69, 21, 0xF6, 178);
     warningBox(25, 10, 55, 15, msgCmp, 1);
+
     _dos_freemem(segBuff);
     segBuff = 0;
 }
@@ -1808,7 +1807,7 @@ void restartProgram()
     setBorder(50);
     _clearscreen(_GWINDOW);
     fillFrame(1, 1, 80, 25, 0xF6, 178);
-    drawShadowBox(15, 8, 65, 15, 0x4F, sysInfo[6]);
+    shadowBox(15, 8, 65, 15, 0x4F, sysInfo[6]);
     writeVRM(21, 11, 0x4A, sysMenu[11], 0x4B);
     writeVRM(18, 10, 0x4F, sysMenu[20], 0);
     writeVRM(21, 10, 0x4F, sysMenu[10], 0x4E);
@@ -1816,6 +1815,7 @@ void restartProgram()
     drawButton(26, 13, 0xB4, 4, sysMenu[0], 1, 0xB1);
     drawButton(45, 13, 0x9F, 4, sysMenu[3], 1, 0x94);
     moveMouse(40, 13);
+
     slc = chs = key = 0;
 
     do {
@@ -1943,7 +1943,7 @@ void chooseDrive()
     _settextcolor(15);
     _clearscreen(_GWINDOW);
     fillFrame(1, 1, 80, 25, 0xF6, 178);
-    drawShadowBox(20, 8, 60, 17, 0x3F, sysInfo[7]);
+    shadowBox(20, 8, 60, 17, 0x3F, sysInfo[7]);
     writeVRM(31, 10, 0x34, sysInfo[24], 0);
     writeChar(29, 11, 0x34, 22, 193);
     for (i = 0; i < 4; i++) writeVRM(29, 12 + i, 0x30, sysMenu[12 + i], 0x3A);
@@ -2202,7 +2202,7 @@ void checkDiskSpace()
     _settextcursor(0x2020);
     _clearscreen(_GWINDOW);
     fillFrame(1, 1, 80, 25, 0xF6, 178);
-    drawShadowBox(15, 5, 65, 20, 0x7F, sysInfo[8]);
+    shadowBox(15, 5, 65, 20, 0x7F, sysInfo[8]);
     writeVRM(18, 7, 0x70, sysInfo[39], 0);
     writeVRM(18, 8, 0x70, sysInfo[40], 0);
     writeVRM(18, 10, 0x70, sysInfo[29], 0);
@@ -2288,7 +2288,7 @@ void checkDiskSpace()
 
     if (outRegs.x.ax == 0xFFFF)
     {
-        drawShadowBox(20, 9, 55, 15, 0x4F, sysInfo[1]);
+        shadowBox(20, 9, 55, 15, 0x4F, sysInfo[1]);
         writeVRM(22, 11, 0x4F, sysInfo[37], 0);
         drawButton(33, 13, wATV, 4, sysMenu[0], 1, wFLT);
 
@@ -2318,7 +2318,7 @@ void checkDiskSpace()
     d = outRegs.x.cx;
 
     fillFrame(1, 1, 80, 25, 0xF6, 178);
-    drawShadowBox(15, 9, 63, 16, 0x1F, sysInfo[9]);
+    shadowBox(15, 9, 63, 16, 0x1F, sysInfo[9]);
     printVRM(20, 11, 0x1E, sysInfo[175], (float)a * c * d / 1024.0 / 1024.0);
     printVRM(20, 12, 0x1E, sysInfo[176], (float)b * c * d / 1024.0 / 1024.0);
     drawButton(34, 14, wATV, 1, sysMenu[0], 1, wFLT);
@@ -2378,7 +2378,7 @@ void startInstall()
     checkDiskSpace();
     checkLicense();
     installProgram();
-    //updateProgram();
+    updateProgram();
     showHelpFile();
     fadeOut();
     strcpy(szDisk, szDrive);
@@ -2409,7 +2409,7 @@ void showInstall()
     _clearscreen(_GWINDOW);
     setBlinking(0);
     fillFrame(1, 1, 80, 25, 0xFD, 178);
-    drawShadowBox(8, 2, 74, 23, 0x1F, sysInfo[74]);
+    shadowBox(8, 2, 74, 23, 0x1F, sysInfo[74]);
     writeVRM(13, 4, 0x1A, sysInfo[10], 0);
     writeChar(11, 5, 0x1B, 61, 205);
     writeVRM(12, 6, 0x1B, sysInfo[36], 0);

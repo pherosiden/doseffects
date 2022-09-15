@@ -297,7 +297,7 @@ void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 }
 
 /*----------------------------------------------*/
-/* Function : drawShadowBox                     */
+/* Function : shadowBox                         */
 /* Purpose  : Draw a box with shadow (very art) */
 /* Expects  : (x1,y1) cordinate top to left     */
 /*            (x2,y2) cordinate bottom to right */
@@ -305,7 +305,7 @@ void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 /*            (szTitle) the title of header     */
 /* Returns  : Nothing                           */
 /*----------------------------------------------*/
-void drawShadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char *szTitle)
+void shadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char *szTitle)
 {
     const uint8_t bkc = wAttr << 4;
     const char szStyle[] = {229, 252, 0};
@@ -817,7 +817,7 @@ void registerForm()
     char szCurrName[25], szCurrID[20], *szName;
     uint8_t flgName = 1, flgID = 1;
 
-    drawShadowBox(20, 8, 60, 15, 0x1F, sysInfo[27]);
+    shadowBox(20, 8, 60, 15, 0x1F, sysInfo[27]);
     writeVRM(23, 10, 0x1F, sysInfo[5], 0);
     writeVRM(23, 12, 0x1F, sysInfo[6], 0);
     writeChar(36, 10, 0x4A, 24, 32);
@@ -958,7 +958,7 @@ void startRegister()
     _clearscreen(_GWINDOW);
     setBlinking(0);
     fillFrame(1, 1, 80, 25, 0xFD, 178);
-    drawShadowBox(3, 3, 77, 22, 0x5F, sysInfo[0]);
+    shadowBox(3, 3, 77, 22, 0x5F, sysInfo[0]);
     writeVRM(8, 5, 0x5E, sysInfo[1], 0);
     writeVRM(15, 6, 0x5E, sysInfo[2], 0);
     writeVRM(5, 8, 0x5F, sysInfo[3], 0);
