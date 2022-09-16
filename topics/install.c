@@ -9,28 +9,6 @@
 /*      Writting Date : 24/09/2001                              */
 /*        Last Update : 12/10/2001                              */
 /*--------------------------------------------------------------*/
-/*        Environment : Borland C++ Ver 3.1 Application         */
-/*        Source File : INSTALL.CPP                             */
-/*        Memory Mode : Small                                   */
-/*            Compile : BCC INSTALL.CPP                         */
-/*        Call to run : INSTALL (none the project file)         */
-/*--------------------------------------------------------------*/
-/*               THE FUNCTIONS SUPPORT PROGRAM                  */
-/*--------------------------------------------------------------*/
-/* copy_all_files; showing_menu_setup; showing_install_program; */
-/* set_text_color; get_text_color    ; get_back_color         ; */
-/* restart_system; set_border_color  ; set_cursor_size        ; */
-/* exit_program  ; restart_program   ; user_manual            ; */
-/* choose_driver ; driver_number     ; check_disk_space       ; */
-/* execute_driver; execute_setup     ; install_program        ; */
-/* check_user    ; write_char        ; set_attribute          ; */
-/* write_OFFS    ; box_shadow        ; fill_frame             ; */
-/* repliacte     ; get_page          ; get_pos                ; */
-/* putch_XY      ; frame             ; box                    ; */
-/* fadeOut        ; introduction      ; out_text_shade        ; */
-/* out_text_width; background        ; start_graphics         ; */
-/* detect_SVGA256; update_register   ; update_program         . */
-/*--------------------------------------------------------------*/
 #include <dos.h>
 #include <io.h>
 #include <ctype.h>
@@ -74,14 +52,17 @@
 #define RESET_FLAG      0x0072L
 #define RESET_ADR	    ((DOS_SEG << 16) | RESET_FLAG)
 
-typedef struct {        // The struction storing the information
-    uint8_t day;        // The date of the program
-    uint8_t month;      // The month of the program
-    uint8_t regs;       // The register code
-    uint8_t num;        // The number of run program
-    char serial[20];    // Product code
-    char user[31];      // Register name user
-    char disk[4];       // The disk letter
+typedef struct {
+    uint8_t     day;        // The date of the program
+    uint8_t     month;      // The month of the program
+    uint16_t    year;       // The year of the program
+    uint8_t     regs;       // The register code
+    uint8_t     num;        // The number of run program
+    uint8_t     key;        // Random key
+    char        serial[20]; // License code
+    char        user[31];   // User name
+    char        path[33];   // The installation path
+    char        magic[33];  // Random characters
 } REG_INFO;
 
 char szDrive[4];        // Drive letter
