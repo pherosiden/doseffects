@@ -1,6 +1,6 @@
 /*------------------------------------------------------*/
 /*      UNIVERSITY OF TECHNOLOGY HO CHI MINH CITY       */
-/*          THE INFORMATIC TECHNOLOGY BRANCH            */
+/*          FACULTY OF INFORMATION TECHNOLOGY           */
 /*               THE CRACKING PROGRAM FILE              */
 /*            Author : NGUYEN NGOC VAN                  */
 /*             Class : 00DTH1                           */
@@ -9,34 +9,16 @@
 /*     Writting date : 24/10/2001                       */
 /*       Last Update : 12/11/2001                       */
 /*------------------------------------------------------*/
-/*       Environment : Borland C++ Ver 3.1 Application  */
-/*       Source file : CRACK.CPP                        */
-/*           Compile : BCC -mt CRACK.CPP                */
-/*            Linker : EXE2BIN CRACK.EXE CRACK.COM      */
-/*      Momery Model : Tiny                             */
-/*       Call To Run : CRACK (none project file)        */
-/*------------------------------------------------------*/
-/*         THE MAIN FUNCTIONS SUPPORT SOURCES           */
-/*------------------------------------------------------*/
-/* showing_menu_user; set_cursor_size; set_border_color;*/
-/* get_text_color   ; get_back_color ; set_attrib      ;*/
-/* box_shadow       ; fill_frame     ; replicate       ;*/
-/* write_char       ; replicate      ; write_VRAM      ;*/
-/* exit_program     ; execute_user   ; button          ;*/
-/* do_blinking      ; write_XY       ; frame           ;*/
-/*------------------------------------------------------*/
 #include <dos.h>
-#include <io.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <conio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <graph.h>
 #include <time.h>
 
-#define SCR_WIDTH       80
+#define SCR_WIDTH       160
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + 80 * (y - 1)) << 1)
 
@@ -51,7 +33,7 @@
 #define _ATV 	        0x78
 #define _FLT 	        0x75
 
-typedef struct {            // Struction information
+typedef struct {
     uint8_t     day;        // The date of the program
     uint8_t     month;      // The month of the program
     uint16_t    year;       // The year of the program
@@ -64,9 +46,39 @@ typedef struct {            // Struction information
     char        magic[33];  // Random characters
 } REG_INFO;
 
-char scrBuff[1500] = {0};   // Screen buffer
+char scrBuff[1272] = {0};   // Screen buffer
 uint8_t bmAvalid = 0;       // Status of the mouse
-uint8_t *txtMem = (uint8_t*)0xB8000000L;
+uint8_t far *txtMem = (uint8_t far*)0xB8000000L;
+
+/*-------------------------------------*/
+/* Funtion : setCursorSize             */
+/* Mission : Resize the cursor         */
+/* Expects : (size) The size of cursor */
+/* Returns : Nothing                   */
+/*-------------------------------------*/
+void setCursorSize(uint16_t size)
+{
+    union REGS regs;
+    regs.h.ah = 0x01;
+    regs.x.cx = size;
+    int86(0x10, &regs, &regs);
+}
+
+/*-------------------------------------*/
+/* Funtion : setCursorPos              */
+/* Mission : Set cursor position       */
+/* Expects : (size) The size of cursor */
+/* Returns : Nothing                   */
+/*-------------------------------------*/
+void setCursorPos(uint8_t x, uint8_t y)
+{
+    union REGS regs;
+    regs.h.ah = 0x02;
+    regs.h.bh = 0;
+    regs.h.dl = x - 1;
+    regs.h.dh = y - 1;
+    int86(0x10, &regs, &regs);
+}
 
 /*-----------------------------------*/
 /* Funtion : setBorder               */
@@ -90,26 +102,9 @@ void setBorder(uint8_t color)
 /*           (chr) character to write            */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void printChar(uint8_t x, uint8_t y, char chr)
+void printChar(uint8_t x, uint8_t y, uint8_t attr, char chr)
 {
-    char txt[2];
-    txt[0] = chr;
-    txt[1] = '\0';
-    _settextposition(y, x);
-    _outtext(txt);
-}
-
-/*-------------------------------------------------*/
-/* Function : printXY                              */
-/* Purpose  : Write a character to cordinate x, y  */
-/* Expects  : (x,y) cordinate to write             */
-/*            (Chr) character to write             */
-/*            (wAttr) attrib for the character     */
-/* Returns  : Nothing                              */
-/*-------------------------------------------------*/
-void printXY(uint8_t x, uint8_t y, uint8_t attr, char chr)
-{
-    txtMem[OFFSET(x, y)    ] = chr;
+    txtMem[OFFSET(x, y)] = chr;
     txtMem[OFFSET(x, y) + 1] = attr;
 }
 
@@ -172,7 +167,7 @@ void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t 
             txtMem[OFFSET(x++, y) + 1] = txtAtr;
         }
 
-        printXY(currX + bPos, y, fstAttr, szTmp[bPos]);
+        printChar(currX + bPos, y, fstAttr, szTmp[bPos]);
         free(szTmp);
     }
     else
@@ -221,16 +216,16 @@ void drawButton(uint8_t x, uint8_t y, uint8_t txtAttr, uint8_t bkClr, const char
         if (fstAttr)
         {
             writeVRM(x, y, txtAttr, szTitle, fstAttr);
-            printXY(x, y, txtAttr, styles[0]);
-            printXY(x + bLen - 2, y, txtAttr, styles[1]);
+            printChar(x, y, txtAttr, styles[0]);
+            printChar(x + bLen - 2, y, txtAttr, styles[1]);
             writeChar(x + 1, y + 1, wAttr, bLen - 1, styles[2]);
             writeChar(x + bLen - 1 , y, wAttr, 1, styles[3]);
         }
         else
         {
             writeVRM(x, y, txtAttr, szTitle, 0);
-            printXY(x, y, txtAttr, styles[0]);
-            printXY(x + bLen - 1, y, txtAttr, styles[1]);
+            printChar(x, y, txtAttr, styles[0]);
+            printChar(x + bLen - 1, y, txtAttr, styles[1]);
             writeChar(x + 1, y + 1, wAttr, bLen, styles[2]);
             writeChar(x + bLen, y, wAttr, 1, styles[3]);
         }
@@ -244,32 +239,26 @@ void drawButton(uint8_t x, uint8_t y, uint8_t txtAttr, uint8_t bkClr, const char
 /*            (x2,y2) cordinate bottom to right  */
 /* Returns  : Nothing                            */
 /*-----------------------------------------------*/
-void drawFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
+void drawFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr)
 {
     int16_t k;
-    char txt[2];
 
-    txt[1] = '\0';
-    printChar(x1, y1, 218);
-
-    txt[0] = 193;
-    for (k = x1 + 1; k < x2; k++) _outtext(txt);
-
-    txt[0] = 191;
-    _outtext(txt);
-    printChar(x1, y2, 192);
-
-    txt[0] = 194;
-    for (k = x1 + 1; k < x2; k++) _outtext(txt);
-
-    txt[0] = 225;
-    _outtext(txt);
+    for (k = x1 + 1; k < x2; k++)
+    {
+        printChar(k, y1, attr, 193);
+        printChar(k, y2, attr, 194);
+    }
 
     for (k = y1 + 1; k < y2; k++)
     {
-        printChar(x1, k, 179);
-        printChar(x2, k, 224);
+        printChar(x1, k, attr, 179);
+        printChar(x2, k, attr, 224);
     }
+
+    printChar(x1, y1, attr, 218);
+    printChar(x2, y1, attr, 191);
+    printChar(x1, y2, attr, 192);
+    printChar(x2, y2, attr, 225);
 }
 
 /*---------------------------------------------------*/
@@ -327,6 +316,34 @@ char readKey(char *key)
     return 1;
 }
 
+/*--------------------------------------------------*/
+/* Funtion : fillFrame                              */
+/* Purpose : To full the box with special character */
+/* Expects : (x1,y1) cordinate top to left          */
+/*           (x2,y2) cordinate bottom to right      */
+/*           (wAttr) special character color        */
+/*           (chr) special character                */
+/* Returns : Nothing                                */
+/*--------------------------------------------------*/
+void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char chr)
+{
+    uint8_t y;
+    for (y = y1; y <= y2; y++) writeChar(x1, y, wAttr, x2 - x1 + 1, chr);
+}
+
+/*----------------------------------------------*/
+/* Function : clearScreen                       */
+/* Purpose  : clearScreen the part of window    */
+/* Expects  : (x1,y1) cordinate top to left     */
+/*            (x2,y2) cordinate bottom to right */
+/*            (color) color needs clear         */
+/* Returns  : Nothing                           */
+/*----------------------------------------------*/
+void clearScreen(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color)
+{
+    fillFrame(x1, y1, x2, y2, color << 4, 32);
+}
+
 /*----------------------------------------------*/
 /* Function : drawBox                           */
 /* Purpose  : Draw a box with color and border  */
@@ -337,18 +354,10 @@ char readKey(char *key)
 /*----------------------------------------------*/
 void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 {
-    uint8_t oldBk = _getbkcolor();
-    uint8_t oldCol = _gettextcolor();
-    _setbkcolor(wAttr >> 4);
-    _settextcolor(wAttr & 0x0F);
-    drawFrame(x1, y1, x2, y2);
-    _settextwindow(y1 + 1, x1 + 1, y2 - 1, x2 - 1);
-    _clearscreen(_GWINDOW);
-    _settextwindow(1, 1, 25, 80);
+    drawFrame(x1, y1, x2, y2, wAttr);
+    fillFrame(x1 + 1, y1 + 1, x2 - 1, y2 - 1, wAttr, 32);
     changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, 0x08);
     changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, 0x08);
-    _setbkcolor(oldBk);
-    _settextcolor(oldCol);
 }
 
 /*----------------------------------------------*/
@@ -370,23 +379,8 @@ void shadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, ch
     drawBox(x1, y1, x2, y2, wAttr);
     writeChar(x1 + 3, y1, bkc, x2 - x1 - 2, 32);
     writeVRM(x1 + bCenter, y1, bkc, szTitle, 0);
-    printXY(x1 + 2, y1, bkc, 226);
+    printChar(x1 + 2, y1, bkc, 226);
     writeVRM(x1, y1, bkc >> 4, szStyle, 0);
-}
-
-/*--------------------------------------------------*/
-/* Funtion : fillFrame                              */
-/* Purpose : To full the box with special character */
-/* Expects : (x1,y1) cordinate top to left          */
-/*           (x2,y2) cordinate bottom to right      */
-/*           (wAttr) special character color        */
-/*           (chr) special character                */
-/* Returns : Nothing                                */
-/*--------------------------------------------------*/
-void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char Chr)
-{
-    uint8_t i;
-    for (i = y1; i <= y2; i++) writeChar(x1, i, wAttr, x2 - x1 + 1, Chr);
 }
 
 /*----------------------------------*/
@@ -414,14 +408,14 @@ uint16_t initMouse()
 /* Returns  : Value 1 : left button, 2 : right button, */
 /*            4 : center button and col, row           */
 /*-----------------------------------------------------*/
-uint16_t clickMouse(uint16_t *col, uint16_t *row)
+uint8_t clickMouse(uint16_t *col, uint16_t *row)
 {
     union REGS regs;
     regs.x.ax = 0x03;
     int86(0x33, &regs, &regs);
     *col = (regs.x.cx >> 3) + 1;
     *row = (regs.x.dx >> 3) + 1;
-    return regs.x.bx;
+    return regs.x.bx == 1;
 }
 
 /*-----------------------------------*/
@@ -499,22 +493,6 @@ void closeMouse()
     hideMouse();
     regs.x.ax = 0;
     int86(0x33, &regs, &regs);
-}
-
-/*----------------------------------------------*/
-/* Function : clearScreen                       */
-/* Purpose  : clearScreen the part of window    */
-/* Expects  : (x1,y1) cordinate top to left     */
-/*            (x2,y2) cordinate bottom to right */
-/*            (color) color needs clear         */
-/* Returns  : Nothing                           */
-/*----------------------------------------------*/
-void clearScreen(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color)
-{
-    _settextwindow(y1, x1, y2, x2);
-    _setbkcolor(color);
-    _clearscreen(_GWINDOW);
-    _settextwindow(1, 1, 25, 80);
 }
 
 /*-----------------------------------------*/
@@ -709,19 +687,16 @@ void fontVNI(char *szPrmpt)
 /*           buff the buffer to store data      */
 /* Returns : Nothing                            */
 /*----------------------------------------------*/
-void getScreenText(int16_t x, int16_t y, int16_t width, int16_t height, void *buff)
+void getScreenText(int16_t x, int16_t y, int16_t width, int16_t height, uint8_t *buff)
 {
-    uint16_t bytes;
-    uint16_t *src, *dst;
-
-    bytes = width << 1;
-    dst = (uint16_t*)buff;
-    src = (uint16_t*)&txtMem[OFFSET(x, y)];
+    uint16_t bytes = width << 1;
+    //uint16_t far *dst = (uint16_t far*)buff;
+    uint8_t far *src = txtMem + OFFSET(x, y);
     
     while (height--)
     {
-        memcpy(dst, src, bytes);
-        dst += width;
+        _fmemcpy(buff, src, bytes);
+        buff += bytes;
         src += SCR_WIDTH;
     }
 }
@@ -733,19 +708,15 @@ void getScreenText(int16_t x, int16_t y, int16_t width, int16_t height, void *bu
 /*           buff the buffer to store data      */
 /* Returns : Nothing                            */
 /*----------------------------------------------*/
-void putScreenText(int16_t x, int16_t y, int16_t width, int16_t height, void *buff)
+void putScreenText(int16_t x, int16_t y, int16_t width, int16_t height, uint8_t *buff)
 {
-    uint16_t bytes;
-    uint16_t *src, *dst;
-
-    bytes = width << 1;
-    src = (uint16_t*)buff;
-    dst = (uint16_t*)&txtMem[OFFSET(x, y)];
+    uint16_t bytes = width << 1;
+    uint8_t far *dst = txtMem + OFFSET(x, y);
     
     while (height--)
     {
-        memcpy(dst, src, bytes);
-        src += width;
+        _fmemcpy(dst, buff, bytes);
+        buff += bytes;
         dst += SCR_WIDTH;
     }
 }
@@ -759,13 +730,11 @@ void putScreenText(int16_t x, int16_t y, int16_t width, int16_t height, void *bu
 void cleanup()
 {
     setBorder(0x00);
-    _settextcolor(0x0607);
-    _setbkcolor(0);
-    _settextcolor(7);
     setBlinking(1);
     if (bmAvalid) closeMouse();
-    _clearscreen(_GCLEARSCREEN);
+    setCursorSize(0x0607);
     system("font off");
+    system("cls");
 }
 
 /*---------------------------------------*/
@@ -838,9 +807,11 @@ void genSerialNumber(char *szUserName, char *CDKey)
 
     len = strlen(CDKey);
     for (i = 0; i < len; i++) tmp.serial[i] = CDKey[i] + tmp.key;
-    
+    tmp.serial[i] = '\0';
+
     len = strlen(szUserName);
     for (i = 0; i < len; i++) tmp.user[i] = szUserName[i] + tmp.key;
+    tmp.user[i] = '\0';
 
     for (i = 0; i < sizeof(tmp.magic); i += 2)
     {
@@ -848,6 +819,7 @@ void genSerialNumber(char *szUserName, char *CDKey)
         tmp.magic[i] = k;
         tmp.magic[i + 1] = szUserName[k] + tmp.key;
     }
+    tmp.magic[i - 2] = '\0';
 
     strcpy(tmp.path, "C:\\TOPICS");
     fwrite(&tmp, sizeof(REG_INFO), 1, fptr);
@@ -887,21 +859,19 @@ void startCracking()
     uint16_t bCol = 0, bRow = 0;
     uint8_t bSlc = 0, isASCII = 1, noUserName = 0;
     
+    memset(szUserName, 0, sizeof(szUserName));
     for (i = 0; i < sizeof(szMenu) / sizeof(szMenu[0]); i++) fontVNI(szMenu[i]);
     for (i = 0; i < sizeof(szHelp) / sizeof(szHelp[0]); i++) fontVNI(szHelp[i]);
-
-    memset(szUserName, 0, sizeof(szUserName));
-    _settextcursor(0x0B0A);
+    
+    setCursorSize(0x0B0A);
     drawButton(51, 8, ATV, 3, szMenu[0], 0, FLT);
     drawButton(51, 10, _ATV, 3, szMenu[1], 1, _FLT);
     moveMouse(35, 10);
     drawButton(51, 12, _ATV, 3, szMenu[2], 1, _FLT);
     writeChar(18, 9, 0x1A, 30, 32);
-    _setbkcolor(1);
-    _settextcolor(10);
 
     do {
-        _settextposition(9, 18 + k);
+        setCursorPos(18 + k, 9);
 
         if (kbhit())
         {
@@ -917,14 +887,14 @@ void startCracking()
             if ((isASCII && k < 30 && cKey != 8 && isalpha(cKey)) || (cKey == 32 && k < 30))
             {
                 szUserName[k] = cKey;
-                printXY(18 + k, 9, 0x1A, cKey);
+                printChar(18 + k, 9, 0x1A, cKey);
                 k++;
             }
 
             if (cKey == 8 && k > 0)
             {
                 k--;
-                printXY(18 + k, 9, 0x1A, 32);
+                printChar(18 + k, 9, 0x1A, 32);
             }
 
             szUserName[k] = '\0';
@@ -963,12 +933,12 @@ void startCracking()
                     if (!validUserName(szUserName))
                     {
                         noUserName = 1;
-                        _settextcursor(0x0B0A);
+                        setCursorSize(0x0B0A);
                         writeVRM(18, 9, 0x1C, szHelp[7], 0);
                     }
                     else
                     {
-                        _settextcursor(0x2020);
+                        setCursorSize(0x2020);
                         genSerialNumber(szUserName, CDKey);
                         writeVRM(18, 12, 0x1A, CDKey, 0);
                     }
@@ -1000,7 +970,7 @@ void startCracking()
                     writeVRM(17, 12, 0x5E, szHelp[5], 0);
                     drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
                     showMouse();
-                    _settextcursor(0x2020);
+                    setCursorSize(0x2020);
 
                     do {
                         if (kbhit())
@@ -1016,7 +986,7 @@ void startCracking()
                                 break;
                             }
 
-                            if ((clickMouse(&bCol, &bRow) == 1) && (bRow == 14 && bCol >= 36 && bCol <= 45))
+                            if (clickMouse(&bCol, &bRow) && (bRow == 14 && bCol >= 36 && bCol <= 45))
                             {
                                 hideMouse();
                                 clearScreen(36, 14, 46, 15, 5);
@@ -1028,8 +998,7 @@ void startCracking()
                         }
                     } while (1);
 
-                    while (kbhit()) getch();
-                    _settextcursor(0x0B0A);
+                    setCursorSize(0x0B0A);
                     putScreenText(15, 6, 53, 12, scrBuff);
                     showMouse();
                     break;
@@ -1038,7 +1007,7 @@ void startCracking()
             }
         }
 
-        if (clickMouse(&bCol, &bRow) == 1)
+        if (clickMouse(&bCol, &bRow))
         {
             if (bRow == 8 && bCol >= 51 && bCol <= 62)
             {
@@ -1054,12 +1023,12 @@ void startCracking()
                 if (!validUserName(szUserName))
                 {
                     noUserName = 1;
-                    _settextcursor(0x0B0A);
+                    setCursorSize(0x0B0A);
                     writeVRM(18, 9, 0x1C, szHelp[7], 0);
                 }
                 else
                 {
-                    _settextcursor(0x2020);
+                    setCursorSize(0x2020);
                     genSerialNumber(szUserName, CDKey);
                     writeVRM(18, 12, 0x1A, CDKey, 0);
                 }
@@ -1096,7 +1065,7 @@ void startCracking()
                 writeVRM(17, 12, 0x5E, szHelp[5], 0);
                 drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
                 showMouse();
-                _settextcursor(0x2020);
+                setCursorSize(0x2020);
 
                 do {
                     if (kbhit())
@@ -1115,7 +1084,7 @@ void startCracking()
                         }
                     }
 
-                    if (clickMouse(&bCol, &bRow) == 1)
+                    if (clickMouse(&bCol, &bRow))
                     {
                         if (bRow == 14 && bCol >= 36 && bCol <= 45)
                         {
@@ -1127,9 +1096,9 @@ void startCracking()
                             break;
                         }
                     }
-                } while (!kbhit());
+                } while (1);
 
-                _settextcursor(0x0B0A);
+                setCursorSize(0x0B0A);
                 putScreenText(15, 6, 53, 12, scrBuff);
                 showMouse();
             }
@@ -1147,22 +1116,17 @@ void main()
         "Ma4 so61 ca2i d9a85t",
     };
     
-    _setvideomode(_TEXTC80);
-
     system("font on");
     for (i = 0; i < 3; i++) fontVNI(szMenu[i]);
     
-    _setbkcolor(1);
-    _settextcolor(15);
     setBorder(30);
-    _settextcursor(0x0B0A);
-    _clearscreen(_GWINDOW);
+    setCursorSize(0x0B0A);
     setBlinking(0);
-    fillFrame(1,1,80,25,0x7D,178);
-    shadowBox(15,6,65,14,0x3F,szMenu[0]);
-    writeVRM(18,8,0x3F,szMenu[1], 0);
-    writeVRM(18,11,0x3F,szMenu[2], 0);
-    writeChar(18,12,0x1A,30,32);
+    fillFrame(1, 1, 80, 25, 0x7D, 178);
+    shadowBox(15, 6, 65, 14, 0x3F, szMenu[0]);
+    writeVRM(18, 8, 0x3F, szMenu[1],  0);
+    writeVRM(18, 11, 0x3F, szMenu[2],  0);
+    writeChar(18, 12, 0x1A, 30, 32);
 
     if (!initMouse()) system("mouse");
 
@@ -1170,5 +1134,4 @@ void main()
     srand(time(NULL));
     startCracking();
     cleanup();
-    _setvideomode(_DEFAULTMODE);
 }
