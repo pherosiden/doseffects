@@ -1,7 +1,6 @@
 /*--------------------------------------------------------------*/
 /*        UNIVERSITY OF TECHNOLOGY HO CHI MINH CITY             */
-/*             MAJOR OF INFORMATIC TECHNOLOGY                   */
-/*            THE PROGRAM INSTALLATION TOPICS                   */
+/*            FACULTY OF INFORMATION TECHNOLOGY                 */
 /*             Author : NGUYEN NGOC VAN                         */
 /*              Class : 00DTH1                                  */
 /*       Student Code : 00DTH201                                */
@@ -18,12 +17,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include <graph.h>
 #include <stdint.h>
 #include <direct.h>
-#include <sys/types.h>
 
-#define SCR_WIDTH       80
+#define SCR_WIDTH       160
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + (y - 1) * 80) << 1)
 
@@ -31,6 +28,7 @@
 #define DOWN            80
 #define HOME            71
 #define END             79
+#define DEL             8
 #define TAB             9
 #define ESC             27
 #define LEFT            75
@@ -57,7 +55,6 @@ typedef struct {
     uint8_t     month;      // The month of the program
     uint16_t    year;       // The year of the program
     uint8_t     regs;       // The register code
-    uint8_t     num;        // The number of run program
     uint8_t     key;        // Random key
     char        serial[20]; // License code
     char        user[31];   // User name
@@ -65,11 +62,11 @@ typedef struct {
     char        magic[33];  // Random characters
 } REG_INFO;
 
-char szDrive[4];        // Drive letter
+char szInstallPath[32];      // Drive letter
 
 uint16_t numFiles = 0;
-uint16_t totalFiles = 0; // Number files to read and files to write
-uint8_t bmAvalid = 0;   // Status of the mouse
+uint16_t totalFiles = 0;    // Number files to read and files to write
+uint8_t bmAvalid = 0;       // Status of the mouse
 
 char **sysInfo, **sysMenu;
 uint16_t infoNum, menuNum;
@@ -78,14 +75,44 @@ char *msgWarn[1], *msgExit[1];
 char *msgCmp[1], *msgError[2];
 
 char key = 0;
-char szScreen[1000] = {0};
+char szScreen[792] = {0};
 uint8_t msgSlc = 0, chs = 0, slc = 0;
 uint16_t bCol = 0, bRow = 0;
-uint8_t *txtMem = (uint8_t*)0xB8000000L;
+uint8_t far *txtMem = (uint8_t far*)0xB8000000L;
 
-uint8_t *copyBuff;
-size_t segBuff;
-size_t bytesCount;
+size_t segBuff = 0;
+size_t bytesCount = 0;
+uint8_t far *copyBuff = NULL;
+
+/*-------------------------------------*/
+/* Funtion : setCursorSize             */
+/* Mission : Resize the cursor         */
+/* Expects : (size) The size of cursor */
+/* Returns : Nothing                   */
+/*-------------------------------------*/
+void setCursorSize(uint16_t size)
+{
+    union REGS regs;
+    regs.h.ah = 0x01;
+    regs.x.cx = size;
+    int86(0x10, &regs, &regs);
+}
+
+/*-------------------------------------*/
+/* Funtion : setCursorPos              */
+/* Mission : Set cursor position       */
+/* Expects : (size) The size of cursor */
+/* Returns : Nothing                   */
+/*-------------------------------------*/
+void setCursorPos(uint8_t x, uint8_t y)
+{
+    union REGS regs;
+    regs.h.ah = 0x02;
+    regs.h.bh = 0;
+    regs.h.dl = x - 1;
+    regs.h.dh = y - 1;
+    int86(0x10, &regs, &regs);
+}
 
 /*-----------------------------------*/
 /* Funtion : setBorder               */
@@ -102,6 +129,7 @@ void setBorder(uint8_t color)
     int86(0x10, &regs, &regs);
 }
 
+
 /*-----------------------------------------------*/
 /* Funtion : printChar                           */
 /* Purpose : Write a character to cordinate x, y */
@@ -109,26 +137,9 @@ void setBorder(uint8_t color)
 /*           (chr) character to write            */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void printChar(uint8_t x, uint8_t y, char chr)
+void printChar(uint8_t x, uint8_t y, uint8_t attr, char chr)
 {
-    char txt[2];
-    txt[0] = chr;
-    txt[1] = '\0';
-    _settextposition(y, x);
-    _outtext(txt);
-}
-
-/*-------------------------------------------------*/
-/* Function : printXY                              */
-/* Purpose  : Write a character to cordinate x, y  */
-/* Expects  : (x,y) cordinate to write             */
-/*            (Chr) character to write             */
-/*            (wAttr) attrib for the character     */
-/* Returns  : Nothing                              */
-/*-------------------------------------------------*/
-void printXY(uint8_t x, uint8_t y, uint8_t attr, char chr)
-{
-    txtMem[OFFSET(x, y)    ] = chr;
+    txtMem[OFFSET(x, y)] = chr;
     txtMem[OFFSET(x, y) + 1] = attr;
 }
 
@@ -191,7 +202,7 @@ void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t 
             txtMem[OFFSET(x++, y) + 1] = txtAtr;
         }
 
-        printXY(currX + bPos, y, fstAttr, szTmp[bPos]);
+        printChar(currX + bPos, y, fstAttr, szTmp[bPos]);
         free(szTmp);
     }
     else
@@ -258,55 +269,50 @@ void drawButton(uint8_t x, uint8_t y, uint8_t txtAttr, uint8_t bkClr, char *szTi
         if (fstAttr)
         {
             writeVRM(x, y, txtAttr, szTitle, fstAttr);
-            printXY(x, y, txtAttr, styles[0]);
-            printXY(x + bLen - 2, y, txtAttr, styles[1]);
+            printChar(x, y, txtAttr, styles[0]);
+            printChar(x + bLen - 2, y, txtAttr, styles[1]);
             writeChar(x + 1, y + 1, wAttr, bLen - 1, styles[2]);
             writeChar(x + bLen - 1 , y, wAttr, 1, styles[3]);
         }
         else
         {
             writeVRM(x, y, txtAttr, szTitle, 0);
-            printXY(x, y, txtAttr, styles[0]);
-            printXY(x + bLen - 1, y, txtAttr, styles[1]);
+            printChar(x, y, txtAttr, styles[0]);
+            printChar(x + bLen - 1, y, txtAttr, styles[1]);
             writeChar(x + 1, y + 1, wAttr, bLen, styles[2]);
             writeChar(x + bLen, y, wAttr, 1, styles[3]);
         }
     }
 }
 
+
 /*-----------------------------------------------*/
 /* Function : drawFrame                          */
 /* Purpose  : Draw a frame with the edge is lane */
 /* Expects  : (x1,y1) cordinate top to left      */
-/*            (x2,y2) cordinate right to bottom  */
+/*            (x2,y2) cordinate bottom to right  */
 /* Returns  : Nothing                            */
 /*-----------------------------------------------*/
-void drawFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
+void drawFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr)
 {
     int16_t k;
-    char txt[2];
 
-    txt[1] = '\0';
-    printChar(x1, y1, 218);
-
-    txt[0] = 193;
-    for (k = x1 + 1; k < x2; k++) _outtext(txt);
-
-    txt[0] = 191;
-    _outtext(txt);
-    printChar(x1, y2, 192);
-
-    txt[0] = 194;
-    for (k = x1 + 1; k < x2; k++) _outtext(txt);
-
-    txt[0] = 225;
-    _outtext(txt);
+    for (k = x1 + 1; k < x2; k++)
+    {
+        printChar(k, y1, attr, 193);
+        printChar(k, y2, attr, 194);
+    }
 
     for (k = y1 + 1; k < y2; k++)
     {
-        printChar(x1, k, 179);
-        printChar(x2, k, 224);
+        printChar(x1, k, attr, 179);
+        printChar(x2, k, attr, 224);
     }
+
+    printChar(x1, y1, attr, 218);
+    printChar(x2, y1, attr, 191);
+    printChar(x1, y2, attr, 192);
+    printChar(x2, y2, attr, 225);
 }
 
 /*---------------------------------------------------*/
@@ -364,6 +370,34 @@ char readKey(char *key)
     return 1;
 }
 
+/*--------------------------------------------------*/
+/* Funtion : fillFrame                              */
+/* Purpose : To full the box with special character */
+/* Expects : (x1,y1) cordinate top to left          */
+/*           (x2,y2) cordinate bottom to right      */
+/*           (wAttr) special character color        */
+/*           (chr) special character                */
+/* Returns : Nothing                                */
+/*--------------------------------------------------*/
+void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char chr)
+{
+    uint8_t y;
+    for (y = y1; y <= y2; y++) writeChar(x1, y, wAttr, x2 - x1 + 1, chr);
+}
+
+/*----------------------------------------------*/
+/* Function : clearScreen                       */
+/* Purpose  : clearScreen the part of window    */
+/* Expects  : (x1,y1) cordinate top to left     */
+/*            (x2,y2) cordinate bottom to right */
+/*            (color) color needs clear         */
+/* Returns  : Nothing                           */
+/*----------------------------------------------*/
+void clearScreen(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color)
+{
+    fillFrame(x1, y1, x2, y2, color << 4, 32);
+}
+
 /*----------------------------------------------*/
 /* Function : drawBox                           */
 /* Purpose  : Draw a box with color and border  */
@@ -374,18 +408,10 @@ char readKey(char *key)
 /*----------------------------------------------*/
 void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 {
-    uint8_t oldBk = _getbkcolor();
-    uint8_t oldCol = _gettextcolor();
-    _setbkcolor(wAttr >> 4);
-    _settextcolor(wAttr & 0x0F);
-    drawFrame(x1, y1, x2, y2);
-    _settextwindow(y1 + 1, x1 + 1, y2 - 1, x2 - 1);
-    _clearscreen(_GWINDOW);
-    _settextwindow(1, 1, 25, 80);
+    drawFrame(x1, y1, x2, y2, wAttr);
+    fillFrame(x1 + 1, y1 + 1, x2 - 1, y2 - 1, wAttr, 32);
     changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, 0x08);
     changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, 0x08);
-    _setbkcolor(oldBk);
-    _settextcolor(oldCol);
 }
 
 /*----------------------------------------------*/
@@ -407,23 +433,8 @@ void shadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, ch
     drawBox(x1, y1, x2, y2, wAttr);
     writeChar(x1 + 3, y1, bkc, x2 - x1 - 2, 32);
     writeVRM(x1 + bCenter, y1, bkc, szTitle, 0);
-    printXY(x1 + 2, y1, bkc, 226);
+    printChar(x1 + 2, y1, bkc, 226);
     writeVRM(x1, y1, bkc >> 4, szStyle, 0);
-}
-
-/*--------------------------------------------------*/
-/* Funtion : fillFrame                              */
-/* Purpose : To full the box with special character */
-/* Expects : (x1,y1) cordinate top to left          */
-/*           (x2,y2) cordinate bottom to right      */
-/*           (wAttr) special character color        */
-/*           (chr) special character                */
-/* Returns : Nothing                                */
-/*--------------------------------------------------*/
-void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char Chr)
-{
-    uint8_t i;
-    for (i = y1; i <= y2; i++) writeChar(x1, i, wAttr, x2 - x1 + 1, Chr);
 }
 
 /*----------------------------------*/
@@ -458,7 +469,7 @@ uint16_t clickMouse(uint16_t *col, uint16_t *row)
     int86(0x33, &regs, &regs);
     *col = (regs.x.cx >> 3) + 1;
     *row = (regs.x.dx >> 3) + 1;
-    return regs.x.bx;
+    return regs.x.bx == 1;
 }
 
 /*-----------------------------------*/
@@ -536,22 +547,6 @@ void closeMouse()
     hideMouse();
     regs.x.ax = 0;
     int86(0x33, &regs, &regs);
-}
-
-/*----------------------------------------------*/
-/* Function : clearScreen                       */
-/* Purpose  : clearScreen the part of window    */
-/* Expects  : (x1,y1) cordinate top to left     */
-/*            (x2,y2) cordinate bottom to right */
-/*            (color) color needs clear         */
-/* Returns  : Nothing                           */
-/*----------------------------------------------*/
-void clearScreen(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color)
-{
-    _settextwindow(y1, x1, y2, x2);
-    _setbkcolor(color);
-    _clearscreen(_GWINDOW);
-    _settextwindow(1, 1, 25, 80);
 }
 
 /*-----------------------------------------*/
@@ -746,19 +741,16 @@ void fontVNI(char *szPrmpt)
 /*           buff the buffer to store data      */
 /* Returns : Nothing                            */
 /*----------------------------------------------*/
-void getScreenText(int16_t x, int16_t y, int16_t width, int16_t height, void *buff)
+void getScreenText(int16_t x, int16_t y, int16_t width, int16_t height, uint8_t *buff)
 {
-    uint16_t bytes;
-    uint16_t *src, *dst;
-
-    bytes = width << 1;
-    dst = (uint16_t*)buff;
-    src = (uint16_t*)&txtMem[OFFSET(x, y)];
+    uint16_t bytes = width << 1;
+    //uint16_t far *dst = (uint16_t far*)buff;
+    uint8_t far *src = txtMem + OFFSET(x, y);
     
     while (height--)
     {
-        memcpy(dst, src, bytes);
-        dst += width;
+        _fmemcpy(buff, src, bytes);
+        buff += bytes;
         src += SCR_WIDTH;
     }
 }
@@ -770,19 +762,15 @@ void getScreenText(int16_t x, int16_t y, int16_t width, int16_t height, void *bu
 /*           buff the buffer to store data      */
 /* Returns : Nothing                            */
 /*----------------------------------------------*/
-void putScreenText(int16_t x, int16_t y, int16_t width, int16_t height, void *buff)
+void putScreenText(int16_t x, int16_t y, int16_t width, int16_t height, uint8_t *buff)
 {
-    uint16_t bytes;
-    uint16_t *src, *dst;
-
-    bytes = width << 1;
-    src = (uint16_t*)buff;
-    dst = (uint16_t*)&txtMem[OFFSET(x, y)];
+    uint16_t bytes = width << 1;
+    uint8_t far *dst = txtMem + OFFSET(x, y);
     
     while (height--)
     {
-        memcpy(dst, src, bytes);
-        src += width;
+        _fmemcpy(dst, buff, bytes);
+        buff += bytes;
         dst += SCR_WIDTH;
     }
 }
@@ -901,23 +889,21 @@ void freeData()
 }
 
 /*-------------------------------*/
-/* Funtion : haltSys             */
-/* Purpose : Restore environment */
+/* Funtion : cleanup             */
+/* Mission : Restore environment */
 /* Expects : Nothing             */
 /* Returns : Nothing             */
 /*-------------------------------*/
-void haltSys()
+void cleanup()
 {
     setBorder(0x00);
-    _settextcursor(0x0607);
-    _setbkcolor(0);
-    _settextcolor(7);
     setBlinking(1);
     if (bmAvalid) closeMouse();
-    _clearscreen(_GWINDOW);
-    system("font off");
+    setCursorSize(0x0607);
     freeData();
-    exit(EXIT_SUCCESS);
+    system("font off");
+    system("cls");
+    exit(1);
 }
 
 /*-------------------------------------*/
@@ -1006,7 +992,7 @@ void errorFile(char *szHandle, char *szErrorType)
     writeVRM(15, 13, 0x4F, sysInfo[55], 0);
 
     do {
-        if (clickMouse(&bCol, &bRow) == 1)
+        if (clickMouse(&bCol, &bRow))
         {
             if (bRow == 15 && bCol >= 33 && bCol <= 45)
             {
@@ -1021,7 +1007,7 @@ void errorFile(char *szHandle, char *szErrorType)
             if (bRow == 8 && bCol == 13 || bCol == 14) break;
         }
     } while (!kbhit());
-    haltSys();
+    cleanup();
 }
 
 /*---------------------------------------------*/
@@ -1131,10 +1117,10 @@ void processDir(char *szSourceDir, char *szDestDir)
             if (!copyFile(curFile, newFile, &entries)) errorFile(newFile, sysInfo[21]);
 
             numFiles++;
-            writeChar(30, 11, 0x19, 33, 32);
-            writeVRM(30, 11, 0x1E, newFile, 0);
+            writeChar(30, 11, 0x99, 33, 32);
+            writeVRM(30, 11, 0x9E, newFile, 0);
             writeChar(18, 12, 0xFF, 45 * (1.0 * numFiles / totalFiles), 219);
-            printVRM(50, 13, 0x1F, "%3d", (int16_t)(100 * (1.0 * numFiles / totalFiles)));
+            printVRM(50, 13, 0x9F, "%3d", (int16_t)(100 * (1.0 * numFiles / totalFiles)));
             delay(50);
         } while (!_dos_findnext(&entries));
     }
@@ -1169,7 +1155,7 @@ uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *szMsg[]
     uint8_t slc = 0, i = 0;
     int16_t bCenter = x1 + (x2 - x1) / 2;
 
-    _settextcursor(0x2020);
+    setCursorSize(0x2020);
     shadowBox(x1, y1, x2, y2, 0x4F, sysInfo[1]);
     showMouse();
     moveMouse(bCenter, y2 - 3);
@@ -1179,7 +1165,7 @@ uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *szMsg[]
     drawButton(bCenter + 6, y2 - 2, _eATV, 4, sysMenu[2], 1, _eFLT);
 
     do {
-        if (clickMouse(&bCol,  &bRow) == 1)
+        if (clickMouse(&bCol, &bRow))
         {
             if (bRow == y2 - 2 && bCol >= bCenter - 14 && bCol <= bCenter - 5)
             {
@@ -1253,7 +1239,7 @@ void warningBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *szMsg[], u
     const int16_t bCenter = x1 + (x2 - x1) / 2;
     const int16_t bPos = bCenter - strlen(sysMenu[0]) / 2;
     
-    _settextcursor(0x2020);
+    setCursorSize(0x2020);
     shadowBox(x1, y1, x2, y2, 0x4F, sysInfo[1]);
 
     for (i = 0; i < n; i++) writeVRM(bCenter - strlen(szMsg[i]) / 2, y1 + 2 + i, 0x4A, szMsg[i], 0);
@@ -1263,7 +1249,7 @@ void warningBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *szMsg[], u
     moveMouse(bCenter, y2 - 3);
 
     do {
-        if (clickMouse(&bCol,  &bRow) == 1)
+        if (clickMouse(&bCol, &bRow))
         {
             if (bRow == y2 - 2 && bCol >= bPos  && bCol <= bPos + 9)
             {
@@ -1305,12 +1291,9 @@ void checkProductKey()
     char szOldName[31], szOldID[20];
     char szCurrName[31], szCurrID[20];
     uint8_t flgCorrectName = 1, flgCorrectID = 0;
-    uint8_t i = 0, j = 0, isASCII = 0;
+    uint8_t i = 0, j = 0, isASCII = 0, isOK = 0;
 
-    _setbkcolor(1);
-    _settextcolor(15);
-    _settextcursor(0x2020);
-    _clearscreen(_GWINDOW);
+    setCursorSize(0x2020);
     fillFrame(1, 1, 80, 25, 0xF6, 178);
     shadowBox(5, 3, 75, 23, 0x5F, sysInfo[2]);
     writeVRM(8, 5, 0x5A, sysInfo[56], 0);
@@ -1330,9 +1313,7 @@ void checkProductKey()
     showMouse();
     moveMouse(10, 11);
 
-    slc = 0;
-    label1:
-    key = 0;
+    slc = key = 0;
     writeVRM(14, 11 + slc, 0x5B, sysMenu[slc + 8], 0x5A);
         
     do {
@@ -1349,7 +1330,6 @@ void checkProductKey()
                 writeVRM(14, 11 + slc, 0x5B, sysMenu[slc + 8], 0x5A);
                 writeVRM(11, 11 + slc, 0x5B, sysMenu[20], 0);
                 break;
-
             case UP:
                 writeVRM(14, 11 + slc, 0x5E, sysMenu[slc + 8], 0x5F);
                 writeVRM(11, 11 + slc, 0x5E, sysMenu[21], 0);
@@ -1357,10 +1337,23 @@ void checkProductKey()
                 writeVRM(14, 11 + slc, 0x5B, sysMenu[slc + 8], 0x5A);
                 writeVRM(11, 11 + slc, 0x5B, sysMenu[20], 0);
                 break;
+            case TAB:
+                if (!slc) isOK = 1;
+                else
+                {
+                    hideMouse();
+                    getScreenText(20, 10, 43, 9, szScreen);
+                    msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
+                    if (!msgSlc) cleanup();
+                    hideMouse();
+                    putScreenText(20, 10, 43, 9, szScreen);
+                    showMouse();
+                }
+                break;
             }
         }
 
-        if (clickMouse(&bCol, &bRow) == 1)
+        if (clickMouse(&bCol, &bRow))
         {
             if (bRow == 11 && bCol >= 11 && bCol <= 40)
             {
@@ -1372,7 +1365,7 @@ void checkProductKey()
                 writeVRM(11, 12, 0x5B, sysMenu[20], 0);
                 showMouse();
                 slc = 0;
-                key = TAB;
+                isOK = 1;
             }
 
             if (bRow == 12 && bCol >= 11 && bCol <= 55)
@@ -1385,60 +1378,52 @@ void checkProductKey()
                 writeVRM(11, 12, 0x5B, sysMenu[20], 0);
                 showMouse();
                 slc = 1;
-                key = TAB;
+                hideMouse();
+                getScreenText(20, 10, 43, 9, szScreen);
+                msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
+                if (!msgSlc) cleanup();
+                hideMouse();
+                putScreenText(20, 10, 43, 9, szScreen);
+                showMouse();   
             }
-
-            if (bRow == 15 && bCol >= 8 && bCol <= 38) key = TAB;
-            if (bRow == 18 && bCol >= 8 && bCol <= 38) key = TAB;
-            if (bRow == 3 && bCol == 5 || bCol == 6) haltSys();
         }
-    } while (key != TAB);
-
-    if (slc)
-    {
-        hideMouse();
-        getScreenText(20, 10, 43, 9, szScreen);
-        msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
-        if (!msgSlc) haltSys();
-        hideMouse();
-        putScreenText(20, 10, 43, 9, szScreen);
-        showMouse();
-        goto label1;
-    }
+    } while (!isOK);
 
     fptr = fopen("register.dat", "rb");
     if (!fptr)
     {
-        _setbkcolor(1);
-        _settextcolor(15);
         setBorder(47);
-        _settextcursor(0x2020);
-        _clearscreen(_GWINDOW);
+        setCursorSize(0x2020);
+        clearScreen(1, 1, 80, 25, 1);
         writeVRM(31, 10, 0x4F, sysInfo[11], 0);
         writeVRM(20, 12, 0x1F, sysInfo[19], 0);
         writeVRM(20, 13, 0x1F, sysInfo[25], 0);
         getch();
-        haltSys();
+        cleanup();
     }
 
     fread(&regInfo, sizeof(REG_INFO), 1, fptr);
     fclose(fptr);
+
+    for (i = 0; i < strlen(regInfo.serial); i++) regInfo.serial[i] -= regInfo.key;
+    for (i = 0; i < strlen(regInfo.user); i++) regInfo.user[i] -= regInfo.key;
+
     strcpy(szOldName, regInfo.user);
     strcpy(szOldID, regInfo.serial);
     szCurrName[0] = '\0';
     szCurrID[0] = '\0';
     
     label2:
-    _settextcursor(0x0B0A);
-    _settextposition(15, 8);
+    setCursorSize(0x0B0A);
+    setCursorPos(8, 15);
 
     key = i = j = slc = 0;
     drawButton(24, 21, wATV, 5, sysMenu[1], 1, wFLT);
     drawButton(47, 21, _wATV, 5, sysMenu[4], 1, _wFLT);
 
     do {
-       if (flgCorrectName) _settextposition(15, 8 + i);
-       if (flgCorrectID) _settextposition(18, 8 + j);
+       if (flgCorrectName) setCursorPos(8 + i, 15);
+       if (flgCorrectID) setCursorPos(8 + j, 18);
       
        if (kbhit())
        {
@@ -1449,14 +1434,14 @@ void checkProductKey()
                 if ((isASCII && i < 30 && key != 8 && isalpha(key)) || (key == 32 && i < 30))
                 {
                     szCurrName[i] = key;
-                    printXY(8 + i, 15, 0x1F, key);
+                    printChar(8 + i, 15, 0x1F, key);
                     i++;
                 }
 
                 if (key == 8 && i > 0)
                 {
                     i--;
-                    printXY(8 + i, 15, 0x1F, 32);
+                    printChar(8 + i, 15, 0x1F, 32);
                 }
             }
 
@@ -1471,14 +1456,14 @@ void checkProductKey()
                 if (isASCII && j < 19 && key != 8 && key != TAB && key != ENTER)
                 {
                     szCurrID[j] = key;
-                    printXY(8 + j, 18, 0x1F, key);
+                    printChar(8 + j, 18, 0x1F, key);
                     j++;
                 }
 
                 if (key == 8 && j > 0)
                 {
                     j--;
-                    printXY(8 + j, 18, 0x1F, 32);
+                    printChar(8 + j, 18, 0x1F, 32);
                 }
             }
 
@@ -1504,7 +1489,7 @@ void checkProductKey()
             }
         }
 
-        if (clickMouse(&bCol, &bRow) == 1)
+        if (clickMouse(&bCol, &bRow))
         {
             if (bRow == 21 && bCol >= 24 && bCol <= 36)
             {
@@ -1585,7 +1570,7 @@ void checkProductKey()
         hideMouse();
         getScreenText(20, 10, 43, 9, szScreen);
         msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
-        if (!msgSlc) haltSys();
+        if (!msgSlc) cleanup();
         hideMouse();
         putScreenText(20, 10, 43, 9, szScreen);
         showMouse();
@@ -1601,11 +1586,8 @@ void checkProductKey()
 /*------------------------------------*/
 void showHelpFile()
 {
-    _setbkcolor(1);
-    _settextcolor(15);
     setBorder(63);
-    _settextcursor(0x2020);
-    _clearscreen(_GWINDOW);
+    setCursorSize(0x2020);
     fillFrame(1, 1, 80, 25, 0xF6, 178);
     shadowBox(10, 3, 74, 22, 0x3E, sysInfo[3]);
     writeVRM(12, 5, 0x30, sysInfo[61], 0);
@@ -1648,7 +1630,7 @@ void showHelpFile()
             }
         }
 
-        if (clickMouse(&bCol, &bRow) == 1)
+        if (clickMouse(&bCol, &bRow))
         {
             if (bRow == 20 && bCol >= 26 && bCol <= 38)
             {
@@ -1676,12 +1658,12 @@ void showHelpFile()
                 break;
             }
 
-            if (bRow == 3 && bCol == 10 || bCol == 11) haltSys();
+            if (bRow == 3 && bCol == 10 || bCol == 11) cleanup();
         }
     } while (key != ENTER);
 
     hideMouse();
-    if (slc) haltSys();
+    if (slc) cleanup();
 }
 
 /*--------------------------------------------*/
@@ -1699,10 +1681,7 @@ void installProgram()
         bytesCount = segBuff;
         if (_dos_allocmem(bytesCount, &segBuff))
         {
-            _setbkcolor(1);
-            _settextcolor(15);
-            _settextcursor(0x2020);
-            _clearscreen(_GWINDOW);
+            setCursorSize(0x2020);
             fillFrame(1, 1, 80, 25, 0xF6, 178);
             hideMouse();
             shadowBox(15, 8, 65, 17, 0x4F, sysInfo[1]);
@@ -1714,7 +1693,18 @@ void installProgram()
             showMouse();
 
             do {
-                if (clickMouse(&bCol, &bRow) == 1)
+                if (kbhit())
+                {
+                    hideMouse();
+                    clearScreen(35, 15, 46, 16, 4);
+                    writeVRM(36, 15, wATV, sysMenu[0], wFLT);
+                    delay(50);
+                    drawButton(35, 15, wATV, 4, sysMenu[0], 1, wFLT);
+                    showMouse();
+                    break;
+                }
+
+                if (clickMouse(&bCol, &bRow))
                 {
                     if (bRow == 15 && bCol >= 35 && bCol <= 45)
                     {
@@ -1730,28 +1720,24 @@ void installProgram()
                     if (bRow == 8 && bCol == 15 || bCol == 16) break;
                 }
             } while (!kbhit());
-
-            haltSys();            
+            cleanup();            
         }
     }
 
-    copyBuff = (uint8_t*)MK_FP(segBuff, 0);
+    copyBuff = (uint8_t far*)MK_FP(segBuff, 0);
     
     setBorder(50);
-    _setbkcolor(1);
-    _settextcolor(15);
-    _settextcursor(0x2020);
-    _clearscreen(_GWINDOW);
+    setCursorSize(0x2020);
     fillFrame(1, 1, 80, 25, 0xF6, 178);
-    shadowBox(15, 6, 65, 17, 0x1F, sysInfo[4]);
-    writeVRM(18, 11, 0x1F, sysInfo[73], 0);
-    writeVRM(18, 8, 0x1F, sysInfo[38], 0);
-    writeVRM(18, 9, 0x1F, sysInfo[40], 0);
+    shadowBox(15, 6, 65, 17, 0x9F, sysInfo[4]);
+    writeVRM(18, 11, 0x9F, sysInfo[73], 0);
+    writeVRM(18, 8, 0x9F, sysInfo[38], 0);
+    writeVRM(18, 9, 0x9F, sysInfo[40], 0);
     writeChar(18, 12, 0x17, 45, 176);
-    writeVRM(53, 13, 0x1F, sysInfo[174], 0);
-    drawButton(35, 15, _wATV, 1, sysMenu[2], 1, _wFLT);
+    writeVRM(53, 13, 0x9F, sysInfo[174], 0);
+    drawButton(35, 15, _wATV, 9, sysMenu[2], 1, _wFLT);
     countFiles("C:\\TOPICS\\*.*");
-    processDir("C:\\TOPICS\\*.*", "C:\\INSTALL");
+    processDir("C:\\TOPICS\\*.*", szInstallPath);
     delay(500);
     fillFrame(15, 6, 69, 21, 0xF6, 178);
     shadowBox(18, 10, 62, 15, 0x1F, sysInfo[5]);
@@ -1782,11 +1768,8 @@ void installProgram()
 void restartProgram()
 {
     showMouse();
-    _setbkcolor(1);
-    _settextcolor(15);
-    _settextcursor(0x2020);
+    setCursorSize(0x2020);
     setBorder(50);
-    _clearscreen(_GWINDOW);
     fillFrame(1, 1, 80, 25, 0xF6, 178);
     shadowBox(15, 8, 65, 15, 0x4F, sysInfo[6]);
     writeVRM(21, 11, 0x4A, sysMenu[11], 0x4B);
@@ -1833,7 +1816,7 @@ void restartProgram()
             }
         }
 
-        if (clickMouse(&bCol, &bRow) == 1)
+        if (clickMouse(&bCol, &bRow))
         {
             if (bRow == 10 && bCol >= 18 && bCol <= 62)
             {
@@ -1885,29 +1868,12 @@ void restartProgram()
                 break;
             }
 
-            if (bRow == 8 && bCol == 15 || bCol == 16) haltSys();
+            if (bRow == 8 && bCol == 15 || bCol == 16) cleanup();
         }
     } while (key != ENTER);
 
     if (!chs && !slc) sysReboot();
-    else haltSys();
-}
-
-/*---------------------------------------*/
-/* Funtion : assignDrive                 */
-/* Purpose : Showing the drive message   */
-/* Expects : (slc) number of szDrive     */
-/* Returns : Nothing                     */
-/*---------------------------------------*/
-void assignDrive(uint8_t bSelect)
-{
-    switch (bSelect)
-    {
-        case 0: strcpy(szDrive, "B:\\"); break;
-        case 1: strcpy(szDrive, "C:\\"); break;
-        case 2: strcpy(szDrive, "D:\\"); break;
-        case 3: strcpy(szDrive, "E:\\"); break;
-    }
+    else cleanup();
 }
 
 /*----------------------------------------*/
@@ -1918,27 +1884,131 @@ void assignDrive(uint8_t bSelect)
 /*----------------------------------------*/
 void chooseDrive()
 {
-    uint8_t i;
-    _settextcursor(0x2020);
-    _setbkcolor(1);
-    _settextcolor(15);
-    _clearscreen(_GWINDOW);
+    uint8_t i = 0, k = 0;
+    uint8_t isASCII = 0, isOK = 0;
+    const char drives[] = {'B', 'C', 'D', 'E'};
+
+    setCursorSize(0x2020);
     fillFrame(1, 1, 80, 25, 0xF6, 178);
-    shadowBox(20, 8, 60, 17, 0x3F, sysInfo[7]);
+    shadowBox(20, 8, 60, 18, 0x3F, sysInfo[7]);
     writeVRM(31, 10, 0x34, sysInfo[24], 0);
     writeChar(29, 11, 0x34, 22, 193);
     for (i = 0; i < 4; i++) writeVRM(29, 12 + i, 0x30, sysMenu[12 + i], 0x3A);
     drawButton(46, 12, wATV, 3, sysMenu[1], 1, wFLT);
-    drawButton(46, 15, _wATV, 3, sysMenu[4], 1, _wFLT);
+    drawButton(46, 14, _wATV, 3, sysMenu[4], 1, _wFLT);
+    writeVRM(23, 17, 0x30, sysMenu[22], 0);
+    writeChar(33, 17, 0x1F, 25, 32);
     moveMouse(38, 11);
-    slc = chs = 0;
 
-    label:
-    key = 0;
+    slc = chs = key = 0;
+    strcpy(szInstallPath, "B:\\INSTALL");
     writeVRM(29, 12 + slc, 0x3F, sysMenu[12 + slc], 0x3E);
 
     do {
-        if (clickMouse(&bCol, &bRow) == 1)
+        key = 0;
+        if (kbhit())
+        {
+            key = getch();
+            if (!key) key = getch();
+            switch (key)
+            {
+            case UP:
+                writeVRM(29, 12 + slc, 0x30, sysMenu[12 + slc], 0x3A);
+                if (slc < 1) slc = 3; else slc--;
+                writeVRM(29, 12 + slc, 0x3F, sysMenu[12 + slc], 0x3E);
+                break;
+            case DOWN:
+                writeVRM(29, 12 + slc, 0x30, sysMenu[12 + slc], 0x3A);
+                if (slc >= 3) slc = 0; else slc++;
+                writeVRM(29, 12 + slc, 0x3F, sysMenu[12 + slc], 0x3E);
+                break;
+            case HOME:
+                slc = 0;
+                writeVRM(29, 12 + slc, 0x30, sysMenu[12 + slc], 0x3A);
+                writeVRM(29, 12 + slc, 0x3F, sysMenu[12 + slc], 0x3E);
+                break;
+            case END:
+                slc = 3;
+                writeVRM(29, 12 + slc, 0x30, sysMenu[12 + slc], 0x3A);
+                writeVRM(29, 12 + slc, 0x3F, sysMenu[12 + slc], 0x3E);
+                break;
+            case TAB:
+                key = 0;
+                do {
+                    if (kbhit())
+                    {
+                        key = getch();
+                        if (!key) key = getch();
+                        switch (key)
+                        {
+                        case UP:
+                            drawButton(46, 12 + 2 * chs, _wATV, 3, sysMenu[3 * chs + 1], 1, _wFLT);
+                            if (chs < 1) chs = 1; else chs--;
+                            drawButton(46, 12 + 2 * chs, wATV, 3, sysMenu[3 * chs + 1], 1, wFLT);
+                            break;
+                        case DOWN:
+                            drawButton(46, 12 + 2 * chs, _wATV, 3, sysMenu[3 * chs + 1], 1, _wFLT);
+                            if (chs > 0) chs = 0; else chs++;
+                            drawButton(46, 12 + 2 * chs, wATV, 3, sysMenu[3 * chs + 1], 1, wFLT);
+                            break;
+                        case ENTER:
+                            if (!chs)
+                            {
+                                isOK = 1;
+                                hideMouse();
+                                drawButton(46, 14, _wATV, 3, sysMenu[4], 1, _wFLT);
+                                clearScreen(46, 12, 57, 13, 3);
+                                writeVRM(47, 12, wATV, sysMenu[1], wFLT);
+                                delay(50);
+                                drawButton(46, 12, wATV, 3, sysMenu[1], 1, wFLT);
+                                showMouse();
+                            }
+                            else
+                            {
+                                hideMouse();
+                                getScreenText(20, 10, 43, 9, szScreen);
+                                msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
+                                if (!msgSlc) cleanup();
+                                putScreenText(20, 10, 43, 9, szScreen);
+                                showMouse();
+                            }
+                            break;
+                        case TAB:
+                            key = 0;
+                            k = strlen(szInstallPath);
+                            do {
+                                setCursorSize(0x0B0A);
+                                setCursorPos(33 + k, 17);
+                                if (kbhit())
+                                {
+                                    isASCII = readKey(&key);
+                                    if (!key) isASCII = readKey(&key);
+                                    if (((isASCII && isalpha(key)) || key == '\\' || isdigit(key)) && k < 20)
+                                    {
+                                        szInstallPath[k] = key;
+                                        printChar(33 + k, 17, 0x1E, key);
+                                        k++;
+                                    }
+
+                                    if (key == DEL && k > 3)
+                                    {
+                                        k--;
+                                        printChar(33 + k, 17, 0x1E, 32);
+                                    }
+
+                                    szInstallPath[k] = '\0';
+                                }
+                            } while (key != ENTER && key != TAB);
+                            setCursorSize(0x2020);
+                            break;
+                        }
+                    }
+                } while (!isOK && key != TAB && key != ENTER);
+                break;
+            }
+        }
+
+        if (clickMouse(&bCol, &bRow))
         {
             if (bRow == 12 && bCol >= 29 && bCol <= 41)
             {
@@ -1982,127 +2052,37 @@ void chooseDrive()
 
             if (bRow == 12 && bCol >= 46 & bCol <= 57)
             {
+                chs = 0;
+                isOK = 1;
                 hideMouse();
-                drawButton(46, 15, _wATV, 3, sysMenu[4], 1, _wFLT);
-                clearScreen(46, 12, 57, 13, 3); writeVRM(47, 12, wFLT, sysMenu[1], wFLT);
+                drawButton(46, 14, _wATV, 3, sysMenu[4], 1, _wFLT);
+                clearScreen(46, 12, 57, 13, 3);
+                writeVRM(47, 12, wATV, sysMenu[1], wFLT);
                 delay(50);
                 drawButton(46, 12, wATV, 3, sysMenu[1], 1, wFLT);
                 showMouse();
-                chs = 0;
-                key = ENTER;
             }
 
-            if (bRow == 15 && bCol >= 46 & bCol <= 57)
+            if (bRow == 14 && bCol >= 46 & bCol <= 57)
             {
+                chs = 1;
                 hideMouse();
                 drawButton(46, 12, _wATV, 3, sysMenu[1], 1, _wFLT);
-                clearScreen(46, 15, 57, 16, 3);
-                writeVRM(47, 15, wATV, sysMenu[2], wFLT);
+                clearScreen(46, 14, 57, 16, 3);
+                writeVRM(47, 15, wATV, sysMenu[4], wFLT);
                 delay(50);
-                drawButton(46, 15, wATV, 3, sysMenu[4], 1, wFLT);
-                showMouse();
-                chs = 1;
-                key = ENTER;
-            }
-
-            if (bRow == 8 && bCol == 20 || bCol == 21) haltSys();
-        }
-
-        if (kbhit())
-        {
-            key = getch();
-            if (!key) key = getch();
-            switch (toupper(key))
-            {
-            case UP:
-                writeVRM(29, 12 + slc, 0x30, sysMenu[12 + slc], 0x3A);
-                if (slc < 1) slc = 3; else slc--;
-                writeVRM(29, 12 + slc, 0x3F, sysMenu[12 + slc], 0x3E);
-                break;
-            case DOWN:
-                writeVRM(29, 12 + slc, 0x30, sysMenu[12 + slc], 0x3A);
-                if (slc >= 3) slc = 0; else slc++;
-                writeVRM(29, 12 + slc, 0x3F, sysMenu[12 + slc], 0x3E);
-                break;
-            case HOME:
-                slc = 0;
-                writeVRM(29, 12 + slc, 0x30, sysMenu[12 + slc], 0x3A);
-                writeVRM(29, 12 + slc, 0x3F, sysMenu[12 + slc], 0x3E);
-                break;
-            case END:
-                slc = 3;
-                writeVRM(29, 12 + slc, 0x30, sysMenu[12 + slc], 0x3A);
-                writeVRM(29, 12 + slc, 0x3F, sysMenu[12 + slc], 0x3E);
-                break;
-            case TAB:
-                do {
-                    if (kbhit())
-                    {
-                        key = getch();
-                        if (!key) key = getch();
-                        switch (toupper(key))
-                        {
-                        case UP:
-                            drawButton(46, 12 + 3 * chs, _wATV, 3, sysMenu[3 * chs + 1], 1, _wFLT);
-                            if (chs < 1) chs = 1; else chs--;
-                            drawButton(46, 12 + 3 * chs, wATV, 3, sysMenu[3 * chs + 1], 1, wFLT);
-                            break;
-                        case DOWN:
-                            drawButton(46, 12 + 3 * chs, _wATV, 3, sysMenu[3 * chs + 1], 1, _wFLT);
-                            if (chs > 0) chs = 0; else chs++;
-                            drawButton(46, 12 + 3 * chs, wATV, 3, sysMenu[3 * chs + 1], 1, wFLT);
-                            break;
-                        }
-                    }
-
-                    if (clickMouse(&bCol,  &bRow) == 1)
-                    {
-                        if (bRow == 12 && bCol >= 46 & bCol <= 57)
-                        {
-                            hideMouse();
-                            drawButton(46, 15, _wATV, 3, sysMenu[4], 1, _wFLT);
-                            clearScreen(46, 12, 57, 13, 3);
-                            writeVRM(47, 12, wATV, sysMenu[1], wFLT);
-                            delay(50);
-                            drawButton(46, 12, wATV, 3, sysMenu[1], 1, wFLT);
-                            showMouse();
-                            chs = 0;
-                            key = ENTER;
-                        }
-
-                        if (bRow == 15 && bCol >= 46 & bCol <= 57)
-                        {
-                            hideMouse();
-                            drawButton(46, 12, _wATV, 3, sysMenu[1], 1, _wFLT);
-                            clearScreen(46, 15, 57, 16, 3);
-                            writeVRM(47, 15, wATV, sysMenu[4], wFLT);
-                            delay(50);
-                            drawButton(46, 15, wATV, 3, sysMenu[4], 1, wFLT);
-                            showMouse();
-                            chs = 1;
-                            key = ENTER;
-                        }
-
-                        if (bRow == 8 && bCol == 20 || bCol == 21) haltSys();
-                    }
-                } while (key != ENTER);
-                break;
+                drawButton(46, 14, wATV, 3, sysMenu[4], 1, wFLT);
+                getScreenText(20, 10, 43, 9, szScreen);
+                msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
+                if (!msgSlc) cleanup();
+                putScreenText(20, 10, 43, 9, szScreen);
+                showMouse();                            
             }
         }
-    } while (key != ENTER);
 
-    if (!chs) assignDrive(slc);
-    else
-    {
-        hideMouse();
-        getScreenText(20, 10, 43, 9, szScreen);
-        msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
-        if (!msgSlc) haltSys();
-        hideMouse();
-        putScreenText(20, 10, 43, 9, szScreen);
-        showMouse();
-        goto label;
-    }
+        szInstallPath[0] = drives[slc];
+        writeVRM(33, 17, 0x1E, szInstallPath, 0);
+    } while (!isOK);
 }
 
 /*----------------------------------------------------*/
@@ -2120,25 +2100,23 @@ void updateProgram()
     fp = fopen(sysInfo[42], "r+b");
     if (!fp)
     {
-        _setbkcolor(1);
-        _settextcolor(15);
         setBorder(47);
-        _settextcursor(0x2020);
-        _clearscreen(_GWINDOW);
+        setCursorSize(0x2020);
+        clearScreen(1, 1, 80, 25, 1);
         writeVRM(33, 10, 0x4F, sysInfo[11], 0);
         writeVRM(20, 12, 0x1F, sysInfo[19], 0);
         writeVRM(20, 13, 0x1F, sysInfo[25], 0);
         getch();
-        haltSys();
+        cleanup();
     }
 
     fread(&regInfo, sizeof(REG_INFO), 1, fp);
-    strcpy(regInfo.disk, szDrive);
+    strcpy(regInfo.path, szInstallPath);
     fseek(fp, 0L, SEEK_SET);
     fwrite(&regInfo, sizeof(REG_INFO), 1, fp);
     fclose(fp);
 
-    strcpy(szPath, szDrive);
+    strcpy(szPath, szInstallPath);
     strcat(szPath, "crack.com");
     unlink(szPath);
 
@@ -2156,12 +2134,12 @@ void updateProgram()
 /* Expects  : (szDrive) Serial number szDrive */
 /* Returns  : number of szDrive               */
 /*--------------------------------------------*/
-uint8_t getDriveId(char *szDrive)
+uint8_t getDriveId(char drive)
 {
-    if (!strcmp(szDrive, "B:\\")) return 2;
-    if (!strcmp(szDrive, "C:\\")) return 3;
-    if (!strcmp(szDrive, "D:\\")) return 4;
-    if (!strcmp(szDrive, "E:\\")) return 5;
+    if (toupper(drive) == 'B') return 2;
+    if (toupper(drive) == 'C') return 3;
+    if (toupper(drive) == 'D') return 4;
+    if (toupper(drive) == 'E') return 5;
     return 0;
 }
 
@@ -2173,15 +2151,12 @@ uint8_t getDriveId(char *szDrive)
 /*--------------------------------------------------*/
 void checkDiskSpace()
 {
-    union REGS inRegs, outRegs;
     uint32_t a, b, c, d;
     uint8_t i, bSkip = 0;
+    union REGS inRegs, outRegs;
     
     setBorder(50);
-    _setbkcolor(1);
-    _settextcolor(15);
-    _settextcursor(0x2020);
-    _clearscreen(_GWINDOW);
+    setCursorSize(0x2020);
     fillFrame(1, 1, 80, 25, 0xF6, 178);
     shadowBox(15, 5, 65, 20, 0x7F, sysInfo[8]);
     writeVRM(18, 7, 0x70, sysInfo[39], 0);
@@ -2197,7 +2172,7 @@ void checkDiskSpace()
         writeChar(18 + i, 11, 0x3E, 1, 219);
         printVRM(50, 12, 0x70, "%3u", 2 * i + 12);
 
-        if (clickMouse(&bCol, &bRow) == 1)
+        if (clickMouse(&bCol, &bRow))
         {
             if (bRow == 18 && bCol >= 36 && bCol <= 45)
             {
@@ -2235,7 +2210,7 @@ void checkDiskSpace()
         writeChar(18 + i, 15, 0x3E, 1, 219);
         printVRM(50, 16, 0x70, "%3u",  2 * i + 12);
 
-        if (clickMouse(&bCol, &bRow) == 1)
+        if (clickMouse(&bCol, &bRow))
         {
             if (bRow == 18 && bCol >= 36 && bCol <= 45)
             {
@@ -2264,7 +2239,7 @@ void checkDiskSpace()
     }
 
     inRegs.h.ah = 0x36;
-    inRegs.h.dl = getDriveId(szDrive);
+    inRegs.h.dl = getDriveId(szInstallPath[0]);
     int86(0x21, &inRegs, &outRegs);
 
     if (outRegs.x.ax == 0xFFFF)
@@ -2274,7 +2249,7 @@ void checkDiskSpace()
         drawButton(33, 13, wATV, 4, sysMenu[0], 1, wFLT);
 
         do {
-            if (clickMouse(&bCol, &bRow) == 1)
+            if (clickMouse(&bCol, &bRow))
             {
                 if (bRow == 13 && bCol >= 33 && bCol <= 43)
                 {
@@ -2290,7 +2265,7 @@ void checkDiskSpace()
                 if (bRow == 9 && bCol == 20 || bCol == 21) break;
             }
         } while (!kbhit());
-        haltSys();
+        cleanup();
     }
 
     a = outRegs.x.dx;
@@ -2299,35 +2274,35 @@ void checkDiskSpace()
     d = outRegs.x.cx;
 
     fillFrame(1, 1, 80, 25, 0xF6, 178);
-    shadowBox(15, 9, 63, 16, 0x1F, sysInfo[9]);
-    printVRM(20, 11, 0x1E, sysInfo[175], (float)a * c * d / 1024.0 / 1024.0);
-    printVRM(20, 12, 0x1E, sysInfo[176], (float)b * c * d / 1024.0 / 1024.0);
-    drawButton(34, 14, wATV, 1, sysMenu[0], 1, wFLT);
+    shadowBox(15, 9, 63, 16, 0x9F, sysInfo[9]);
+    printVRM(20, 11, 0x9E, sysInfo[175], (float)a * c * d / 1024.0 / 1024.0);
+    printVRM(20, 12, 0x9E, sysInfo[176], (float)b * c * d / 1024.0 / 1024.0);
+    drawButton(34, 14, wATV, 9, sysMenu[0], 1, wFLT);
     moveMouse(38, 12);
 
     if (((b * c * d) / 1024) <= 1024)
     {
         writeVRM(18, 13, 0x1C, sysInfo[35], 0);
         do {
-            if (clickMouse(&bCol, &bRow) == 1)
+            if (clickMouse(&bCol, &bRow))
             {
                 if (bRow == 14 && bCol >= 34 && bCol <= 41)
                 {
                     clearScreen(34, 14, 42, 15, 1);
                     writeVRM(35, 14, wATV, sysMenu[0], wFLT);
                     delay(50);
-                    drawButton(34, 14, wATV, 1, sysMenu[0], 1, wFLT);
+                    drawButton(34, 14, wATV, 9, sysMenu[0], 1, wFLT);
                     break;
                 }
 
                 if (bRow == 9 && bCol == 15 || bCol == 16) break;
             }
         } while (!kbhit());
-        haltSys();
+        cleanup();
     }
 
     do {
-        if (clickMouse(&bCol, &bRow) == 1)
+        if (clickMouse(&bCol, &bRow))
         {
             if (bRow == 14 && bCol >= 34 && bCol <= 41)
             {
@@ -2335,7 +2310,7 @@ void checkDiskSpace()
                 clearScreen(34, 14, 42, 15, 1);
                 writeVRM(35, 14, wATV, sysMenu[0], wFLT);
                 delay(50);
-                drawButton(34, 14, wATV, 1, sysMenu[0], 1, wFLT);
+                drawButton(34, 14, wATV, 9, sysMenu[0], 1, wFLT);
                 showMouse();
                 break;
             }
@@ -2353,20 +2328,14 @@ void checkDiskSpace()
 /*------------------------------------*/
 void startInstall()
 {
-    char szDisk[17];
-
     chooseDrive();
     checkDiskSpace();
-    checkProductKey();
+    //checkProductKey();
     installProgram();
     updateProgram();
     showHelpFile();
     fadeOut();
-    strcpy(szDisk, szDrive);
-    strcat(szDisk, "TOPICS");
-    chdir(szDisk);
-    szDrive[2] = '\0';
-    system(szDrive);
+    chdir(szInstallPath);
     system("readme");
     restartProgram();
 }
@@ -2380,14 +2349,11 @@ void startInstall()
 void showInstall()
 {
     uint8_t fltStop[3] = {0};
-    uint8_t i = 0, found = 0, cancel = 0;
+    uint8_t i = 0, isOK = 0;
 
     memset(fltStop, 0, 3);
-    _setbkcolor(1);
-    _settextcolor(15);
     setBorder(59);
-    _settextcursor(0x0B0A);
-    _clearscreen(_GWINDOW);
+    setCursorSize(0x0B0A);
     setBlinking(0);
     fillFrame(1, 1, 80, 25, 0xFD, 178);
     shadowBox(8, 2, 74, 23, 0x1F, sysInfo[74]);
@@ -2404,8 +2370,8 @@ void showInstall()
     writeVRM(23, 17, 0x1B, sysInfo[51], 0);
     writeVRM(23, 18, 0x1B, sysInfo[52], 0);
     writeChar(9, 19, 0x1F, 65, 196);
-    printXY(8, 19, 0x1F, 195);
-    printXY(74, 19, 0x1F, 180);
+    printChar(8, 19, 0x1F, 195);
+    printChar(74, 19, 0x1F, 180);
     writeVRM(14, 11, 0x1C, sysMenu[17], 0x1E);
     writeVRM(14, 15, 0x1C, sysMenu[18], 0x1E);
     
@@ -2415,20 +2381,12 @@ void showInstall()
     drawButton(24, 21, wATV, 1, sysMenu[1], 1, wFLT);
     drawButton(48, 21, _wATV, 1, sysMenu[4], 1, _wFLT);
     
-    label1:
-    found = cancel = 0;
-    for (i = 0; i < 3 && !found; i++) if (!fltStop[i]) found = 1;
-    if (found)
-    {
-        i--;
-        _settextcursor(0x0B0A);
-        _settextposition(7 + 4 * i, 15);
-        writeVRM(14, 7 + 4 * i, 0x1A, sysMenu[16 + i], 0x1F);
-        slc = i;
-    }
+    key = slc = 0;
+    writeVRM(14, 7, 0x1A, sysMenu[16], 0x1F);
 
-    key = 0;
     do {
+        setCursorSize(0x0B0A);
+        setCursorPos(15, 7 + 4 * slc);
         if (kbhit())
         {
             key = getch();
@@ -2440,7 +2398,7 @@ void showInstall()
                 else
                 {
                     writeVRM(14, 7 + 4 * slc, 0x1C, sysMenu[16 + slc], 0x1E);
-                    printXY(15, 7 + 4 * slc, 0x1C, 251);
+                    printChar(15, 7 + 4 * slc, 0x1C, 251);
                 }
 
                 if (slc < 1) slc = 2; else slc--;
@@ -2449,16 +2407,16 @@ void showInstall()
                 else
                 {
                     writeVRM(14, 7 + 4 * slc, 0x1A, sysMenu[16 + slc], 0x1F);
-                    printXY(15, 7 + 4 * slc, 0x1A, 251);
+                    printChar(15, 7 + 4 * slc, 0x1A, 251);
                 }
-                _settextposition(7 + 4 * slc,  15);
+                setCursorPos(15, 7 + 4 * slc);
                 break;
             case DOWN:
                 if (!fltStop[slc]) writeVRM(14, 7 + 4 * slc, 0x1C, sysMenu[16 + slc], 0x1E);
                 else
                 {
                     writeVRM(14, 7 + 4 * slc, 0x1C, sysMenu[16 + slc], 0x1E);
-                    printXY(15, 7 + 4 * slc, 0x1C, 251);
+                    printChar(15, 7 + 4 * slc, 0x1C, 251);
                 }
 
                 if (slc >= 2) slc = 0; else slc++;
@@ -2467,16 +2425,16 @@ void showInstall()
                 else
                 {
                     writeVRM(14, 7 + 4 * slc, 0x1A, sysMenu[16 + slc], 0x1F);
-                    printXY(15, 7 + 4 * slc, 0x1A, 251);
+                    printChar(15, 7 + 4 * slc, 0x1A, 251);
                 }
-                _settextposition(7 + 4 * slc, 15);
+                setCursorPos(15, 7 + 4 * slc);
                 break;
             case HOME:
                 if (!fltStop[slc]) writeVRM(14, 7 + 4 * slc, 0x1C, sysMenu[16 + slc], 0x1E);
                 else
                 {
                     writeVRM(14, 7 + 4 * slc, 0x1C, sysMenu[16 + slc], 0x1E);
-                    printXY(15, 7 + 4 * slc, 0x1C, 251);
+                    printChar(15, 7 + 4 * slc, 0x1C, 251);
                 }
                 
                 slc = 0;
@@ -2484,16 +2442,16 @@ void showInstall()
                 else
                 {
                     writeVRM(14, 7 + 4 * slc, 0x1A, sysMenu[16 + slc], 0x1F);
-                    printXY(15, 7 + 4 * slc, 0x1A, 251);
+                    printChar(15, 7 + 4 * slc, 0x1A, 251);
                 }
-                _settextposition(7 + 4 * slc, 15);
+                setCursorPos(15, 7 + 4 * slc);
                 break;
             case END:
                 if (!fltStop[slc]) writeVRM(14, 7 + 4 * slc, 0x1C, sysMenu[16 + slc], 0x1E);
                 else
                 {
                     writeVRM(14, 7 + 4 * slc, 0x1C, sysMenu[16 + slc], 0x1E);
-                    printXY(15, 7 + 4 * slc, 0x1C, 251);
+                    printChar(15, 7 + 4 * slc, 0x1C, 251);
                 }
                 
                 slc = 2;
@@ -2501,9 +2459,9 @@ void showInstall()
                 else
                 {
                     writeVRM(14, 7 + 4 * slc, 0x1A, sysMenu[16 + slc], 0x1F);
-                    printXY(15, 7 + 4 * slc, 0x1A, 251);
+                    printChar(15, 7 + 4 * slc, 0x1A, 251);
                 }
-                _settextposition(7 + 4 * slc, 15);
+                setCursorPos(15, 7 + 4 * slc);
                 break;
             case LEFT:
                 drawButton(24 + chs * 24, 21, _wATV, 1, sysMenu[3 * chs + 1], 1, _wFLT);
@@ -2515,10 +2473,7 @@ void showInstall()
                 if (chs > 0) chs = 0; else chs++;
                 drawButton(24 + chs * 24, 21, wATV, 1, sysMenu[3 * chs + 1], 1, wFLT);
                 break;
-            }
-
-            if (key == 32)
-            {
+            case SPACE:
                 if (fltStop[slc])
                 {
                     writeVRM(14, 7 + 4 * slc, 0x1A, sysMenu[16 + slc], 0x1F);
@@ -2526,13 +2481,45 @@ void showInstall()
                 }
                 else
                 {
-                    printXY(15, 7 + 4 * slc, 0x1A, 251);
+                    printChar(15, 7 + 4 * slc, 0x1A, 251);
                     fltStop[slc] = 1;
                 }
+                break;
+            case ENTER:
+                if (!chs)
+                {
+                    hideMouse();
+                    drawButton(48, 21, _wATV, 1, sysMenu[4], 1, _wFLT);
+                    clearScreen(24, 21, 37, 22, 1);
+                    writeVRM(25, 21, wATV, sysMenu[1], wFLT);
+                    delay(50);
+                    drawButton(24, 21, wATV, 1, sysMenu[1], 1, wFLT);
+                    showMouse();
+                    if (fltStop[1] && fltStop[2]) isOK = 1;
+                    else
+                    {
+                        hideMouse();
+                        getScreenText(20, 10, 44, 9, szScreen);
+                        msgSlc = messageBox(20, 10, 61, 17, msgError, 2);
+                        if (msgSlc) cleanup();
+                        putScreenText(20, 10, 44, 9, szScreen);
+                        showMouse();
+                    }
+                }
+                else
+                {
+                    hideMouse();
+                    getScreenText(20, 10, 44, 9, szScreen);
+                    msgSlc = messageBox(20, 10, 61, 16, msgExit, 1);
+                    if (!msgSlc) cleanup();
+                    putScreenText(20, 10, 44, 9, szScreen);
+                    showMouse();
+                }
+                break;
             }
         }
 
-        if (clickMouse(&bCol, &bRow) == 1)
+        if (clickMouse(&bCol, &bRow))
         {
             if (bRow == 7 && bCol >= 14 && bCol <= 48)
             {
@@ -2541,14 +2528,14 @@ void showInstall()
                 else
                 {
                     writeVRM(14, 7 + 4 * slc, 0x1C, sysMenu[16 + slc], 0x1E);
-                    printXY(15, 7 + 4 * slc, 0x1C, 251);
+                    printChar(15, 7 + 4 * slc, 0x1C, 251);
                 }
                 
                 slc = 0;
                 if (!fltStop[slc])
                 {
                     writeVRM(14, 7, 0x1A, sysMenu[16], 0x1F);
-                    printXY(15, 7, 0x1A, 251); fltStop[0] = 1;
+                    printChar(15, 7, 0x1A, 251); fltStop[0] = 1;
                 }
                 else
                 {
@@ -2556,7 +2543,7 @@ void showInstall()
                     fltStop[0] = 0;
                 }
 
-                _settextposition(7, 15);
+                setCursorPos(15, 7);
                 showMouse();
                 delay(150);
             }
@@ -2568,14 +2555,14 @@ void showInstall()
                 else
                 {
                     writeVRM(14, 7 + 4 * slc, 0x1C, sysMenu[16 + slc], 0x1E);
-                    printXY(15, 7 + 4 * slc, 0x1C, 251);
+                    printChar(15, 7 + 4 * slc, 0x1C, 251);
                 }
                 
                 slc = 1;
                 if (!fltStop[slc])
                 {
                     writeVRM(14, 11, 0x1A, sysMenu[17], 0x1F);
-                    printXY(15, 11, 0x1A, 251); fltStop[1] = 1;
+                    printChar(15, 11, 0x1A, 251); fltStop[1] = 1;
                 }
                 else
                 {
@@ -2583,7 +2570,7 @@ void showInstall()
                     fltStop[1] = 0;
                 }
 
-                _settextposition(11, 15);
+                setCursorPos(15, 11);
                 showMouse();
                 delay(150);
             }
@@ -2595,14 +2582,14 @@ void showInstall()
                 else
                 {
                     writeVRM(14, 7 + 4 * slc, 0x1C, sysMenu[16 + slc], 0x1E);
-                    printXY(15, 7 + 4 * slc, 0x1C, 251);
+                    printChar(15, 7 + 4 * slc, 0x1C, 251);
                 }
                 
                 slc = 2;
                 if (!fltStop[slc])
                 {
                     writeVRM(14, 15, 0x1A, sysMenu[18], 0x1F);
-                    printXY(15, 15, 0x1A, 251); fltStop[2] = 1;
+                    printChar(15, 15, 0x1A, 251); fltStop[2] = 1;
                 }
                 else
                 {
@@ -2610,7 +2597,7 @@ void showInstall()
                     fltStop[2] = 0;
                 }
 
-                _settextposition(15, 15);
+                setCursorPos(15, 15);
                 showMouse();
                 delay(150);
             }
@@ -2625,7 +2612,16 @@ void showInstall()
                 drawButton(24, 21, wATV, 1, sysMenu[1], 1, wFLT);
                 showMouse();
                 chs = 0;
-                key = ENTER;
+                if (fltStop[1] && fltStop[2]) isOK = 1;
+                else
+                {
+                    hideMouse();
+                    getScreenText(20, 10, 44, 9, szScreen);
+                    msgSlc = messageBox(20, 10, 61, 17, msgError, 2);
+                    if (msgSlc) cleanup();
+                    putScreenText(20, 10, 44, 9, szScreen);
+                    showMouse();
+                }
             }
 
             if (bRow == 21 && bCol >= 48 && bCol <= 60)
@@ -2638,50 +2634,17 @@ void showInstall()
                 drawButton(48, 21, wATV, 1, sysMenu[4], 1, wFLT);
                 showMouse();
                 chs = 1;
-                key = ENTER;
-            }
-
-            if (bRow == 2 && bCol == 8 || bCol == 9) haltSys();
-        }
-    } while (key != ENTER);
-
-    if (fltStop[slc])
-    {
-        writeVRM(14, 7 + 4 * slc, 0x1C, sysMenu[16 + slc], 0x1E);
-        printXY(15, 7 + 4 * slc, 0x1C, 251);
-    }
-    else writeVRM(14, 7 + 4 * slc, 0x1C, sysMenu[16 + slc], 0x1E);
-
-    if (!chs && !cancel)
-    {
-        if (fltStop[1] && fltStop[2]) startInstall();
-        else
-        {
-            hideMouse();
-            getScreenText(20, 10, 44, 9, szScreen);
-            
-            msgSlc = messageBox(20, 10, 61, 17, msgError, 2);
-            if (msgSlc) haltSys();
-            else
-            {
                 hideMouse();
+                getScreenText(20, 10, 44, 9, szScreen);
+                msgSlc = messageBox(20, 10, 61, 16, msgExit, 1);
+                if (!msgSlc) cleanup();
                 putScreenText(20, 10, 44, 9, szScreen);
                 showMouse();
-                goto label1;
             }
         }
-    }
-    else
-    {
-        hideMouse();
-        getScreenText(20, 10, 44, 9, szScreen);
-        msgSlc = messageBox(20, 10, 61, 16, msgExit, 1);
-        if (!msgSlc) haltSys();
-        hideMouse();
-        putScreenText(20, 10, 44, 9, szScreen);
-        showMouse();
-        goto label1;
-    }
+    } while (!isOK);
+
+    startInstall();
 }
 
 /*-------------------------------------------*/
@@ -2692,8 +2655,6 @@ void showInstall()
 /*-------------------------------------------*/
 void main()
 {
-    _setvideomode(_TEXTC80);
     initData();
     showInstall();
-    _setvideomode(_DEFAULTMODE);
 }

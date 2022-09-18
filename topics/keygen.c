@@ -38,7 +38,6 @@ typedef struct {
     uint8_t     month;      // The month of the program
     uint16_t    year;       // The year of the program
     uint8_t     regs;       // The register code
-    uint8_t     num;        // The number of run program
     uint8_t     key;        // Random key
     char        serial[20]; // License code
     char        user[31];   // User name

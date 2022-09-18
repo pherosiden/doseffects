@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <graph.h>
 
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + 80 * (y - 1)) << 1)
@@ -20,20 +19,41 @@
 #define _wATV   0x78
 #define _wFLT   0x74
 
-typedef struct {            // Struction information
+typedef struct {
     uint8_t     day;        // The date of the program
     uint8_t     month;      // The month of the program
+    uint16_t    year;       // The year of the program
     uint8_t     regs;       // The register code
-    uint8_t     num;        // The number of run program
+    uint8_t     key;        // Random key
     char        serial[20]; // License code
     char        user[31];   // User name
-    char        disk[4];    // The disk letter
+    char        path[33];   // The installation path
+    char        magic[33];  // Random characters
 } REG_INFO;
 
 uint8_t bmAvalid = 0;       // Status of the mouse
 char **sysInfo = NULL;      // Text message
 uint16_t sysNum = 0;        // Message count
-uint8_t *txtMem = (uint8_t*)0xB8000000L;
+uint8_t far *txtMem = (uint8_t far*)0xB8000000L;
+
+/*-----------------------------------*/
+/* Funtion : setBorder               */
+/* Purpose : Setting border color    */
+/* Expects : (color) color of border */
+/* Returns : Nothing                 */
+/*-----------------------------------*/
+void getCpuInfo(uint16_t *cpuInfo)
+{
+    __asm {
+        xor     eax, 0
+        lds     si, cpuInfo
+        cpuid
+        mov     [si    ], ax
+        mov     [si + 2], bx
+        mov     [si + 4], cx
+        mov     [si + 6], dx
+    }
+}
 
 /*-----------------------------------*/
 /* Funtion : setBorder               */
@@ -50,6 +70,36 @@ void setBorder(uint8_t color)
     int86(0x10, &regs, &regs);
 }
 
+/*-------------------------------------*/
+/* Funtion : setCursorSize             */
+/* Mission : Resize the cursor         */
+/* Expects : (size) The size of cursor */
+/* Returns : Nothing                   */
+/*-------------------------------------*/
+void setCursorSize(uint16_t size)
+{
+    union REGS regs;
+    regs.h.ah = 0x01;
+    regs.x.cx = size;
+    int86(0x10, &regs, &regs);
+}
+
+/*-------------------------------------*/
+/* Funtion : setCursorPos              */
+/* Mission : Set cursor position       */
+/* Expects : (size) The size of cursor */
+/* Returns : Nothing                   */
+/*-------------------------------------*/
+void setCursorPos(uint8_t x, uint8_t y)
+{
+    union REGS regs;
+    regs.h.ah = 0x02;
+    regs.h.bh = 0;
+    regs.h.dl = x - 1;
+    regs.h.dh = y - 1;
+    int86(0x10, &regs, &regs);
+}
+
 /*-----------------------------------------------*/
 /* Funtion : printChar                           */
 /* Purpose : Write a character to cordinate x, y */
@@ -57,26 +107,9 @@ void setBorder(uint8_t color)
 /*           (chr) character to write            */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void printChar(uint8_t x, uint8_t y, char chr)
+void printChar(uint8_t x, uint8_t y, uint8_t attr, char chr)
 {
-    char txt[2];
-    txt[0] = chr;
-    txt[1] = '\0';
-    _settextposition(y, x);
-    _outtext(txt);
-}
-
-/*-------------------------------------------------*/
-/* Function : printXY                              */
-/* Purpose  : Write a character to cordinate x, y  */
-/* Expects  : (x,y) cordinate to write             */
-/*            (Chr) character to write             */
-/*            (wAttr) attrib for the character     */
-/* Returns  : Nothing                              */
-/*-------------------------------------------------*/
-void printXY(uint8_t x, uint8_t y, uint8_t attr, char chr)
-{
-    txtMem[OFFSET(x, y)    ] = chr;
+    txtMem[OFFSET(x, y)] = chr;
     txtMem[OFFSET(x, y) + 1] = attr;
 }
 
@@ -139,7 +172,7 @@ void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t 
             txtMem[OFFSET(x++, y) + 1] = txtAtr;
         }
 
-        printXY(currX + bPos, y, fstAttr, szTmp[bPos]);
+        printChar(currX + bPos, y, fstAttr, szTmp[bPos]);
         free(szTmp);
     }
     else
@@ -188,16 +221,16 @@ void drawButton(uint8_t x, uint8_t y, uint8_t txtAttr, uint8_t bkClr, const char
         if (fstAttr)
         {
             writeVRM(x, y, txtAttr, szTitle, fstAttr);
-            printXY(x, y, txtAttr, styles[0]);
-            printXY(x + bLen - 2, y, txtAttr, styles[1]);
+            printChar(x, y, txtAttr, styles[0]);
+            printChar(x + bLen - 2, y, txtAttr, styles[1]);
             writeChar(x + 1, y + 1, wAttr, bLen - 1, styles[2]);
             writeChar(x + bLen - 1 , y, wAttr, 1, styles[3]);
         }
         else
         {
             writeVRM(x, y, txtAttr, szTitle, 0);
-            printXY(x, y, txtAttr, styles[0]);
-            printXY(x + bLen - 1, y, txtAttr, styles[1]);
+            printChar(x, y, txtAttr, styles[0]);
+            printChar(x + bLen - 1, y, txtAttr, styles[1]);
             writeChar(x + 1, y + 1, wAttr, bLen, styles[2]);
             writeChar(x + bLen, y, wAttr, 1, styles[3]);
         }
@@ -211,32 +244,26 @@ void drawButton(uint8_t x, uint8_t y, uint8_t txtAttr, uint8_t bkClr, const char
 /*            (x2,y2) cordinate bottom to right  */
 /* Returns  : Nothing                            */
 /*-----------------------------------------------*/
-void drawFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
+void drawFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr)
 {
     int16_t k;
-    char txt[2];
 
-    txt[1] = '\0';
-    printChar(x1, y1, 218);
-
-    txt[0] = 193;
-    for (k = x1 + 1; k < x2; k++) _outtext(txt);
-
-    txt[0] = 191;
-    _outtext(txt);
-    printChar(x1, y2, 192);
-
-    txt[0] = 194;
-    for (k = x1 + 1; k < x2; k++) _outtext(txt);
-
-    txt[0] = 225;
-    _outtext(txt);
+    for (k = x1 + 1; k < x2; k++)
+    {
+        printChar(k, y1, attr, 193);
+        printChar(k, y2, attr, 194);
+    }
 
     for (k = y1 + 1; k < y2; k++)
     {
-        printChar(x1, k, 179);
-        printChar(x2, k, 224);
+        printChar(x1, k, attr, 179);
+        printChar(x2, k, attr, 224);
     }
+
+    printChar(x1, y1, attr, 218);
+    printChar(x2, y1, attr, 191);
+    printChar(x1, y2, attr, 192);
+    printChar(x2, y2, attr, 225);
 }
 
 /*---------------------------------------------------*/
@@ -272,6 +299,35 @@ void setBlinking(uint8_t doblink)
     int86(0x10, &regs, &regs);
 }
 
+
+/*--------------------------------------------------*/
+/* Funtion : fillFrame                              */
+/* Purpose : To full the box with special character */
+/* Expects : (x1,y1) cordinate top to left          */
+/*           (x2,y2) cordinate bottom to right      */
+/*           (wAttr) special character color        */
+/*           (chr) special character                */
+/* Returns : Nothing                                */
+/*--------------------------------------------------*/
+void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char chr)
+{
+    uint8_t y;
+    for (y = y1; y <= y2; y++) writeChar(x1, y, wAttr, x2 - x1 + 1, chr);
+}
+
+/*----------------------------------------------*/
+/* Function : clearScreen                       */
+/* Purpose  : clearScreen the part of window    */
+/* Expects  : (x1,y1) cordinate top to left     */
+/*            (x2,y2) cordinate bottom to right */
+/*            (color) color needs clear         */
+/* Returns  : Nothing                           */
+/*----------------------------------------------*/
+void clearScreen(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color)
+{
+    fillFrame(x1, y1, x2, y2, color << 4, 32);
+}
+
 /*----------------------------------------------*/
 /* Function : drawBox                           */
 /* Purpose  : Draw a box with color and border  */
@@ -282,18 +338,10 @@ void setBlinking(uint8_t doblink)
 /*----------------------------------------------*/
 void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 {
-    uint8_t oldBk = _getbkcolor();
-    uint8_t oldCol = _gettextcolor();
-    _setbkcolor(wAttr >> 4);
-    _settextcolor(wAttr & 0x0F);
-    drawFrame(x1, y1, x2, y2);
-    _settextwindow(y1 + 1, x1 + 1, y2 - 1, x2 - 1);
-    _clearscreen(_GWINDOW);
-    _settextwindow(1, 1, 25, 80);
+    drawFrame(x1, y1, x2, y2, wAttr);
+    fillFrame(x1 + 1, y1 + 1, x2 - 1, y2 - 1, wAttr, 32);
     changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, 0x08);
     changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, 0x08);
-    _setbkcolor(oldBk);
-    _settextcolor(oldCol);
 }
 
 /*----------------------------------------------*/
@@ -315,23 +363,8 @@ void shadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, ch
     drawBox(x1, y1, x2, y2, wAttr);
     writeChar(x1 + 3, y1, bkc, x2 - x1 - 2, 32);
     writeVRM(x1 + bCenter, y1, bkc, szTitle, 0);
-    printXY(x1 + 2, y1, bkc, 226);
+    printChar(x1 + 2, y1, bkc, 226);
     writeVRM(x1, y1, bkc >> 4, szStyle, 0);
-}
-
-/*--------------------------------------------------*/
-/* Funtion : fillFrame                              */
-/* Purpose : To full the box with special character */
-/* Expects : (x1,y1) cordinate top to left          */
-/*           (x2,y2) cordinate bottom to right      */
-/*           (wAttr) special character color        */
-/*           (chr) special character                */
-/* Returns : Nothing                                */
-/*--------------------------------------------------*/
-void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char Chr)
-{
-    uint8_t i;
-    for (i = y1; i <= y2; i++) writeChar(x1, i, wAttr, x2 - x1 + 1, Chr);
 }
 
 /*----------------------------------*/
@@ -444,22 +477,6 @@ void closeMouse()
     hideMouse();
     regs.x.ax = 0;
     int86(0x33, &regs, &regs);
-}
-
-/*----------------------------------------------*/
-/* Function : clearScreen                       */
-/* Purpose  : clearScreen the part of window    */
-/* Expects  : (x1,y1) cordinate top to left     */
-/*            (x2,y2) cordinate bottom to right */
-/*            (color) color needs clear         */
-/* Returns  : Nothing                           */
-/*----------------------------------------------*/
-void clearScreen(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color)
-{
-    _settextwindow(y1, x1, y2, x2);
-    _setbkcolor(color);
-    _clearscreen(_GWINDOW);
-    _settextwindow(1, 1, 25, 80);
 }
 
 /*-----------------------------------------*/
@@ -738,26 +755,21 @@ void releaseData()
 }
 
 /*-------------------------------*/
-/* Funtion : haltSys             */
+/* Funtion : cleanup             */
 /* Purpose : Restore environment */
 /* Expects : Nothing             */
 /* Returns : Nothing             */
 /*-------------------------------*/
-void haltSys()
+void cleanup()
 {
-    char szPath[28] = {0};
-    strcpy(szPath, sysInfo[23]);
-    strcat(szPath, "off");
     setBorder(0x00);
-    _settextcursor(0x0607);
-    _setbkcolor(0);
-    _settextcolor(7);
+    setCursorSize(0x0607);
+    setCursorPos(1, 1);
     setBlinking(1);
     if (bmAvalid) closeMouse();
-    _clearscreen(_GWINDOW);
-    system(szPath);
     releaseData();
-    exit(EXIT_SUCCESS);
+    system("font off");
+    system("cls");
 }
 
 /*---------------------------------------------*/
@@ -797,11 +809,8 @@ void fadeIn()
 /*----------------------------------------------*/
 void initData()
 {
-    char szPath[32];
     getText("register.sys", "register.$$$");
-    strcpy(szPath, sysInfo[23]);
-    strcat(szPath, "on");
-    system(szPath);
+    system("font on");
 }
 
 /*---------------------------------*/
@@ -813,7 +822,7 @@ void initData()
 void registerForm()
 {
     FILE *fptr;
-    REG_INFO tmp;
+    REG_INFO regInfo;
     char szCurrName[25], szCurrID[20], *szName;
     uint8_t flgName = 1, flgID = 1;
 
@@ -827,24 +836,23 @@ void registerForm()
     if (!fptr)
     {
         fprintf(stderr, sysInfo[22]);
-        haltSys();
+        cleanup();
+        exit(1);
     }
 
-    fread(&tmp, sizeof(REG_INFO), 1, fptr);
-    _settextcursor(0x0B0A);
+    fread(&regInfo, sizeof(REG_INFO), 1, fptr);
+    setCursorSize(0x0B0A);
     szCurrName[0] = 25;
-    _settextposition(10, 36);
-    _setbkcolor(4);
-    _settextcolor(10);
+    setCursorPos(36, 10);
     szName = cgets(szCurrName);
-    if (strcmp(tmp.user, szName))
+    if (strcmp(regInfo.user, szName))
     {
         writeChar(36, 10, 0x4F, 24, 32);
         writeVRM(36, 10, 0x4F, sysInfo[7], 0);
         flgName = 0;
     }
 
-    _settextposition(12, 36);
+    setCursorPos(36, 12);
     szCurrID[0] = 20;
     szName = cgets(szCurrID);
     if (strcmp(szName, sysInfo[11]))
@@ -857,9 +865,9 @@ void registerForm()
     if (flgName && flgID)
     {
         writeVRM(30, 14, 0x1A, sysInfo[9], 0);
-        tmp.regs = 1;
+        regInfo.regs = 1;
         rewind(fptr);
-        fwrite(&tmp, sizeof(REG_INFO), 1, fptr);
+        fwrite(&regInfo, sizeof(REG_INFO), 1, fptr);
         fclose(fptr);
     }
     else
@@ -937,7 +945,7 @@ void menuRegister()
     if (!pos)
     {
         registerForm();
-        _settextcursor(0x2020);
+        setCursorSize(0x2020);
         getch();
         fadeIn();
     }
@@ -951,11 +959,8 @@ void menuRegister()
 /*--------------------------------------------------*/
 void startRegister()
 {
-    _setbkcolor(1);
-    _settextcolor(15);
     setBorder(55);
-    _settextcursor(0x2020);
-    _clearscreen(_GWINDOW);
+    setCursorSize(0x2020);
     setBlinking(0);
     fillFrame(1, 1, 80, 25, 0xFD, 178);
     shadowBox(3, 3, 77, 22, 0x5F, sysInfo[0]);
@@ -984,19 +989,19 @@ void startRegister()
 uint8_t isRegister()
 {
     FILE *fptr;
-    REG_INFO tmp;
+    REG_INFO regInfo;
 
     fptr = fopen(sysInfo[21], "rb");
     if (!fptr)
     {
         fprintf(stderr, sysInfo[22]);
-        getch();
-        haltSys();
+        cleanup();
+        exit(1);
     }
 
-    fread(&tmp, sizeof(REG_INFO), 1, fptr);
+    fread(&regInfo, sizeof(REG_INFO), 1, fptr);
     fclose(fptr);
-    return tmp.regs ? 1 : 0;
+    return regInfo.regs ? 1 : 0;
 }
 
 /*--------------------------------------*/
@@ -1008,8 +1013,8 @@ uint8_t isRegister()
 void checkLicense()
 {
     FILE *fptr;
-    REG_INFO tmp;
-    char szPath[31];
+    REG_INFO regInfo;
+    char szPath[33];
     struct dosdate_t da;
 
     _dos_getdate(&da);
@@ -1018,48 +1023,41 @@ void checkLicense()
     if (!fptr)
     {
         fprintf(stderr, sysInfo[22]);
-        getch();
-        haltSys();
+        cleanup();
+        exit(1);
     }
 
-    fread(&tmp, sizeof(REG_INFO), 1, fptr);
+    fread(&regInfo, sizeof(REG_INFO), 1, fptr);
     fclose(fptr);
-    strcat(szPath, tmp.disk);
+    strcat(szPath, regInfo.path);
 
-    if ((tmp.num >= 100) && !tmp.regs)
+    if (regInfo.month == da.month)
     {
-        system(szPath);
-        haltSys();
-    }
-
-    if (tmp.month == da.month)
-    {
-        if ((da.day - tmp.day) >= 7)
+        if ((da.day - regInfo.day) >= 7)
         {
             system(szPath);
-            haltSys();
+            cleanup();
+            exit(1);
         }
     }
     else
     {
-        if (((da.day + 31) - tmp.day) >= 7)
+        if (((da.day + 31) - regInfo.day) >= 7)
         {
             system(szPath);
-            haltSys();
+            cleanup();
+            exit(1);
         }
     }
 }
 
 void main()
 {
-    _setvideomode(_TEXTC80);
     initData();
     if (!isRegister())
     {
         //checkLicense();
         startRegister();
-        haltSys();
     }
-    releaseData();
-    _setvideomode(_DEFAULTMODE);
+    cleanup();
 }
