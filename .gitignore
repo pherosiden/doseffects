@@ -1,5 +1,6 @@
 # Compile output files
 *.exe
+*.com
 *.err
 *.obj
 *.DS_Store
