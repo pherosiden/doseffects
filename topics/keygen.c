@@ -801,7 +801,6 @@ void genSerialNumber(char *szUserName, char *CDKey)
     tmp.month = da.month;
     tmp.year = da.year;
     tmp.regs = 0;
-    tmp.num = 0;
     tmp.key = 90 + (rand() % 10);
 
     len = strlen(CDKey);
