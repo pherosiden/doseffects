@@ -42,25 +42,6 @@ uint8_t far *txtMem = (uint8_t far*)0xB8000000L;
 /* Expects : (color) color of border */
 /* Returns : Nothing                 */
 /*-----------------------------------*/
-void getCpuInfo(uint16_t *cpuInfo)
-{
-    __asm {
-        xor     eax, 0
-        lds     si, cpuInfo
-        cpuid
-        mov     [si    ], ax
-        mov     [si + 2], bx
-        mov     [si + 4], cx
-        mov     [si + 6], dx
-    }
-}
-
-/*-----------------------------------*/
-/* Funtion : setBorder               */
-/* Purpose : Setting border color    */
-/* Expects : (color) color of border */
-/* Returns : Nothing                 */
-/*-----------------------------------*/
 void setBorder(uint8_t color)
 {
     union REGS regs;

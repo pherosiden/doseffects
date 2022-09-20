@@ -866,7 +866,7 @@ void startCracking()
     drawButton(51, 10, _ATV, 3, szMenu[1], 1, _FLT);
     moveMouse(35, 10);
     drawButton(51, 12, _ATV, 3, szMenu[2], 1, _FLT);
-    writeChar(18, 9, 0x1A, 30, 32);
+    writeChar(18, 9, 0x1E, 30, 32);
 
     do {
         setCursorPos(18 + k, 9);
@@ -876,7 +876,7 @@ void startCracking()
             if (noUserName)
             {
                 noUserName = 0;
-                writeChar(18, 9, 0x1A, 30, 32);
+                writeChar(18, 9, 0x1E, 30, 32);
             }
 
             isASCII = readKey(&cKey);
@@ -885,14 +885,14 @@ void startCracking()
             if ((isASCII && k < 30 && cKey != 8 && isalpha(cKey)) || (cKey == 32 && k < 30))
             {
                 szUserName[k] = cKey;
-                printChar(18 + k, 9, 0x1A, cKey);
+                printChar(18 + k, 9, 0x1E, cKey);
                 k++;
             }
 
             if (cKey == 8 && k > 0)
             {
                 k--;
-                printChar(18 + k, 9, 0x1A, 32);
+                printChar(18 + k, 9, 0x1E, 32);
             }
 
             szUserName[k] = '\0';
@@ -938,7 +938,7 @@ void startCracking()
                     {
                         setCursorSize(0x2020);
                         genSerialNumber(szUserName, CDKey);
-                        writeVRM(18, 12, 0x1A, CDKey, 0);
+                        writeVRM(18, 12, 0x1E, CDKey, 0);
                     }
                     break;
                 case 1:
@@ -1028,7 +1028,7 @@ void startCracking()
                 {
                     setCursorSize(0x2020);
                     genSerialNumber(szUserName, CDKey);
-                    writeVRM(18, 12, 0x1A, CDKey, 0);
+                    writeVRM(18, 12, 0x1E, CDKey, 0);
                 }
             }
 
@@ -1124,7 +1124,7 @@ void main()
     shadowBox(15, 6, 65, 14, 0x3F, szMenu[0]);
     writeVRM(18, 8, 0x3F, szMenu[1],  0);
     writeVRM(18, 11, 0x3F, szMenu[2],  0);
-    writeChar(18, 12, 0x1A, 30, 32);
+    writeChar(18, 12, 0x1E, 30, 32);
 
     if (!initMouse()) system("mouse");
 

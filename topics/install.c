@@ -982,9 +982,9 @@ void initData()
 /*--------------------------------*/
 void sysReboot()
 {
-    void((far* reset_ptr)()) = (void(far*)())BOOT_ADR;
+    void((far *resetFunc)()) = (void(far*)())BOOT_ADR;
     *(int16_t far*)RESET_ADR = 0;
-    (*reset_ptr)();
+    (*resetFunc)();
 }
 
 /*---------------------------------------*/
@@ -1006,10 +1006,11 @@ void errorFile(char *szHandle, char *szErrorType)
     writeVRM(15, 12, 0x4F, sysInfo[54], 0);
     writeVRM(15, 13, 0x4F, sysInfo[55], 0);
 
+    while (kbhit()) getch();
     do {
-        if (clickMouse(&bCol, &bRow))
+        if (kbhit() || clickMouse(&bCol, &bRow))
         {
-            if (bRow == 15 && bCol >= 33 && bCol <= 45)
+            if (kbhit() || bRow == 15 && bCol >= 33 && bCol <= 45)
             {
                 hideMouse();
                 clearScreen(33, 15, 46, 16, 4);
@@ -1019,6 +1020,7 @@ void errorFile(char *szHandle, char *szErrorType)
                 showMouse();
                 break;
             }
+
             if (bRow == 8 && bCol == 13 || bCol == 14) break;
         }
     } while (!kbhit());
@@ -1474,8 +1476,8 @@ void checkProductKey()
             {
                 if (isASCII && j < 19 && key != 8 && key != TAB && key != ENTER)
                 {
-                    szSerial[j] = key;
-                    printChar(8 + j, 18, 0x1F, key);
+                    szSerial[j] = toupper(key);
+                    printChar(8 + j, 18, 0x1F, toupper(key));
                     j++;
                 }
 
@@ -1578,10 +1580,6 @@ void checkProductKey()
                 writeVRM(25, 21, wATV, sysMenu[1], wFLT);
                 delay(50);
                 drawButton(24, 21, wATV, 5, sysMenu[1], 1, wFLT);
-                getScreenText(20, 10, 43, 9, szScreen);
-                warningBox(20, 10, 60, 16, msgWarn, 1);
-                putScreenText(20, 10, 43, 9, szScreen);
-                showMouse();
 
                 if (!strcmp(regInfo.user, szUserName) && !strcmp(regInfo.serial, szSerial)) isOK = 1;
                 else if (strcmp(regInfo.user, szUserName) && strcmp(regInfo.serial, szSerial))
@@ -1598,6 +1596,14 @@ void checkProductKey()
                 {
                     selUserName = 1;
                     selSerial = 0;
+                }
+
+                if (!isOK)
+                {
+                    getScreenText(20, 10, 43, 9, szScreen);
+                    warningBox(20, 10, 60, 16, msgWarn, 1);
+                    putScreenText(20, 10, 43, 9, szScreen);
+                    showMouse();
                 }
             }
 
@@ -1633,12 +1639,12 @@ void checkProductKey()
 }
 
 /*------------------------------------*/
-/* Funtion : showHelpFile             */
+/* Funtion : showRegisterInfo             */
 /* Purpose : Show the readme.hlp file */
 /* Expects : Nothing                  */
 /* Returns : Nothing                  */
 /*------------------------------------*/
-void showHelpFile()
+void showRegisterInfo()
 {
     char isOK = 0;
 
@@ -1839,6 +1845,7 @@ void restartProgram()
 {
     char isOK = 0;
 
+    system("font on");
     showMouse();
     setCursorSize(0x2020);
     setBorder(50);
@@ -1853,7 +1860,7 @@ void restartProgram()
     moveMouse(40, 13);
 
     slc = chs = key = 0;
-
+    while (kbhit()) getch();
     do {
         if (kbhit())
         {
@@ -1884,6 +1891,15 @@ void restartProgram()
                 drawButton(26 + chs * 19, 13, 0x9F, 4, sysMenu[3 * chs], 1, 0x94);
                 if (chs > 0) chs = 1; else chs++;
                 drawButton(26 + chs * 19, 13, 0xB4, 4, sysMenu[3 * chs], 1, 0xB1);
+                break;
+            case ENTER:
+                isOK = 1;
+                hideMouse();
+                clearScreen(26, 13, 36, 14, 4);
+                writeVRM(27 + chs * 19, 13, 0xB4, sysMenu[3 * chs], 0xB1);
+                delay(50);
+                drawButton(26 + chs * 19, 13, 0xB4, 4, sysMenu[3 * chs], 1, 0xB1);
+                showMouse();
                 break;
             }
         }
@@ -1923,7 +1939,6 @@ void restartProgram()
                 delay(50);
                 drawButton(26, 13, 0xB4, 4, sysMenu[0], 1, 0xB1);
                 showMouse();
-                break;
             }
 
             if (bRow == 13 && bCol >= 45 && bCol <= 56)
@@ -1937,15 +1952,14 @@ void restartProgram()
                 delay(50);
                 drawButton(45, 13, 0xB4, 4, sysMenu[3], 1, 0xB1);
                 showMouse();
-                break;
             }
 
             if (bRow == 8 && bCol == 15 || bCol == 16) isOK = 1;
         }
     } while (!isOK);
 
-    cleanup();
     if (!chs && !slc) sysReboot();
+    else cleanup();
 }
 
 /*----------------------------------------*/
@@ -1975,7 +1989,8 @@ void chooseDrive()
     slc = chs = key = 0;
     strcpy(szInstallPath, "B:\\INSTALL");
     writeVRM(29, 12 + slc, 0x3F, sysMenu[12 + slc], 0x3E);
-
+    
+    while (kbhit()) getch();
     do {
         key = 0;
         if (kbhit())
@@ -2150,6 +2165,36 @@ void chooseDrive()
                 putScreenText(20, 10, 43, 9, szScreen);
                 showMouse();                            
             }
+
+            if (bRow == 17 && bCol >= 33 && bCol <= 53)
+            {
+                key = 0;
+                k = strlen(szInstallPath);
+                do {
+                    setCursorSize(0x0B0A);
+                    setCursorPos(33 + k, 17);
+                    if (kbhit())
+                    {
+                        isASCII = readKey(&key);
+                        if (!key) isASCII = readKey(&key);
+                        if (((isASCII && isalpha(key)) || key == '\\' || isdigit(key)) && k < 20)
+                        {
+                            szInstallPath[k] = key;
+                            printChar(33 + k, 17, 0x1E, key);
+                            k++;
+                        }
+
+                        if (key == DEL && k > 3)
+                        {
+                            k--;
+                            printChar(33 + k, 17, 0x1E, 32);
+                        }
+
+                        szInstallPath[k] = '\0';
+                    }
+                } while (key != ENTER && key != TAB);
+                setCursorSize(0x2020);                
+            }
         }
 
         szInstallPath[0] = drives[slc];
@@ -2189,14 +2234,11 @@ void updateProgram()
     fclose(fp);
 
     strcpy(szPath, szInstallPath);
-    strcat(szPath, "crack.com");
+    strcat(szPath, "\\keygen.com");
     unlink(szPath);
 
-    szPath[3] = '\0';
-    strcat(szPath, "install.com");
-    unlink(szPath);
-    szPath[3] = '\0';
-    strcat(szPath, "guide.txt");
+    strcpy(szPath, szInstallPath);
+    strcat(szPath, "\\install.com");
     unlink(szPath);
 }
 
@@ -2383,12 +2425,11 @@ void startInstall()
 {
     chooseDrive();
     checkDiskSpace();
-    //checkProductKey();
+    checkProductKey();
     installProgram();
     updateProgram();
-    showHelpFile();
+    showRegisterInfo();
     fadeOut();
-    chdir(szInstallPath);
     system("readme");
     restartProgram();
 }
