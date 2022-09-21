@@ -103,8 +103,8 @@ void setBorder(uint8_t color)
 /*-----------------------------------------------*/
 void printChar(uint8_t x, uint8_t y, uint8_t attr, char chr)
 {
-    txtMem[OFFSET(x, y)] = chr;
-    txtMem[OFFSET(x, y) + 1] = attr;
+    uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
+    *pmem = (attr << 8) + chr;
 }
 
 /*------------------------------------------------*/
@@ -119,15 +119,9 @@ void printChar(uint8_t x, uint8_t y, uint8_t attr, char chr)
 void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 {
     uint8_t i;
-    uint16_t rwVideoOFS;
-
-    rwVideoOFS = OFFSET(x, y);
-    for (i = 0; i < len; i++)
-    {
-        txtMem[rwVideoOFS    ] = chr;
-        txtMem[rwVideoOFS + 1] = attr;
-        rwVideoOFS += 2;
-    }
+    const uint16_t txt = (attr << 8) + chr;
+    uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
+    for (i = 0; i < len; i++) *pmem++ = txt;
 }
 
 /*-----------------------------------------------*/
@@ -142,13 +136,13 @@ void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 /*-----------------------------------------------*/
 void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t fstAttr)
 {
-    char *szTmp;
-    uint8_t i = 0, fltStop = 0, currX = x, bPos;
+    uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
 
     if (fstAttr)
     {
-        szTmp = (char*)malloc(strlen(szPrmt) + 1);
-        if (!szTmp) return;
+        char *ptmp = NULL;
+        char szTmp[80] = {0};
+        uint8_t i = 0, fltStop = 0, currX = x, bPos;
 
         strcpy(szTmp, szPrmt);
         for (i = 0; (i < strlen(szTmp) - 1) && !fltStop; i++)
@@ -159,23 +153,13 @@ void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t 
         memmove(&szTmp[i - 1], &szTmp[i], strlen(szTmp) - i + 1);
         bPos = i - 1;
 
-        i = 0;
-        while (szTmp[i])
-        {
-            txtMem[OFFSET(x, y)] = szTmp[i++];
-            txtMem[OFFSET(x++, y) + 1] = txtAtr;
-        }
-
+        ptmp = szTmp;
+        while (*ptmp) *pmem++ = (txtAtr << 8) + *ptmp++;
         printChar(currX + bPos, y, fstAttr, szTmp[bPos]);
-        free(szTmp);
     }
     else
     {
-        while (*szPrmt)
-        {
-            txtMem[OFFSET(x, y)] = *szPrmt++;
-            txtMem[OFFSET(x++, y) + 1] = txtAtr;
-        }
+        while (*szPrmt) *pmem++ = (txtAtr << 8) + *szPrmt++;
     }
 }
 
@@ -265,15 +249,23 @@ void drawFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr)
 /* Purpose  : Chage the attribute of the area screen */
 /* Expects  : (x1,y1) cordinate top to left          */
 /*            (x2,y2) cordinate bottom to right      */
-/*            (wAttr) the attribute                  */
+/*            (attr) the attribute                   */
 /* Returns  : Nothing                                */
 /*---------------------------------------------------*/
-void changeAttrib(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
+void changeAttrib(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr)
 {
-    uint8_t col, row;
-    for (col = x1; col <= x2; col++)
+    uint8_t x0 = x1, y0 = y1;
+    const uint8_t addofs = (80 - (x2 - x1 + 1)) << 1;
+    uint8_t far *pmem = (uint8_t far*)(txtMem + OFFSET(x1, y1));
+
+    for (y0 = y1; y0 <= y2; y0++)
     {
-        for (row = y1; row <= y2; row++) txtMem[OFFSET(col, row) + 1] = wAttr;
+        for (x0 = x1; x0 <= x2; x0++)
+        {
+            *(pmem + 1) = attr;
+            pmem += 2;
+        }
+        pmem += addofs;
     }
 }
 
@@ -938,7 +930,7 @@ void startCracking()
                     {
                         setCursorSize(0x2020);
                         genSerialNumber(szUserName, CDKey);
-                        writeVRM(18, 12, 0x1E, CDKey, 0);
+                        writeVRM(18, 12, 0x7E, CDKey, 0);
                     }
                     break;
                 case 1:
@@ -1028,7 +1020,7 @@ void startCracking()
                 {
                     setCursorSize(0x2020);
                     genSerialNumber(szUserName, CDKey);
-                    writeVRM(18, 12, 0x1E, CDKey, 0);
+                    writeVRM(18, 12, 0x7E, CDKey, 0);
                 }
             }
 
@@ -1124,7 +1116,7 @@ void main()
     shadowBox(15, 6, 65, 14, 0x3F, szMenu[0]);
     writeVRM(18, 8, 0x3F, szMenu[1],  0);
     writeVRM(18, 11, 0x3F, szMenu[2],  0);
-    writeChar(18, 12, 0x1E, 30, 32);
+    writeChar(18, 12, 0x7E, 30, 32);
 
     if (!initMouse()) system("mouse");
 

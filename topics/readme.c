@@ -23,7 +23,7 @@ uint8_t far *txtMem = (uint8_t far*)0xB8000000L;
 
 /*------------------------------------------------*/
 /* Function : scrollText                          */
-/* Mission  : scrollText a line on the monitor        */
+/* Mission  : scrollText a line on the monitor    */
 /* Expects  : (bNumRow) Number lines needs scroll */
 /*            (bCol,bRow,colLR) The Coordinate    */
 /*            (bType) scroll up or down           */
@@ -99,15 +99,9 @@ void setCursorPos(uint8_t x, uint8_t y)
 void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 {
     uint8_t i;
-    uint16_t rwVideoOFS;
-
-    rwVideoOFS = OFFSET(x, y);
-    for (i = 0; i < len; i++)
-    {
-        txtMem[rwVideoOFS    ] = chr;
-        txtMem[rwVideoOFS + 1] = attr;
-        rwVideoOFS += 2;
-    }
+    const uint16_t txt = (attr << 8) + chr;
+    uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
+    for (i = 0; i < len; i++) *pmem++ = txt;
 }
 
 /*-----------------------------------------------*/
@@ -120,13 +114,10 @@ void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 /*            (fstAttr) The attr of first letter */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt)
+void writeVRM(uint8_t x, uint8_t y, uint8_t attr, const char *msg)
 {
-    while (*szPrmt)
-    {
-        txtMem[OFFSET(x, y)] = *szPrmt++;
-        txtMem[OFFSET(x++, y) + 1] = txtAtr;
-    }
+    uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
+    while (*msg) *pmem++ = (attr << 8) + *msg++;
 }
 
 /*-----------------------------------------------*/
@@ -458,6 +449,7 @@ void viewFile(char *szFileName)
 {
     char key = 0;
     char szDate[12];
+
     char *szTitle[] = {
         "Ta65p tin README",
         "Du2ng:    - PgUp - PgDwn - Home - End d9e63 d9ie62u khie63n. ESC d9e63 thoa1t",
@@ -467,25 +459,28 @@ void viewFile(char *szFileName)
 
     struct dostime_t tm;
     struct dosdate_t da;
-    uint16_t currLine = 0, i = 0, j = 0, k = 0, m = 0;
+    uint16_t currLine = 0, i = 0, j = 0, k = 0;
+    
+    for (i = 0; i < sizeof(szTitle) / sizeof(szTitle[0]); i++) fontVNI(szTitle[i]);
 
     getTextFile(szFileName, "readme.$$$");
-    _dos_getdate(&da);
     clearScreen(1, 1, 80, 25, 3);
     setCursorSize(0x2020);
     setBorder(43);
     setBlinking(0);
     writeChar(1, 1, 0x4E, 80, 32);
     writeChar(1, 25, 0x4E, 80, 32);
-    for (i = 0; i < sizeof(szTitle) / sizeof(szTitle[0]); i++) fontVNI(szTitle[i]);
     writeVRM(31, 1, 0x4F, szTitle[0]);
     writeChar(27, 1, 0x4A, 3, 3);
     writeChar(46, 1, 0x4A, 3, 3);
     writeVRM(2, 25, 0x4F, szTitle[1]);
     writeChar(8, 25, 0x4F, 1, 24);
     writeChar(9, 25, 0x4F, 1, 25);
+    
+    _dos_getdate(&da);
     sprintf(szDate, "%s: %.2d/%.2d/%d", szTitle[3], da.day,da.month,da.year);
     writeVRM(2, 1, 0x4E, szDate);
+
     for (i = 0; i < 23; i++) writeVRM(1, 2 + i, 0x30, szLines[i]);
     
     currLine = 23;
@@ -565,14 +560,8 @@ void viewFile(char *szFileName)
         }
         
         _dos_gettime(&tm);
-        txtMem[142] = tm.hour / 10 + '0';
-        txtMem[144] = tm.hour % 10 + '0';
-        txtMem[146] = ':';
-        txtMem[148] = tm.minute / 10 + '0';
-        txtMem[150] = tm.minute % 10 + '0';
-        txtMem[152] = ':';
-        txtMem[154] = tm.second / 10 + '0';
-        txtMem[156] = tm.second % 10 + '0';
+        sprintf(szDate, "%.2d:%.2d:%.2d", tm.hour, tm.minute, tm.second);
+        writeVRM(72, 1, 0x4E, szDate);
     } while (key != ESC);
     releaseData();
 }

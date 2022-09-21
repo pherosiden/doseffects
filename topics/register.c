@@ -90,8 +90,8 @@ void setCursorPos(uint8_t x, uint8_t y)
 /*-----------------------------------------------*/
 void printChar(uint8_t x, uint8_t y, uint8_t attr, char chr)
 {
-    txtMem[OFFSET(x, y)] = chr;
-    txtMem[OFFSET(x, y) + 1] = attr;
+    uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
+    *pmem = (attr << 8) + chr;
 }
 
 /*------------------------------------------------*/
@@ -106,15 +106,9 @@ void printChar(uint8_t x, uint8_t y, uint8_t attr, char chr)
 void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 {
     uint8_t i;
-    uint16_t rwVideoOFS;
-
-    rwVideoOFS = OFFSET(x, y);
-    for (i = 0; i < len; i++)
-    {
-        txtMem[rwVideoOFS    ] = chr;
-        txtMem[rwVideoOFS + 1] = attr;
-        rwVideoOFS += 2;
-    }
+    const uint16_t txt = (attr << 8) + chr;
+    uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
+    for (i = 0; i < len; i++) *pmem++ = txt;
 }
 
 /*-----------------------------------------------*/
@@ -129,13 +123,13 @@ void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 /*-----------------------------------------------*/
 void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t fstAttr)
 {
-    char *szTmp;
-    uint8_t i = 0, fltStop = 0, currX = x, bPos;
+    uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
 
     if (fstAttr)
     {
-        szTmp = (char*)malloc(strlen(szPrmt) + 1);
-        if (!szTmp) return;
+        char *ptmp = NULL;
+        char szTmp[80] = {0};
+        uint8_t i = 0, fltStop = 0, currX = x, bPos;
 
         strcpy(szTmp, szPrmt);
         for (i = 0; (i < strlen(szTmp) - 1) && !fltStop; i++)
@@ -146,23 +140,13 @@ void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t 
         memmove(&szTmp[i - 1], &szTmp[i], strlen(szTmp) - i + 1);
         bPos = i - 1;
 
-        i = 0;
-        while (szTmp[i])
-        {
-            txtMem[OFFSET(x, y)] = szTmp[i++];
-            txtMem[OFFSET(x++, y) + 1] = txtAtr;
-        }
-
+        ptmp = szTmp;
+        while (*ptmp) *pmem++ = (txtAtr << 8) + *ptmp++;
         printChar(currX + bPos, y, fstAttr, szTmp[bPos]);
-        free(szTmp);
     }
     else
     {
-        while (*szPrmt)
-        {
-            txtMem[OFFSET(x, y)] = *szPrmt++;
-            txtMem[OFFSET(x++, y) + 1] = txtAtr;
-        }
+        while (*szPrmt) *pmem++ = (txtAtr << 8) + *szPrmt++;
     }
 }
 
@@ -252,15 +236,23 @@ void drawFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr)
 /* Purpose  : Chage the attribute of the area screen */
 /* Expects  : (x1,y1) cordinate top to left          */
 /*            (x2,y2) cordinate bottom to right      */
-/*            (wAttr) the attribute                  */
+/*            (attr) the attribute                   */
 /* Returns  : Nothing                                */
 /*---------------------------------------------------*/
-void changeAttrib(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
+void changeAttrib(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr)
 {
-    uint8_t col, row;
-    for (col = x1; col <= x2; col++)
+    uint8_t x0 = x1, y0 = y1;
+    const uint8_t addofs = (80 - (x2 - x1 + 1)) << 1;
+    uint8_t far *pmem = (uint8_t far*)(txtMem + OFFSET(x1, y1));
+
+    for (y0 = y1; y0 <= y2; y0++)
     {
-        for (row = y1; row <= y2; row++) txtMem[OFFSET(col, row) + 1] = wAttr;
+        for (x0 = x1; x0 <= x2; x0++)
+        {
+            *(pmem + 1) = attr;
+            pmem += 2;
+        }
+        pmem += addofs;
     }
 }
 
@@ -279,7 +271,6 @@ void setBlinking(uint8_t doblink)
     regs.h.bl = doblink ? 1 : 0;
     int86(0x10, &regs, &regs);
 }
-
 
 /*--------------------------------------------------*/
 /* Funtion : fillFrame                              */
@@ -380,7 +371,7 @@ uint16_t clickMouse(uint16_t *col, uint16_t *row)
     int86(0x33, &regs, &regs);
     *col = (regs.x.cx >> 3) + 1;
     *row = (regs.x.dx >> 3) + 1;
-    return regs.x.bx;
+    return regs.x.bx == 1;
 }
 
 /*-----------------------------------*/
@@ -866,19 +857,20 @@ void registerForm()
 /*-------------------------------------*/
 void menuRegister()
 {
-    char key;
+    char key = 0, isOK = 0;
     uint16_t pos = 0, col = 0, row = 0;
 
     initMouse();
     drawButton(22, 20, wATV, 5, sysInfo[25], 1, wFLT);
     drawButton(47, 20, _wATV, 5, sysInfo[26], 1, _wFLT);
 
+    while (kbhit()) getch();
     do {
         if (kbhit())
         {
             key = getch();
             if (!key) key = getch();
-            switch (toupper(key))
+            switch (key)
             {
             case LEFT:
                 drawButton(22 + pos * 25, 20, _wATV, 5, sysInfo[25 + pos], 1, _wFLT);
@@ -890,13 +882,22 @@ void menuRegister()
                 if (pos > 0) pos = 0; else pos++;
                 drawButton(22 + pos * 25, 20, wATV, 5, sysInfo[25 + pos], 1, wFLT);
                 break;
+            case ENTER:
+                isOK = 1;
+                clearScreen(22, 20, 34, 21, 5);
+                writeVRM(23 + pos * 25, 20, wATV, sysInfo[25 + pos], wFLT);
+                delay(50);
+                drawButton(22 + pos * 25, 20, wATV, 5, sysInfo[25 + pos], 1, wFLT);
+                break;
             }
         }
 
-        if (clickMouse(&col, &row) == 1)
+        if (clickMouse(&col, &row))
         {
             if (row == 20 && col >= 22 && col <= 33)
             {
+                pos = 0;
+                isOK = 1;
                 hideMouse();
                 drawButton(47, 20, _wATV, 5, sysInfo[26], 1, _wFLT);
                 clearScreen(22, 20, 34, 21, 5);
@@ -904,11 +905,12 @@ void menuRegister()
                 delay(50);
                 drawButton(22, 20, wATV, 5, sysInfo[25], 1, wFLT);
                 showMouse();
-                pos = 0;
-                key = ENTER;
             }
+
             if (row == 20 && col >= 47 && col <= 57)
             {
+                pos = 1;
+                isOK = 1;
                 hideMouse();
                 drawButton(22, 20, _wATV, 5, sysInfo[25], 1, _wFLT);
                 clearScreen(47, 20, 58, 21, 5);
@@ -916,12 +918,11 @@ void menuRegister()
                 delay(50);
                 drawButton(47, 20, wATV, 5, sysInfo[26], 1, wFLT);
                 showMouse();
-                pos = 1;
-                key = ENTER;
             }
-            if (col == 3 || col == 4 && row == 2) key = ENTER;
+
+            if (col == 3 || col == 4 && row == 2) isOK = 1;
         }
-    } while (key != ENTER);
+    } while (!isOK);
 
     if (!pos)
     {

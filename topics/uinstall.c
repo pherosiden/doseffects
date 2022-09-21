@@ -703,8 +703,8 @@ void SummaryResult()
 
 	textattr(0x1F); clrscr();
 	DlgWin(18,8,62,16,0x7F,SysInf[1]);
-	PrintVRM(28,10,0x70,"%2u t‹p tin ù§ ùž—c g– bÆ.",nFiles);
-	PrintVRM(28,11,0x70,"%2u thž mÖc ù§ ùž—c g– bÆ.",nDirs);
+	PrintVRM(28,10,0x70,"%2u tï¿½p tin ï¿½ï¿½ ï¿½ï¿½ï¿½c gï¿½ bï¿½.",nFiles);
+	PrintVRM(28,11,0x70,"%2u thï¿½ mï¿½c ï¿½ï¿½ ï¿½ï¿½ï¿½c gï¿½ bï¿½.",nDirs);
 	WriteVRM(22,12,0x70,SysInf[11]); Button(35,14,0x4F,7,SysInf[14],1,0x4A);
 	do {
 		if(ClickMouse(bCol, bRow) == 1) {
