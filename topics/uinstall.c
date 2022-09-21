@@ -1,150 +1,140 @@
-#include <dir.h>
 #include <dos.h>
-#include <ctype.h>
+#include <io.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <ctype.h>
 #include <conio.h>
+#include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
+#include <direct.h>
 #include <stdarg.h>
+#include <fcntl.h>
 
-#define LEFT	75
-#define RIGHT	77
-#define ENTER	13
+#define MASK_BG         0x08
+#define OFFSET(x, y)    (((x - 1) + 80 * (y - 1)) << 1)
 
-#define VIDEO_ADDR	0xB800
-#define MASK_BG		0x08
-#define OFFSET(x, y) ( (x - 1)*2 + 160*(y - 1) )
-#ifndef MK_FP
-#define MK_FP(seg, ofs) ((void far*)((unsigned long)(seg) << 16 | (ofs)))
-#endif
+#define LEFT    75
+#define RIGHT   77
+#define ENTER   13
 
-#define LEFT  75
-#define RIGHT 77
-#define ENTER 13
+#define wATV    0xF0
+#define wFLT    0xFC
+#define _wATV   0x78
+#define _wFLT   0x74
 
-#define wATV 0xF0
-#define wFLT 0xFC
-#define _wATV 0x78
-#define _wFLT 0x74
+typedef struct {
+    uint8_t     day;        // The date of the program
+    uint8_t     month;      // The month of the program
+    uint16_t    year;       // The year of the program
+    uint8_t     regs;       // The register code
+    uint8_t     key;        // Random key
+    char        serial[20]; // License code
+    char        user[31];   // User name
+    char        path[33];   // The installation path
+    char        magic[33];  // Random characters
+} REG_INFO;
 
-struct text_info txtInfo;    // Save information of the text mode
-typedef unsigned char byte;  // Data type byte
-typedef unsigned int word;   // Data type word
-typedef byte bool;           // Data type boolean
-char far *fpVRM =            // The pointer to video memory
-(char far *)MK_FP(0xB800,0); // Address of monitor VGA
-char szDrive[15];            // The disk letter
-byte bmAvalid = 0;           // Status of the mouse
-struct tagRegs {             // Struction information
-	byte day;                 // The date of the program
-	byte month;               // The month of the program
-	byte regs;                // The register code
-	byte num;                 // The number of run program
-	char serial[20];          // Product code
-	char user[31];            // Register name user
-	char disk[4];             // The disk letter
+char szInstallPath[32];     // Installation path
+uint8_t bmAvalid = 0;       // Status of the mouse
+uint8_t far *txtMem = (uint8_t far*)0xB8000000L;
+uint16_t nFiles = 0, nDirs = 0;
+
+char *sysInf[] = {
+    "Go74 bo3 chu7o7ng tri2nh",
+    "To1m ta81t tho6ng tin",
+    "D9ang xo1a, xin d9o75i mo65t chu1t...",
+    "Chu7o7ng tri2nh  TOPICS cu3a ba5n d9a4 he61t tho72i gian su73 du5ng. No1",
+    "hoa5t d9o65ng kho6ng to61t trong ma1y ba5n nu74a va2 no1 se4 bi5 loa5i bo3",
+    "ra kho3i he65 tho61ng cu3a ba5n. Ne61u ba5n ca3m tha61y ra82ng ba5n thi1ch",
+    "chu7o7ng tri2nh na2y xin ba5n vui lo2ng d9a8ng ky1 no1 vo71i ta1c gia3!",
+    "Ca1m o7n ba5n d9a4 cho5n va2 su73 du5ng  chu7o7ng tri2nh na2y. Xin cha2o",
+    "ta5m bie65t va2 he5n ga85p la5i ca1c ba5n...",
+    "Nguye64n Ngo5c Va6n.",
+    "D9ie65n thoa5i : 8267231",
+    "Chu7o7ng tri2nh TOPICS d9a4 go74 bo3 hoa2n ta61t.",
+    "He61t ha5n su73 du5ng chu7o7ng tri2nh TOPICS",
+    "  ~D9o62ng y1  ",
+    "  ~Bo3 qua  "
 };
-static char *SysInf[] = {
-"Go74 bo3 chu7o7ng tri2nh", "To1m ta81t tho6ng tin",
-"D9ang xo1a, xin d9o75i mo65t chu1t...",
-"Chu7o7ng tri2nh  TOPICS cu3a ba5n d9a4 he61t tho72i gian su73 du5ng. No1",
-"hoa5t d9o65ng kho6ng to61t trong ma1y ba5n nu74a va2 no1 se4 bi5 loa5i bo3",
-"ra kho3i he65 tho61ng cu3a ba5n. Ne61u ba5n ca3m tha61y ra82ng ba5n thi1ch",
-"chu7o7ng tri2nh na2y xin ba5n vui lo2ng d9a8ng ky1 no1 vo71i ta1c gia3!",
-"Ca1m o7n ba5n d9a4 cho5n va2 su73 du5ng  chu7o7ng tri2nh na2y. Xin cha2o",
-"ta5m bie65t va2 he5n ga85p la5i ca1c ba5n...",
-"Nguye64n Ngo5c Va6n author.", "D9ie65n thoa5i : 8267231",
-"Chu7o7ng tri2nh TOPICS d9a4 go74 bo3 hoa2n ta61t.",
-"Qu1a ha5n su73 du5ng chu7o7ng tri2nh TOPICS","TOPICS\\DRIVERS\\font on",
-"  ~D9o62ng y1  ","  ~Bo3 qua  ","C:\\WINDOWS\\register.dat"};
-word nFiles = 0, nDirs = 0;
 
-/*-------------------------------------------------*/
-/* Function : GetTextAttr                          */
-/* Mission  : Save current attrib of the text mode */
-/* Expects  : Nothing                              */
-/* Returns  : Current color of the text mode       */
-/*-------------------------------------------------*/
-word GetTextAttr()
+/*-----------------------------------*/
+/* Funtion : setBorder               */
+/* Purpose : Setting border color    */
+/* Expects : (color) color of border */
+/* Returns : Nothing                 */
+/*-----------------------------------*/
+void setBorder(uint8_t color)
 {
-	gettextinfo(&txtInfo); return txtInfo.attribute;
+    union REGS regs;
+    regs.h.ah = 0x10;
+    regs.h.al = 0x01;
+    regs.h.bh = color & 63;
+    int86(0x10, &regs, &regs);
 }
 
 /*-------------------------------------*/
-/* Funtion : SetCursorSize             */
+/* Funtion : setCursorSize             */
 /* Mission : Resize the cursor         */
 /* Expects : (size) The size of cursor */
 /* Returns : Nothing                   */
 /*-------------------------------------*/
-void SetCursorSize(word size)
+void setCursorSize(uint16_t size)
 {
-	asm {
-		mov ah, 1
-		mov cx, size
-		int 0x10
-	}
+    union REGS regs;
+    regs.h.ah = 0x01;
+    regs.x.cx = size;
+    int86(0x10, &regs, &regs);
 }
 
-/*-----------------------------------*/
-/* Funtion : SetBorder               */
-/* Mission : Setting border color    */
-/* Expects : (color) color of border */
-/* Returns : Nothing                 */
-/*-----------------------------------*/
-void SetBorder(byte color)
+/*-------------------------------------*/
+/* Funtion : setCursorPos              */
+/* Mission : Set cursor position       */
+/* Expects : (size) The size of cursor */
+/* Returns : Nothing                   */
+/*-------------------------------------*/
+void setCursorPos(uint8_t x, uint8_t y)
 {
-	union REGS regs; regs.h.ah = 0x10; regs.h.al = 0x01;
-	regs.h.bh = color & 63; int86(0x10, &regs, &regs);
+    union REGS regs;
+    regs.h.ah = 0x02;
+    regs.h.bh = 0;
+    regs.h.dl = x - 1;
+    regs.h.dh = y - 1;
+    int86(0x10, &regs, &regs);
 }
 
 /*-----------------------------------------------*/
-/* Funtion : PrintChar                           */
-/* Mission : Write a character to cordinate x, y */
+/* Funtion : printChar                           */
+/* Purpose : Write a character to cordinate x, y */
 /* Expects : (x,y) cordinate to write            */
 /*           (chr) character to write            */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void PrintChar(byte x, byte y, char chr)
+void printChar(uint8_t x, uint8_t y, uint8_t attr, char chr)
 {
-	gotoxy(x,y); putch(chr);
-}
-
-/*-------------------------------------------------*/
-/* Function : PrintXY                              */
-/* Mission  : Write a character to cordinate x, y  */
-/* Expects  : (x,y) cordinate to write             */
-/*            (Chr) character to write             */
-/*            (wAttr) attrib for the character     */
-/* Returns  : Nothing                              */
-/*-------------------------------------------------*/
-void PrintXY(byte x, byte y, word wAttr, char Chr)
-{
-	fpVRM[OFFSET(x, y)] = Chr; fpVRM[OFFSET(x, y) + 1] = wAttr;
+    uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
+    *pmem = (attr << 8) + chr;
 }
 
 /*------------------------------------------------*/
-/* Funtion : WriteChar                            */
-/* Mission : Writting a character with attribute  */
+/* Funtion : writeChar                            */
+/* Purpose : Writting a character with attribute  */
 /* Expects : (x,y) cordinate to write a character */
 /*           (wAttr) attribute of character       */
 /*           (bLen) length area                   */
 /*           (Chr) symbol needs to write          */
 /* Returns : Nothing                              */
 /*------------------------------------------------*/
-void WriteChar(byte x, byte y, byte wAttr, byte bLen, char Chr)
+void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 {
-	register word rwVideoOFS;
-	register byte i;
-
-	rwVideoOFS = OFFSET(x,y);
-	for(i = 1; i <= bLen; i++) {
-		poke(VIDEO_ADDR, rwVideoOFS, (wAttr << 8) + Chr); rwVideoOFS += 2;
-	}
+    uint8_t i;
+    const uint16_t txt = (attr << 8) + chr;
+    uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
+    for (i = 0; i < len; i++) *pmem++ = txt;
 }
 
 /*-----------------------------------------------*/
-/* Function : WriteVRM                           */
-/* Mission  : Writing a character with attribute */
+/* Function : writeVRM                           */
+/* Purpose  : Writing a character with attribute */
 /* Notices  : Intervention in video memory       */
 /* Expects  : (x,y) cordinate needs to writting  */
 /*            (txtAttr) The attribute of string  */
@@ -152,48 +142,56 @@ void WriteChar(byte x, byte y, byte wAttr, byte bLen, char Chr)
 /*            (fstAttr) The attr of first letter */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void WriteVRM(byte x, byte y, word txtAtr, const char *szPrmt, word fstAttr = 0)
+void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t fstAttr)
 {
-	byte i = 0, fltStop = 0, currX = x, bPos;
-	char *szTmp;
+    uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
 
-	if(fstAttr) {
-		szTmp = new char[strlen(szPrmt)+1]; strcpy(szTmp, szPrmt);
-		for(;(i < strlen(szTmp) - 1) && !fltStop;)
-		if(szTmp[i++] == 126) fltStop = 1;
-		memmove(&szTmp[i-1], &szTmp[i], strlen(szTmp) - i + 1);
-		bPos = i - 1; i = 0;
-		while(szTmp[i]) {
-			fpVRM[OFFSET(x, y)] = szTmp[i++];
-			fpVRM[OFFSET(x++, y) + 1] = txtAtr;
-		}
-		PrintXY(currX + bPos, y, fstAttr, szTmp[bPos]); delete[]szTmp;
-	}
-	else {
-		while(*szPrmt) {
-			fpVRM[OFFSET(x, y)] = *szPrmt++; fpVRM[OFFSET(x++, y)+1] = txtAtr;
-		}
-	}
+    if (fstAttr)
+    {
+        char *ptmp = NULL;
+        char szTmp[80] = {0};
+        uint8_t i = 0, fltStop = 0, currX = x, bPos;
+
+        strcpy(szTmp, szPrmt);
+        for (i = 0; (i < strlen(szTmp) - 1) && !fltStop; i++)
+        {
+            if (szTmp[i] == 126) fltStop = 1;
+        }
+
+        memmove(&szTmp[i - 1], &szTmp[i], strlen(szTmp) - i + 1);
+        bPos = i - 1;
+
+        ptmp = szTmp;
+        while (*ptmp) *pmem++ = (txtAtr << 8) + *ptmp++;
+        printChar(currX + bPos, y, fstAttr, szTmp[bPos]);
+    }
+    else
+    {
+        while (*szPrmt) *pmem++ = (txtAtr << 8) + *szPrmt++;
+    }
 }
 
 /*-----------------------------------------------*/
-/* Function : PrintVRM                           */
-/* Mission  : Writing a character with attribute */
+/* Function : printVRM                           */
+/* Purpose  : Writing a character with attribute */
 /* Notices  : Intervention in video memory       */
 /* Expects  : (x,y) cordinate needs to writting  */
-/*            (wAttr) The attribute of string    */
-/*            (szMsg) the string to format       */
+/*            (attr) The attribute of string     */
+/*            (str) the string to format         */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void PrintVRM(byte x, byte y, word wAttr, char *szMsg, ...)
+void printVRM(uint8_t x, uint8_t y, uint8_t attr, char *str, ...)
 {
-	va_list vlPara; char szBuff[255]; va_start(vlPara,szMsg);
-	vsprintf(szBuff, szMsg, vlPara); WriteVRM(x,y,wAttr,szBuff);
+    char buffer[255];
+    va_list params;
+    va_start(params, str);
+    vsprintf(buffer, str, params);
+    writeVRM(x, y, attr, buffer, 0);
 }
 
 /*-----------------------------------------------*/
-/* Function : Button                             */
-/* Mission  : Define the button shadow           */
+/* Function : drawButton                         */
+/* Purpose  : Define the button shadow           */
 /* Expects  : (x,y) cordinate needs to writting  */
 /*            (txtAttr) the attribute of a title */
 /*            (szTitle) the string to format     */
@@ -201,607 +199,751 @@ void PrintVRM(byte x, byte y, word wAttr, char *szMsg, ...)
 /*            (fstAttr) The attr of first letter */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void Button(byte x, byte y, word txtAttr, byte bckClr, const char *szTitle, byte bType = 0, word fstAttr = 0)
+void drawButton(uint8_t x, uint8_t y, uint8_t txtAttr, uint8_t bkClr, const char *szTitle, uint8_t bType, uint8_t fstAttr)
 {
-	static const char Style[4] = {16, 17, 223, 220};
-	byte bLen = strlen(szTitle);
-	word wAttr = (bckClr << 4) + 1;
+    const uint8_t wAttr = bkClr << 4;
+    const uint16_t bLen = strlen(szTitle);
+    const char styles[] = {16, 17, 223, 220};
 
-	if(bType) {
-		if(fstAttr) {
-			WriteVRM(x, y, txtAttr, szTitle, fstAttr);
-			WriteChar(x+1, y+1, wAttr, bLen - 1, Style[2]);
-			WriteChar(x+bLen-1, y, wAttr, 1, Style[3]);
-		}
-		else {
-			WriteVRM(x, y, txtAttr, szTitle);
-			WriteChar(x+1, y+1, wAttr, bLen, Style[2]);
-			WriteChar(x+bLen, y, wAttr, 1, Style[3]);
-		}
-	}
-	else {
-		if(fstAttr) {
-			WriteVRM(x, y, txtAttr, szTitle, fstAttr);
-			PrintXY(x, y, txtAttr, Style[0]);
-			PrintXY(x+bLen-2, y, txtAttr, Style[1]);
-			WriteChar(x+1, y+1, wAttr, bLen - 1, Style[2]);
-			WriteChar(x+bLen-1 , y, wAttr, 1, Style[3]);
-		}
-		else {
-			WriteVRM(x, y, txtAttr, szTitle); PrintXY(x, y, txtAttr, Style[0]);
-			PrintXY(x+bLen-1, y, txtAttr, Style[1]);
-			WriteChar(x+1, y+1, wAttr, bLen, Style[2]);
-			WriteChar(x+bLen, y, wAttr, 1, Style[3]);
-		}
-	}
+    if (bType)
+    {
+        if (fstAttr)
+        {
+            writeVRM(x, y, txtAttr, szTitle, fstAttr);
+            writeChar(x + 1, y + 1, wAttr, bLen - 1, styles[2]);
+            writeChar(x + bLen - 1, y, wAttr, 1, styles[3]);
+        }
+        else
+        {
+            writeVRM(x, y, txtAttr, szTitle, 0);
+            writeChar(x + 1, y + 1, wAttr, bLen, styles[2]);
+            writeChar(x + bLen, y, wAttr, 1, styles[3]);
+        }
+    }
+    else
+    {
+        if (fstAttr)
+        {
+            writeVRM(x, y, txtAttr, szTitle, fstAttr);
+            printChar(x, y, txtAttr, styles[0]);
+            printChar(x + bLen - 2, y, txtAttr, styles[1]);
+            writeChar(x + 1, y + 1, wAttr, bLen - 1, styles[2]);
+            writeChar(x + bLen - 1 , y, wAttr, 1, styles[3]);
+        }
+        else
+        {
+            writeVRM(x, y, txtAttr, szTitle, 0);
+            printChar(x, y, txtAttr, styles[0]);
+            printChar(x + bLen - 1, y, txtAttr, styles[1]);
+            writeChar(x + 1, y + 1, wAttr, bLen, styles[2]);
+            writeChar(x + bLen, y, wAttr, 1, styles[3]);
+        }
+    }
 }
 
 /*-----------------------------------------------*/
-/* Function : Frame                              */
-/* Mission  : Draw a frame with the edge is lane */
+/* Function : drawFrame                          */
+/* Purpose  : Draw a frame with the edge is lane */
 /* Expects  : (x1,y1) cordinate top to left      */
 /*            (x2,y2) cordinate bottom to right  */
 /* Returns  : Nothing                            */
 /*-----------------------------------------------*/
-void Frame(byte x1, byte y1, byte x2, byte y2)
+void drawFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr)
 {
-	register byte k;
-	PrintChar(x1, y1, 218);
-	for(k = x1 + 1; k < x2; putch(193), k++);
-	putch(191); PrintChar(x1, y2,192);
-	for(k = x1 + 1; k < x2; putch(194), k++); putch(225);
-	for(k = y1 + 1; k < y2; k++) {
-		PrintChar(x1,k,179);
-		PrintChar(x2,k,224);
-	}
+    int16_t k;
+
+    for (k = x1 + 1; k < x2; k++)
+    {
+        printChar(k, y1, attr, 193);
+        printChar(k, y2, attr, 194);
+    }
+
+    for (k = y1 + 1; k < y2; k++)
+    {
+        printChar(x1, k, attr, 179);
+        printChar(x2, k, attr, 224);
+    }
+
+    printChar(x1, y1, attr, 218);
+    printChar(x2, y1, attr, 191);
+    printChar(x1, y2, attr, 192);
+    printChar(x2, y2, attr, 225);
 }
 
 /*---------------------------------------------------*/
-/* Function : ChangeAttrib                           */
-/* Mission  : Chage the attribute of the area screen */
+/* Function : changeAttrib                           */
+/* Purpose  : Chage the attribute of the area screen */
 /* Expects  : (x1,y1) cordinate top to left          */
 /*            (x2,y2) cordinate bottom to right      */
-/*            (wAttr) the attribute                  */
+/*            (attr) the attribute                   */
 /* Returns  : Nothing                                */
 /*---------------------------------------------------*/
-void ChangeAttr(byte x1, byte y1, byte x2, byte y2, word wAttr)
+void changeAttrib(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr)
 {
-	register byte bCol, bRow;
+    uint8_t x0 = x1, y0 = y1;
+    const uint8_t addofs = (80 - (x2 - x1 + 1)) << 1;
+    uint8_t far *pmem = (uint8_t far*)(txtMem + OFFSET(x1, y1));
 
-	for(bCol = x1; bCol <= x2; bCol++)
-		for(bRow = y1; bRow <= y2; bRow++)
-			pokeb(VIDEO_ADDR, OFFSET(bCol, bRow) + 1, wAttr);
+    for (y0 = y1; y0 <= y2; y0++)
+    {
+        for (x0 = x1; x0 <= x2; x0++)
+        {
+            *(pmem + 1) = attr;
+            pmem += 2;
+        }
+        pmem += addofs;
+    }
 }
 
 /*-----------------------------------------------*/
-/* Function : isBlinking                         */
-/* Mission  : Redefine bits 7 in the text attrib */
+/* Function : setBlinking                        */
+/* Purpose  : Redefine bits 7 in the text attrib */
 /* Expects  : (doblink) = 0, back color is light */
 /*                      = 1, text is blinking    */
 /* Return   : Nothing                            */
 /*-----------------------------------------------*/
-void isBlinking(byte doblink)
+void setBlinking(uint8_t doblink)
 {
-	union REGS regs; regs.h.ah = 0x10; regs.h.al = 0x03;
-	regs.h.bl = doblink ? 1 : 0; int86(0x10, &regs, &regs);
+    union REGS regs;
+    regs.h.ah = 0x10;
+    regs.h.al = 0x03;
+    regs.h.bl = doblink ? 1 : 0;
+    int86(0x10, &regs, &regs);
+}
+
+/*--------------------------------------------------*/
+/* Funtion : fillFrame                              */
+/* Purpose : To full the box with special character */
+/* Expects : (x1,y1) cordinate top to left          */
+/*           (x2,y2) cordinate bottom to right      */
+/*           (attr) special character color         */
+/*           (chr) special character                */
+/* Returns : Nothing                                */
+/*--------------------------------------------------*/
+void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr, char chr)
+{
+    uint8_t y;
+    for (y = y1; y <= y2; y++) writeChar(x1, y, attr, x2 - x1 + 1, chr);
 }
 
 /*----------------------------------------------*/
-/* Function : DlgBox                            */
-/* Mission  : Draw a box with color and border  */
+/* Function : clearScreen                       */
+/* Purpose  : clearScreen the part of window    */
+/* Expects  : (x1,y1) cordinate top to left     */
+/*            (x2,y2) cordinate bottom to right */
+/*            (color) color needs clear         */
+/* Returns  : Nothing                           */
+/*----------------------------------------------*/
+void clearScreen(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color)
+{
+    fillFrame(x1, y1, x2, y2, color << 4, 32);
+}
+
+/*----------------------------------------------*/
+/* Function : drawBox                           */
+/* Purpose  : Draw a box with color and border  */
 /* Expects  : (x1,y1) cordinate top to left     */
 /*            (x2,y2) cordinate bottom to right */
 /*            (wAttr) the attribute of the box  */
 /* Returns  : Nothing                           */
 /*----------------------------------------------*/
-void DlgBox(byte x1, byte y1, byte x2, byte y2, word wAttr)
+void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 {
-	word oldAttr;
-	oldAttr = GetTextAttr(); textattr(wAttr);
-	Frame(x1, y1, x2, y2); window(x1+1, y1+1, x2-1, y2-1);
-	clrscr(); window(1, 1, 80 ,25);
-	ChangeAttr(x2+1, y1+1, x2+2, y2+1, 0x08);
-	ChangeAttr(x1+2, y2+1, x2+2, y2+1, 0x08);
-	textattr(oldAttr);
+    drawFrame(x1, y1, x2, y2, wAttr);
+    fillFrame(x1 + 1, y1 + 1, x2 - 1, y2 - 1, wAttr, 32);
+    changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, 0x08);
+    changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, 0x08);
 }
 
 /*----------------------------------------------*/
-/* Function : DlgWin                            */
-/* Mission  : Draw a box with shadow (very art) */
+/* Function : shadowBox                         */
+/* Purpose  : Draw a box with shadow (very art) */
 /* Expects  : (x1,y1) cordinate top to left     */
 /*            (x2,y2) cordinate bottom to right */
 /*            (wAttr) the attribute of the box  */
 /*            (szTitle) the title of header     */
 /* Returns  : Nothing                           */
 /*----------------------------------------------*/
-void DlgWin(byte x1, byte y1, byte x2, byte y2, word wAttr, char *szTitle)
+void shadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char *szTitle)
 {
-	byte bCenter = ((x2 - x1) >> 1) - (strlen(szTitle) >> 1), bkc;
-	const char szStyle[3] = {229,252,0};
-	bkc = (wAttr << 4);
-	ChangeAttr(x2+1, y1+1, x2+2, y2+1, MASK_BG);
-	ChangeAttr(x1+2, y2+1, x2+2, y2+1, MASK_BG);
-	DlgBox(x1, y1, x2, y2, wAttr);
-	WriteChar(x1+3, y1, bkc, x2-x1-2, 32);
-	WriteVRM(x1+bCenter, y1, bkc, szTitle);
-	PrintXY(x1+2, y1, bkc, 226);
-	WriteVRM(x1,y1,bkc >> 4,szStyle);
-}
-
-
-/*--------------------------------------------------*/
-/* Funtion : FillFrame                              */
-/* Mission : To full the box with special character */
-/* Expects : (x1,y1) cordinate top to left          */
-/*           (x2,y2) cordinate bottom to right      */
-/*           (wAttr) special character color        */
-/*           (chr) special character                */
-/* Returns : Nothing                                */
-/*--------------------------------------------------*/
-void FillFrame(byte x1, byte y1, byte x2, byte y2, byte wAttr, char Chr)
-{
-	register byte i = y1;
-	for(;i <= y2;) WriteChar(x1, i++, wAttr, x2 - x1 + 1, Chr);
+    const uint8_t bkc = wAttr << 4;
+    const char szStyle[] = {229, 252, 0};
+    const uint16_t bCenter = ((x2 - x1) >> 1) - (strlen(szTitle) >> 1);
+    changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, MASK_BG);
+    changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, MASK_BG);
+    drawBox(x1, y1, x2, y2, wAttr);
+    writeChar(x1 + 3, y1, bkc, x2 - x1 - 2, 32);
+    writeVRM(x1 + bCenter, y1, bkc, szTitle, 0);
+    printChar(x1 + 2, y1, bkc, 226);
+    writeVRM(x1, y1, bkc >> 4, szStyle, 0);
 }
 
 /*----------------------------------*/
-/* Function : InitMouse             */
-/* Mission  : Initialize mouse port */
+/* Function : initMouse             */
+/* Purpose  : Initialize mouse port */
 /* Expects  : Nothing               */
 /* Returns  : 1 if success. 0 fail  */
 /*----------------------------------*/
-byte InitMouse()
+uint16_t initMouse()
 {
-	union REGS regs; regs.x.ax = 0x00; int86(0x33, &regs, &regs);
-	if(regs.x.ax != 0xFFFF) return 0; regs.x.ax = 0x01;
-	int86(0x33, &regs, &regs); bmAvalid = 1; return 1;
+    union REGS regs;
+    regs.x.ax = 0x00;
+    int86(0x33, &regs, &regs);
+    if (regs.x.ax != 0xFFFF) return 0;
+    regs.x.ax = 0x01;
+    int86(0x33, &regs, &regs);
+    bmAvalid = 1;
+    return 1;
 }
 
 /*-----------------------------------------------------*/
-/* Function : ClickMouse                               */
-/* Mission  : Get status button and cordinate col, row */
-/* Expects  : (bCol, bRow) cordinate of col and row    */
+/* Function : clickMouse                               */
+/* Purpose  : Get status button and cordinate col, row */
+/* Expects  : (col, row) cordinate of col and row      */
 /* Returns  : Value 1 : left button, 2 : right button, */
 /*            4 : center button and col, row           */
 /*-----------------------------------------------------*/
-byte ClickMouse(byte &bCol, byte &bRow)
+uint16_t clickMouse(uint16_t *col, uint16_t *row)
 {
-	union REGS regs; regs.x.ax = 0x03; int86(0x33, &regs, &regs);
-	bRow = (regs.x.dx >> 3) + 1; bCol = (regs.x.cx >> 3) + 1; return regs.x.bx;
+    union REGS regs;
+    regs.x.ax = 0x03;
+    int86(0x33, &regs, &regs);
+    *col = (regs.x.cx >> 3) + 1;
+    *row = (regs.x.dx >> 3) + 1;
+    return regs.x.bx == 1;
 }
 
 /*-----------------------------------*/
-/* Function : HideMouse              */
-/* Mission  : Hide the mouse pointer */
+/* Function : hideMouse              */
+/* Purpose  : Hide the mouse pointer */
 /* Expects  : Nothing                */
 /* Returns  : Nothing                */
 /*-----------------------------------*/
-void HideMouse()
+void hideMouse()
 {
-	union REGS regs; regs.x.ax = 0x02; int86(0x33, &regs, &regs);
+    union REGS regs;
+    regs.x.ax = 0x02;
+    int86(0x33, &regs, &regs);
 }
 
 /*--------------------------------------*/
-/* Function : ShowMouse                 */
-/* Mission  : Showing the mouse pointer */
+/* Function : showMouse                 */
+/* Purpose  : Showing the mouse pointer */
 /* Expects  : Nothing                   */
 /* Returns  : Nothing                   */
 /*--------------------------------------*/
-void ShowMouse()
+void showMouse()
 {
-	union REGS regs; regs.x.ax = 0x01; int86(0x33, &regs, &regs);
+    union REGS regs;
+    regs.x.ax = 0x01;
+    int86(0x33, &regs, &regs);
 }
 
 /*--------------------------------------------*/
 /* Function : SetPos                          */
-/* Mission  : Setting the limit bCol and bRow */
+/* Purpose  : Setting the limit col and row   */
 /* Expects  : Nothing                         */
 /* Returns  : Nothing                         */
 /*--------------------------------------------*/
-void SetMousePos()
+void setMousePos()
 {
-	union REGS regs; regs.x.ax = 0x07; regs.x.cx = 0; regs.x.dx = 2*320 - 8;
-	int86(0x33, &regs, &regs); regs.x.ax = 0x08; regs.x.cx = 0;
-	regs.x.dx = 200 - 8; int86(0x33, &regs, &regs); regs.x.ax = 0x1D;
-	regs.x.bx = 0; int86(0x33, &regs, &regs);
+    union REGS regs;
+    regs.x.ax = 0x07;
+    regs.x.cx = 0;
+    regs.x.dx = 2 * 320 - 8;
+    int86(0x33, &regs, &regs);
+    regs.x.ax = 0x08;
+    regs.x.cx = 0;
+    regs.x.dx = 200 - 8;
+    int86(0x33, &regs, &regs);
+    regs.x.ax = 0x1D;
+    regs.x.bx = 0;
+    int86(0x33, &regs, &regs);
 }
 
 /*------------------------------------------------*/
-/* Function : MoveMouse                           */
-/* Mission  : Move mouse pointer to new cordinate */
+/* Function : moveMouse                           */
+/* Purpose  : Move mouse pointer to new cordinate */
 /* Expects  : (x, y) the new cordinate            */
 /* Returns  : Nothing                             */
 /*------------------------------------------------*/
-void MoveMouse(byte x, byte y)
+void moveMouse(uint16_t x, uint16_t y)
 {
-	union REGS regs; regs.x.ax = 0x0004; regs.x.cx = (x << 3) - 1;
-	regs.x.dx = (y << 3) - 1; int86(0x33, &regs, &regs);
+    union REGS regs;
+    regs.x.ax = 0x0004;
+    regs.x.cx = (x << 3) - 1;
+    regs.x.dx = (y << 3) - 1;
+    int86(0x33, &regs, &regs);
 }
 
 /*------------------------------------*/
-/* Function : CloseMouse              */
-/* Mission  : Colosing mouse fumction */
+/* Function : closeMouse              */
+/* Purpose  : Colosing mouse fumction */
 /* Expects  : Nothing                 */
 /* Returns  : Nothing                 */
 /*------------------------------------*/
-void CloseMouse()
+void closeMouse()
 {
-	union REGS regs; HideMouse(); regs.x.ax = 0; int86(0x33, &regs, &regs);
-}
-
-/*----------------------------------------------*/
-/* Function : Clear                             */
-/* Mission  : Clear the part of window          */
-/* Expects  : (x1,y1) cordinate top to left     */
-/*            (x2,y2) cordinate bottom to right */
-/*            (color) color needs clear         */
-/* Returns  : Nothing                           */
-/*----------------------------------------------*/
-void Clear(byte x1, byte y1, byte x2, byte y2, byte color)
-{
-	window(x1,y1,x2,y2); textattr((color << 4));
-	clrscr(); window(1,1,80,25);
+    union REGS regs;
+    hideMouse();
+    regs.x.ax = 0;
+    int86(0x33, &regs, &regs);
 }
 
 /*-----------------------------------------*/
 /* Funtion : strPos                        */
-/* Mission : Getting position of substring */
+/* Purpose : Getting position of substring */
 /* Expects : (str) The string main         */
 /*           (substr) The substring        */
 /* Returns : Position of substring         */
 /*-----------------------------------------*/
-int StrPos(char *str, char *szSubstr)
+int16_t strPos(char *str, char *szSubstr)
 {
-	char *ptr = strstr(str, szSubstr);
-	if(!ptr) return -1;
-	return (ptr - str);
+    char *ptr = strstr(str, szSubstr);
+    if (!ptr) return -1;
+    return ptr - str;
 }
 
 /*---------------------------------------------*/
-/* Funtion : InsertChar                        */
-/* Mission : Inserted the char into string     */
+/* Funtion : insertChar                        */
+/* Purpose : Inserted the char into string     */
 /* Expects : (str) The string                  */
 /*           (chr) The character need inserted */
 /*           (iPos) The position inserted      */
 /* Returns : Nothing                           */
 /*---------------------------------------------*/
-void InsertChar(char *str, char chr, int iPos)
+void insertChar(char *str, char chr, int16_t iPos)
 {
-	if(iPos < 0 || iPos > strlen(str)) return;
-	*(str+iPos) = chr;
+    if (iPos < 0 || iPos >= strlen(str)) return;
+    *(str + iPos) = chr;
 }
 
 /*---------------------------------------------*/
-/* Funtion : StrDelete                         */
-/* Mission : Deleting the characters           */
+/* Funtion : strDelete                         */
+/* Purpose : Deleting the characters           */
 /* Expects : (str) The string main             */
 /*           (i) position to delete            */
 /*           (numchar) the number of character */
 /* Returns : Nothing                           */
 /*---------------------------------------------*/
-void StrDelete(char *str, int i, int numchar)
+void strDelete(char *str, int16_t i, int16_t num)
 {
-	if(i < 0 || i > strlen(str)) return;
-	memcpy((str+i+1), (str+i+numchar), (strlen(str)-i-1));
+    if (i < 0 || i >= strlen(str)) return;
+    memcpy(str + i + 1, str + i +num, strlen(str) - i - 1);
 }
 
 /*--------------------------------------*/
-/* Funtion : SchRepl                    */
-/* Mission : Concat the string          */
+/* Funtion : schRepl                    */
+/* Purpose : Concat the string          */
 /* Expects : (str) The string main      */
 /*           (sch) The substring        */
 /*           (repl) The char to replace */
 /* Returns : Nothing                    */
 /*--------------------------------------*/
-void SchRepl(char *str, char *sch, char repl)
+void schRepl(char *str, char *sch, char repl)
 {
-	int i;
-
-	do {
-		i = StrPos(str,sch);
-		if(i >= 0) {
-			StrDelete(str,i,strlen(sch));
-			InsertChar(str,repl,i);
-		}
-	} while(i >= 0);
-}
-
-/*--------------------------------------------*/
-/* Funtion : Chr2Str                          */
-/* Mission : Conver the char to the string    */
-/* Expects : (chr, n) The character to conver */
-/* Returns : The pointer to string            */
-/*--------------------------------------------*/
-char *Chr2Str(char chr, char n)
-{
-	char *szString = new char[3];
-	szString[0] = chr;
-	szString[1] = n;
-	szString[2] = '\0';
-	return szString;
-}
-
-/*--------------------------------------*/
-/* Funtion : FontVNI                    */
-/* Mission : Decode font to Vietnamese  */
-/* Expects : (str) The string to decode */
-/* Returns : Nothing                    */
-/*--------------------------------------*/
-void FontVNI(char *szPrmpt)
-{
-	SchRepl(szPrmpt,"a8",128);
-	SchRepl(szPrmpt,Chr2Str(128,'1'),129);
-	SchRepl(szPrmpt,Chr2Str(128,'2'),130);
-	SchRepl(szPrmpt,Chr2Str(128,'3'),131);
-	SchRepl(szPrmpt,Chr2Str(128,'4'),132);
-	SchRepl(szPrmpt,Chr2Str(128,'5'),133);
-	SchRepl(szPrmpt,"a6",134);
-	SchRepl(szPrmpt,Chr2Str(134,'1'),135);
-	SchRepl(szPrmpt,Chr2Str(134,'2'),136);
-	SchRepl(szPrmpt,Chr2Str(134,'3'),137);
-	SchRepl(szPrmpt,Chr2Str(134,'4'),138);
-	SchRepl(szPrmpt,Chr2Str(134,'5'),139);
-	SchRepl(szPrmpt,"e6",140);
-	SchRepl(szPrmpt,Chr2Str(140,'1'),141);
-	SchRepl(szPrmpt,Chr2Str(140,'2'),142);
-	SchRepl(szPrmpt,Chr2Str(140,'3'),143);
-	SchRepl(szPrmpt,Chr2Str(140,'4'),144);
-	SchRepl(szPrmpt,Chr2Str(140,'5'),145);
-	SchRepl(szPrmpt,"o7",146);
-	SchRepl(szPrmpt,Chr2Str(146,'1'),147);
-	SchRepl(szPrmpt,Chr2Str(146,'2'),148);
-	SchRepl(szPrmpt,Chr2Str(146,'3'),149);
-	SchRepl(szPrmpt,Chr2Str(146,'4'),150);
-	SchRepl(szPrmpt,Chr2Str(146,'5'),151);
-	SchRepl(szPrmpt,"o6",152);
-	SchRepl(szPrmpt,Chr2Str(152,'1'),153);
-	SchRepl(szPrmpt,Chr2Str(152,'2'),154);
-	SchRepl(szPrmpt,Chr2Str(152,'3'),155);
-	SchRepl(szPrmpt,Chr2Str(152,'4'),156);
-	SchRepl(szPrmpt,Chr2Str(152,'5'),157);
-	SchRepl(szPrmpt,"u7",158);
-	SchRepl(szPrmpt,Chr2Str(158,'1'),159);
-	SchRepl(szPrmpt,Chr2Str(158,'2'),160);
-	SchRepl(szPrmpt,Chr2Str(158,'3'),161);
-	SchRepl(szPrmpt,Chr2Str(158,'4'),162);
-	SchRepl(szPrmpt,Chr2Str(158,'5'),163);
-	SchRepl(szPrmpt,"a1",164);
-	SchRepl(szPrmpt,"a2",165);
-	SchRepl(szPrmpt,"a3",166);
-	SchRepl(szPrmpt,"a4",167);
-	SchRepl(szPrmpt,"a5",168);
-	SchRepl(szPrmpt,"e1",169);
-	SchRepl(szPrmpt,"e2",170);
-	SchRepl(szPrmpt,"e3",171);
-	SchRepl(szPrmpt,"e4",172);
-	SchRepl(szPrmpt,"e5",173);
-	SchRepl(szPrmpt,"i1",174);
-	SchRepl(szPrmpt,"i2",175);
-	SchRepl(szPrmpt,"i3",181);
-	SchRepl(szPrmpt,"i4",182);
-	SchRepl(szPrmpt,"i5",183);
-	SchRepl(szPrmpt,"o1",184);
-	SchRepl(szPrmpt,"o2",190);
-	SchRepl(szPrmpt,"o3",198);
-	SchRepl(szPrmpt,"o4",199);
-	SchRepl(szPrmpt,"o5",208);
-	SchRepl(szPrmpt,"u1",210);
-	SchRepl(szPrmpt,"u2",211);
-	SchRepl(szPrmpt,"u3",212);
-	SchRepl(szPrmpt,"u4",213);
-	SchRepl(szPrmpt,"u5",214);
-	SchRepl(szPrmpt,"y1",215);
-	SchRepl(szPrmpt,"y2",216);
-	SchRepl(szPrmpt,"y3",221);
-	SchRepl(szPrmpt,"y4",222);
-	SchRepl(szPrmpt,"y5",248);
-	SchRepl(szPrmpt,"d9",249);
-	SchRepl(szPrmpt,"D9",250);
+    int16_t i;
+    do {
+        i = strPos(str, sch);
+        if (i >= 0)
+        {
+            strDelete(str, i, strlen(sch));
+            insertChar(str, repl, i);
+        }
+    } while (i >= 0);
 }
 
 /*----------------------------------------------*/
-/* Function : InitData                          */
+/* Funtion : chr2Str                            */
+/* Purpose : Conver the char to the string      */
+/* Expects : (chr, n, buff) Characters convert  */
+/* Returns : The pointer to string              */
+/*----------------------------------------------*/
+void chr2Str(char chr, char n, char *str)
+{
+    str[0] = chr;
+    str[1] = n;
+    str[2] = '\0';
+}
+
+/*--------------------------------------*/
+/* Funtion : fontVNI                    */
+/* Purpose : Decode font to Vietnamese  */
+/* Expects : (str) The string to decode */
+/* Returns : Nothing                    */
+/*--------------------------------------*/
+void fontVNI(char *szPrmpt)
+{
+    char buff[4] = {0};
+    schRepl(szPrmpt, "a8", 128);
+    chr2Str(128, '1', buff);
+    schRepl(szPrmpt, buff, 129);
+    chr2Str(128, '2', buff);
+    schRepl(szPrmpt, buff, 130);
+    chr2Str(128, '3', buff);
+    schRepl(szPrmpt, buff, 131);
+    chr2Str(128, '4', buff);
+    schRepl(szPrmpt, buff, 132);
+    chr2Str(128, '5', buff);
+    schRepl(szPrmpt, buff, 133);
+    schRepl(szPrmpt, "a6", 134);
+    chr2Str(134, '1', buff);
+    schRepl(szPrmpt, buff, 135);
+    chr2Str(134, '2', buff);
+    schRepl(szPrmpt, buff, 136);
+    chr2Str(134, '3', buff);
+    schRepl(szPrmpt, buff, 137);
+    chr2Str(134, '4', buff);
+    schRepl(szPrmpt, buff, 138);
+    chr2Str(134, '5', buff);
+    schRepl(szPrmpt, buff, 139);
+    schRepl(szPrmpt, "e6", 140);
+    chr2Str(140, '1', buff);
+    schRepl(szPrmpt, buff, 141);
+    chr2Str(140, '2', buff);
+    schRepl(szPrmpt, buff, 142);
+    chr2Str(140, '3', buff);
+    schRepl(szPrmpt, buff, 143);
+    chr2Str(140, '4', buff);
+    schRepl(szPrmpt, buff, 144);
+    chr2Str(140, '5', buff);
+    schRepl(szPrmpt, buff, 145);
+    schRepl(szPrmpt, "o7", 146);
+    chr2Str(146, '1', buff);
+    schRepl(szPrmpt, buff, 147);
+    chr2Str(146, '2', buff);
+    schRepl(szPrmpt, buff, 148);
+    chr2Str(146, '3', buff);
+    schRepl(szPrmpt, buff, 149);
+    chr2Str(146, '4', buff);
+    schRepl(szPrmpt, buff, 150);
+    chr2Str(146, '5', buff);
+    schRepl(szPrmpt, buff, 151);
+    schRepl(szPrmpt, "o6", 152);
+    chr2Str(152, '1', buff);
+    schRepl(szPrmpt, buff, 153);
+    chr2Str(152, '2', buff);
+    schRepl(szPrmpt, buff, 154);
+    chr2Str(152, '3', buff);
+    schRepl(szPrmpt, buff, 155);
+    chr2Str(152, '4', buff);
+    schRepl(szPrmpt, buff, 156);
+    chr2Str(152, '5', buff);
+    schRepl(szPrmpt, buff, 157);
+    schRepl(szPrmpt, "u7", 158);
+    chr2Str(158, '1', buff);
+    schRepl(szPrmpt, buff, 159);
+    chr2Str(158, '2', buff);
+    schRepl(szPrmpt, buff, 160);
+    chr2Str(158, '3', buff);
+    schRepl(szPrmpt, buff, 161);
+    chr2Str(158, '4', buff);
+    schRepl(szPrmpt, buff, 162);
+    chr2Str(158, '5', buff);
+    schRepl(szPrmpt, buff, 163);
+    schRepl(szPrmpt, "a1", 164);
+    schRepl(szPrmpt, "a2", 165);
+    schRepl(szPrmpt, "a3", 166);
+    schRepl(szPrmpt, "a4", 167);
+    schRepl(szPrmpt, "a5", 168);
+    schRepl(szPrmpt, "e1", 169);
+    schRepl(szPrmpt, "e2", 170);
+    schRepl(szPrmpt, "e3", 171);
+    schRepl(szPrmpt, "e4", 172);
+    schRepl(szPrmpt, "e5", 173);
+    schRepl(szPrmpt, "i1", 174);
+    schRepl(szPrmpt, "i2", 175);
+    schRepl(szPrmpt, "i3", 181);
+    schRepl(szPrmpt, "i4", 182);
+    schRepl(szPrmpt, "i5", 183);
+    schRepl(szPrmpt, "o1", 184);
+    schRepl(szPrmpt, "o2", 190);
+    schRepl(szPrmpt, "o3", 198);
+    schRepl(szPrmpt, "o4", 199);
+    schRepl(szPrmpt, "o5", 208);
+    schRepl(szPrmpt, "u1", 210);
+    schRepl(szPrmpt, "u2", 211);
+    schRepl(szPrmpt, "u3", 212);
+    schRepl(szPrmpt, "u4", 213);
+    schRepl(szPrmpt, "u5", 214);
+    schRepl(szPrmpt, "y1", 215);
+    schRepl(szPrmpt, "y2", 216);
+    schRepl(szPrmpt, "y3", 221);
+    schRepl(szPrmpt, "y4", 222);
+    schRepl(szPrmpt, "y5", 248);
+    schRepl(szPrmpt, "d9", 249);
+    schRepl(szPrmpt, "D9", 250);
+}
+
+/*----------------------------------------------*/
+/* Function : initData                          */
 /* Mission  : Initialize parameters for program */
 /* Expects  : Nothing                           */
 /* Returns  : Nothing                           */
 /*----------------------------------------------*/
-void InitData()
+void initData()
 {
-	char szPath[30];
-	byte i;
-	strcpy(szPath,szDrive); strcat(szPath,SysInf[13]); system(szPath);
-	for(i = 0; i < 16; i++) FontVNI(SysInf[i]);
+    FILE *fp;
+    int16_t i;
+    REG_INFO reg;
+
+    fp = fopen("register.dat", "rb");
+    if (!fp)
+    {
+        fprintf(stderr, "System file error!");
+        exit(1);
+    }
+    fread(&reg, sizeof(reg), 1, fp);
+    fclose(fp);
+    strcpy(szInstallPath, reg.path);
+    for (i = 0; i < sizeof(sysInf) / sizeof(sysInf[0]); i++) fontVNI(sysInf[i]);
+    system("font on");
 }
 
 /*-------------------------------*/
-/* Funtion : HaltSys             */
-/* Mission : Restore environment */
+/* Funtion : cleanup             */
+/* Purpose : Restore environment */
 /* Expects : Nothing             */
 /* Returns : Nothing             */
 /*-------------------------------*/
-void HaltSys()
+void cleanup()
 {
-	SetBorder(0x00); SetCursorSize(0x0607); textattr(0x07); isBlinking(1);
-	if(bmAvalid) CloseMouse();
-	asm {
-		mov ah, 0
-		mov al, 3
-		int 0x10
-	} exit(EXIT_SUCCESS);
+    setBorder(0x00);
+    setCursorSize(0x0607);
+    setCursorPos(1, 1);
+    setBlinking(1);
+    if (bmAvalid) closeMouse();
+    __asm {
+        mov ah, 0
+        mov al, 3
+        int 0x10
+    }
 }
 
-/*--------------------------------------------*/
-/* Funtion : DeleteFiles                      */
-/* Mission : Deleting all files from the disk */
-/* Expects : (file_spec) sources files        */
-/*           (attrib) file attribute          */
-/* Returns : Nothing                          */
-/*--------------------------------------------*/
-bool DeleteFiles(char *szFileSpec, word wAttr)
+/*---------------------------------------------*/
+/* Funtion : processDir                        */
+/* Purpose : Copy all files from the disk      */
+/* Expects : (psrc) sources directory          */
+/*           (pdst) destination directory      */
+/* Returns : 1 for success                     */
+/*           0 for failure                     */
+/*---------------------------------------------*/
+void processDir(char *psrc)
 {
-	bool blResume;
-	word wEntry;
-	struct find_t ftDirEntry;
-	char szPath[64], szTarget[64], szEntries[64],
-	szCurrFiles[64], szCurrDirs[64];
+    size_t i;
+    struct find_t entries;
+    
+    char srcPath[64], srcExt[64], srcDir[64];
+    char curFile[68], newFile[68], newDir[64];
 
-	blResume = 1;
-	for(wEntry = strlen(szFileSpec) - 1; szFileSpec[wEntry] != '\\'; wEntry--);
-	strcpy(szPath, szFileSpec); szPath[wEntry] = 0;
-	strcpy(szCurrFiles, szFileSpec); szCurrFiles[wEntry + 1] = 0;
-	strcpy(szTarget, &szFileSpec[wEntry + 1]);
-	if(!_dos_findfirst(szFileSpec, wAttr, &ftDirEntry)) {
-      do {
-			szCurrFiles[wEntry + 1] = 0; strcat(szCurrFiles, ftDirEntry.name);
-			if(ftDirEntry.attrib != _A_NORMAL || ftDirEntry.attrib != _A_ARCH)
-			_dos_setfileattr(szCurrFiles, _A_NORMAL); unlink(szCurrFiles);
-			nFiles++; WriteChar(17,11,0x1F,nFiles % 48,219); delay(10);
-		} while(!_dos_findnext(&ftDirEntry));
-	}
-	sprintf(szEntries, "%s\\*.*", szPath);
-	if(!_dos_findfirst(szEntries, _A_SUBDIR | _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM, &ftDirEntry)) {
-		do {
-			if((ftDirEntry.attrib & _A_SUBDIR) && (ftDirEntry.name[0] != '.')) {
-				sprintf(szEntries, "%s\\%s\\%s", szPath, ftDirEntry.name, szTarget);
-				sprintf(szCurrDirs, "%s\\%s", szPath, ftDirEntry.name);
-				blResume = DeleteFiles(szEntries, wAttr); rmdir(szCurrDirs); nDirs++;
-			}
-		} while(blResume && !_dos_findnext(&ftDirEntry));
-	}
-	return blResume;
+    for (i = strlen(psrc) - 1; psrc[i] != '\\'; i--);
+
+    strcpy(srcPath, psrc);
+    srcPath[i] = '\0';
+    strcpy(srcExt, &psrc[i + 1]);
+
+    if (!_dos_findfirst(psrc, _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM, &entries))
+    {
+        do {
+            sprintf(curFile, "%s\\%s", srcPath, entries.name);
+
+            _dos_setfileattr(curFile, _A_NORMAL);
+            unlink(curFile);
+            writeChar(17, 11, 0x1F, nFiles++ % 48, 219);
+            delay(10);
+        } while (!_dos_findnext(&entries));
+    }
+
+    sprintf(srcDir, "%s\\*.*", srcPath);
+    if (!_dos_findfirst(srcDir, _A_SUBDIR | _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM, &entries))
+    {
+        do {
+            if ((entries.attrib & _A_SUBDIR) && (entries.name[0] != '.'))
+            {
+                sprintf(srcDir, "%s\\%s\\%s", srcPath, entries.name, srcExt);
+                sprintf(newDir, "%s\\%s", srcPath, entries.name);
+                processDir(srcDir);
+                _dos_setfileattr(newDir, _A_NORMAL);
+                rmdir(newDir);
+                nDirs++;
+            }
+        } while (!_dos_findnext(&entries));
+    }
 }
 
 /*---------------------------------------*/
-/* Funtion : StartDelete                 */
+/* Funtion : startDelete                 */
 /* Mission : Deleting the topics program */
 /* Expects : Nothing                     */
 /* Returns : Nothing                     */
 /*---------------------------------------*/
-void StartDelete()
+void startDelete()
 {
-	SetBorder(47); textattr(0x1F); clrscr();
-	DlgWin(15,8,65,15,0x5F,SysInf[0]);
-	Button(35,13,0xF7,5,SysInf[15],1,0xF8);
-	WriteVRM(17,10,0x5E,SysInf[2]);
-	WriteChar(17,11,0x17,47,176);
-	strcat(szDrive,"TOPICS"); chdir(szDrive);
-	strcat(szDrive,"\\*.*");
-	DeleteFiles(szDrive,_A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM);
-	szDrive[3] = '\0'; chdir(szDrive); strcat(szDrive, "TOPICS");
-	rmdir(szDrive); unlink(SysInf[16]);
+    char path[32];
+
+    strcpy(path, szInstallPath);
+    strcat(path, "\\*.*");
+	setBorder(47);
+    fillFrame(1,1,80,25,0x1F,32);
+	shadowBox(15,8,65,15,0x5F,sysInf[0]);
+	drawButton(35,13,0xF7,5,sysInf[14],1,0xF8);
+	writeVRM(17,10,0x5E,sysInf[2],0);
+	writeChar(17,11,0x17,47,176);
+	processDir(path);
 }
 
 /*----------------------------------------------------*/
-/* Funtion : SummaryResult                            */
+/* Funtion : showResults                              */
 /* Mission : Information summary about delete program */
 /* Expects : Nothing                                  */
 /* Returns : Nothing                                  */
 /*----------------------------------------------------*/
-void SummaryResult()
+void showResults()
 {
-	byte bCol = 0, bRow = 0;
+	uint16_t bCol = 0, bRow = 0;
 
-	textattr(0x1F); clrscr();
-	DlgWin(18,8,62,16,0x7F,SysInf[1]);
-	PrintVRM(28,10,0x70,"%2u t�p tin �� ���c g� b�.",nFiles);
-	PrintVRM(28,11,0x70,"%2u th� m�c �� ���c g� b�.",nDirs);
-	WriteVRM(22,12,0x70,SysInf[11]); Button(35,14,0x4F,7,SysInf[14],1,0x4A);
+	fillFrame(1,1,80,25,0x1F,32);
+	shadowBox(18,8,62,16,0x7F,sysInf[1]);
+	printVRM(28,10,0x70,"%2u t�p tin �� ���c g� b�.",nFiles);
+	printVRM(28,11,0x70,"%2u th� m�c �� ���c g� b�.",nDirs);
+	writeVRM(22,12,0x70,sysInf[11],0);
+    drawButton(35,14,0x4F,7,sysInf[13],1,0x4A);
+
+    while (kbhit()) getch();
 	do {
-		if(ClickMouse(bCol, bRow) == 1) {
-			if(bRow == 14 && bCol >= 35 && bCol <= 45) {
-				HideMouse(); Clear(35,14,46,15,7);
-				WriteVRM(36,14,0x4F,SysInf[14],0x4A); delay(50);
-				Button(35,14,0x4F,7,SysInf[14],1,0x4A); ShowMouse(); break;
-
+        if (kbhit() || clickMouse(&bCol, &bRow))
+        {
+            if (kbhit() || (bRow == 14 && bCol >= 35 && bCol <= 45))
+            {
+                hideMouse();
+                clearScreen(35,14,46,15,7);
+                writeVRM(36,14,0x4F,sysInf[13],0x4A);
+                delay(50);
+                drawButton(35,14,0x4F,7,sysInf[13],1,0x4A);
+                showMouse();
+                break;
 			}
-			if(bRow == 8 && bCol == 18 || bCol == 19) break;
+
+			if (bRow == 8 && bCol == 18 || bCol == 19) break;
 		}
-	} while(!kbhit()); HaltSys();
+	} while (!kbhit());
+    cleanup();
 }
 
 /*--------------------------------------------------*/
-/* Funtion : DeleteTopics                           */
+/* Funtion : showMenu                               */
 /* Mission : Showing the menu delete topics message */
 /* Expects : Nothing                                */
 /* Returns : Nothing                                */
 /*--------------------------------------------------*/
-void DeleteTopics()
+void showMenu()
 {
-	int slc = 0;
+	int16_t slc = 0;
 	char key, szPath[25];
-	byte bCol = 0, bRow = 0;
+	uint16_t bCol = 0, bRow = 0;
 
-	Button(24,18,0xF0,4,SysInf[14],1,0xF4);
-	Button(46,18,0xE7,4,SysInf[15],1,0xE8);
-	if(!InitMouse()) {
-		strcpy(szPath,szDrive);
-		strcat(szPath,"TOPICS\\DRIVERS\\mouse.com"); system(szPath);
-	} SetMousePos();
+	drawButton(24,18,0xF0,4,sysInf[13],1,0xF4);
+	drawButton(46,18,0xE7,4,sysInf[14],1,0xE8);
+
+	if (!initMouse())
+    {
+		strcpy(szPath, szInstallPath);
+		strcat(szPath, "drivers\\mouse.com");
+        system(szPath);
+	}
+
+    setMousePos();
+
+    while (kbhit()) getch();
 	do {
-		if(kbhit()) {
-			key = getch(); if(!key) key = getch();
-			switch(toupper(key)) {
+		if (kbhit())
+        {
+			key = getch();
+            if (!key) key = getch();
+			switch(key)
+            {
 			case LEFT:
-				Button(24+slc*22,18,0xE7,4,SysInf[14+slc],1,0xE8);
-				if(slc <= 0) slc = 1; else slc--;
-				Button(24+slc*22,18,0xF0,4,SysInf[14+slc],1,0xF4); break;
+				drawButton(24+slc*22,18,0xE7,4,sysInf[13+slc],1,0xE8);
+				if (slc <= 0) slc = 1; else slc--;
+				drawButton(24+slc*22,18,0xF0,4,sysInf[13+slc],1,0xF4);
+                break;
 			case RIGHT:
-				Button(24+slc*22,18,0xE7,4,SysInf[14+slc],1, 0xE8);
-				if(slc >= 1) slc = 0; else slc++;
-				Button(24+slc*22,18,0xF0,4,SysInf[14+slc],1,0xF4); break;
+				drawButton(24+slc*22,18,0xE7,4,sysInf[13+slc],1, 0xE8);
+				if (slc >= 1) slc = 0; else slc++;
+				drawButton(24+slc*22,18,0xF0,4,sysInf[13+slc],1,0xF4);
+                break;
 			}
 		}
-		if(ClickMouse(bCol, bRow) == 1) {
-			if(bRow == 18 && bCol >= 24 && bCol <= 33 ) {
-				HideMouse(); Button(46,18,0xE7,4,SysInf[15],1,0xE8);
-				slc = 0; Clear(24,18,34,19,4);
-				WriteVRM(25,18,0xF0,SysInf[14],0xF4); delay(50);
-				Button(24,18,0xF0,4,SysInf[14],1,0xF4); ShowMouse(); key = ENTER;
+
+		if (clickMouse(&bCol, &bRow))
+        {
+			if (bRow == 18 && bCol >= 24 && bCol <= 33)
+            {
+                slc = 0;
+                key = ENTER;
+				hideMouse();
+                drawButton(46,18,0xE7,4,sysInf[14],1,0xE8);
+                clearScreen(24,18,34,19,4);
+				writeVRM(25,18,0xF0,sysInf[13],0xF4);
+                delay(50);
+				drawButton(24,18,0xF0,4,sysInf[13],1,0xF4);
+                showMouse();
 			}
-			if(bRow == 18 && bCol >= 46 && bCol <= 55) {
-				Button(24,18,0xE7,4,SysInf[14],1,0xE8); slc = 1;
-				Clear(46,18,56,19,4); WriteVRM(47,18,0xF0,SysInf[15],0xF4);
-				delay(50); Button(46,18,0xF0,4,SysInf[15],1,0xF4); key = ENTER;
+
+			if (bRow == 18 && bCol >= 46 && bCol <= 55)
+            {
+                slc = 1;
+                key = ENTER;
+				drawButton(24,18,0xE7,4,sysInf[13],1,0xE8);
+				clearScreen(46,18,56,19,4);
+                writeVRM(47,18,0xF0,sysInf[14],0xF4);
+				delay(50);
+                drawButton(46,18,0xF0,4,sysInf[14],1,0xF4);
 			}
-			if(bRow == 4 && bCol == 10 || bCol == 11) key = ENTER;
+
+			if (bRow == 4 && bCol == 10 || bCol == 11) key = ENTER;
 		}
 	} while(key != ENTER);
-	if(!slc) {
-		StartDelete(); SummaryResult(); HaltSys();
+
+	if (!slc)
+    {
+		startDelete();
+        showResults();
+        cleanup();
 	}
-	else HaltSys();
+	else cleanup();
 }
 
 /*-----------------------------------------------*/
-/* Funtion : MessageDeleteTopics                 */
+/* Funtion : showRemove                          */
 /* Mission : Showing message deleting the topics */
 /* Expects : Nothing                             */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void MessageDeleteTopics()
+void showRemove()
 {
-   textattr(0x1F); SetBorder(47);
-	SetCursorSize(0x2020); clrscr(); isBlinking(0);
-	DlgWin(10,4,70,20,0x4F,SysInf[12]);
-	WriteVRM(12,6,0x4B,SysInf[3]); WriteVRM(12,7,0x4B,SysInf[4]);
-	WriteVRM(12,8,0x4B,SysInf[5]); WriteVRM(12,9,0x4B,SysInf[6]);
-	WriteVRM(12,10,0x4B,SysInf[7]); WriteVRM(12,11,0x4B,SysInf[8]);
-	WriteVRM(40,13,0x4A,SysInf[9]); WriteVRM(40,14,0x4A,SysInf[10]);
-	WriteChar(11,16,0x50,59,196); PrintXY(10,16,0x4F,195);
-	PrintXY(70,16,0x4F,180); DeleteTopics();
+    setBorder(47);
+	setCursorSize(0x2020);
+    fillFrame(1,1,80,25,0x1F,32);
+    setBlinking(0);
+	shadowBox(10,4,70,20,0x4F,sysInf[12]);
+	writeVRM(12,6,0x4B,sysInf[3],0);
+    writeVRM(12,7,0x4B,sysInf[4],0);
+	writeVRM(12,8,0x4B,sysInf[5],0);
+    writeVRM(12,9,0x4B,sysInf[6],0);
+	writeVRM(12,10,0x4B,sysInf[7],0);
+    writeVRM(12,11,0x4B,sysInf[8],0);
+	writeVRM(40,13,0x4A,sysInf[9],0);
+    writeVRM(40,14,0x4A,sysInf[10],0);
+	writeChar(11,16,0x4F,59,196);
+    printChar(10,16,0x4F,195);
+	printChar(70,16,0x4F,180);
+    showMenu();
 }
 
-/*------------------------------------------*/
-/* Funtion : main                           */
-/* Mission : Linker funtions to run program */
-/* Expects : Nothing                        */
-/* Returns : Nothing                        */
-/*------------------------------------------*/
-int main(int argc, char *argv[])
+void main()
 {
-	if(argc < 2) return 1;
-	if(!strcmp(argv[1],"C:\\") || !strcmp(argv[1],"D:\\") || !strcmp(argv[1],"E:\\")) {
-		strcpy(szDrive, argv[1]); InitData(); MessageDeleteTopics();
-	}
-	return 0;
+    initData();
+    showRemove();
+    cleanup();
 }

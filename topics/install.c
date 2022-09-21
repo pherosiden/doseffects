@@ -2215,17 +2215,18 @@ void updateProgram()
     }
 
     fread(&regInfo, sizeof(REG_INFO), 1, fp);
+    strcat(szInstallPath, "\\");
     strcpy(regInfo.path, szInstallPath);
     fseek(fp, 0L, SEEK_SET);
     fwrite(&regInfo, sizeof(REG_INFO), 1, fp);
     fclose(fp);
 
     strcpy(szPath, szInstallPath);
-    strcat(szPath, "\\keygen.com");
+    strcat(szPath, "keygen.com");
     unlink(szPath);
 
     strcpy(szPath, szInstallPath);
-    strcat(szPath, "\\install.com");
+    strcat(szPath, "install.com");
     unlink(szPath);
 }
 
@@ -2412,7 +2413,7 @@ void startInstall()
 {
     chooseDrive();
     checkDiskSpace();
-    checkProductKey();
+    //checkProductKey();
     installProgram();
     updateProgram();
     showRegisterInfo();
