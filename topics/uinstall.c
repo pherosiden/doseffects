@@ -42,7 +42,7 @@ uint16_t nFiles = 0, nDirs = 0;
 char *sysInf[] = {
     "Go74 bo3 chu7o7ng tri2nh",
     "To1m ta81t tho6ng tin",
-    "D9ang xo1a, xin d9o75i mo65t chu1t...",
+    "D9ang xo1a: %s",
     "Chu7o7ng tri2nh  TOPICS cu3a ba5n d9a4 he61t tho72i gian su73 du5ng. No1",
     "hoa5t d9o65ng kho6ng to61t trong ma1y ba5n nu74a va2 no1 se4 bi5 loa5i bo3",
     "ra kho3i he65 tho61ng cu3a ba5n. Ne61u ba5n ca3m tha61y ra82ng ba5n thi1ch",
@@ -751,8 +751,9 @@ void processDir(char *psrc)
 
             _dos_setfileattr(curFile, _A_NORMAL);
             unlink(curFile);
+            printVRM(17, 10, 0x5E, sysInf[2], curFile);
             writeChar(17, 11, 0x1F, nFiles++ % 48, 219);
-            delay(10);
+            delay(50);
         } while (!_dos_findnext(&entries));
     }
 
@@ -784,12 +785,11 @@ void startDelete()
     char path[32];
 
     strcpy(path, szInstallPath);
-    strcat(path, "\\*.*");
+    strcat(path, "*.*");
 	setBorder(47);
     fillFrame(1, 1, 80, 25, 0x1F, 32);
 	shadowBox(15, 8, 65, 15, 0x5F, sysInf[0]);
 	drawButton(35, 13, 0xF7, 5, sysInf[14], 1, 0xF8);
-	writeVRM(17, 10, 0x5E, sysInf[2], 0);
 	writeChar(17, 11, 0x17, 47, 176);
 	processDir(path);
 }
