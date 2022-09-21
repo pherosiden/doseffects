@@ -23,6 +23,7 @@
 #define SCR_WIDTH       160
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + (y - 1) * 80) << 1)
+#define PROG_DIR        "C:\\TOPICS\\*.*"
 
 #define UP              72
 #define DOWN            80
@@ -62,7 +63,7 @@ typedef struct {
     char        magic[33];  // Random characters
 } REG_INFO;
 
-char szInstallPath[32];      // Drive letter
+char szInstallPath[32];     // The installation path
 
 uint16_t numFiles = 0;
 uint16_t totalFiles = 0;    // Number files to read and files to write
@@ -174,42 +175,42 @@ void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
     for (i = 0; i < len; i++) *pmem++ = txt;
 }
 
-/*-----------------------------------------------*/
-/* Function : writeVRM                           */
-/* Purpose  : Writing a character with attribute */
-/* Notices  : Intervention in video memory       */
-/* Expects  : (x,y) cordinate needs to writting  */
-/*            (txtAttr) The attribute of string  */
-/*            (szPrmt) the string to format      */
-/*            (fstAttr) The attr of first letter */
-/* Returns : Nothing                             */
-/*-----------------------------------------------*/
-void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t fstAttr)
+/*------------------------------------------------*/
+/* Function : writeVRM                            */
+/* Purpose  : Writing a character with attribute  */
+/* Notices  : Direct write to video memory        */
+/* Expects  : (x,y) cordinate needs to write      */
+/*            (attr) The attrib of string         */
+/*            (str) The string contents           */
+/*            (lets) The attrib hot key letter    */
+/* Returns : Nothing                              */
+/*------------------------------------------------*/
+void writeVRM(uint8_t x, uint8_t y, uint8_t attr, const char *str, uint8_t lets)
 {
     uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
 
-    if (fstAttr)
+    if (lets)
     {
         char *ptmp = NULL;
-        char szTmp[80] = {0};
+        char buff[80] = {0};
         uint8_t i = 0, fltStop = 0, currX = x, bPos;
 
-        strcpy(szTmp, szPrmt);
-        for (i = 0; (i < strlen(szTmp) - 1) && !fltStop; i++)
+        strcpy(buff, str);
+        for (i = 0; (i < strlen(buff) - 1) && !fltStop; i++)
         {
-            if (szTmp[i] == 126) fltStop = 1;
+            if (buff[i] == 126) fltStop = 1;
         }
 
-        memmove(&szTmp[i - 1], &szTmp[i], strlen(szTmp) - i + 1);
+        memmove(&buff[i - 1], &buff[i], strlen(buff) - i + 1);
         bPos = i - 1;
 
-        ptmp = szTmp;
-        while (*ptmp) *pmem++ = (txtAtr << 8) + *ptmp++;
-        printChar(currX + bPos, y, fstAttr, szTmp[bPos]);
+        ptmp = buff;
+        while (*ptmp) *pmem++ = (attr << 8) + *ptmp++;
+        printChar(currX + bPos, y, lets, buff[bPos]);
     }
     else
     {
-        while (*szPrmt) *pmem++ = (txtAtr << 8) + *szPrmt++;
+        while (*str) *pmem++ = (attr << 8) + *str++;
     }
 }
 
@@ -219,66 +220,66 @@ void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t 
 /* Notices  : Intervention in video memory       */
 /* Expects  : (x,y) cordinate needs to writting  */
 /*            (attr) The attribute of string     */
-/*            (szString) the string to format    */
+/*            (str) the string to format         */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void printVRM(uint8_t x, uint8_t y, uint8_t wAttr, char *szString, ...)
+void printVRM(uint8_t x, uint8_t y, uint8_t attr, char *str, ...)
 {
     char buffer[255];
     va_list params;
-    va_start(params, szString);
-    vsprintf(buffer, szString, params);
-    writeVRM(x, y, wAttr, buffer, 0);
+    va_start(params, str);
+    vsprintf(buffer, str, params);
+    writeVRM(x, y, attr, buffer, 0);
 }
 
 /*-----------------------------------------------*/
 /* Function : drawButton                         */
 /* Purpose  : Define the button shadow           */
 /* Expects  : (x,y) cordinate needs to writting  */
-/*            (txtAttr) the attribute of a title */
-/*            (szTitle) the string to format     */
-/*            (bType) The type of button         */
-/*            (fstAttr) The attr of first letter */
+/*            (attr) the attribute of a title    */
+/*            (title) the string to format       */
+/*            (type) The type of button          */
+/*            (lets) The attr of first letter    */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void drawButton(uint8_t x, uint8_t y, uint8_t txtAttr, uint8_t bkClr, char *szTitle, uint8_t bType, uint8_t fstAttr)
+void drawButton(uint8_t x, uint8_t y, uint8_t attr, uint8_t bkc, char *title, uint8_t type, uint8_t lets)
 {
-    const uint8_t wAttr = bkClr << 4;
-    const uint16_t bLen = strlen(szTitle);
+    const uint8_t bka = bkc << 4;
+    const uint16_t len = strlen(title);
     const char styles[] = {16, 17, 223, 220};
 
-    if (bType)
+    if (type)
     {
-        if (fstAttr)
+        if (lets)
         {
-            writeVRM(x, y, txtAttr, szTitle, fstAttr);
-            writeChar(x + 1, y + 1, wAttr, bLen - 1, styles[2]);
-            writeChar(x + bLen - 1, y, wAttr, 1, styles[3]);
+            writeVRM(x, y, attr, title, lets);
+            writeChar(x + 1, y + 1, bka, len - 1, styles[2]);
+            writeChar(x + len - 1, y, bka, 1, styles[3]);
         }
         else
         {
-            writeVRM(x, y, txtAttr, szTitle, 0);
-            writeChar(x + 1, y + 1, wAttr, bLen, styles[2]);
-            writeChar(x + bLen, y, wAttr, 1, styles[3]);
+            writeVRM(x, y, attr, title, 0);
+            writeChar(x + 1, y + 1, bka, len, styles[2]);
+            writeChar(x + len, y, bka, 1, styles[3]);
         }
     }
     else
     {
-        if (fstAttr)
+        if (lets)
         {
-            writeVRM(x, y, txtAttr, szTitle, fstAttr);
-            printChar(x, y, txtAttr, styles[0]);
-            printChar(x + bLen - 2, y, txtAttr, styles[1]);
-            writeChar(x + 1, y + 1, wAttr, bLen - 1, styles[2]);
-            writeChar(x + bLen - 1 , y, wAttr, 1, styles[3]);
+            writeVRM(x, y, attr, title, lets);
+            printChar(x, y, attr, styles[0]);
+            printChar(x + len - 2, y, attr, styles[1]);
+            writeChar(x + 1, y + 1, bka, len - 1, styles[2]);
+            writeChar(x + len - 1 , y, bka, 1, styles[3]);
         }
         else
         {
-            writeVRM(x, y, txtAttr, szTitle, 0);
-            printChar(x, y, txtAttr, styles[0]);
-            printChar(x + bLen - 1, y, txtAttr, styles[1]);
-            writeChar(x + 1, y + 1, wAttr, bLen, styles[2]);
-            writeChar(x + bLen, y, wAttr, 1, styles[3]);
+            writeVRM(x, y, attr, title, 0);
+            printChar(x, y, attr, styles[0]);
+            printChar(x + len - 1, y, attr, styles[1]);
+            writeChar(x + 1, y + 1, bka, len, styles[2]);
+            writeChar(x + len, y, bka, 1, styles[3]);
         }
     }
 }
@@ -370,7 +371,6 @@ char readKey(char *key)
         *key = regs.h.ah;
         return 0;
     }
-
     *key = regs.h.al;
     return 1;
 }
@@ -384,10 +384,10 @@ char readKey(char *key)
 /*           (chr) special character                */
 /* Returns : Nothing                                */
 /*--------------------------------------------------*/
-void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char chr)
+void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr, char chr)
 {
     uint8_t y;
-    for (y = y1; y <= y2; y++) writeChar(x1, y, wAttr, x2 - x1 + 1, chr);
+    for (y = y1; y <= y2; y++) writeChar(x1, y, attr, x2 - x1 + 1, chr);
 }
 
 /*----------------------------------------------*/
@@ -408,13 +408,13 @@ void clearScreen(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color)
 /* Purpose  : Draw a box with color and border  */
 /* Expects  : (x1,y1) cordinate top to left     */
 /*            (x2,y2) cordinate bottom to right */
-/*            (wAttr) the attribute of the box  */
+/*            (attr) the attribute of the box   */
 /* Returns  : Nothing                           */
 /*----------------------------------------------*/
-void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
+void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr)
 {
-    drawFrame(x1, y1, x2, y2, wAttr);
-    fillFrame(x1 + 1, y1 + 1, x2 - 1, y2 - 1, wAttr, 32);
+    drawFrame(x1, y1, x2, y2, attr);
+    fillFrame(x1 + 1, y1 + 1, x2 - 1, y2 - 1, attr, 32);
     changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, 0x08);
     changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, 0x08);
 }
@@ -424,22 +424,22 @@ void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 /* Purpose  : Draw a box with shadow (very art) */
 /* Expects  : (x1,y1) cordinate top to left     */
 /*            (x2,y2) cordinate bottom to right */
-/*            (wAttr) the attribute of the box  */
-/*            (szTitle) the title of header     */
+/*            (attr) the attribute of the box   */
+/*            (title) the title of header       */
 /* Returns  : Nothing                           */
 /*----------------------------------------------*/
-void shadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char *szTitle)
+void shadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr, char *title)
 {
-    const uint8_t bkc = wAttr << 4;
-    const char szStyle[] = {229, 252, 0};
-    const uint16_t bCenter = ((x2 - x1) >> 1) - (strlen(szTitle) >> 1);
+    const uint8_t bkc = attr << 4;
+    const char styles[] = {229, 252, 0};
+    const uint16_t center = ((x2 - x1) >> 1) - (strlen(title) >> 1);
     changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, MASK_BG);
     changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, MASK_BG);
-    drawBox(x1, y1, x2, y2, wAttr);
+    drawBox(x1, y1, x2, y2, attr);
     writeChar(x1 + 3, y1, bkc, x2 - x1 - 2, 32);
-    writeVRM(x1 + bCenter, y1, bkc, szTitle, 0);
+    writeVRM(x1 + center, y1, bkc, title, 0);
     printChar(x1 + 2, y1, bkc, 226);
-    writeVRM(x1, y1, bkc >> 4, szStyle, 0);
+    writeVRM(x1, y1, bkc >> 4, styles, 0);
 }
 
 /*----------------------------------*/
@@ -561,9 +561,9 @@ void closeMouse()
 /*           (substr) The substring        */
 /* Returns : Position of substring         */
 /*-----------------------------------------*/
-int16_t strPos(char *str, char *szSubstr)
+int16_t strPos(char *str, char *substr)
 {
-    char *ptr = strstr(str, szSubstr);
+    char *ptr = strstr(str, substr);
     if (!ptr) return -1;
     return ptr - str;
 }
@@ -573,13 +573,13 @@ int16_t strPos(char *str, char *szSubstr)
 /* Purpose : Inserted the char into string     */
 /* Expects : (str) The string                  */
 /*           (chr) The character need inserted */
-/*           (iPos) The position inserted      */
+/*           (pos) The position inserted       */
 /* Returns : Nothing                           */
 /*---------------------------------------------*/
-void insertChar(char *str, char chr, int16_t iPos)
+void insertChar(char *str, char chr, int16_t pos)
 {
-    if (iPos < 0 || iPos >= strlen(str)) return;
-    *(str + iPos) = chr;
+    if (pos < 0 || pos >= strlen(str)) return;
+    *(str + pos) = chr;
 }
 
 /*---------------------------------------------*/
@@ -593,7 +593,7 @@ void insertChar(char *str, char chr, int16_t iPos)
 void strDelete(char *str, int16_t i, int16_t num)
 {
     if (i < 0 || i >= strlen(str)) return;
-    memcpy(str + i + 1, str + i +num, strlen(str) - i - 1);
+    memcpy(str + i + 1, str + i + num, strlen(str) - i - 1);
 }
 
 /*--------------------------------------*/
@@ -636,107 +636,107 @@ void chr2Str(char chr, char n, char *str)
 /* Expects : (str) The string to decode */
 /* Returns : Nothing                    */
 /*--------------------------------------*/
-void fontVNI(char *szPrmpt)
+void fontVNI(char *str)
 {
     char buff[3] = {0};
-    schRepl(szPrmpt, "a8", 128);
+    schRepl(str, "a8", 128);
     chr2Str(128, '1', buff);
-    schRepl(szPrmpt, buff, 129);
+    schRepl(str, buff, 129);
     chr2Str(128, '2', buff);
-    schRepl(szPrmpt, buff, 130);
+    schRepl(str, buff, 130);
     chr2Str(128, '3', buff);
-    schRepl(szPrmpt, buff, 131);
+    schRepl(str, buff, 131);
     chr2Str(128, '4', buff);
-    schRepl(szPrmpt, buff, 132);
+    schRepl(str, buff, 132);
     chr2Str(128, '5', buff);
-    schRepl(szPrmpt, buff, 133);
-    schRepl(szPrmpt, "a6", 134);
+    schRepl(str, buff, 133);
+    schRepl(str, "a6", 134);
     chr2Str(134, '1', buff);
-    schRepl(szPrmpt, buff, 135);
+    schRepl(str, buff, 135);
     chr2Str(134, '2', buff);
-    schRepl(szPrmpt, buff, 136);
+    schRepl(str, buff, 136);
     chr2Str(134, '3', buff);
-    schRepl(szPrmpt, buff, 137);
+    schRepl(str, buff, 137);
     chr2Str(134, '4', buff);
-    schRepl(szPrmpt, buff, 138);
+    schRepl(str, buff, 138);
     chr2Str(134, '5', buff);
-    schRepl(szPrmpt, buff, 139);
-    schRepl(szPrmpt, "e6", 140);
+    schRepl(str, buff, 139);
+    schRepl(str, "e6", 140);
     chr2Str(140, '1', buff);
-    schRepl(szPrmpt, buff, 141);
+    schRepl(str, buff, 141);
     chr2Str(140, '2', buff);
-    schRepl(szPrmpt, buff, 142);
+    schRepl(str, buff, 142);
     chr2Str(140, '3', buff);
-    schRepl(szPrmpt, buff, 143);
+    schRepl(str, buff, 143);
     chr2Str(140, '4', buff);
-    schRepl(szPrmpt, buff, 144);
+    schRepl(str, buff, 144);
     chr2Str(140, '5', buff);
-    schRepl(szPrmpt, buff, 145);
-    schRepl(szPrmpt, "o7", 146);
+    schRepl(str, buff, 145);
+    schRepl(str, "o7", 146);
     chr2Str(146, '1', buff);
-    schRepl(szPrmpt, buff, 147);
+    schRepl(str, buff, 147);
     chr2Str(146, '2', buff);
-    schRepl(szPrmpt, buff, 148);
+    schRepl(str, buff, 148);
     chr2Str(146, '3', buff);
-    schRepl(szPrmpt, buff, 149);
+    schRepl(str, buff, 149);
     chr2Str(146, '4', buff);
-    schRepl(szPrmpt, buff, 150);
+    schRepl(str, buff, 150);
     chr2Str(146, '5', buff);
-    schRepl(szPrmpt, buff, 151);
-    schRepl(szPrmpt, "o6", 152);
+    schRepl(str, buff, 151);
+    schRepl(str, "o6", 152);
     chr2Str(152, '1', buff);
-    schRepl(szPrmpt, buff, 153);
+    schRepl(str, buff, 153);
     chr2Str(152, '2', buff);
-    schRepl(szPrmpt, buff, 154);
+    schRepl(str, buff, 154);
     chr2Str(152, '3', buff);
-    schRepl(szPrmpt, buff, 155);
+    schRepl(str, buff, 155);
     chr2Str(152, '4', buff);
-    schRepl(szPrmpt, buff, 156);
+    schRepl(str, buff, 156);
     chr2Str(152, '5', buff);
-    schRepl(szPrmpt, buff, 157);
-    schRepl(szPrmpt, "u7", 158);
+    schRepl(str, buff, 157);
+    schRepl(str, "u7", 158);
     chr2Str(158, '1', buff);
-    schRepl(szPrmpt, buff, 159);
+    schRepl(str, buff, 159);
     chr2Str(158, '2', buff);
-    schRepl(szPrmpt, buff, 160);
+    schRepl(str, buff, 160);
     chr2Str(158, '3', buff);
-    schRepl(szPrmpt, buff, 161);
+    schRepl(str, buff, 161);
     chr2Str(158, '4', buff);
-    schRepl(szPrmpt, buff, 162);
+    schRepl(str, buff, 162);
     chr2Str(158, '5', buff);
-    schRepl(szPrmpt, buff, 163);
-    schRepl(szPrmpt, "a1", 164);
-    schRepl(szPrmpt, "a2", 165);
-    schRepl(szPrmpt, "a3", 166);
-    schRepl(szPrmpt, "a4", 167);
-    schRepl(szPrmpt, "a5", 168);
-    schRepl(szPrmpt, "e1", 169);
-    schRepl(szPrmpt, "e2", 170);
-    schRepl(szPrmpt, "e3", 171);
-    schRepl(szPrmpt, "e4", 172);
-    schRepl(szPrmpt, "e5", 173);
-    schRepl(szPrmpt, "i1", 174);
-    schRepl(szPrmpt, "i2", 175);
-    schRepl(szPrmpt, "i3", 181);
-    schRepl(szPrmpt, "i4", 182);
-    schRepl(szPrmpt, "i5", 183);
-    schRepl(szPrmpt, "o1", 184);
-    schRepl(szPrmpt, "o2", 190);
-    schRepl(szPrmpt, "o3", 198);
-    schRepl(szPrmpt, "o4", 199);
-    schRepl(szPrmpt, "o5", 208);
-    schRepl(szPrmpt, "u1", 210);
-    schRepl(szPrmpt, "u2", 211);
-    schRepl(szPrmpt, "u3", 212);
-    schRepl(szPrmpt, "u4", 213);
-    schRepl(szPrmpt, "u5", 214);
-    schRepl(szPrmpt, "y1", 215);
-    schRepl(szPrmpt, "y2", 216);
-    schRepl(szPrmpt, "y3", 221);
-    schRepl(szPrmpt, "y4", 222);
-    schRepl(szPrmpt, "y5", 248);
-    schRepl(szPrmpt, "d9", 249);
-    schRepl(szPrmpt, "D9", 250);
+    schRepl(str, buff, 163);
+    schRepl(str, "a1", 164);
+    schRepl(str, "a2", 165);
+    schRepl(str, "a3", 166);
+    schRepl(str, "a4", 167);
+    schRepl(str, "a5", 168);
+    schRepl(str, "e1", 169);
+    schRepl(str, "e2", 170);
+    schRepl(str, "e3", 171);
+    schRepl(str, "e4", 172);
+    schRepl(str, "e5", 173);
+    schRepl(str, "i1", 174);
+    schRepl(str, "i2", 175);
+    schRepl(str, "i3", 181);
+    schRepl(str, "i4", 182);
+    schRepl(str, "i5", 183);
+    schRepl(str, "o1", 184);
+    schRepl(str, "o2", 190);
+    schRepl(str, "o3", 198);
+    schRepl(str, "o4", 199);
+    schRepl(str, "o5", 208);
+    schRepl(str, "u1", 210);
+    schRepl(str, "u2", 211);
+    schRepl(str, "u3", 212);
+    schRepl(str, "u4", 213);
+    schRepl(str, "u5", 214);
+    schRepl(str, "y1", 215);
+    schRepl(str, "y2", 216);
+    schRepl(str, "y3", 221);
+    schRepl(str, "y4", 222);
+    schRepl(str, "y5", 248);
+    schRepl(str, "d9", 249);
+    schRepl(str, "D9", 250);
 }
 
 /*----------------------------------------------*/
@@ -748,10 +748,8 @@ void fontVNI(char *szPrmpt)
 /*----------------------------------------------*/
 void getScreenText(int16_t x, int16_t y, int16_t width, int16_t height, uint8_t *buff)
 {
-    uint16_t bytes = width << 1;
-    //uint16_t far *dst = (uint16_t far*)buff;
+    const uint16_t bytes = width << 1;
     uint8_t far *src = txtMem + OFFSET(x, y);
-    
     while (height--)
     {
         _fmemcpy(buff, src, bytes);
@@ -769,7 +767,7 @@ void getScreenText(int16_t x, int16_t y, int16_t width, int16_t height, uint8_t 
 /*----------------------------------------------*/
 void putScreenText(int16_t x, int16_t y, int16_t width, int16_t height, uint8_t *buff)
 {
-    uint16_t bytes = width << 1;
+    const uint16_t bytes = width << 1;
     uint8_t far *dst = txtMem + OFFSET(x, y);
     
     while (height--)
@@ -783,64 +781,64 @@ void putScreenText(int16_t x, int16_t y, int16_t width, int16_t height, uint8_t 
 /*-------------------------------------*/
 /* Funtion : decodeFile                */
 /* Purpose : Decode the language files */
-/* Expects : (inFile) The source file  */
-/*           (outFile) The dest file   */
+/* Expects : (ifile) The source file   */
+/*           (ofile) The dest file     */
 /* Returns : Number of lines in file   */
 /*-------------------------------------*/
-uint16_t decodeFile(const char *inFile, const char *outFile)
+uint16_t decodeFile(const char *ifile, const char *ofile)
 {
     int16_t c, key = 98;
     uint16_t linesCount = 0;
-    FILE *inHandle, *outHandle;
+    FILE *ihandle, *ohandle;
     
-    inHandle = fopen(inFile, "rb");
-    outHandle = fopen(outFile, "wb");
+    ihandle = fopen(ifile, "rb");
+    ohandle = fopen(ofile, "wb");
 
-    if (!inHandle || !outHandle)
+    if (!ihandle || !ohandle)
     {
-        fprintf(stderr, "Error loading file %s. System halt.", inFile);
+        fprintf(stderr, "Error loading file %s. System halt.", ifile);
         exit(1);
     }
 
-    while ((c = fgetc(inHandle)) != EOF)
+    while ((c = fgetc(ihandle)) != EOF)
     {
         c = c - ~key;
-        fputc(c, outHandle);
+        fputc(c, ohandle);
         if (c == 266) linesCount++;
     }
 
-    fclose(inHandle);
-    fclose(outHandle);
+    fclose(ihandle);
+    fclose(ohandle);
     return linesCount;
 }
 
 /*------------------------------------------------*/
 /* Function : getTextFile                         */
 /* Purpose  : Reading information into data array */
-/* Expects  : (inFile) the input file             */
-/*            (outFile) the output file           */
-/*            (szData) the array data             */
-/*            (wNumElm) the number of elements    */
+/* Expects  : (ifile) the input file              */
+/*            (ofile) the output file             */
+/*            (data) the array data               */
+/*            (num) the number of elements        */
 /* Returns  : Nothing                             */
 /*------------------------------------------------*/
-void getTextFile(const char *inFile, const char *outFile, char ***szData, uint16_t *wNumElm)
+void getTextFile(const char *ifile, const char *ofile, char ***data, uint16_t *num)
 {
     FILE *fp;
     uint16_t elems = 0;
     char szBuffer[102] = {0};
     
-    elems = decodeFile(inFile, outFile);
-    szData[0] = (char**)malloc(elems * sizeof(char*));
-    if (!(szData[0]))
+    elems = decodeFile(ifile, ofile);
+    data[0] = (char**)malloc(elems * sizeof(char*));
+    if (!(data[0]))
     {
         fprintf(stderr, "Not enough memory for count: %d\n", elems);
         exit(1);
     }
 
-    fp = fopen(outFile, "rt");
+    fp = fopen(ofile, "rt");
     if (!fp)
     {
-        fprintf(stderr, "Error open file: %s", outFile);
+        fprintf(stderr, "Error open file: %s", ofile);
         exit(1);   
     }
 
@@ -848,20 +846,20 @@ void getTextFile(const char *inFile, const char *outFile, char ***szData, uint16
     while (fgets(szBuffer, 102, fp))
     {
         fontVNI(szBuffer);
-        szData[0][elems] = (char*)malloc(strlen(szBuffer) + 1);
-        if (!(szData[0][elems]))
+        data[0][elems] = (char*)malloc(strlen(szBuffer) + 1);
+        if (!(data[0][elems]))
         {
             fprintf(stderr, "Not enough memory at line: %u", elems);
             exit(1);
         }
         szBuffer[strlen(szBuffer) - 1] = '\0';
-        strcpy(szData[0][elems], szBuffer);
+        strcpy(data[0][elems], szBuffer);
         elems++;
     }
 
-    *wNumElm = elems;
+    *num = elems;
     fclose(fp);
-    unlink(outFile);
+    unlink(ofile);
 }
 
 /*------------------------------------------*/
@@ -984,11 +982,11 @@ void sysReboot()
 /*           (errortype) error file type */
 /* Returns : Nothing                     */
 /*---------------------------------------*/
-void errorFile(char *szHandle, char *szErrorType)
+void errorFile(char *msg, char *type)
 {
     char errorCode[60];
-    strcpy(errorCode, szErrorType);
-    strcat(errorCode, szHandle);
+    strcpy(errorCode, type);
+    strcat(errorCode, msg);
     shadowBox(13, 8, 65, 17, 0x4F, sysInfo[1]);
     drawButton(33, 15, 0xF0, 4, sysMenu[3], 1, 0xF4);
     writeVRM(39 - strlen(errorCode) / 2, 10, 0x4A, errorCode, 0);
@@ -1020,22 +1018,22 @@ void errorFile(char *szHandle, char *szErrorType)
 /*---------------------------------------------*/
 /* Funtion : countFiles                        */
 /* Purpose : Count total files from directory  */
-/* Expects : (szDir) sources directory         */
+/* Expects : (dirName) sources directory       */
 /* Returns : Number of files in directory      */
 /*---------------------------------------------*/
-void countFiles(char *szDir)
+void countFiles(char *dirName)
 {
     size_t i = 0;
     struct find_t entries;
     char srcPath[64], srcExt[64], srcDir[64];
 
-    for (i = strlen(szDir) - 1; szDir[i] != '\\'; i--);
+    for (i = strlen(dirName) - 1; dirName[i] != '\\'; i--);
 
-    strcpy(srcPath, szDir);
+    strcpy(srcPath, dirName);
     srcPath[i] = '\0';
-    strcpy(srcExt, &szDir[i + 1]);
+    strcpy(srcExt, &dirName[i + 1]);
 
-    if (!_dos_findfirst(szDir, _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM, &entries))
+    if (!_dos_findfirst(dirName, _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM, &entries))
     {
         do {
             totalFiles++;
@@ -1058,19 +1056,19 @@ void countFiles(char *szDir)
 /*---------------------------------------------*/
 /* Funtion : copyFile                          */
 /* Purpose : Copy file from source to dest     */
-/* Expects : (szSrc) sources file path         */
-/*           (szDst) destination file path     */
+/* Expects : (src) sources file path           */
+/*           (dst) destination file path       */
 /*           (fileInfo) file attributes        */
 /* Returns : 1 for success                     */
 /*           0 for failure                     */
 /*---------------------------------------------*/
-uint8_t copyFile(char *szSrc, char *szDst, struct find_t *fileInfo)
+uint8_t copyFile(char *src, char *dst, struct find_t *fileInfo)
 {
     int srcHandle, dstHandle;
     size_t numBytes = bytesCount;
     
-    if (_dos_open(szSrc, O_RDONLY, &srcHandle)) errorFile(szSrc, sysInfo[17]);
-    if (_dos_creat(szDst, fileInfo->attrib, &dstHandle)) errorFile(szDst, sysInfo[17]);
+    if (_dos_open(src, O_RDONLY, &srcHandle)) errorFile(src, sysInfo[17]);
+    if (_dos_creat(dst, fileInfo->attrib, &dstHandle)) errorFile(dst, sysInfo[17]);
 
     while (numBytes)
     {
@@ -1096,13 +1094,12 @@ uint8_t copyFile(char *szSrc, char *szDst, struct find_t *fileInfo)
 /*---------------------------------------------*/
 /* Funtion : processDir                        */
 /* Purpose : Copy all files from the disk      */
-/* Expects : (szSourceDir) sources directory   */
-/*           (szDestDir) destination directory */
-/*           (wAttr) file attribute            */
+/* Expects : (psrc) sources directory          */
+/*           (pdst) destination directory      */
 /* Returns : 1 for success                     */
 /*           0 for failure                     */
 /*---------------------------------------------*/
-void processDir(char *szSourceDir, char *szDestDir)
+void processDir(char *psrc, char *pdst)
 {
     size_t i;
     struct find_t entries;
@@ -1110,17 +1107,17 @@ void processDir(char *szSourceDir, char *szDestDir)
     char srcPath[64], srcExt[64], srcDir[64];
     char curFile[68], newFile[68], newDir[64];
 
-    for (i = strlen(szSourceDir) - 1; szSourceDir[i] != '\\'; i--);
+    for (i = strlen(psrc) - 1; psrc[i] != '\\'; i--);
 
-    strcpy(srcPath, szSourceDir);
+    strcpy(srcPath, psrc);
     srcPath[i] = '\0';
-    strcpy(srcExt, &szSourceDir[i + 1]);
+    strcpy(srcExt, &psrc[i + 1]);
 
-    if (!_dos_findfirst(szSourceDir, _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM, &entries))
+    if (!_dos_findfirst(psrc, _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SYSTEM, &entries))
     {
         do {
             sprintf(curFile, "%s\\%s", srcPath, entries.name);
-            sprintf(newFile, "%s\\%s", szDestDir, entries.name);
+            sprintf(newFile, "%s\\%s", pdst, entries.name);
             if (!copyFile(curFile, newFile, &entries)) errorFile(newFile, sysInfo[21]);
 
             numFiles++;
@@ -1139,7 +1136,7 @@ void processDir(char *szSourceDir, char *szDestDir)
             if ((entries.attrib & _A_SUBDIR) && (entries.name[0] != '.'))
             {
                 sprintf(srcDir, "%s\\%s\\%s", srcPath, entries.name, srcExt);
-                sprintf(newDir, "%s\\%s", szDestDir, entries.name);
+                sprintf(newDir, "%s\\%s", pdst, entries.name);
                 mkdir(newDir);
                 _dos_setfileattr(newDir, entries.attrib);
                 processDir(srcDir, newDir);
@@ -1152,25 +1149,25 @@ void processDir(char *szSourceDir, char *szDestDir)
 /* Function : messageBox                 */
 /* Purpose  : Display the system message */
 /* Expects  : (x1,y1,x2,y2) coordinates  */
-/*            (szMsg) The messages array */
-/*            (n) The elements of array  */
-/* Return   : 1 or 0                     */
+/*            (msg) The messages array   */
+/*            (n) The number of elements */
+/* Return   : Selected order             */
 /*---------------------------------------*/
-uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *szMsg[], uint8_t n)
+uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], uint8_t n)
 {
     char key = 0, isOK = 0;
     uint8_t slc = 0, i = 0;
     const uint16_t oldCursor = getCursorSize();
-    const int16_t bCenter = x1 + (x2 - x1) / 2;
+    const int16_t center = x1 + (x2 - x1) / 2;
 
     setCursorSize(0x2020);
     shadowBox(x1, y1, x2, y2, 0x4F, sysInfo[1]);
     showMouse();
-    moveMouse(bCenter, y2 - 3);
+    moveMouse(center, y2 - 3);
     
-    for (i = 0; i < n; i++) writeVRM(bCenter - strlen(szMsg[i]) / 2 + 1, y1 + 2 + i, 0x4A, szMsg[i], 0);
-    drawButton(bCenter - 14, y2 - 2, wATV, 4, sysMenu[0], 1, wFLT);
-    drawButton(bCenter + 6, y2 - 2, _eATV, 4, sysMenu[2], 1, _eFLT);
+    for (i = 0; i < n; i++) writeVRM(center - strlen(msg[i]) / 2 + 1, y1 + 2 + i, 0x4A, msg[i], 0);
+    drawButton(center - 14, y2 - 2, wATV, 4, sysMenu[0], 1, wFLT);
+    drawButton(center + 6, y2 - 2, _eATV, 4, sysMenu[2], 1, _eFLT);
 
     while (kbhit()) getch();
     do {
@@ -1181,22 +1178,22 @@ uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *szMsg[]
             switch (key)
             {
             case LEFT:
-                drawButton(bCenter - 14 + slc * 20, y2 - 2, _eATV, 4, sysMenu[slc * 2], 1, _eFLT);
+                drawButton(center - 14 + slc * 20, y2 - 2, _eATV, 4, sysMenu[slc * 2], 1, _eFLT);
                 if (slc < 1) slc = 1; else slc--;
-                drawButton(bCenter - 14 + slc * 20, y2 - 2, wATV, 4, sysMenu[slc * 2], 1, wFLT);
+                drawButton(center - 14 + slc * 20, y2 - 2, wATV, 4, sysMenu[slc * 2], 1, wFLT);
                 break;
             case RIGHT:
-                drawButton(bCenter - 14 + slc * 20, y2 - 2, _eATV, 4, sysMenu[slc * 2], 1, _eFLT);
+                drawButton(center - 14 + slc * 20, y2 - 2, _eATV, 4, sysMenu[slc * 2], 1, _eFLT);
                 if (slc > 0) slc = 0; else slc++;
-                drawButton(bCenter - 14 + slc * 20, y2 - 2, wATV, 4, sysMenu[slc * 2], 1, wFLT);
+                drawButton(center - 14 + slc * 20, y2 - 2, wATV, 4, sysMenu[slc * 2], 1, wFLT);
                 break;
             case ENTER:
                 isOK = 1;
                 hideMouse();
-                clearScreen(bCenter - 14 + slc * 20, y2 - 2, bCenter - 3 + slc * 20, y2 - 1, 4);
-                writeVRM(bCenter - 13 + slc * 20, y2 - 2, wATV, sysMenu[2 * slc], wFLT);
+                clearScreen(center - 14 + slc * 20, y2 - 2, center - 3 + slc * 20, y2 - 1, 4);
+                writeVRM(center - 13 + slc * 20, y2 - 2, wATV, sysMenu[2 * slc], wFLT);
                 delay(50);
-                drawButton(bCenter - 14 + slc * 20, y2 - 2, wATV, 4, sysMenu[2 * slc], 1, wFLT);
+                drawButton(center - 14 + slc * 20, y2 - 2, wATV, 4, sysMenu[2 * slc], 1, wFLT);
                 showMouse();
                 break;
             }
@@ -1204,29 +1201,29 @@ uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *szMsg[]
         
         if (clickMouse(&bCol, &bRow))
         {
-            if (bRow == y2 - 2 && bCol >= bCenter - 14 && bCol <= bCenter - 5)
+            if (bRow == y2 - 2 && bCol >= center - 14 && bCol <= center - 5)
             {
                 slc = 0;
                 isOK = 1;
                 hideMouse();
-                drawButton(bCenter + 6, y2 - 2, _eATV, 4, sysMenu[2], 1, _eFLT);
-                clearScreen(bCenter - 14, y2 - 2, bCenter - 3, y2 - 1, 4);
-                writeVRM(bCenter - 13, y2 - 2, wATV, sysMenu[0], wFLT);
+                drawButton(center + 6, y2 - 2, _eATV, 4, sysMenu[2], 1, _eFLT);
+                clearScreen(center - 14, y2 - 2, center - 3, y2 - 1, 4);
+                writeVRM(center - 13, y2 - 2, wATV, sysMenu[0], wFLT);
                 delay(50);
-                drawButton(bCenter - 14, y2 - 2, wATV, 4, sysMenu[0], 1, wFLT);
+                drawButton(center - 14, y2 - 2, wATV, 4, sysMenu[0], 1, wFLT);
                 showMouse();
             }
 
-            if (bRow == y2 - 2 && bCol >= bCenter + 6 && bCol <= bCenter + 15)
+            if (bRow == y2 - 2 && bCol >= center + 6 && bCol <= center + 15)
             {
                 slc = 1;
                 isOK = 1;
                 hideMouse();
-                drawButton(bCenter - 14, y2 - 2, _eATV, 4, sysMenu[0], 1, _eFLT);
-                clearScreen(bCenter + 6,  y2 - 2, bCenter + 16, y2 - 1, 4);
-                writeVRM(bCenter + 7, y2 - 2, wATV, sysMenu[2], wFLT);
+                drawButton(center - 14, y2 - 2, _eATV, 4, sysMenu[0], 1, _eFLT);
+                clearScreen(center + 6,  y2 - 2, center + 16, y2 - 1, 4);
+                writeVRM(center + 7, y2 - 2, wATV, sysMenu[2], wFLT);
                 delay(50);
-                drawButton(bCenter + 6, y2 - 2, wATV, 4, sysMenu[2], 1, wFLT);
+                drawButton(center + 6, y2 - 2, wATV, 4, sysMenu[2], 1, wFLT);
                 showMouse();
             }
 
@@ -1246,11 +1243,11 @@ uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *szMsg[]
 /* Function : warningBox                 */
 /* Purpose  : Display the system message */
 /* Expects  : (x1,y1,x2,y2) coordinates  */
-/*            (szMsg) The messages array */
+/*            (msg) The messages array */
 /*            (n) The elements of array  */
 /* Return   : 1 or 0                     */
 /*---------------------------------------*/
-void warningBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *szMsg[], uint8_t n)
+void warningBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], uint8_t n)
 {
     int16_t i = 0;
     char key = 0;
@@ -1261,7 +1258,7 @@ void warningBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *szMsg[], u
     setCursorSize(0x2020);
     shadowBox(x1, y1, x2, y2, 0x4F, sysInfo[1]);
 
-    for (i = 0; i < n; i++) writeVRM(bCenter - strlen(szMsg[i]) / 2, y1 + 2 + i, 0x4A, szMsg[i], 0);
+    for (i = 0; i < n; i++) writeVRM(bCenter - strlen(msg[i]) / 2, y1 + 2 + i, 0x4A, msg[i], 0);
     
     drawButton(bPos, y2 - 2, wATV, 4, sysMenu[0], 1, wFLT);
     showMouse();
@@ -1629,8 +1626,8 @@ void checkProductKey()
 }
 
 /*------------------------------------*/
-/* Funtion : showRegisterInfo             */
-/* Purpose : Show the readme.hlp file */
+/* Funtion : showRegisterInfo         */
+/* Purpose : Show user register info  */
 /* Expects : Nothing                  */
 /* Returns : Nothing                  */
 /*------------------------------------*/
@@ -1802,8 +1799,8 @@ void installProgram()
     writeChar(18, 12, 0x17, 45, 176);
     writeVRM(53, 13, 0x9F, sysInfo[174], 0);
     drawButton(35, 15, _wATV, 9, sysMenu[2], 1, _wFLT);
-    countFiles("C:\\TOPICS\\*.*");
-    processDir("C:\\TOPICS\\*.*", szInstallPath);
+    countFiles(PROG_DIR);
+    processDir(PROG_DIR, szInstallPath);
     delay(500);
     fillFrame(15, 6, 69, 21, 0xF6, 178);
     shadowBox(18, 10, 62, 15, 0x1F, sysInfo[5]);
