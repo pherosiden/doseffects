@@ -52,10 +52,8 @@
 #define RESET_ADR	    ((DOS_SEG << 16) | RESET_FLAG)
 
 typedef struct {
-    uint8_t     day;        // The date of the program
-    uint8_t     month;      // The month of the program
-    uint16_t    year;       // The year of the program
-    uint8_t     regs;       // The register code
+    time_t      utime;      // Register timestamp
+    uint16_t    days;       // The number of days
     uint8_t     key;        // Random key
     char        serial[20]; // License code
     char        user[31];   // User name
@@ -748,12 +746,13 @@ void fontVNI(char *str)
 /*----------------------------------------------*/
 void getScreenText(int16_t x, int16_t y, int16_t width, int16_t height, uint8_t *buff)
 {
-    const uint16_t bytes = width << 1;
     uint8_t far *src = txtMem + OFFSET(x, y);
+
+    width <<= 1;
     while (height--)
     {
-        _fmemcpy(buff, src, bytes);
-        buff += bytes;
+        _fmemcpy(buff, src, width);
+        buff += width;
         src += SCR_WIDTH;
     }
 }
@@ -767,13 +766,13 @@ void getScreenText(int16_t x, int16_t y, int16_t width, int16_t height, uint8_t 
 /*----------------------------------------------*/
 void putScreenText(int16_t x, int16_t y, int16_t width, int16_t height, uint8_t *buff)
 {
-    const uint16_t bytes = width << 1;
     uint8_t far *dst = txtMem + OFFSET(x, y);
-    
+
+    width <<= 1;
     while (height--)
     {
-        _fmemcpy(dst, buff, bytes);
-        buff += bytes;
+        _fmemcpy(dst, buff, width);
+        buff += width;
         dst += SCR_WIDTH;
     }
 }
@@ -2413,7 +2412,7 @@ void startInstall()
 {
     chooseDrive();
     checkDiskSpace();
-    //checkProductKey();
+    checkProductKey();
     installProgram();
     updateProgram();
     showRegisterInfo();

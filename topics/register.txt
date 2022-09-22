@@ -21,8 +21,8 @@ go1p pha62n khuye61n khi1ch tinh tha62n ta1c gia3 d9e63 pha1t trie63n pha62n me6
 Ra61t ca1m o7n ca1c ba5n d9a4 u3ng ho65 va2 su73 du5ng chu7o7ng tri2nh TOPICS na2y !!!
 register.dat
 Error loading file... System halt.
-font.com 
-release.exe 
+font 
+uinstall
   ~D9a8ng ky1  
   ~Tie61p tu5c  
 Tho6ng tin d9a8ng ky1

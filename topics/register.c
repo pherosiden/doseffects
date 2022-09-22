@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <time.h>
 
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + 80 * (y - 1)) << 1)
@@ -20,10 +21,8 @@
 #define _wFLT   0x74
 
 typedef struct {
-    uint8_t     day;        // The date of the program
-    uint8_t     month;      // The month of the program
-    uint16_t    year;       // The year of the program
-    uint8_t     regs;       // The register code
+    time_t      utime;      // Register timestamp
+    uint16_t    days;       // The number of days
     uint8_t     key;        // Random key
     char        serial[20]; // License code
     char        user[31];   // User name
@@ -98,7 +97,7 @@ void printChar(uint8_t x, uint8_t y, uint8_t attr, char chr)
 /* Funtion : writeChar                            */
 /* Purpose : Writting a character with attribute  */
 /* Expects : (x,y) cordinate to write a character */
-/*           (wAttr) attribute of character       */
+/*           (attr) attribute of character       */
 /*           (bLen) length area                   */
 /*           (Chr) symbol needs to write          */
 /* Returns : Nothing                              */
@@ -116,37 +115,37 @@ void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 /* Purpose  : Writing a character with attribute */
 /* Notices  : Intervention in video memory       */
 /* Expects  : (x,y) cordinate needs to writting  */
-/*            (txtAttr) The attribute of string  */
-/*            (szPrmt) the string to format      */
-/*            (fstAttr) The attr of first letter */
+/*            (attr) The attribute of string     */
+/*            (str) the string to format         */
+/*            (lets) The attr of first letter    */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t fstAttr)
+void writeVRM(uint8_t x, uint8_t y, uint8_t attr, const char *str, uint8_t lets)
 {
     uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
 
-    if (fstAttr)
+    if (lets)
     {
         char *ptmp = NULL;
-        char szTmp[80] = {0};
-        uint8_t i = 0, fltStop = 0, currX = x, bPos;
+        char buff[80] = {0};
+        uint8_t i = 0, stop = 0, currx = x, pos;
 
-        strcpy(szTmp, szPrmt);
-        for (i = 0; (i < strlen(szTmp) - 1) && !fltStop; i++)
+        strcpy(buff, str);
+        for (i = 0; (i < strlen(buff) - 1) && !stop; i++)
         {
-            if (szTmp[i] == 126) fltStop = 1;
+            if (buff[i] == 126) stop = 1;
         }
 
-        memmove(&szTmp[i - 1], &szTmp[i], strlen(szTmp) - i + 1);
-        bPos = i - 1;
+        memmove(&buff[i - 1], &buff[i], strlen(buff) - i + 1);
+        pos = i - 1;
 
-        ptmp = szTmp;
-        while (*ptmp) *pmem++ = (txtAtr << 8) + *ptmp++;
-        printChar(currX + bPos, y, fstAttr, szTmp[bPos]);
+        ptmp = buff;
+        while (*ptmp) *pmem++ = (attr << 8) + *ptmp++;
+        printChar(currx + pos, y, lets, buff[pos]);
     }
     else
     {
-        while (*szPrmt) *pmem++ = (txtAtr << 8) + *szPrmt++;
+        while (*str) *pmem++ = (attr << 8) + *str++;
     }
 }
 
@@ -154,50 +153,50 @@ void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t 
 /* Function : drawButton                         */
 /* Purpose  : Define the button shadow           */
 /* Expects  : (x,y) cordinate needs to writting  */
-/*            (txtAttr) the attribute of a title */
-/*            (szTitle) the string to format     */
-/*            (bType) The type of button         */
-/*            (fstAttr) The attr of first letter */
+/*            (attr) the attribute of a title    */
+/*            (title) the string to format       */
+/*            (type) The type of button          */
+/*            (lets) The attr of first letter    */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void drawButton(uint8_t x, uint8_t y, uint8_t txtAttr, uint8_t bkClr, const char *szTitle, uint8_t bType, uint8_t fstAttr)
+void drawButton(uint8_t x, uint8_t y, uint8_t attr, uint8_t bkc, const char *title, uint8_t type, uint8_t lets)
 {
-    const uint8_t wAttr = bkClr << 4;
-    const uint16_t bLen = strlen(szTitle);
+    const uint8_t bka = bkc << 4;
+    const uint16_t len = strlen(title);
     const char styles[] = {16, 17, 223, 220};
 
-    if (bType)
+    if (type)
     {
-        if (fstAttr)
+        if (lets)
         {
-            writeVRM(x, y, txtAttr, szTitle, fstAttr);
-            writeChar(x + 1, y + 1, wAttr, bLen - 1, styles[2]);
-            writeChar(x + bLen - 1, y, wAttr, 1, styles[3]);
+            writeVRM(x, y, attr, title, lets);
+            writeChar(x + 1, y + 1, bka, len - 1, styles[2]);
+            writeChar(x + len - 1, y, bka, 1, styles[3]);
         }
         else
         {
-            writeVRM(x, y, txtAttr, szTitle, 0);
-            writeChar(x + 1, y + 1, wAttr, bLen, styles[2]);
-            writeChar(x + bLen, y, wAttr, 1, styles[3]);
+            writeVRM(x, y, attr, title, 0);
+            writeChar(x + 1, y + 1, bka, len, styles[2]);
+            writeChar(x + len, y, bka, 1, styles[3]);
         }
     }
     else
     {
-        if (fstAttr)
+        if (lets)
         {
-            writeVRM(x, y, txtAttr, szTitle, fstAttr);
-            printChar(x, y, txtAttr, styles[0]);
-            printChar(x + bLen - 2, y, txtAttr, styles[1]);
-            writeChar(x + 1, y + 1, wAttr, bLen - 1, styles[2]);
-            writeChar(x + bLen - 1 , y, wAttr, 1, styles[3]);
+            writeVRM(x, y, attr, title, lets);
+            printChar(x, y, attr, styles[0]);
+            printChar(x + len - 2, y, attr, styles[1]);
+            writeChar(x + 1, y + 1, bka, len - 1, styles[2]);
+            writeChar(x + len - 1 , y, bka, 1, styles[3]);
         }
         else
         {
-            writeVRM(x, y, txtAttr, szTitle, 0);
-            printChar(x, y, txtAttr, styles[0]);
-            printChar(x + bLen - 1, y, txtAttr, styles[1]);
-            writeChar(x + 1, y + 1, wAttr, bLen, styles[2]);
-            writeChar(x + bLen, y, wAttr, 1, styles[3]);
+            writeVRM(x, y, attr, title, 0);
+            printChar(x, y, attr, styles[0]);
+            printChar(x + len - 1, y, attr, styles[1]);
+            writeChar(x + 1, y + 1, bka, len, styles[2]);
+            writeChar(x + len, y, bka, 1, styles[3]);
         }
     }
 }
@@ -277,14 +276,14 @@ void setBlinking(uint8_t doblink)
 /* Purpose : To full the box with special character */
 /* Expects : (x1,y1) cordinate top to left          */
 /*           (x2,y2) cordinate bottom to right      */
-/*           (wAttr) special character color        */
+/*           (attr) special character color         */
 /*           (chr) special character                */
 /* Returns : Nothing                                */
 /*--------------------------------------------------*/
-void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char chr)
+void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr, char chr)
 {
     uint8_t y;
-    for (y = y1; y <= y2; y++) writeChar(x1, y, wAttr, x2 - x1 + 1, chr);
+    for (y = y1; y <= y2; y++) writeChar(x1, y, attr, x2 - x1 + 1, chr);
 }
 
 /*----------------------------------------------*/
@@ -305,13 +304,13 @@ void clearScreen(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color)
 /* Purpose  : Draw a box with color and border  */
 /* Expects  : (x1,y1) cordinate top to left     */
 /*            (x2,y2) cordinate bottom to right */
-/*            (wAttr) the attribute of the box  */
+/*            (attr) the attribute of the box   */
 /* Returns  : Nothing                           */
 /*----------------------------------------------*/
-void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
+void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr)
 {
-    drawFrame(x1, y1, x2, y2, wAttr);
-    fillFrame(x1 + 1, y1 + 1, x2 - 1, y2 - 1, wAttr, 32);
+    drawFrame(x1, y1, x2, y2, attr);
+    fillFrame(x1 + 1, y1 + 1, x2 - 1, y2 - 1, attr, 32);
     changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, 0x08);
     changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, 0x08);
 }
@@ -321,20 +320,20 @@ void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 /* Purpose  : Draw a box with shadow (very art) */
 /* Expects  : (x1,y1) cordinate top to left     */
 /*            (x2,y2) cordinate bottom to right */
-/*            (wAttr) the attribute of the box  */
-/*            (szTitle) the title of header     */
+/*            (attr) the attribute of the box   */
+/*            (title) the title of header       */
 /* Returns  : Nothing                           */
 /*----------------------------------------------*/
-void shadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char *szTitle)
+void shadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr, char *title)
 {
-    const uint8_t bkc = wAttr << 4;
+    const uint8_t bkc = attr << 4;
     const char szStyle[] = {229, 252, 0};
-    const uint16_t bCenter = ((x2 - x1) >> 1) - (strlen(szTitle) >> 1);
+    const uint16_t bCenter = ((x2 - x1) >> 1) - (strlen(title) >> 1);
     changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, MASK_BG);
     changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, MASK_BG);
-    drawBox(x1, y1, x2, y2, wAttr);
+    drawBox(x1, y1, x2, y2, attr);
     writeChar(x1 + 3, y1, bkc, x2 - x1 - 2, 32);
-    writeVRM(x1 + bCenter, y1, bkc, szTitle, 0);
+    writeVRM(x1 + bCenter, y1, bkc, title, 0);
     printChar(x1 + 2, y1, bkc, 226);
     writeVRM(x1, y1, bkc >> 4, szStyle, 0);
 }
@@ -458,9 +457,9 @@ void closeMouse()
 /*           (substr) The substring        */
 /* Returns : Position of substring         */
 /*-----------------------------------------*/
-int16_t strPos(char *str, char *szSubstr)
+int16_t strPos(char *str, char *substr)
 {
-    char *ptr = strstr(str, szSubstr);
+    char *ptr = strstr(str, substr);
     if (!ptr) return -1;
     return ptr - str;
 }
@@ -470,13 +469,13 @@ int16_t strPos(char *str, char *szSubstr)
 /* Purpose : Inserted the char into string     */
 /* Expects : (str) The string                  */
 /*           (chr) The character need inserted */
-/*           (iPos) The position inserted      */
+/*           (pos) The position inserted       */
 /* Returns : Nothing                           */
 /*---------------------------------------------*/
-void insertChar(char *str, char chr, int16_t iPos)
+void insertChar(char *str, char chr, int16_t pos)
 {
-    if (iPos < 0 || iPos >= strlen(str)) return;
-    *(str + iPos) = chr;
+    if (pos < 0 || pos >= strlen(str)) return;
+    *(str + pos) = chr;
 }
 
 /*---------------------------------------------*/
@@ -490,7 +489,7 @@ void insertChar(char *str, char chr, int16_t iPos)
 void strDelete(char *str, int16_t i, int16_t num)
 {
     if (i < 0 || i >= strlen(str)) return;
-    memcpy(str + i + 1, str + i +num, strlen(str) - i - 1);
+    memcpy(str + i + 1, str + i + num, strlen(str) - i - 1);
 }
 
 /*--------------------------------------*/
@@ -533,129 +532,129 @@ void chr2Str(char chr, char n, char *str)
 /* Expects : (str) The string to decode */
 /* Returns : Nothing                    */
 /*--------------------------------------*/
-void fontVNI(char *szPrmpt)
+void fontVNI(char *str)
 {
     char buff[4] = {0};
-    schRepl(szPrmpt, "a8", 128);
+    schRepl(str, "a8", 128);
     chr2Str(128, '1', buff);
-    schRepl(szPrmpt, buff, 129);
+    schRepl(str, buff, 129);
     chr2Str(128, '2', buff);
-    schRepl(szPrmpt, buff, 130);
+    schRepl(str, buff, 130);
     chr2Str(128, '3', buff);
-    schRepl(szPrmpt, buff, 131);
+    schRepl(str, buff, 131);
     chr2Str(128, '4', buff);
-    schRepl(szPrmpt, buff, 132);
+    schRepl(str, buff, 132);
     chr2Str(128, '5', buff);
-    schRepl(szPrmpt, buff, 133);
-    schRepl(szPrmpt, "a6", 134);
+    schRepl(str, buff, 133);
+    schRepl(str, "a6", 134);
     chr2Str(134, '1', buff);
-    schRepl(szPrmpt, buff, 135);
+    schRepl(str, buff, 135);
     chr2Str(134, '2', buff);
-    schRepl(szPrmpt, buff, 136);
+    schRepl(str, buff, 136);
     chr2Str(134, '3', buff);
-    schRepl(szPrmpt, buff, 137);
+    schRepl(str, buff, 137);
     chr2Str(134, '4', buff);
-    schRepl(szPrmpt, buff, 138);
+    schRepl(str, buff, 138);
     chr2Str(134, '5', buff);
-    schRepl(szPrmpt, buff, 139);
-    schRepl(szPrmpt, "e6", 140);
+    schRepl(str, buff, 139);
+    schRepl(str, "e6", 140);
     chr2Str(140, '1', buff);
-    schRepl(szPrmpt, buff, 141);
+    schRepl(str, buff, 141);
     chr2Str(140, '2', buff);
-    schRepl(szPrmpt, buff, 142);
+    schRepl(str, buff, 142);
     chr2Str(140, '3', buff);
-    schRepl(szPrmpt, buff, 143);
+    schRepl(str, buff, 143);
     chr2Str(140, '4', buff);
-    schRepl(szPrmpt, buff, 144);
+    schRepl(str, buff, 144);
     chr2Str(140, '5', buff);
-    schRepl(szPrmpt, buff, 145);
-    schRepl(szPrmpt, "o7", 146);
+    schRepl(str, buff, 145);
+    schRepl(str, "o7", 146);
     chr2Str(146, '1', buff);
-    schRepl(szPrmpt, buff, 147);
+    schRepl(str, buff, 147);
     chr2Str(146, '2', buff);
-    schRepl(szPrmpt, buff, 148);
+    schRepl(str, buff, 148);
     chr2Str(146, '3', buff);
-    schRepl(szPrmpt, buff, 149);
+    schRepl(str, buff, 149);
     chr2Str(146, '4', buff);
-    schRepl(szPrmpt, buff, 150);
+    schRepl(str, buff, 150);
     chr2Str(146, '5', buff);
-    schRepl(szPrmpt, buff, 151);
-    schRepl(szPrmpt, "o6", 152);
+    schRepl(str, buff, 151);
+    schRepl(str, "o6", 152);
     chr2Str(152, '1', buff);
-    schRepl(szPrmpt, buff, 153);
+    schRepl(str, buff, 153);
     chr2Str(152, '2', buff);
-    schRepl(szPrmpt, buff, 154);
+    schRepl(str, buff, 154);
     chr2Str(152, '3', buff);
-    schRepl(szPrmpt, buff, 155);
+    schRepl(str, buff, 155);
     chr2Str(152, '4', buff);
-    schRepl(szPrmpt, buff, 156);
+    schRepl(str, buff, 156);
     chr2Str(152, '5', buff);
-    schRepl(szPrmpt, buff, 157);
-    schRepl(szPrmpt, "u7", 158);
+    schRepl(str, buff, 157);
+    schRepl(str, "u7", 158);
     chr2Str(158, '1', buff);
-    schRepl(szPrmpt, buff, 159);
+    schRepl(str, buff, 159);
     chr2Str(158, '2', buff);
-    schRepl(szPrmpt, buff, 160);
+    schRepl(str, buff, 160);
     chr2Str(158, '3', buff);
-    schRepl(szPrmpt, buff, 161);
+    schRepl(str, buff, 161);
     chr2Str(158, '4', buff);
-    schRepl(szPrmpt, buff, 162);
+    schRepl(str, buff, 162);
     chr2Str(158, '5', buff);
-    schRepl(szPrmpt, buff, 163);
-    schRepl(szPrmpt, "a1", 164);
-    schRepl(szPrmpt, "a2", 165);
-    schRepl(szPrmpt, "a3", 166);
-    schRepl(szPrmpt, "a4", 167);
-    schRepl(szPrmpt, "a5", 168);
-    schRepl(szPrmpt, "e1", 169);
-    schRepl(szPrmpt, "e2", 170);
-    schRepl(szPrmpt, "e3", 171);
-    schRepl(szPrmpt, "e4", 172);
-    schRepl(szPrmpt, "e5", 173);
-    schRepl(szPrmpt, "i1", 174);
-    schRepl(szPrmpt, "i2", 175);
-    schRepl(szPrmpt, "i3", 181);
-    schRepl(szPrmpt, "i4", 182);
-    schRepl(szPrmpt, "i5", 183);
-    schRepl(szPrmpt, "o1", 184);
-    schRepl(szPrmpt, "o2", 190);
-    schRepl(szPrmpt, "o3", 198);
-    schRepl(szPrmpt, "o4", 199);
-    schRepl(szPrmpt, "o5", 208);
-    schRepl(szPrmpt, "u1", 210);
-    schRepl(szPrmpt, "u2", 211);
-    schRepl(szPrmpt, "u3", 212);
-    schRepl(szPrmpt, "u4", 213);
-    schRepl(szPrmpt, "u5", 214);
-    schRepl(szPrmpt, "y1", 215);
-    schRepl(szPrmpt, "y2", 216);
-    schRepl(szPrmpt, "y3", 221);
-    schRepl(szPrmpt, "y4", 222);
-    schRepl(szPrmpt, "y5", 248);
-    schRepl(szPrmpt, "d9", 249);
-    schRepl(szPrmpt, "D9", 250);
+    schRepl(str, buff, 163);
+    schRepl(str, "a1", 164);
+    schRepl(str, "a2", 165);
+    schRepl(str, "a3", 166);
+    schRepl(str, "a4", 167);
+    schRepl(str, "a5", 168);
+    schRepl(str, "e1", 169);
+    schRepl(str, "e2", 170);
+    schRepl(str, "e3", 171);
+    schRepl(str, "e4", 172);
+    schRepl(str, "e5", 173);
+    schRepl(str, "i1", 174);
+    schRepl(str, "i2", 175);
+    schRepl(str, "i3", 181);
+    schRepl(str, "i4", 182);
+    schRepl(str, "i5", 183);
+    schRepl(str, "o1", 184);
+    schRepl(str, "o2", 190);
+    schRepl(str, "o3", 198);
+    schRepl(str, "o4", 199);
+    schRepl(str, "o5", 208);
+    schRepl(str, "u1", 210);
+    schRepl(str, "u2", 211);
+    schRepl(str, "u3", 212);
+    schRepl(str, "u4", 213);
+    schRepl(str, "u5", 214);
+    schRepl(str, "y1", 215);
+    schRepl(str, "y2", 216);
+    schRepl(str, "y3", 221);
+    schRepl(str, "y4", 222);
+    schRepl(str, "y5", 248);
+    schRepl(str, "d9", 249);
+    schRepl(str, "D9", 250);
 }
 
 /*------------------------------------*/
 /* Funtion : decodeFile               */
 /* Purpose : Decode file register.sys */
-/* Expects : (inFile) The source file */
-/*           (outFile) The dest file  */
+/* Expects : (ifile) The source file  */
+/*           (ofile) The dest file    */
 /* Returns : Number of lines in file  */
 /*------------------------------------*/
-uint16_t decodeFile(const char *inFile, const char *outFile)
+uint16_t decodeFile(const char *ifile, const char *ofile)
 {
     int16_t c, key = 98;
     uint16_t linesCount = 0;
     FILE *inHandle, *outHandle;
     
     sysNum = 0;
-    inHandle = fopen(inFile, "rb");
-    outHandle = fopen(outFile, "wb");
+    inHandle = fopen(ifile, "rb");
+    outHandle = fopen(ofile, "wb");
 
     if (!inHandle || !outHandle)
     {
-        fprintf(stderr, "Error loading file %s. System halt.", inFile);
+        fprintf(stderr, "Error loading file %s. System halt.", ifile);
         exit(1);
     }
 
@@ -672,20 +671,20 @@ uint16_t decodeFile(const char *inFile, const char *outFile)
 }
 
 /*------------------------------------------------*/
-/* Function : getText                             */
+/* Function : getTextFile                         */
 /* Purpose  : Reading information into data array */
-/* Expects  : (inFile) the input file             */
-/*            (outFile) the output file           */
+/* Expects  : (ifile) the input file              */
+/*            (ofile) the output file             */
 /*            (szData) the array data             */
 /*            (wNumElm) the number of elements    */
 /* Returns  : Nothing                             */
 /*------------------------------------------------*/
-void getText(const char *inFile, const char *outFile)
+void getTextFile(const char *ifile, const char *ofile)
 {
     FILE *fp;
     char szBuffer[102];
 
-    sysNum = decodeFile(inFile, outFile);
+    sysNum = decodeFile(ifile, ofile);
     sysInfo = (char**)malloc(sysNum * sizeof(char*));
     if (!sysInfo)
     {
@@ -694,7 +693,7 @@ void getText(const char *inFile, const char *outFile)
     }
 
     sysNum = 0;
-    fp = fopen(outFile, "rt");
+    fp = fopen(ofile, "rt");
     while (fgets(szBuffer, 102, fp))
     {
         fontVNI(szBuffer);
@@ -710,7 +709,7 @@ void getText(const char *inFile, const char *outFile)
     }
 
     fclose(fp);
-    unlink(outFile);
+    unlink(ofile);
 }
 
 /*------------------------------------------*/
@@ -781,7 +780,7 @@ void fadeIn()
 /*----------------------------------------------*/
 void initData()
 {
-    getText("register.sys", "register.$$$");
+    getTextFile("register.sys", "register.$$$");
     system("font on");
 }
 
@@ -837,7 +836,7 @@ void registerForm()
     if (flgName && flgID)
     {
         writeVRM(30, 14, 0x1A, sysInfo[9], 0);
-        regInfo.regs = 1;
+        regInfo.utime = time(0);
         rewind(fptr);
         fwrite(&regInfo, sizeof(REG_INFO), 1, fptr);
         fclose(fptr);
@@ -974,16 +973,10 @@ uint8_t isRegister()
     REG_INFO regInfo;
 
     fptr = fopen(sysInfo[21], "rb");
-    if (!fptr)
-    {
-        fprintf(stderr, sysInfo[22]);
-        cleanup();
-        exit(1);
-    }
-
+    if (!fptr) return 0;
     fread(&regInfo, sizeof(REG_INFO), 1, fptr);
     fclose(fptr);
-    return regInfo.regs ? 1 : 0;
+    return regInfo.utime > 0;
 }
 
 /*--------------------------------------*/
@@ -994,12 +987,11 @@ uint8_t isRegister()
 /*--------------------------------------*/
 void checkLicense()
 {
+    time_t currTime;
     FILE *fptr;
     REG_INFO regInfo;
     char szPath[33];
-    struct dosdate_t da;
-
-    _dos_getdate(&da);
+    
     strcpy(szPath, sysInfo[24]);
     fptr = fopen(sysInfo[21], "rb");
     if (!fptr)
@@ -1011,35 +1003,23 @@ void checkLicense()
 
     fread(&regInfo, sizeof(REG_INFO), 1, fptr);
     fclose(fptr);
-    strcat(szPath, regInfo.path);
 
-    if (regInfo.month == da.month)
+    strcpy(szPath, regInfo.path);
+    strcat(szPath, sysInfo[24]);
+
+    currTime = time(0);
+    if (difftime(currTime, regInfo.utime) > regInfo.days)
     {
-        if ((da.day - regInfo.day) >= 7)
-        {
-            system(szPath);
-            cleanup();
-            exit(1);
-        }
-    }
-    else
-    {
-        if (((da.day + 31) - regInfo.day) >= 7)
-        {
-            system(szPath);
-            cleanup();
-            exit(1);
-        }
+        system(szPath);
+        cleanup();
+        exit(1);
     }
 }
 
 void main()
 {
     initData();
-    if (!isRegister())
-    {
-        //checkLicense();
-        startRegister();
-    }
+    if (!isRegister()) startRegister();
+    else checkLicense(); 
     cleanup();
 }

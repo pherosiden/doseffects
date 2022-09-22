@@ -21,33 +21,33 @@ char **szLines = NULL;      // Text message
 uint16_t numLines = 0;      // Message count
 uint8_t far *txtMem = (uint8_t far*)0xB8000000L;
 
-/*------------------------------------------------*/
-/* Function : scrollText                          */
-/* Mission  : scrollText a line on the monitor    */
-/* Expects  : (bNumRow) Number lines needs scroll */
-/*            (bCol,bRow,colLR) The Coordinate    */
-/*            (bType) scroll up or down           */
-/* Returns  : Nothing                             */
-/*------------------------------------------------*/
-void scrollText(uint8_t bNumRow, uint8_t bColor, uint8_t bCol, uint8_t bRow, uint8_t colLR, uint8_t rowLR, uint8_t bType)
+/*---------------------------------------------------*/
+/* Function : scrollText                             */
+/* Mission  : scrollText a line on the monitor       */
+/* Expects  : (num) Number lines needs scroll        */
+/*            (left,top,right,bot) The coordinate    */
+/*            (type) scroll direction (up or down)   */
+/* Returns  : Nothing                                */
+/*---------------------------------------------------*/
+void scrollText(uint8_t num, uint8_t color, uint8_t left, uint8_t top, uint8_t right, uint8_t bot, uint8_t type)
 {
     union REGS regs;
-    regs.h.ah = bType;
-    regs.h.al = bNumRow;
-    regs.h.bh = bColor;
-    regs.h.ch = bRow;
-    regs.h.cl = bCol;
-    regs.h.dh = rowLR;
-    regs.h.dl = colLR;
+    regs.h.ah = type;
+    regs.h.al = num;
+    regs.h.bh = color;
+    regs.h.cl = left;
+    regs.h.ch = top;
+    regs.h.dl = right;
+    regs.h.dh = bot;
     int86(0x10, &regs, &regs);
 }
 
-/*-----------------------------------*/
-/* Funtion : setBorder               */
-/* Purpose : Setting border color    */
-/* Expects : (color) color of border */
-/* Returns : Nothing                 */
-/*-----------------------------------*/
+/*----------------------------------------*/
+/* Funtion : setBorder                    */
+/* Purpose : Set the text border color    */
+/* Expects : (color) color of border      */
+/* Returns : Nothing                      */
+/*----------------------------------------*/
 void setBorder(uint8_t color)
 {
     union REGS regs;
@@ -141,14 +141,14 @@ void setBlinking(uint8_t doblink)
 /* Purpose : To full the box with special character */
 /* Expects : (x1,y1) cordinate top to left          */
 /*           (x2,y2) cordinate bottom to right      */
-/*           (wAttr) special character color        */
+/*           (attr) special character color         */
 /*           (chr) special character                */
 /* Returns : Nothing                                */
 /*--------------------------------------------------*/
-void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char chr)
+void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr, char chr)
 {
     uint8_t y;
-    for (y = y1; y <= y2; y++) writeChar(x1, y, wAttr, x2 - x1 + 1, chr);
+    for (y = y1; y <= y2; y++) writeChar(x1, y, attr, x2 - x1 + 1, chr);
 }
 
 /*----------------------------------------------*/
@@ -171,9 +171,9 @@ void clearScreen(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color)
 /*           (substr) The substring        */
 /* Returns : Position of substring         */
 /*-----------------------------------------*/
-int16_t strPos(char *str, char *szSubstr)
+int16_t strPos(char *str, char *sub)
 {
-    char *ptr = strstr(str, szSubstr);
+    char *ptr = strstr(str, sub);
     if (!ptr) return -1;
     return ptr - str;
 }
@@ -183,13 +183,13 @@ int16_t strPos(char *str, char *szSubstr)
 /* Purpose : Inserted the char into string     */
 /* Expects : (str) The string                  */
 /*           (chr) The character need inserted */
-/*           (iPos) The position inserted      */
+/*           (pos) The position inserted      */
 /* Returns : Nothing                           */
 /*---------------------------------------------*/
-void insertChar(char *str, char chr, int16_t iPos)
+void insertChar(char *str, char chr, int16_t pos)
 {
-    if (iPos < 0 || iPos >= strlen(str)) return;
-    *(str + iPos) = chr;
+    if (pos < 0 || pos >= strlen(str)) return;
+    *(str + pos) = chr;
 }
 
 /*---------------------------------------------*/
@@ -246,129 +246,129 @@ void chr2Str(char chr, char n, char *str)
 /* Expects : (str) The string to decode */
 /* Returns : Nothing                    */
 /*--------------------------------------*/
-void fontVNI(char *szPrmpt)
+void fontVNI(char *str)
 {
     char buff[4] = {0};
-    schRepl(szPrmpt, "a8", 128);
+    schRepl(str, "a8", 128);
     chr2Str(128, '1', buff);
-    schRepl(szPrmpt, buff, 129);
+    schRepl(str, buff, 129);
     chr2Str(128, '2', buff);
-    schRepl(szPrmpt, buff, 130);
+    schRepl(str, buff, 130);
     chr2Str(128, '3', buff);
-    schRepl(szPrmpt, buff, 131);
+    schRepl(str, buff, 131);
     chr2Str(128, '4', buff);
-    schRepl(szPrmpt, buff, 132);
+    schRepl(str, buff, 132);
     chr2Str(128, '5', buff);
-    schRepl(szPrmpt, buff, 133);
-    schRepl(szPrmpt, "a6", 134);
+    schRepl(str, buff, 133);
+    schRepl(str, "a6", 134);
     chr2Str(134, '1', buff);
-    schRepl(szPrmpt, buff, 135);
+    schRepl(str, buff, 135);
     chr2Str(134, '2', buff);
-    schRepl(szPrmpt, buff, 136);
+    schRepl(str, buff, 136);
     chr2Str(134, '3', buff);
-    schRepl(szPrmpt, buff, 137);
+    schRepl(str, buff, 137);
     chr2Str(134, '4', buff);
-    schRepl(szPrmpt, buff, 138);
+    schRepl(str, buff, 138);
     chr2Str(134, '5', buff);
-    schRepl(szPrmpt, buff, 139);
-    schRepl(szPrmpt, "e6", 140);
+    schRepl(str, buff, 139);
+    schRepl(str, "e6", 140);
     chr2Str(140, '1', buff);
-    schRepl(szPrmpt, buff, 141);
+    schRepl(str, buff, 141);
     chr2Str(140, '2', buff);
-    schRepl(szPrmpt, buff, 142);
+    schRepl(str, buff, 142);
     chr2Str(140, '3', buff);
-    schRepl(szPrmpt, buff, 143);
+    schRepl(str, buff, 143);
     chr2Str(140, '4', buff);
-    schRepl(szPrmpt, buff, 144);
+    schRepl(str, buff, 144);
     chr2Str(140, '5', buff);
-    schRepl(szPrmpt, buff, 145);
-    schRepl(szPrmpt, "o7", 146);
+    schRepl(str, buff, 145);
+    schRepl(str, "o7", 146);
     chr2Str(146, '1', buff);
-    schRepl(szPrmpt, buff, 147);
+    schRepl(str, buff, 147);
     chr2Str(146, '2', buff);
-    schRepl(szPrmpt, buff, 148);
+    schRepl(str, buff, 148);
     chr2Str(146, '3', buff);
-    schRepl(szPrmpt, buff, 149);
+    schRepl(str, buff, 149);
     chr2Str(146, '4', buff);
-    schRepl(szPrmpt, buff, 150);
+    schRepl(str, buff, 150);
     chr2Str(146, '5', buff);
-    schRepl(szPrmpt, buff, 151);
-    schRepl(szPrmpt, "o6", 152);
+    schRepl(str, buff, 151);
+    schRepl(str, "o6", 152);
     chr2Str(152, '1', buff);
-    schRepl(szPrmpt, buff, 153);
+    schRepl(str, buff, 153);
     chr2Str(152, '2', buff);
-    schRepl(szPrmpt, buff, 154);
+    schRepl(str, buff, 154);
     chr2Str(152, '3', buff);
-    schRepl(szPrmpt, buff, 155);
+    schRepl(str, buff, 155);
     chr2Str(152, '4', buff);
-    schRepl(szPrmpt, buff, 156);
+    schRepl(str, buff, 156);
     chr2Str(152, '5', buff);
-    schRepl(szPrmpt, buff, 157);
-    schRepl(szPrmpt, "u7", 158);
+    schRepl(str, buff, 157);
+    schRepl(str, "u7", 158);
     chr2Str(158, '1', buff);
-    schRepl(szPrmpt, buff, 159);
+    schRepl(str, buff, 159);
     chr2Str(158, '2', buff);
-    schRepl(szPrmpt, buff, 160);
+    schRepl(str, buff, 160);
     chr2Str(158, '3', buff);
-    schRepl(szPrmpt, buff, 161);
+    schRepl(str, buff, 161);
     chr2Str(158, '4', buff);
-    schRepl(szPrmpt, buff, 162);
+    schRepl(str, buff, 162);
     chr2Str(158, '5', buff);
-    schRepl(szPrmpt, buff, 163);
-    schRepl(szPrmpt, "a1", 164);
-    schRepl(szPrmpt, "a2", 165);
-    schRepl(szPrmpt, "a3", 166);
-    schRepl(szPrmpt, "a4", 167);
-    schRepl(szPrmpt, "a5", 168);
-    schRepl(szPrmpt, "e1", 169);
-    schRepl(szPrmpt, "e2", 170);
-    schRepl(szPrmpt, "e3", 171);
-    schRepl(szPrmpt, "e4", 172);
-    schRepl(szPrmpt, "e5", 173);
-    schRepl(szPrmpt, "i1", 174);
-    schRepl(szPrmpt, "i2", 175);
-    schRepl(szPrmpt, "i3", 181);
-    schRepl(szPrmpt, "i4", 182);
-    schRepl(szPrmpt, "i5", 183);
-    schRepl(szPrmpt, "o1", 184);
-    schRepl(szPrmpt, "o2", 190);
-    schRepl(szPrmpt, "o3", 198);
-    schRepl(szPrmpt, "o4", 199);
-    schRepl(szPrmpt, "o5", 208);
-    schRepl(szPrmpt, "u1", 210);
-    schRepl(szPrmpt, "u2", 211);
-    schRepl(szPrmpt, "u3", 212);
-    schRepl(szPrmpt, "u4", 213);
-    schRepl(szPrmpt, "u5", 214);
-    schRepl(szPrmpt, "y1", 215);
-    schRepl(szPrmpt, "y2", 216);
-    schRepl(szPrmpt, "y3", 221);
-    schRepl(szPrmpt, "y4", 222);
-    schRepl(szPrmpt, "y5", 248);
-    schRepl(szPrmpt, "d9", 249);
-    schRepl(szPrmpt, "D9", 250);
+    schRepl(str, buff, 163);
+    schRepl(str, "a1", 164);
+    schRepl(str, "a2", 165);
+    schRepl(str, "a3", 166);
+    schRepl(str, "a4", 167);
+    schRepl(str, "a5", 168);
+    schRepl(str, "e1", 169);
+    schRepl(str, "e2", 170);
+    schRepl(str, "e3", 171);
+    schRepl(str, "e4", 172);
+    schRepl(str, "e5", 173);
+    schRepl(str, "i1", 174);
+    schRepl(str, "i2", 175);
+    schRepl(str, "i3", 181);
+    schRepl(str, "i4", 182);
+    schRepl(str, "i5", 183);
+    schRepl(str, "o1", 184);
+    schRepl(str, "o2", 190);
+    schRepl(str, "o3", 198);
+    schRepl(str, "o4", 199);
+    schRepl(str, "o5", 208);
+    schRepl(str, "u1", 210);
+    schRepl(str, "u2", 211);
+    schRepl(str, "u3", 212);
+    schRepl(str, "u4", 213);
+    schRepl(str, "u5", 214);
+    schRepl(str, "y1", 215);
+    schRepl(str, "y2", 216);
+    schRepl(str, "y3", 221);
+    schRepl(str, "y4", 222);
+    schRepl(str, "y5", 248);
+    schRepl(str, "d9", 249);
+    schRepl(str, "D9", 250);
 }
 
 /*------------------------------------*/
 /* Funtion : decodeFile               */
 /* Purpose : Decode file register.sys */
-/* Expects : (inFile) The source file */
-/*           (outFile) The dest file  */
+/* Expects : (ifile) The source file  */
+/*           (ofile) The dest file  */
 /* Returns : Number of lines in file  */
 /*------------------------------------*/
-uint16_t decodeFile(const char *inFile, const char *outFile)
+uint16_t decodeFile(const char *ifile, const char *ofile)
 {
     int16_t c, key = 98;
     uint16_t linesCount = 0;
     FILE *inHandle, *outHandle;
     
     numLines = 0;
-    inHandle = fopen(inFile, "rb");
-    outHandle = fopen(outFile, "wb");
+    inHandle = fopen(ifile, "rb");
+    outHandle = fopen(ofile, "wb");
 
     if (!inHandle || !outHandle)
     {
-        fprintf(stderr, "Error loading file %s. System halt.", inFile);
+        fprintf(stderr, "Error loading file %s. System halt.", ifile);
         exit(1);
     }
 
@@ -385,20 +385,20 @@ uint16_t decodeFile(const char *inFile, const char *outFile)
 }
 
 /*------------------------------------------------*/
-/* Function : getTextFile                             */
+/* Function : getTextFile                         */
 /* Purpose  : Reading information into data array */
-/* Expects  : (inFile) the input file             */
-/*            (outFile) the output file           */
+/* Expects  : (ifile) the input file              */
+/*            (ofile) the output file             */
 /*            (szData) the array data             */
 /*            (wNumElm) the number of elements    */
 /* Returns  : Nothing                             */
 /*------------------------------------------------*/
-void getTextFile(const char *inFile, const char *outFile)
+void getTextFile(const char *ifile, const char *ofile)
 {
     FILE *fp;
     char szBuffer[102];
 
-    numLines = decodeFile(inFile, outFile);
+    numLines = decodeFile(ifile, ofile);
     szLines = (char**)malloc(numLines * sizeof(char*));
     if (!szLines)
     {
@@ -407,7 +407,7 @@ void getTextFile(const char *inFile, const char *outFile)
     }
 
     numLines = 0;
-    fp = fopen(outFile, "rt");
+    fp = fopen(ofile, "rt");
     while (fgets(szBuffer, 102, fp))
     {
         fontVNI(szBuffer);
@@ -423,7 +423,7 @@ void getTextFile(const char *inFile, const char *outFile)
     }
 
     fclose(fp);
-    unlink(outFile);
+    unlink(ofile);
 }
 
 /*------------------------------------------*/
@@ -442,10 +442,10 @@ void releaseData()
 /*---------------------------------------------*/
 /* Function : ViewFile                         */
 /* Mission  : Display the information on scren */
-/* Expects  : (szFileName) The name of file    */
+/* Expects  : (fileName) The name of file      */
 /* Returns  : Nothing                          */
 /*---------------------------------------------*/
-void viewFile(char *szFileName)
+void viewFile(char *fileName)
 {
     char key = 0;
     char szDate[12];
@@ -463,7 +463,7 @@ void viewFile(char *szFileName)
     
     for (i = 0; i < sizeof(szTitle) / sizeof(szTitle[0]); i++) fontVNI(szTitle[i]);
 
-    getTextFile(szFileName, "readme.$$$");
+    getTextFile(fileName, "readme.$$$");
     clearScreen(1, 1, 80, 25, 3);
     setCursorSize(0x2020);
     setBorder(43);
@@ -478,7 +478,7 @@ void viewFile(char *szFileName)
     writeChar(9, 25, 0x4F, 1, 25);
     
     _dos_getdate(&da);
-    sprintf(szDate, "%s: %.2d/%.2d/%d", szTitle[3], da.day,da.month,da.year);
+    sprintf(szDate, "%s: %.2d/%.2d/%d", szTitle[3], da.day, da.month, da.year);
     writeVRM(2, 1, 0x4E, szDate);
 
     for (i = 0; i < 23; i++) writeVRM(1, 2 + i, 0x30, szLines[i]);

@@ -18,6 +18,7 @@
 #include <string.h>
 #include <time.h>
 
+#define MAX_DAYS        30
 #define SCR_WIDTH       160
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + 80 * (y - 1)) << 1)
@@ -34,15 +35,13 @@
 #define _FLT 	        0x75
 
 typedef struct {
-    uint8_t     day;        // The date of the program
-    uint8_t     month;      // The month of the program
-    uint16_t    year;       // The year of the program
-    uint8_t     regs;       // The register code
+    time_t      utime;      // Register timestamp
+    uint16_t    days;       // The number of days
     uint8_t     key;        // Random key
-    char        serial[20]; // License code
-    char        user[31];   // User name
-    char        path[33];   // The installation path
-    char        magic[33];  // Random characters
+    char        serial[21]; // License code
+    char        user[32];   // User name
+    char        path[34];   // The installation path
+    char        magic[34];  // Random characters
 } REG_INFO;
 
 char scrBuff[1272] = {0};   // Screen buffer
@@ -766,12 +765,10 @@ void genSerialNumber(char *szUserName, char *CDKey)
     char cKey = 0;
     FILE *fptr;
     REG_INFO tmp;
-    struct dosdate_t da;
+    uint8_t k = 0;
     uint16_t col = 0, row = 0;
-    uint16_t i = 0, k = 0, len = 0;
+    uint16_t i = 0, len = 0;
 
-    memset(CDKey, 0, sizeof(CDKey));
-    
     i = 0;
     do {
         cKey = 48 + (rand() % 49);
@@ -784,15 +781,12 @@ void genSerialNumber(char *szUserName, char *CDKey)
     {
         if (!((i + 1) % 5)) CDKey[i] = 45;
     }
-
+    
     fptr = fopen("register.dat", "wb");
     if (!fptr) return;
 
-    _dos_getdate(&da);
-    tmp.day = da.day;
-    tmp.month = da.month;
-    tmp.year = da.year;
-    tmp.regs = 0;
+    tmp.days = MAX_DAYS;
+    tmp.utime = time(0);
     tmp.key = 90 + (rand() % 10);
 
     len = strlen(CDKey);
@@ -803,16 +797,16 @@ void genSerialNumber(char *szUserName, char *CDKey)
     for (i = 0; i < len; i++) tmp.user[i] = szUserName[i] + tmp.key;
     tmp.user[i] = '\0';
 
-    for (i = 0; i < sizeof(tmp.magic); i += 2)
+    len = strlen(szUserName);
+    for (i = 0; i < sizeof(tmp.magic) / 2; i += 2)
     {
-        k = rand() % strlen(szUserName);
+        k = rand() % len;
         tmp.magic[i] = k;
         tmp.magic[i + 1] = szUserName[k] + tmp.key;
     }
     tmp.magic[i - 2] = '\0';
 
-    strcpy(tmp.path, "C:\\TOPICS");
-    fwrite(&tmp, sizeof(REG_INFO), 1, fptr);
+    fwrite(&tmp, sizeof(tmp), 1, fptr);
     fclose(fptr);
 }
 
@@ -934,9 +928,9 @@ void startCracking()
                     }
                     break;
                 case 1:
+                    bSlc = 1;
                     hideMouse();
                     drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
-                    bSlc = 1;
                     clearScreen(51, 8 + bSlc * 2, 64, 11, 3);
                     writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
                     delay(50);
@@ -944,8 +938,8 @@ void startCracking()
                     showMouse();
                     return;
                 case 2:
-                    drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
                     bSlc = 2;
+                    drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
                     clearScreen(51, 8 + bSlc * 2, 64, 13, 3);
                     writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
                     delay(50);
