@@ -8,7 +8,6 @@
 #include <string.h>
 #include <time.h>
 
-#define MAX_DAYS        30
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + 80 * (y - 1)) << 1)
 
@@ -17,6 +16,7 @@
 #define LEFT            75
 #define RIGHT           77
 #define ENTER           13
+#define SPACE           32
 
 #define wATV            0xF0
 #define wFLT            0xFC
@@ -24,13 +24,14 @@
 #define _wFLT           0x74
 
 typedef struct {
-    time_t      utime;      // Register timestamp
+    uint8_t     key;        // Encode and decode key
+    uint16_t    regs;       // Register code
     uint16_t    days;       // The number of days
-    uint8_t     key;        // Random key
+    uint16_t    magic;      // Validate license code
+    time_t      utime;      // Register timestamp
     char        serial[20]; // License code
     char        user[33];   // User name
     char        path[33];   // The installation path
-    char        magic[33];  // Random characters
 } REG_INFO;
 
 uint8_t bmAvalid = 0;       // Status of the mouse
@@ -351,15 +352,15 @@ void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr)
 void shadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr, char *title)
 {
     const uint8_t bkc = attr << 4;
-    const char szStyle[] = {229, 252, 0};
-    const uint16_t bCenter = ((x2 - x1) >> 1) - (strlen(title) >> 1);
+    const char styles[] = {229, 252, 0};
+    const uint16_t center = ((x2 - x1) >> 1) - (strlen(title) >> 1);
     changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, MASK_BG);
     changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, MASK_BG);
     drawBox(x1, y1, x2, y2, attr);
     writeChar(x1 + 3, y1, bkc, x2 - x1 - 2, 32);
-    writeVRM(x1 + bCenter, y1, bkc, title, 0);
+    writeVRM(x1 + center, y1, bkc, title, 0);
     printChar(x1 + 2, y1, bkc, 226);
-    writeVRM(x1, y1, bkc >> 4, szStyle, 0);
+    writeVRM(x1, y1, bkc >> 4, styles, 0);
 }
 
 /*----------------------------------*/
@@ -737,12 +738,12 @@ void getTextFile(const char *ifile, const char *ofile)
 }
 
 /*------------------------------------------*/
-/* Function : releaseData                   */
+/* Function : freeData                      */
 /* Purpose  : free block memory of the data */
 /* Expects  : Nothing                       */
 /* Returns  : Nothing                       */
 /*------------------------------------------*/
-void releaseData()
+void freeData()
 {
     int16_t i = 0;
     for (i = 0; i < sysNum; i++) free(sysInfo[i]);
@@ -762,19 +763,19 @@ void cleanup()
     setCursorPos(1, 1);
     setBlinking(1);
     if (bmAvalid) closeMouse();
-    releaseData();
+    freeData();
     system("font off");
     system("cls");
     exit(1);
 }
 
 /*---------------------------------------------*/
-/* Funtion : fadeIn                            */
+/* Funtion : fadeOut                           */
 /* Purpose : Debrightness light of the monitor */
 /* Expects : Nothing                           */
 /* Returns : Nothing                           */
 /*---------------------------------------------*/
-void fadeIn()
+void fadeOut()
 {
     int16_t i, j;
     uint8_t palette[200], dummy[200];
@@ -807,6 +808,7 @@ void initData()
 {
     getTextFile("register.sys", "register.$$$");
     system("font on");
+    srand(time(0));
 }
 
 /*---------------------------------*/
@@ -819,12 +821,15 @@ void registerForm()
 {
     FILE *fptr;
     REG_INFO regInfo;
-    char regUser[31], regSerial[20];
-    char szUserName[31], szSerial[20], key;
-    uint16_t col, row;
-    uint8_t selUserName = 0, selSerial = 0, slc = 0;
-    uint8_t i = 0, j = 0, isASCII = 0, isOK = 0;
     
+    char key = 0;
+    char regUser[33], regSerial[20];
+    char szUserName[33], szSerial[20];
+
+    uint16_t col = 0, row = 0;
+    uint8_t i = 0, j = 0, isASCII = 0, isOK = 0;
+    uint8_t selUserName = 0, selSerial = 0, slc = 0;
+        
     shadowBox(20, 8, 65, 17, 0x1F, sysInfo[27]);
     writeVRM(23, 10, 0x1F, sysInfo[5], 0);
     writeVRM(23, 12, 0x1F, sysInfo[6], 0);
@@ -845,9 +850,9 @@ void registerForm()
     memset(regSerial, 0, sizeof(regSerial));
     memset(regUser, 0, sizeof(regUser));
 
-    for (i = 0; i < strlen(regInfo.serial); i++) regSerial[i] = regInfo.serial[i] - regInfo.key;
     for (i = 0; i < strlen(regInfo.user); i++) regUser[i] = regInfo.user[i] - regInfo.key;
-        
+    for (i = 0; i < strlen(regInfo.serial); i++) regSerial[i] = regInfo.serial[i] - regInfo.key;
+            
     setCursorSize(0x0B0A);
     drawButton(26, 15, wATV, 1, sysInfo[28], 1, wFLT);
     drawButton(47, 15, _wATV, 1, sysInfo[29], 1, _wFLT);
@@ -856,7 +861,8 @@ void registerForm()
     selSerial = 0;
     selUserName = 1;
     key = i = j = slc = 0;
-
+    
+    while (kbhit()) getch();
     do {
         if (selUserName) setCursorPos(36 + i, 10);
         if (selSerial) setCursorPos(36 + j, 12);
@@ -867,14 +873,14 @@ void registerForm()
             if (!key) isASCII = readKey(&key);
             if (selUserName)
             {
-                if ((isASCII && i < 30 && key != 8 && isalpha(key)) || (key == 32 && i < 30))
+                if (((isASCII && key != DEL && isalpha(key)) || (key == SPACE)) && i < 30)
                 {
                     szUserName[i] = key;
                     printChar(36 + i, 10, 0x4E, key);
                     i++;
                 }
 
-                if (key == 8 && i > 0)
+                if (key == DEL && i > 0)
                 {
                     i--;
                     printChar(36 + i, 10, 0x4E, 32);
@@ -885,14 +891,14 @@ void registerForm()
 
             if (selSerial)
             {
-                if (isASCII && j < 19 && key != DEL && key != TAB && key != ENTER)
+                if (isASCII && key != DEL && key != TAB && key != ENTER && j < 19)
                 {
                     szSerial[j] = toupper(key);
                     printChar(36 + j, 12, 0x4E, toupper(key));
                     j++;
                 }
 
-                if (key == 8 && j > 0)
+                if (key == DEL && j > 0)
                 {
                     j--;
                     printChar(36 + j, 12, 0x4E, 32);
@@ -1017,8 +1023,7 @@ void registerForm()
         }
     } while (!isOK);
 
-    regInfo.utime = time(0);
-    regInfo.days = MAX_DAYS;
+    regInfo.regs = regInfo.magic + (rand() % 100) + 1;
     rewind(fptr);
     fwrite(&regInfo, sizeof(REG_INFO), 1, fptr);
     fclose(fptr);
@@ -1104,7 +1109,7 @@ void menuRegister()
         registerForm();
         setCursorSize(0x2020);
         getch();
-        fadeIn();
+        fadeOut();
     }
 }
 
@@ -1147,24 +1152,28 @@ uint8_t isRegister()
 {
     FILE *fptr;
     REG_INFO regInfo;
+    uint16_t i = 0, magic = 0;
 
     fptr = fopen(sysInfo[21], "rb");
     if (!fptr) return 0;
     fread(&regInfo, sizeof(REG_INFO), 1, fptr);
     fclose(fptr);
-    return regInfo.utime > 0 && regInfo.days > 0;
+
+    for (i = 0; i < strlen(regInfo.user); i++) magic += regInfo.user[i];
+    for (i = 0; i < strlen(regInfo.serial); i++) magic += regInfo.serial[i];
+    magic += regInfo.key;
+    return (regInfo.regs > regInfo.magic) && (magic == regInfo.magic);
 }
 
 /*--------------------------------------*/
-/* Funtion : checkLicense               */
+/* Funtion : checkExpired               */
 /* Purpose : Checking the period in use */
 /* Expects : Nothing                    */
 /* Returns : Nothing                    */
 /*--------------------------------------*/
-void checkLicense()
+void checkExpired()
 {
     uint16_t diff;
-    time_t currTime;
     FILE *fptr;
     REG_INFO regInfo;
     char szPath[33];
@@ -1183,8 +1192,7 @@ void checkLicense()
     strcpy(szPath, regInfo.path);
     strcat(szPath, sysInfo[24]);
 
-    currTime = time(0);
-    diff = difftime(currTime, regInfo.utime) / 86400;
+    diff = difftime(time(0), regInfo.utime) / 86400;
     if (diff > regInfo.days)
     {
         system(szPath);
@@ -1197,7 +1205,7 @@ void main()
     initData();
     if (!isRegister())
     {
-        checkLicense();
+        checkExpired();
         startRegister();
     }
     cleanup();

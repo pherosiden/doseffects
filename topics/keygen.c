@@ -34,13 +34,14 @@
 #define _FLT 	        0x75
 
 typedef struct {
-    time_t      utime;      // Register timestamp
+    uint8_t     key;        // Encode and decode key
+    uint16_t    regs;       // Register code
     uint16_t    days;       // The number of days
-    uint8_t     key;        // Random key
+    uint16_t    magic;      // Validate license code
+    time_t      utime;      // Register timestamp
     char        serial[20]; // License code
     char        user[33];   // User name
     char        path[33];   // The installation path
-    char        magic[33];  // Random characters
 } REG_INFO;
 
 char scrBuff[1272] = {0};   // Screen buffer
@@ -784,22 +785,23 @@ void genSerialNumber(char *szUserName, char *CDKey)
     fptr = fopen("register.dat", "wb");
     if (!fptr) return;
 
-    tmp.key = 90 + (rand() % 10);
+    tmp.key = 90 + (rand() % 120);
 
     len = strlen(CDKey);
-    for (i = 0; i < len; i++) tmp.serial[i] = CDKey[i] + tmp.key;
-    
-    len = strlen(szUserName);
-    for (i = 0; i < len; i++) tmp.user[i] = szUserName[i] + tmp.key;
-    
-    len = strlen(szUserName);
-    for (i = 0; i < sizeof(tmp.magic) - 1; i += 2)
+    for (i = 0; i < len; i++)
     {
-        k = rand() % len;
-        tmp.magic[i] = k;
-        tmp.magic[i + 1] = szUserName[k] + tmp.key;
+        tmp.serial[i] = CDKey[i] + tmp.key;
+        tmp.magic += tmp.serial[i];
     }
     
+    len = strlen(szUserName);
+    for (i = 0; i < len; i++)
+    {
+        tmp.user[i] = szUserName[i] + tmp.key;
+        tmp.magic += tmp.user[i];
+    }
+    
+    tmp.magic += tmp.key;
     fwrite(&tmp, sizeof(tmp), 1, fptr);
     fclose(fptr);
 }
@@ -1109,7 +1111,7 @@ void main()
     if (!initMouse()) system("mouse");
 
     setMousePos();
-    srand(time(NULL));
+    srand(time(0));
     startCracking();
     cleanup();
 }

@@ -203,7 +203,7 @@ void insertChar(char *str, char chr, int16_t pos)
 void strDelete(char *str, int16_t i, int16_t num)
 {
     if (i < 0 || i >= strlen(str)) return;
-    memcpy(str + i + 1, str + i +num, strlen(str) - i - 1);
+    memcpy(str + i + 1, str + i + num, strlen(str) - i - 1);
 }
 
 /*--------------------------------------*/

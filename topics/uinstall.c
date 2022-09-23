@@ -23,13 +23,14 @@
 #define _wFLT   0x74
 
 typedef struct {
-    time_t      utime;      // Register timestamp
+    uint8_t     key;        // Encode and decode key
+    uint16_t    regs;       // Register code
     uint16_t    days;       // The number of days
-    uint8_t     key;        // Random key
+    uint16_t    magic;      // Validate license code
+    time_t      utime;      // Register timestamp
     char        serial[20]; // License code
     char        user[33];   // User name
     char        path[33];   // The installation path
-    char        magic[33];  // Random characters
 } REG_INFO;
 
 char szInstallPath[32];     // Installation path
@@ -529,7 +530,7 @@ void insertChar(char *str, char chr, int16_t pos)
 void strDelete(char *str, int16_t i, int16_t num)
 {
     if (i < 0 || i >= strlen(str)) return;
-    memcpy(str + i + 1, str + i +num, strlen(str) - i - 1);
+    memcpy(str + i + 1, str + i + num, strlen(str) - i - 1);
 }
 
 /*--------------------------------------*/

@@ -19,7 +19,9 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <direct.h>
+#include <time.h>
 
+#define MAX_DAYS        30
 #define SCR_WIDTH       160
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + (y - 1) * 80) << 1)
@@ -52,13 +54,14 @@
 #define RESET_ADR	    ((DOS_SEG << 16) | RESET_FLAG)
 
 typedef struct {
-    time_t      utime;      // Register timestamp
+    uint8_t     key;        // Encode and decode key
+    uint16_t    regs;       // Register code
     uint16_t    days;       // The number of days
-    uint8_t     key;        // Random key
+    uint16_t    magic;      // Validate license code
+    time_t      utime;      // Register timestamp
     char        serial[20]; // License code
     char        user[33];   // User name
     char        path[33];   // The installation path
-    char        magic[33];  // Random characters
 } REG_INFO;
 
 char szInstallPath[32];     // The installation path
@@ -1305,6 +1308,7 @@ void checkProductKey()
 {
     FILE *fptr;
     REG_INFO regInfo;
+    uint16_t magic = 0;
     char szUserName[31], szSerial[20];
     uint8_t selUserName = 0, selSerial = 0;
     uint8_t i = 0, j = 0, isASCII = 0, isOK = 0;
@@ -1416,8 +1420,31 @@ void checkProductKey()
     fread(&regInfo, sizeof(REG_INFO), 1, fptr);
     fclose(fptr);
 
-    for (i = 0; i < strlen(regInfo.serial); i++) regInfo.serial[i] -= regInfo.key;
-    for (i = 0; i < strlen(regInfo.user); i++) regInfo.user[i] -= regInfo.key;
+    for (i = 0; i < strlen(regInfo.user); i++)
+    {
+        magic += regInfo.user[i];
+        regInfo.user[i] -= regInfo.key;
+    }
+    
+    for (i = 0; i < strlen(regInfo.serial); i++)
+    {
+        magic += regInfo.serial[i];
+        regInfo.serial[i] -= regInfo.key;
+    }
+    
+    magic += regInfo.key;
+
+    if (magic != regInfo.magic)
+    {
+        setBorder(47);
+        setCursorSize(0x2020);
+        clearScreen(1, 1, 80, 25, 1);
+        writeVRM(31, 10, 0x4F, sysInfo[11], 0);
+        writeVRM(20, 12, 0x1F, sysInfo[19], 0);
+        writeVRM(20, 13, 0x1F, sysInfo[25], 0);
+        getch();
+        cleanup();
+    }
 
     memset(szUserName, 0, sizeof(szUserName));
     memset(szSerial, 0, sizeof(szSerial));
@@ -2166,7 +2193,7 @@ void chooseDrive()
 
 /*----------------------------------------------------*/
 /* Funtion : updateProgram                            */
-/* Purpose : Deleting files crack.com and install.com */
+/* Purpose : Update register info and delete files    */
 /* Expects : Nothing                                  */
 /* Returns : Nothing                                  */
 /*----------------------------------------------------*/
@@ -2189,10 +2216,13 @@ void updateProgram()
         cleanup();
     }
 
-    fread(&regInfo, sizeof(REG_INFO), 1, fp);
     strcat(szInstallPath, "\\");
+    fread(&regInfo, sizeof(REG_INFO), 1, fp);
+    regInfo.regs = 0;
+    regInfo.utime = time(0);
+    regInfo.days = MAX_DAYS;
     strcpy(regInfo.path, szInstallPath);
-    fseek(fp, 0L, SEEK_SET);
+    rewind(fp);
     fwrite(&regInfo, sizeof(REG_INFO), 1, fp);
     fclose(fp);
 
