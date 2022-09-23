@@ -56,7 +56,7 @@ typedef struct {
     uint16_t    days;       // The number of days
     uint8_t     key;        // Random key
     char        serial[20]; // License code
-    char        user[31];   // User name
+    char        user[33];   // User name
     char        path[33];   // The installation path
     char        magic[33];  // Random characters
 } REG_INFO;
@@ -1445,14 +1445,14 @@ void checkProductKey()
                 if ((isASCII && i < 30 && key != 8 && isalpha(key)) || (key == 32 && i < 30))
                 {
                     szUserName[i] = key;
-                    printChar(8 + i, 15, 0x1F, key);
+                    printChar(8 + i, 15, 0x1E, key);
                     i++;
                 }
 
                 if (key == 8 && i > 0)
                 {
                     i--;
-                    printChar(8 + i, 15, 0x1F, 32);
+                    printChar(8 + i, 15, 0x1E, 32);
                 }
 
                 szUserName[i] = '\0';
@@ -1463,14 +1463,14 @@ void checkProductKey()
                 if (isASCII && j < 19 && key != 8 && key != TAB && key != ENTER)
                 {
                     szSerial[j] = toupper(key);
-                    printChar(8 + j, 18, 0x1F, toupper(key));
+                    printChar(8 + j, 18, 0x1E, toupper(key));
                     j++;
                 }
 
                 if (key == 8 && j > 0)
                 {
                     j--;
-                    printChar(8 + j, 18, 0x1F, 32);
+                    printChar(8 + j, 18, 0x1E, 32);
                 }
 
                 szSerial[j] = '\0';
@@ -1515,27 +1515,17 @@ void checkProductKey()
                     writeVRM(25, 21, wATV, sysMenu[1], wFLT);
                     delay(50);
                     drawButton(24, 21, wATV, 5, sysMenu[1], 1, wFLT);
-                    getScreenText(20, 10, 43, 9, szScreen);
-                    warningBox(20, 10, 60, 16, msgWarn, 1);
-                    putScreenText(20, 10, 43, 9, szScreen);
-                    showMouse();
 
                     if (!strcmp(regInfo.user, szUserName) && !strcmp(regInfo.serial, szSerial)) isOK = 1;
-                    else if (strcmp(regInfo.user, szUserName) && strcmp(regInfo.serial, szSerial))
+                    else
                     {
                         selUserName = 1;
                         selSerial = 0;
-                    }
-                    else if (!strcmp(regInfo.user, szUserName) && strcmp(regInfo.serial, szSerial))
-                    {                        
-                        selUserName = 0;
-                        selSerial = 1;
-                    }
-                    else if (strcmp(regInfo.user, szUserName) && !strcmp(regInfo.serial, szSerial))
-                    {
-                        selUserName = 1;
-                        selSerial = 0;
-                    }
+                        getScreenText(20, 10, 43, 9, szScreen);
+                        warningBox(20, 10, 60, 16, msgWarn, 1);
+                        putScreenText(20, 10, 43, 9, szScreen);
+                        showMouse();
+                    }                    
                 }
                 else
                 {
@@ -1568,24 +1558,10 @@ void checkProductKey()
                 drawButton(24, 21, wATV, 5, sysMenu[1], 1, wFLT);
 
                 if (!strcmp(regInfo.user, szUserName) && !strcmp(regInfo.serial, szSerial)) isOK = 1;
-                else if (strcmp(regInfo.user, szUserName) && strcmp(regInfo.serial, szSerial))
+                else
                 {
                     selUserName = 1;
                     selSerial = 0;
-                }
-                else if (!strcmp(regInfo.user, szUserName) && strcmp(regInfo.serial, szSerial))
-                {                        
-                    selUserName = 0;
-                    selSerial = 1;
-                }
-                else if (strcmp(regInfo.user, szUserName) && !strcmp(regInfo.serial, szSerial))
-                {
-                    selUserName = 1;
-                    selSerial = 0;
-                }
-
-                if (!isOK)
-                {
                     getScreenText(20, 10, 43, 9, szScreen);
                     warningBox(20, 10, 60, 16, msgWarn, 1);
                     putScreenText(20, 10, 43, 9, szScreen);
@@ -2253,8 +2229,8 @@ uint8_t getDriveId(char drive)
 void checkDiskSpace()
 {
     uint8_t i = 0;
-    uint32_t a, b, c, d;
-    union REGS inRegs, outRegs;
+    double freeSpace, totalSpace;
+    struct diskfree_t dsk;
     
     setBorder(50);
     setCursorSize(0x2020);
@@ -2316,11 +2292,7 @@ void checkDiskSpace()
         delay(100);
     }
 
-    inRegs.h.ah = 0x36;
-    inRegs.h.dl = getDriveId(szInstallPath[0]);
-    int86(0x21, &inRegs, &outRegs);
-
-    if (outRegs.x.ax == 0xFFFF)
+    if (_dos_getdiskfree(getDriveId(szInstallPath[0]), &dsk))
     {
         shadowBox(20, 9, 55, 15, 0x4F, sysInfo[1]);
         writeVRM(22, 11, 0x4F, sysInfo[37], 0);
@@ -2347,19 +2319,17 @@ void checkDiskSpace()
         cleanup();
     }
 
-    a = outRegs.x.dx;
-    b = outRegs.x.bx;
-    c = outRegs.x.ax;
-    d = outRegs.x.cx;
+    totalSpace = ((1.0 * dsk.total_clusters * dsk.sectors_per_cluster * dsk.bytes_per_sector) / 1024) / 1024;
+    freeSpace = ((1.0 * dsk.avail_clusters * dsk.sectors_per_cluster * dsk.bytes_per_sector) / 1024) / 1024;
 
     fillFrame(1, 1, 80, 25, 0xF6, 178);
     shadowBox(15, 9, 63, 16, 0x9F, sysInfo[9]);
-    printVRM(20, 11, 0x9E, sysInfo[175], 1.0 * a * c * d / 1024.0 / 1024.0);
-    printVRM(20, 12, 0x9E, sysInfo[176], 1.0 * b * c * d / 1024.0 / 1024.0);
+    printVRM(20, 11, 0x9E, sysInfo[175], totalSpace);
+    printVRM(20, 12, 0x9E, sysInfo[176], freeSpace);
     drawButton(34, 14, wATV, 9, sysMenu[0], 1, wFLT);
     moveMouse(38, 12);
 
-    if (((b * c * d) / 1024) <= 1024)
+    if (freeSpace < 4)
     {
         writeVRM(18, 13, 0x1C, sysInfo[35], 0);
 

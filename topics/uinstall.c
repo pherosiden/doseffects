@@ -27,7 +27,7 @@ typedef struct {
     uint16_t    days;       // The number of days
     uint8_t     key;        // Random key
     char        serial[20]; // License code
-    char        user[31];   // User name
+    char        user[33];   // User name
     char        path[33];   // The installation path
     char        magic[33];  // Random characters
 } REG_INFO;

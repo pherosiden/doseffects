@@ -18,7 +18,6 @@
 #include <string.h>
 #include <time.h>
 
-#define MAX_DAYS        30
 #define SCR_WIDTH       160
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + 80 * (y - 1)) << 1)
@@ -38,10 +37,10 @@ typedef struct {
     time_t      utime;      // Register timestamp
     uint16_t    days;       // The number of days
     uint8_t     key;        // Random key
-    char        serial[21]; // License code
-    char        user[32];   // User name
-    char        path[34];   // The installation path
-    char        magic[34];  // Random characters
+    char        serial[20]; // License code
+    char        user[33];   // User name
+    char        path[33];   // The installation path
+    char        magic[33];  // Random characters
 } REG_INFO;
 
 char scrBuff[1272] = {0};   // Screen buffer
@@ -110,8 +109,8 @@ void printChar(uint8_t x, uint8_t y, uint8_t attr, char chr)
 /* Funtion : writeChar                            */
 /* Purpose : Writting a character with attribute  */
 /* Expects : (x,y) cordinate to write a character */
-/*           (wAttr) attribute of character       */
-/*           (bLen) length area                   */
+/*           (attr) attribute of character        */
+/*           (len) length area                   */
 /*           (Chr) symbol needs to write          */
 /* Returns : Nothing                              */
 /*------------------------------------------------*/
@@ -128,22 +127,22 @@ void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 /* Purpose  : Writing a character with attribute */
 /* Notices  : Intervention in video memory       */
 /* Expects  : (x,y) cordinate needs to writting  */
-/*            (txtAttr) The attribute of string  */
-/*            (szPrmt) the string to format      */
-/*            (fstAttr) The attr of first letter */
+/*            (attr) The attribute of string     */
+/*            (str) the string to format         */
+/*            (lets) The attr of first letter    */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t fstAttr)
+void writeVRM(uint8_t x, uint8_t y, uint8_t attr, const char *str, uint8_t lets)
 {
     uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
 
-    if (fstAttr)
+    if (lets)
     {
         char *ptmp = NULL;
         char szTmp[80] = {0};
         uint8_t i = 0, fltStop = 0, currX = x, bPos;
 
-        strcpy(szTmp, szPrmt);
+        strcpy(szTmp, str);
         for (i = 0; (i < strlen(szTmp) - 1) && !fltStop; i++)
         {
             if (szTmp[i] == 126) fltStop = 1;
@@ -153,12 +152,12 @@ void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t 
         bPos = i - 1;
 
         ptmp = szTmp;
-        while (*ptmp) *pmem++ = (txtAtr << 8) + *ptmp++;
-        printChar(currX + bPos, y, fstAttr, szTmp[bPos]);
+        while (*ptmp) *pmem++ = (attr << 8) + *ptmp++;
+        printChar(currX + bPos, y, lets, szTmp[bPos]);
     }
     else
     {
-        while (*szPrmt) *pmem++ = (txtAtr << 8) + *szPrmt++;
+        while (*str) *pmem++ = (attr << 8) + *str++;
     }
 }
 
@@ -166,50 +165,50 @@ void writeVRM(uint8_t x, uint8_t y, uint8_t txtAtr, const char *szPrmt, uint8_t 
 /* Function : drawButton                         */
 /* Purpose  : Define the button shadow           */
 /* Expects  : (x,y) cordinate needs to writting  */
-/*            (txtAttr) the attribute of a title */
-/*            (szTitle) the string to format     */
-/*            (bType) The type of button         */
-/*            (fstAttr) The attr of first letter */
+/*            (attr) the attribute of a title    */
+/*            (title) the string to format       */
+/*            (type) The type of button          */
+/*            (lets) The attr of first letter    */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void drawButton(uint8_t x, uint8_t y, uint8_t txtAttr, uint8_t bkClr, const char *szTitle, uint8_t bType, uint8_t fstAttr)
+void drawButton(uint8_t x, uint8_t y, uint8_t attr, uint8_t bkc, const char *title, uint8_t type, uint8_t lets)
 {
-    const uint8_t wAttr = bkClr << 4;
-    const uint16_t bLen = strlen(szTitle);
+    const uint8_t bka = bkc << 4;
+    const uint16_t len = strlen(title);
     const char styles[] = {16, 17, 223, 220};
 
-    if (bType)
+    if (type)
     {
-        if (fstAttr)
+        if (lets)
         {
-            writeVRM(x, y, txtAttr, szTitle, fstAttr);
-            writeChar(x + 1, y + 1, wAttr, bLen - 1, styles[2]);
-            writeChar(x + bLen - 1, y, wAttr, 1, styles[3]);
+            writeVRM(x, y, attr, title, lets);
+            writeChar(x + 1, y + 1, bka, len - 1, styles[2]);
+            writeChar(x + len - 1, y, bka, 1, styles[3]);
         }
         else
         {
-            writeVRM(x, y, txtAttr, szTitle, 0);
-            writeChar(x + 1, y + 1, wAttr, bLen, styles[2]);
-            writeChar(x + bLen, y, wAttr, 1, styles[3]);
+            writeVRM(x, y, attr, title, 0);
+            writeChar(x + 1, y + 1, bka, len, styles[2]);
+            writeChar(x + len, y, bka, 1, styles[3]);
         }
     }
     else
     {
-        if (fstAttr)
+        if (lets)
         {
-            writeVRM(x, y, txtAttr, szTitle, fstAttr);
-            printChar(x, y, txtAttr, styles[0]);
-            printChar(x + bLen - 2, y, txtAttr, styles[1]);
-            writeChar(x + 1, y + 1, wAttr, bLen - 1, styles[2]);
-            writeChar(x + bLen - 1 , y, wAttr, 1, styles[3]);
+            writeVRM(x, y, attr, title, lets);
+            printChar(x, y, attr, styles[0]);
+            printChar(x + len - 2, y, attr, styles[1]);
+            writeChar(x + 1, y + 1, bka, len - 1, styles[2]);
+            writeChar(x + len - 1 , y, bka, 1, styles[3]);
         }
         else
         {
-            writeVRM(x, y, txtAttr, szTitle, 0);
-            printChar(x, y, txtAttr, styles[0]);
-            printChar(x + bLen - 1, y, txtAttr, styles[1]);
-            writeChar(x + 1, y + 1, wAttr, bLen, styles[2]);
-            writeChar(x + bLen, y, wAttr, 1, styles[3]);
+            writeVRM(x, y, attr, title, 0);
+            printChar(x, y, attr, styles[0]);
+            printChar(x + len - 1, y, attr, styles[1]);
+            writeChar(x + 1, y + 1, bka, len, styles[2]);
+            writeChar(x + len, y, bka, 1, styles[3]);
         }
     }
 }
@@ -311,14 +310,14 @@ char readKey(char *key)
 /* Purpose : To full the box with special character */
 /* Expects : (x1,y1) cordinate top to left          */
 /*           (x2,y2) cordinate bottom to right      */
-/*           (wAttr) special character color        */
+/*           (bka) special character color        */
 /*           (chr) special character                */
 /* Returns : Nothing                                */
 /*--------------------------------------------------*/
-void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char chr)
+void fillFrame(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t bka, char chr)
 {
     uint8_t y;
-    for (y = y1; y <= y2; y++) writeChar(x1, y, wAttr, x2 - x1 + 1, chr);
+    for (y = y1; y <= y2; y++) writeChar(x1, y, bka, x2 - x1 + 1, chr);
 }
 
 /*----------------------------------------------*/
@@ -339,13 +338,13 @@ void clearScreen(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color)
 /* Purpose  : Draw a box with color and border  */
 /* Expects  : (x1,y1) cordinate top to left     */
 /*            (x2,y2) cordinate bottom to right */
-/*            (wAttr) the attribute of the box  */
+/*            (bka) the attribute of the box  */
 /* Returns  : Nothing                           */
 /*----------------------------------------------*/
-void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
+void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t bka)
 {
-    drawFrame(x1, y1, x2, y2, wAttr);
-    fillFrame(x1 + 1, y1 + 1, x2 - 1, y2 - 1, wAttr, 32);
+    drawFrame(x1, y1, x2, y2, bka);
+    fillFrame(x1 + 1, y1 + 1, x2 - 1, y2 - 1, bka, 32);
     changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, 0x08);
     changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, 0x08);
 }
@@ -355,22 +354,22 @@ void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr)
 /* Purpose  : Draw a box with shadow (very art) */
 /* Expects  : (x1,y1) cordinate top to left     */
 /*            (x2,y2) cordinate bottom to right */
-/*            (wAttr) the attribute of the box  */
-/*            (szTitle) the title of header     */
+/*            (bka) the attribute of the box  */
+/*            (title) the title of header     */
 /* Returns  : Nothing                           */
 /*----------------------------------------------*/
-void shadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t wAttr, char *szTitle)
+void shadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t bka, char *title)
 {
-    const uint8_t bkc = wAttr << 4;
-    const char szStyle[] = {229, 252, 0};
-    const uint16_t bCenter = ((x2 - x1) >> 1) - (strlen(szTitle) >> 1);
+    const uint8_t bkc = bka << 4;
+    const char styles[] = {229, 252, 0};
+    const uint16_t center = ((x2 - x1) >> 1) - (strlen(title) >> 1);
     changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, MASK_BG);
     changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, MASK_BG);
-    drawBox(x1, y1, x2, y2, wAttr);
+    drawBox(x1, y1, x2, y2, bka);
     writeChar(x1 + 3, y1, bkc, x2 - x1 - 2, 32);
-    writeVRM(x1 + bCenter, y1, bkc, szTitle, 0);
+    writeVRM(x1 + center, y1, bkc, title, 0);
     printChar(x1 + 2, y1, bkc, 226);
-    writeVRM(x1, y1, bkc >> 4, szStyle, 0);
+    writeVRM(x1, y1, bkc >> 4, styles, 0);
 }
 
 /*----------------------------------*/
@@ -492,9 +491,9 @@ void closeMouse()
 /*           (substr) The substring        */
 /* Returns : Position of substring         */
 /*-----------------------------------------*/
-int16_t strPos(char *str, char *szSubstr)
+int16_t strPos(char *str, char *substr)
 {
-    char *ptr = strstr(str, szSubstr);
+    char *ptr = strstr(str, substr);
     if (!ptr) return -1;
     return ptr - str;
 }
@@ -504,13 +503,13 @@ int16_t strPos(char *str, char *szSubstr)
 /* Purpose : Inserted the char into string     */
 /* Expects : (str) The string                  */
 /*           (chr) The character need inserted */
-/*           (iPos) The position inserted      */
+/*           (pos) The position inserted      */
 /* Returns : Nothing                           */
 /*---------------------------------------------*/
-void insertChar(char *str, char chr, int16_t iPos)
+void insertChar(char *str, char chr, int16_t pos)
 {
-    if (iPos < 0 || iPos >= strlen(str)) return;
-    *(str + iPos) = chr;
+    if (pos < 0 || pos >= strlen(str)) return;
+    *(str + pos) = chr;
 }
 
 /*---------------------------------------------*/
@@ -524,7 +523,7 @@ void insertChar(char *str, char chr, int16_t iPos)
 void strDelete(char *str, int16_t i, int16_t num)
 {
     if (i < 0 || i >= strlen(str)) return;
-    memcpy(str + i + 1, str + i +num, strlen(str) - i - 1);
+    memcpy(str + i + 1, str + i + num, strlen(str) - i - 1);
 }
 
 /*--------------------------------------*/
@@ -567,107 +566,107 @@ void chr2Str(char chr, char n, char *str)
 /* Expects : (str) The string to decode */
 /* Returns : Nothing                    */
 /*--------------------------------------*/
-void fontVNI(char *szPrmpt)
+void fontVNI(char *str)
 {
     char buff[4] = {0};
-    schRepl(szPrmpt, "a8", 128);
+    schRepl(str, "a8", 128);
     chr2Str(128, '1', buff);
-    schRepl(szPrmpt, buff, 129);
+    schRepl(str, buff, 129);
     chr2Str(128, '2', buff);
-    schRepl(szPrmpt, buff, 130);
+    schRepl(str, buff, 130);
     chr2Str(128, '3', buff);
-    schRepl(szPrmpt, buff, 131);
+    schRepl(str, buff, 131);
     chr2Str(128, '4', buff);
-    schRepl(szPrmpt, buff, 132);
+    schRepl(str, buff, 132);
     chr2Str(128, '5', buff);
-    schRepl(szPrmpt, buff, 133);
-    schRepl(szPrmpt, "a6", 134);
+    schRepl(str, buff, 133);
+    schRepl(str, "a6", 134);
     chr2Str(134, '1', buff);
-    schRepl(szPrmpt, buff, 135);
+    schRepl(str, buff, 135);
     chr2Str(134, '2', buff);
-    schRepl(szPrmpt, buff, 136);
+    schRepl(str, buff, 136);
     chr2Str(134, '3', buff);
-    schRepl(szPrmpt, buff, 137);
+    schRepl(str, buff, 137);
     chr2Str(134, '4', buff);
-    schRepl(szPrmpt, buff, 138);
+    schRepl(str, buff, 138);
     chr2Str(134, '5', buff);
-    schRepl(szPrmpt, buff, 139);
-    schRepl(szPrmpt, "e6", 140);
+    schRepl(str, buff, 139);
+    schRepl(str, "e6", 140);
     chr2Str(140, '1', buff);
-    schRepl(szPrmpt, buff, 141);
+    schRepl(str, buff, 141);
     chr2Str(140, '2', buff);
-    schRepl(szPrmpt, buff, 142);
+    schRepl(str, buff, 142);
     chr2Str(140, '3', buff);
-    schRepl(szPrmpt, buff, 143);
+    schRepl(str, buff, 143);
     chr2Str(140, '4', buff);
-    schRepl(szPrmpt, buff, 144);
+    schRepl(str, buff, 144);
     chr2Str(140, '5', buff);
-    schRepl(szPrmpt, buff, 145);
-    schRepl(szPrmpt, "o7", 146);
+    schRepl(str, buff, 145);
+    schRepl(str, "o7", 146);
     chr2Str(146, '1', buff);
-    schRepl(szPrmpt, buff, 147);
+    schRepl(str, buff, 147);
     chr2Str(146, '2', buff);
-    schRepl(szPrmpt, buff, 148);
+    schRepl(str, buff, 148);
     chr2Str(146, '3', buff);
-    schRepl(szPrmpt, buff, 149);
+    schRepl(str, buff, 149);
     chr2Str(146, '4', buff);
-    schRepl(szPrmpt, buff, 150);
+    schRepl(str, buff, 150);
     chr2Str(146, '5', buff);
-    schRepl(szPrmpt, buff, 151);
-    schRepl(szPrmpt, "o6", 152);
+    schRepl(str, buff, 151);
+    schRepl(str, "o6", 152);
     chr2Str(152, '1', buff);
-    schRepl(szPrmpt, buff, 153);
+    schRepl(str, buff, 153);
     chr2Str(152, '2', buff);
-    schRepl(szPrmpt, buff, 154);
+    schRepl(str, buff, 154);
     chr2Str(152, '3', buff);
-    schRepl(szPrmpt, buff, 155);
+    schRepl(str, buff, 155);
     chr2Str(152, '4', buff);
-    schRepl(szPrmpt, buff, 156);
+    schRepl(str, buff, 156);
     chr2Str(152, '5', buff);
-    schRepl(szPrmpt, buff, 157);
-    schRepl(szPrmpt, "u7", 158);
+    schRepl(str, buff, 157);
+    schRepl(str, "u7", 158);
     chr2Str(158, '1', buff);
-    schRepl(szPrmpt, buff, 159);
+    schRepl(str, buff, 159);
     chr2Str(158, '2', buff);
-    schRepl(szPrmpt, buff, 160);
+    schRepl(str, buff, 160);
     chr2Str(158, '3', buff);
-    schRepl(szPrmpt, buff, 161);
+    schRepl(str, buff, 161);
     chr2Str(158, '4', buff);
-    schRepl(szPrmpt, buff, 162);
+    schRepl(str, buff, 162);
     chr2Str(158, '5', buff);
-    schRepl(szPrmpt, buff, 163);
-    schRepl(szPrmpt, "a1", 164);
-    schRepl(szPrmpt, "a2", 165);
-    schRepl(szPrmpt, "a3", 166);
-    schRepl(szPrmpt, "a4", 167);
-    schRepl(szPrmpt, "a5", 168);
-    schRepl(szPrmpt, "e1", 169);
-    schRepl(szPrmpt, "e2", 170);
-    schRepl(szPrmpt, "e3", 171);
-    schRepl(szPrmpt, "e4", 172);
-    schRepl(szPrmpt, "e5", 173);
-    schRepl(szPrmpt, "i1", 174);
-    schRepl(szPrmpt, "i2", 175);
-    schRepl(szPrmpt, "i3", 181);
-    schRepl(szPrmpt, "i4", 182);
-    schRepl(szPrmpt, "i5", 183);
-    schRepl(szPrmpt, "o1", 184);
-    schRepl(szPrmpt, "o2", 190);
-    schRepl(szPrmpt, "o3", 198);
-    schRepl(szPrmpt, "o4", 199);
-    schRepl(szPrmpt, "o5", 208);
-    schRepl(szPrmpt, "u1", 210);
-    schRepl(szPrmpt, "u2", 211);
-    schRepl(szPrmpt, "u3", 212);
-    schRepl(szPrmpt, "u4", 213);
-    schRepl(szPrmpt, "u5", 214);
-    schRepl(szPrmpt, "y1", 215);
-    schRepl(szPrmpt, "y2", 216);
-    schRepl(szPrmpt, "y3", 221);
-    schRepl(szPrmpt, "y4", 222);
-    schRepl(szPrmpt, "y5", 248);
-    schRepl(szPrmpt, "d9", 249);
-    schRepl(szPrmpt, "D9", 250);
+    schRepl(str, buff, 163);
+    schRepl(str, "a1", 164);
+    schRepl(str, "a2", 165);
+    schRepl(str, "a3", 166);
+    schRepl(str, "a4", 167);
+    schRepl(str, "a5", 168);
+    schRepl(str, "e1", 169);
+    schRepl(str, "e2", 170);
+    schRepl(str, "e3", 171);
+    schRepl(str, "e4", 172);
+    schRepl(str, "e5", 173);
+    schRepl(str, "i1", 174);
+    schRepl(str, "i2", 175);
+    schRepl(str, "i3", 181);
+    schRepl(str, "i4", 182);
+    schRepl(str, "i5", 183);
+    schRepl(str, "o1", 184);
+    schRepl(str, "o2", 190);
+    schRepl(str, "o3", 198);
+    schRepl(str, "o4", 199);
+    schRepl(str, "o5", 208);
+    schRepl(str, "u1", 210);
+    schRepl(str, "u2", 211);
+    schRepl(str, "u3", 212);
+    schRepl(str, "u4", 213);
+    schRepl(str, "u5", 214);
+    schRepl(str, "y1", 215);
+    schRepl(str, "y2", 216);
+    schRepl(str, "y3", 221);
+    schRepl(str, "y4", 222);
+    schRepl(str, "y5", 248);
+    schRepl(str, "d9", 249);
+    schRepl(str, "D9", 250);
 }
 
 /*----------------------------------------------*/
@@ -679,14 +678,13 @@ void fontVNI(char *szPrmpt)
 /*----------------------------------------------*/
 void getScreenText(int16_t x, int16_t y, int16_t width, int16_t height, uint8_t *buff)
 {
-    uint16_t bytes = width << 1;
-    //uint16_t far *dst = (uint16_t far*)buff;
     uint8_t far *src = txtMem + OFFSET(x, y);
-    
+
+    width <<= 1;
     while (height--)
     {
-        _fmemcpy(buff, src, bytes);
-        buff += bytes;
+        _fmemcpy(buff, src, width);
+        buff += width;
         src += SCR_WIDTH;
     }
 }
@@ -700,13 +698,13 @@ void getScreenText(int16_t x, int16_t y, int16_t width, int16_t height, uint8_t 
 /*----------------------------------------------*/
 void putScreenText(int16_t x, int16_t y, int16_t width, int16_t height, uint8_t *buff)
 {
-    uint16_t bytes = width << 1;
     uint8_t far *dst = txtMem + OFFSET(x, y);
-    
+
+    width <<= 1;
     while (height--)
     {
-        _fmemcpy(dst, buff, bytes);
-        buff += bytes;
+        _fmemcpy(dst, buff, width);
+        buff += width;
         dst += SCR_WIDTH;
     }
 }
@@ -765,9 +763,10 @@ void genSerialNumber(char *szUserName, char *CDKey)
     char cKey = 0;
     FILE *fptr;
     REG_INFO tmp;
-    uint8_t k = 0;
     uint16_t col = 0, row = 0;
-    uint16_t i = 0, len = 0;
+    uint16_t i = 0, len = 0, k = 0;
+
+    memset(&tmp, 0, sizeof(tmp));
 
     i = 0;
     do {
@@ -785,27 +784,22 @@ void genSerialNumber(char *szUserName, char *CDKey)
     fptr = fopen("register.dat", "wb");
     if (!fptr) return;
 
-    tmp.days = MAX_DAYS;
-    tmp.utime = time(0);
     tmp.key = 90 + (rand() % 10);
 
     len = strlen(CDKey);
     for (i = 0; i < len; i++) tmp.serial[i] = CDKey[i] + tmp.key;
-    tmp.serial[i] = '\0';
-
+    
     len = strlen(szUserName);
     for (i = 0; i < len; i++) tmp.user[i] = szUserName[i] + tmp.key;
-    tmp.user[i] = '\0';
-
+    
     len = strlen(szUserName);
-    for (i = 0; i < sizeof(tmp.magic) / 2; i += 2)
+    for (i = 0; i < sizeof(tmp.magic) - 1; i += 2)
     {
         k = rand() % len;
         tmp.magic[i] = k;
         tmp.magic[i + 1] = szUserName[k] + tmp.key;
     }
-    tmp.magic[i - 2] = '\0';
-
+    
     fwrite(&tmp, sizeof(tmp), 1, fptr);
     fclose(fptr);
 }
@@ -924,7 +918,7 @@ void startCracking()
                     {
                         setCursorSize(0x2020);
                         genSerialNumber(szUserName, CDKey);
-                        writeVRM(18, 12, 0x7E, CDKey, 0);
+                        writeVRM(18, 12, 0x1E, CDKey, 0);
                     }
                     break;
                 case 1:
@@ -1014,7 +1008,7 @@ void startCracking()
                 {
                     setCursorSize(0x2020);
                     genSerialNumber(szUserName, CDKey);
-                    writeVRM(18, 12, 0x7E, CDKey, 0);
+                    writeVRM(18, 12, 0x1E, CDKey, 0);
                 }
             }
 
@@ -1101,7 +1095,7 @@ void main()
     };
     
     system("font on");
-    for (i = 0; i < 3; i++) fontVNI(szMenu[i]);
+    for (i = 0; i < sizeof(szMenu) / sizeof(szMenu[0]); i++) fontVNI(szMenu[i]);
     
     setBorder(30);
     setCursorSize(0x0B0A);
@@ -1110,7 +1104,7 @@ void main()
     shadowBox(15, 6, 65, 14, 0x3F, szMenu[0]);
     writeVRM(18, 8, 0x3F, szMenu[1],  0);
     writeVRM(18, 11, 0x3F, szMenu[2],  0);
-    writeChar(18, 12, 0x7E, 30, 32);
+    writeChar(18, 12, 0x1E, 30, 32);
 
     if (!initMouse()) system("mouse");
 

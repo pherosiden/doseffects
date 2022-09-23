@@ -8,24 +8,27 @@
 #include <string.h>
 #include <time.h>
 
+#define MAX_DAYS        30
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + 80 * (y - 1)) << 1)
 
-#define LEFT    75
-#define RIGHT   77
-#define ENTER   13
+#define DEL             8
+#define TAB             9
+#define LEFT            75
+#define RIGHT           77
+#define ENTER           13
 
-#define wATV    0xF0
-#define wFLT    0xFC
-#define _wATV   0x78
-#define _wFLT   0x74
+#define wATV            0xF0
+#define wFLT            0xFC
+#define _wATV           0x78
+#define _wFLT           0x74
 
 typedef struct {
     time_t      utime;      // Register timestamp
     uint16_t    days;       // The number of days
     uint8_t     key;        // Random key
     char        serial[20]; // License code
-    char        user[31];   // User name
+    char        user[33];   // User name
     char        path[33];   // The installation path
     char        magic[33];  // Random characters
 } REG_INFO;
@@ -269,6 +272,27 @@ void setBlinking(uint8_t doblink)
     regs.h.al = 0x03;
     regs.h.bl = doblink ? 1 : 0;
     int86(0x10, &regs, &regs);
+}
+
+/*---------------------------------------------------------*/
+/* Function : readKey                                      */
+/* Purpose  : Read a key from the keyboard                 */
+/* Expects  : (ch) get the key from the keyboard           */
+/* Returns  : If the key is a extend key then return code  */
+/*	          key and 0 value else return 1 value and code */
+/*---------------------------------------------------------*/
+char readKey(char *key)
+{
+    union REGS regs;
+    regs.h.ah = 0;
+    int86(22, &regs, &regs);
+    if (!(regs.h.al))
+    {
+        *key = regs.h.ah;
+        return 0;
+    }
+    *key = regs.h.al;
+    return 1;
 }
 
 /*--------------------------------------------------*/
@@ -741,6 +765,7 @@ void cleanup()
     releaseData();
     system("font off");
     system("cls");
+    exit(1);
 }
 
 /*---------------------------------------------*/
@@ -794,58 +819,209 @@ void registerForm()
 {
     FILE *fptr;
     REG_INFO regInfo;
-    char szCurrName[25], szCurrID[20], *szName;
-    uint8_t flgName = 1, flgID = 1;
-
-    shadowBox(20, 8, 60, 15, 0x1F, sysInfo[27]);
+    char regUser[31], regSerial[20];
+    char szUserName[31], szSerial[20], key;
+    uint16_t col, row;
+    uint8_t selUserName = 0, selSerial = 0, slc = 0;
+    uint8_t i = 0, j = 0, isASCII = 0, isOK = 0;
+    
+    shadowBox(20, 8, 65, 17, 0x1F, sysInfo[27]);
     writeVRM(23, 10, 0x1F, sysInfo[5], 0);
     writeVRM(23, 12, 0x1F, sysInfo[6], 0);
-    writeChar(36, 10, 0x4A, 24, 32);
-    writeChar(36, 12, 0x4A, 24, 32);
+    writeChar(36, 10, 0x4E, 26, 32);
+    writeChar(36, 12, 0x4E, 26, 32);
 
     fptr = fopen(sysInfo[21], "r+b");
     if (!fptr)
     {
         fprintf(stderr, sysInfo[22]);
         cleanup();
-        exit(1);
     }
 
     fread(&regInfo, sizeof(REG_INFO), 1, fptr);
+
+    memset(szUserName, 0, sizeof(szUserName));
+    memset(szSerial, 0, sizeof(szSerial));
+    memset(regSerial, 0, sizeof(regSerial));
+    memset(regUser, 0, sizeof(regUser));
+
+    for (i = 0; i < strlen(regInfo.serial); i++) regSerial[i] = regInfo.serial[i] - regInfo.key;
+    for (i = 0; i < strlen(regInfo.user); i++) regUser[i] = regInfo.user[i] - regInfo.key;
+        
     setCursorSize(0x0B0A);
-    szCurrName[0] = 25;
-    setCursorPos(36, 10);
-    szName = cgets(szCurrName);
-    if (strcmp(regInfo.user, szName))
-    {
-        writeChar(36, 10, 0x4F, 24, 32);
-        writeVRM(36, 10, 0x4F, sysInfo[7], 0);
-        flgName = 0;
-    }
+    drawButton(26, 15, wATV, 1, sysInfo[28], 1, wFLT);
+    drawButton(47, 15, _wATV, 1, sysInfo[29], 1, _wFLT);
+    
+    isOK = 0;
+    selSerial = 0;
+    selUserName = 1;
+    key = i = j = slc = 0;
 
-    setCursorPos(36, 12);
-    szCurrID[0] = 20;
-    szName = cgets(szCurrID);
-    if (strcmp(szName, sysInfo[11]))
-    {
-        writeChar(36, 12, 0x4F, 24, 32);
-        writeVRM(36, 12, 0x4F, sysInfo[8], 0);
-        flgID = 0;
-    }
+    do {
+        if (selUserName) setCursorPos(36 + i, 10);
+        if (selSerial) setCursorPos(36 + j, 12);
+      
+        if (kbhit())
+        {
+            isASCII = readKey(&key);
+            if (!key) isASCII = readKey(&key);
+            if (selUserName)
+            {
+                if ((isASCII && i < 30 && key != 8 && isalpha(key)) || (key == 32 && i < 30))
+                {
+                    szUserName[i] = key;
+                    printChar(36 + i, 10, 0x4E, key);
+                    i++;
+                }
 
-    if (flgName && flgID)
-    {
-        writeVRM(30, 14, 0x1A, sysInfo[9], 0);
-        regInfo.utime = time(0);
-        rewind(fptr);
-        fwrite(&regInfo, sizeof(REG_INFO), 1, fptr);
-        fclose(fptr);
-    }
-    else
-    {
-        writeVRM(30, 14, 0x1A, sysInfo[10], 0);
-        fclose(fptr);
-    }
+                if (key == 8 && i > 0)
+                {
+                    i--;
+                    printChar(36 + i, 10, 0x4E, 32);
+                }
+
+                szUserName[i] = '\0';
+            }
+
+            if (selSerial)
+            {
+                if (isASCII && j < 19 && key != DEL && key != TAB && key != ENTER)
+                {
+                    szSerial[j] = toupper(key);
+                    printChar(36 + j, 12, 0x4E, toupper(key));
+                    j++;
+                }
+
+                if (key == 8 && j > 0)
+                {
+                    j--;
+                    printChar(36 + j, 12, 0x4E, 32);
+                }
+
+                szSerial[j] = '\0';
+            }
+
+            switch (key)
+            {
+            case LEFT:
+                if (!isASCII)
+                {
+                    drawButton(26 + slc * 21, 15, _wATV, 1, sysInfo[28 + slc], 1, _wFLT);
+                    if (slc < 1) slc = 0; else slc--;
+                    drawButton(26 + slc * 21, 15, wATV, 1, sysInfo[28 + slc], 1, wFLT);
+                }
+                break;
+            case RIGHT:
+                if (!isASCII)
+                {
+                    drawButton(26 + slc * 21, 15, _wATV, 1, sysInfo[28 + slc], 1, _wFLT);
+                    if (slc > 0) slc = 1; else slc++;
+                    drawButton(26 + slc * 21, 15, wATV, 1, sysInfo[28 + slc], 1, wFLT);
+                }
+                break;
+            case TAB:
+                if (selUserName)
+                {
+                    selUserName = 0;
+                    selSerial = 1;
+                }
+                else
+                {
+                    selSerial = 0;
+                    selUserName = 1;
+                }
+                break;
+            case ENTER:
+                if (!slc)
+                {
+                    hideMouse();
+                    clearScreen(26, 15, 36, 16, 1);
+                    writeVRM(27, 15, wATV, sysInfo[28], wFLT);
+                    delay(50);
+                    drawButton(26, 15, wATV, 1, sysInfo[28], 1, wFLT);
+
+                    if (!strcmp(regUser, szUserName) && !strcmp(regSerial, szSerial))
+                    {
+                        isOK = 1;
+                        writeVRM(30, 13, 0x1A, sysInfo[9], 0);
+                    }
+                    else
+                    {
+                        selUserName = 1;
+                        selSerial = 0;
+                        writeVRM(30, 13, 0x1A, sysInfo[10], 0);
+                    }                    
+                }
+                else
+                {
+                    clearScreen(47, 15, 59, 16, 1);
+                    writeVRM(48, 15, wATV, sysInfo[29], wFLT);
+                    delay(50);
+                    drawButton(47, 15, wATV, 5, sysInfo[29], 1, wFLT);
+                    fclose(fptr);
+                    cleanup();
+                }
+                break;
+            }
+        }
+
+        if (clickMouse(&col, &row))
+        {
+            if (row == 15 && col >= 24 && col <= 36)
+            {
+                slc = 0;
+                hideMouse();
+                drawButton(47, 15, _wATV, 1, sysInfo[4], 1, _wFLT);
+                clearScreen(26, 15, 36, 16, 1);
+                writeVRM(27, 15, wATV, sysInfo[1], wFLT);
+                delay(50);
+                drawButton(26, 15, wATV, 1, sysInfo[1], 1, wFLT);
+
+                if (!strcmp(regUser, szUserName) && !strcmp(regSerial, szSerial))
+                {
+                    isOK = 1;
+                    writeVRM(30, 13, 0x1A, sysInfo[9], 0);
+                }
+                else
+                {
+                    selUserName = 1;
+                    selSerial = 0;
+                    writeVRM(30, 13, 0x1A, sysInfo[10], 0);
+                }
+            }
+
+            if (row == 15 && col >= 47 && col <= 59)
+            {
+                slc = 1;
+                hideMouse();
+                drawButton(26, 15, _wATV, 1, sysInfo[1], 1, _wFLT);
+                clearScreen(47, 15, 59, 16, 1);
+                writeVRM(48, 15, wATV, sysInfo[4], wFLT);
+                delay(50);
+                drawButton(47, 15, wATV, 1, sysInfo[4], 1, wFLT);
+                fclose(fptr);
+                cleanup();
+            }
+
+            if (row == 10 && col >= 8 && col <= 38)
+            {
+                selUserName = 1;
+                selSerial = 0;
+            }
+
+            if (row == 12 && col >= 8 && col <= 38)
+            {
+                selSerial = 1;
+                selUserName = 0;
+            }
+        }
+    } while (!isOK);
+
+    regInfo.utime = time(0);
+    regInfo.days = MAX_DAYS;
+    rewind(fptr);
+    fwrite(&regInfo, sizeof(REG_INFO), 1, fptr);
+    fclose(fptr);
 }
 
 /*-------------------------------------*/
@@ -976,7 +1152,7 @@ uint8_t isRegister()
     if (!fptr) return 0;
     fread(&regInfo, sizeof(REG_INFO), 1, fptr);
     fclose(fptr);
-    return regInfo.utime > 0;
+    return regInfo.utime > 0 && regInfo.days > 0;
 }
 
 /*--------------------------------------*/
@@ -987,6 +1163,7 @@ uint8_t isRegister()
 /*--------------------------------------*/
 void checkLicense()
 {
+    uint16_t diff;
     time_t currTime;
     FILE *fptr;
     REG_INFO regInfo;
@@ -998,7 +1175,6 @@ void checkLicense()
     {
         fprintf(stderr, sysInfo[22]);
         cleanup();
-        exit(1);
     }
 
     fread(&regInfo, sizeof(REG_INFO), 1, fptr);
@@ -1008,18 +1184,21 @@ void checkLicense()
     strcat(szPath, sysInfo[24]);
 
     currTime = time(0);
-    if (difftime(currTime, regInfo.utime) > regInfo.days)
+    diff = difftime(currTime, regInfo.utime) / 86400;
+    if (diff > regInfo.days)
     {
         system(szPath);
         cleanup();
-        exit(1);
     }
 }
 
 void main()
 {
     initData();
-    if (!isRegister()) startRegister();
-    else checkLicense(); 
+    if (!isRegister())
+    {
+        checkLicense();
+        startRegister();
+    }
     cleanup();
 }

@@ -7,7 +7,7 @@ Nha65p va2o te6n
 Ma4 sa3n pha63m
 Te6n kho6ng ho75p le65
 Ma4 sa3n pha63m kho6ng ho75p le65
-Ca1m o7n ba5n d9a4 d9a8ng ky1. 
+Ca1m o7n ba5n d9a4 d9a8ng ky1!
 D9a8ng ky1 kho6ng tha2nh co6ng
 60FA-NVTU-4322
    Ne61u ba5n kho6ng co1 ma4 so61 sa3n pha63m.  Ha4y go73i cho to6i ma4 so61 ma1y cu3a ba5n
@@ -26,3 +26,5 @@ uinstall
   ~D9a8ng ky1  
   ~Tie61p tu5c  
 Tho6ng tin d9a8ng ky1
+  ~Cha61p nha65n  
+   ~Thoa1t ra   
