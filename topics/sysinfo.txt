@@ -169,9 +169,6 @@ Incorrect Password
 Correct Password
 Press any key to start program
 Enter your password
- Result 
- Password 
-TOPICS\REGISTER\register  
 % hoa2n ta61t
 To63ng dung lu7o75ng d9i4a : %.2f MB
 Dung lu7o75ng co2n tro61ng : %.2f MB

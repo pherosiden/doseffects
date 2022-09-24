@@ -37,8 +37,8 @@
  ca1c chi3 da64n tre6n ma2n hi2nh d9e63 ca2i d9a85t chu7o7ng tri2nh.
  Bu7o71c 3: Sau khi ca2i d9a85t tha2nh co6ng ba5n pha3i restart la5i ma1y ti1nh.
  Chu1 y1 : Vi2 d9a6y la2 ba3n DEMO ne6n trong la62n cha5y d9a62u tie6n se4 xua61t hie65n ba3ng
- tho6ng ba1o chu7o7ng tri2nh chu7a d9u7o75c d9a8ng ky1. Ba5n ca62n pha3i d9a8ng ky1 vo71i ta1c
- gia3 d9e63 nha65n d9u7o75c chu7o7ng tri2nh hoa2n chi3nh ho7n.
+ tho6ng ba1o chu7o7ng tri2nh chu7a d9u7o75c d9a8ng ky1. Ba5n ca62n pha3i d9a8ng ky1 vo71i ta1c gia3
+ d9e63 nha65n d9u7o75c chu7o7ng tri2nh hoa2n chi3nh ho7n.
 
  4. Ca1c bu7o71c d9a8ng ky1 chu7o7ng tri2nh
     Ba5n go73i ma4 so61 ma1y (mo64i ma1y ti1nh se4 co1  mo65t ma4 so61 rie6ng) d9e61n ta1c gia3 se4
@@ -49,15 +49,15 @@
 
  5. Ca1c tha2nh pha62n chi1nh cu3a chu7o7ng tri2nh
     Sau khi ca2i d9a85t xong, trong ma1y ba5n se4 co1 ca1c to63 chu71c chi1nh nhu7 sau:
-    readme.com (d9a6y la2 file ba5n d9ang xem)
-    readme.hlp (file chu71a ca1c tho6ng tin)
-    font.com (file gia3i ma4 tie61ng vie65t)
-    register.com (file d9a8ng ky1 chu7o7ng tri2nh)
-    uinstall.com (file theo do4i hoa5t d9o65ng cu3a chu7o7ng tri2nh)
-    mouse.com (file driver chuo65t)
+    - readme.com (d9a6y la2 file ba5n d9ang xem)
+    - readme.hlp (file chu71a ca1c tho6ng tin)
+    - font.com (file gia3i ma4 tie61ng vie65t)
+    - register.com (file d9a8ng ky1 chu7o7ng tri2nh)
+    - uinstall.com (file theo do4i hoa5t d9o65ng cu3a chu7o7ng tri2nh)
+    - mouse.com (file driver chuo65t)
  Va2 ta61t ca3 ca1c file chu7o7ng tri2nh DEMO cua3 pha62n me62m TOPICS. Chu1 y1: Ne61u chu7a d9a8ng
- ky1 thi2 chu7o7ng tri2nh se4 ho3i password Password chung cho ta61t ca3 ca1c chu7o7ng tri2nh
- TOPICS na2y la2 NV60FA4322.
+ ky1 thi2 chu7o7ng tri2nh se4 ho3i ma65t kha63u. Ma65t kha63u chung cho ta61t ca3 ca1c chu7o7ng
+ tri2nh TOPICS na2y la2 NV60FA4322.
 
  6. So7 lu7o75c ve62 ta1c gia3
     Nguye64n Ngo5c Va6n hie65n la2 sinh vie6n na8m 2 tru7o72ng D9a5i Ho5c Ky4 Thua65t Co6ng Nghe65

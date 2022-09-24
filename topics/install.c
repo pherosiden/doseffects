@@ -66,8 +66,8 @@ typedef struct {
 
 char szInstallPath[32];     // The installation path
 
-uint16_t numFiles = 0;
-uint16_t totalFiles = 0;    // Number files to read and files to write
+uint16_t numFiles = 0;      // Number of files in current directory
+uint16_t totalFiles = 0;    // Number files to read and write
 uint8_t bmAvalid = 0;       // Status of the mouse
 
 char **sysInfo, **sysMenu;
@@ -986,7 +986,7 @@ void sysReboot()
 /*---------------------------------------*/
 void errorFile(char *msg, char *type)
 {
-    char errorCode[60];
+    char errorCode[60], isOK = 0;
     strcpy(errorCode, type);
     strcat(errorCode, msg);
     shadowBox(13, 8, 65, 17, 0x4F, sysInfo[1]);
@@ -1002,18 +1002,16 @@ void errorFile(char *msg, char *type)
         {
             if (kbhit() || bRow == 15 && bCol >= 33 && bCol <= 45)
             {
-                hideMouse();
+                isOK = 1;
                 clearScreen(33, 15, 46, 16, 4);
                 writeVRM(34, 15, wATV, sysMenu[3], wFLT);
-                delay(50);
+                delay(60);
                 drawButton(33, 15, wATV, 4, sysMenu[3], 1, wFLT);
-                showMouse();
-                break;
             }
 
-            if (bRow == 8 && bCol == 13 || bCol == 14) break;
+            if (bRow == 8 && bCol == 13 || bCol == 14) isOK = 1;
         }
-    } while (!kbhit());
+    } while (!isOK);
     cleanup();
 }
 
@@ -1127,7 +1125,7 @@ void processDir(char *psrc, char *pdst)
             writeVRM(30, 11, 0x9E, newFile, 0);
             writeChar(18, 12, 0xFF, 45 * (1.0 * numFiles / totalFiles), 219);
             printVRM(50, 13, 0x9F, "%3d", (int16_t)(100 * (1.0 * numFiles / totalFiles)));
-            delay(50);
+            delay(60);
         } while (!_dos_findnext(&entries));
     }
 
@@ -1164,7 +1162,6 @@ uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], 
 
     setCursorSize(0x2020);
     shadowBox(x1, y1, x2, y2, 0x4F, sysInfo[1]);
-    showMouse();
     moveMouse(center, y2 - 3);
     
     for (i = 0; i < n; i++) writeVRM(center - strlen(msg[i]) / 2 + 1, y1 + 2 + i, 0x4A, msg[i], 0);
@@ -1191,12 +1188,10 @@ uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], 
                 break;
             case ENTER:
                 isOK = 1;
-                hideMouse();
                 clearScreen(center - 14 + slc * 20, y2 - 2, center - 3 + slc * 20, y2 - 1, 4);
                 writeVRM(center - 13 + slc * 20, y2 - 2, wATV, sysMenu[2 * slc], wFLT);
-                delay(50);
+                delay(60);
                 drawButton(center - 14 + slc * 20, y2 - 2, wATV, 4, sysMenu[2 * slc], 1, wFLT);
-                showMouse();
                 break;
             }
         }
@@ -1207,26 +1202,22 @@ uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], 
             {
                 slc = 0;
                 isOK = 1;
-                hideMouse();
                 drawButton(center + 6, y2 - 2, _eATV, 4, sysMenu[2], 1, _eFLT);
                 clearScreen(center - 14, y2 - 2, center - 3, y2 - 1, 4);
                 writeVRM(center - 13, y2 - 2, wATV, sysMenu[0], wFLT);
-                delay(50);
+                delay(60);
                 drawButton(center - 14, y2 - 2, wATV, 4, sysMenu[0], 1, wFLT);
-                showMouse();
             }
 
             if (bRow == y2 - 2 && bCol >= center + 6 && bCol <= center + 15)
             {
                 slc = 1;
                 isOK = 1;
-                hideMouse();
                 drawButton(center - 14, y2 - 2, _eATV, 4, sysMenu[0], 1, _eFLT);
                 clearScreen(center + 6,  y2 - 2, center + 16, y2 - 1, 4);
                 writeVRM(center + 7, y2 - 2, wATV, sysMenu[2], wFLT);
-                delay(50);
+                delay(60);
                 drawButton(center + 6, y2 - 2, wATV, 4, sysMenu[2], 1, wFLT);
-                showMouse();
             }
 
             if (bRow == y1 && bCol == x1 || bCol == x1 + 1)
@@ -1236,7 +1227,8 @@ uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], 
             }
         }        
     } while (!isOK);
-
+    
+    while (kbhit()) getch();
     setCursorSize(oldCursor);
     return slc;
 }
@@ -1252,7 +1244,7 @@ uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], 
 void warningBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], uint8_t n)
 {
     int16_t i = 0;
-    char key = 0;
+    char key = 0, isOK = 0;
     const uint16_t oldCursor = getCursorSize();
     const int16_t bCenter = x1 + (x2 - x1) / 2;
     const int16_t bPos = bCenter - strlen(sysMenu[0]) / 2;
@@ -1263,38 +1255,26 @@ void warningBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], uin
     for (i = 0; i < n; i++) writeVRM(bCenter - strlen(msg[i]) / 2, y1 + 2 + i, 0x4A, msg[i], 0);
     
     drawButton(bPos, y2 - 2, wATV, 4, sysMenu[0], 1, wFLT);
-    showMouse();
     moveMouse(bCenter, y2 - 3);
 
     while (kbhit()) getch();
     do {
-        if (clickMouse(&bCol, &bRow))
+        if (kbhit() || clickMouse(&bCol, &bRow))
         {
-            if (bRow == y2 - 2 && bCol >= bPos  && bCol <= bPos + 9)
+            if (kbhit() || (bRow == y2 - 2 && bCol >= bPos && bCol <= bPos + 9))
             {
-                hideMouse();
+                isOK = 1;
                 clearScreen(bPos, y2 - 2, bPos + 7, y2 - 1, 4);
                 writeVRM(bPos + 1, y2 - 2, wATV, sysMenu[0], 0xF4);
-                delay(50);
+                delay(60);
                 drawButton(bPos, y2 - 2, wATV, 4, sysMenu[0], 1, 0xF4);
-                showMouse();
-                break;                
             }
 
-            if (bRow == y1 && bCol == x1 || bCol == x1 + 1) break;
+            if (bRow == y1 && bCol == x1 || bCol == x1 + 1) isOK = 1;
         }
+    } while (!isOK);
 
-        if (kbhit())
-        {
-            hideMouse();
-            clearScreen(bPos, y2 - 2, bPos + 7, y2 - 1, 4);
-            writeVRM(bPos + 1, y2 - 2, wATV, sysMenu[0], 0xF4);
-            delay(50);
-            drawButton(bPos, y2 - 2, wATV, 4, sysMenu[0], 1, 0xF4);
-            showMouse();
-            break;
-        }
-    } while (!kbhit());
+    while (kbhit()) getch();
     setCursorSize(oldCursor);
 }
 
@@ -1330,7 +1310,6 @@ void checkProductKey()
     writeChar(8, 18, 0x1F, 30, 32);
     drawButton(24, 21, _wATV, 5, sysMenu[1], 1, _wFLT);
     drawButton(47, 21, wATV, 5, sysMenu[4], 1, wFLT);
-    showMouse();
     moveMouse(10, 11);
 
     slc = key = 0;
@@ -1341,7 +1320,7 @@ void checkProductKey()
         {
             key = getch();
             if (!key) key = getch();
-            switch (toupper(key))
+            switch (key)
             {
             case DOWN:
                 writeVRM(14, 11 + slc, 0x5E, sysMenu[slc + 8], 0x5F);
@@ -1361,13 +1340,10 @@ void checkProductKey()
                 if (!slc) isOK = 1;
                 else
                 {
-                    hideMouse();
                     getScreenText(20, 10, 43, 9, szScreen);
                     msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
                     if (!msgSlc) cleanup();
-                    hideMouse();
                     putScreenText(20, 10, 43, 9, szScreen);
-                    showMouse();
                 }
                 break;
             }
@@ -1379,18 +1355,15 @@ void checkProductKey()
             {
                 slc = 0;
                 isOK = 1;
-                hideMouse();
                 writeVRM(14, 12, 0x5E, sysMenu[9], 0x5F);
                 writeVRM(11, 12, 0x5E, sysMenu[21], 0);
                 writeVRM(14, 11, 0x5B, sysMenu[8], 0x5A);
                 writeVRM(11, 11, 0x5B, sysMenu[20], 0);
-                showMouse();
             }
 
             if (bRow == 12 && bCol >= 11 && bCol <= 55)
             {
                 slc = 1;
-                hideMouse();
                 writeVRM(14, 11, 0x5E, sysMenu[8], 0x5F);
                 writeVRM(11, 11, 0x5E, sysMenu[21], 0);
                 writeVRM(14, 12, 0x5B, sysMenu[9], 0x5A);
@@ -1399,7 +1372,6 @@ void checkProductKey()
                 msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
                 if (!msgSlc) cleanup();
                 putScreenText(20, 10, 43, 9, szScreen);
-                showMouse();   
             }
         }
     } while (!isOK);
@@ -1534,15 +1506,12 @@ void checkProductKey()
                 }
                 break;
             case ENTER:
+                clearScreen(24 + slc * 23, 21, 36 + slc * 23, 22, 5);
+                writeVRM(25 + slc * 23, 21, wATV, sysMenu[3 * slc + 1], wFLT);
+                delay(60);
+                drawButton(24 + slc * 23, 21, wATV, 5, sysMenu[3 * slc + 1], 1, wFLT);
                 if (!slc)
                 {
-                    hideMouse();
-                    drawButton(47, 21, _wATV, 5, sysMenu[4], 1, _wFLT);
-                    clearScreen(24, 21, 36, 22, 5);
-                    writeVRM(25, 21, wATV, sysMenu[1], wFLT);
-                    delay(50);
-                    drawButton(24, 21, wATV, 5, sysMenu[1], 1, wFLT);
-
                     if (!strcmp(regInfo.user, szUserName) && !strcmp(regInfo.serial, szSerial)) isOK = 1;
                     else
                     {
@@ -1551,22 +1520,14 @@ void checkProductKey()
                         getScreenText(20, 10, 43, 9, szScreen);
                         warningBox(20, 10, 60, 16, msgWarn, 1);
                         putScreenText(20, 10, 43, 9, szScreen);
-                        showMouse();
-                    }                    
+                    }
                 }
                 else
                 {
-                    hideMouse();
-                    drawButton(24, 21, _wATV, 5, sysMenu[1], 1, _wFLT);
-                    clearScreen(47, 21, 59, 22, 5);
-                    writeVRM(48, 21, wATV, sysMenu[2], wFLT);
-                    delay(50);
-                    drawButton(47, 21, wATV, 5, sysMenu[4], 1, wFLT);
                     getScreenText(20, 10, 43, 9, szScreen);
                     msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
                     if (!msgSlc) cleanup();
                     putScreenText(20, 10, 43, 9, szScreen);
-                    showMouse();
                 }
                 break;
             }
@@ -1577,11 +1538,10 @@ void checkProductKey()
             if (bRow == 21 && bCol >= 24 && bCol <= 36)
             {
                 slc = 0;
-                hideMouse();
                 drawButton(47, 21, _wATV, 5, sysMenu[4], 1, _wFLT);
                 clearScreen(24, 21, 36, 22, 5);
                 writeVRM(25, 21, wATV, sysMenu[1], wFLT);
-                delay(50);
+                delay(60);
                 drawButton(24, 21, wATV, 5, sysMenu[1], 1, wFLT);
 
                 if (!strcmp(regInfo.user, szUserName) && !strcmp(regInfo.serial, szSerial)) isOK = 1;
@@ -1599,17 +1559,15 @@ void checkProductKey()
             if (bRow == 21 && bCol >= 47 && bCol <= 59)
             {
                 slc = 1;
-                hideMouse();
                 drawButton(24, 21, _wATV, 5, sysMenu[1], 1, _wFLT);
                 clearScreen(47, 21, 59, 22, 5);
                 writeVRM(48, 21, wATV, sysMenu[4], wFLT);
-                delay(50);
+                delay(60);
                 drawButton(47, 21, wATV, 5, sysMenu[4], 1, wFLT);
                 getScreenText(20, 10, 43, 9, szScreen);
                 msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
                 if (!msgSlc) cleanup();
                 putScreenText(20, 10, 43, 9, szScreen);
-                showMouse();                
             }
 
             if (bRow == 15 && bCol >= 8 && bCol <= 38)
@@ -1655,7 +1613,6 @@ void showRegisterInfo()
     writeVRM(12, 18, 0x31, sysInfo[72], 0);
     drawButton(47, 20, _wATV, 3, sysMenu[4], 1, _wFLT);
     drawButton(26, 20, wATV, 3, sysMenu[1], 1, wFLT);
-    showMouse();
     moveMouse(42, 20);
 
     slc = chs = key = 0;
@@ -1680,12 +1637,10 @@ void showRegisterInfo()
                 break;
             case ENTER:
                 isOK = 1;
-                hideMouse();
-                clearScreen(26, 20, 38, 21, 11);
-                writeVRM(26 + slc * 21, 20, wATV, sysMenu[3 * slc + 1], wFLT);
-                delay(50);
+                clearScreen(26 + slc * 21, 20, 38 + slc * 21, 21, 11);
+                writeVRM(27 + slc * 21, 20, wATV, sysMenu[3 * slc + 1], wFLT);
+                delay(60);
                 drawButton(26 + slc * 21, 20, wATV, 3, sysMenu[3 * slc + 1], 1, wFLT);
-                showMouse();
                 break;
             }
         }
@@ -1696,26 +1651,22 @@ void showRegisterInfo()
             {
                 slc = 0;
                 isOK = 1;
-                hideMouse();
                 drawButton(47, 20, _wATV, 3, sysMenu[4], 1, _wFLT);
                 clearScreen(26, 20, 38, 21, 11);
                 writeVRM(27, 20, wATV, sysMenu[1], wFLT);
-                delay(50);
+                delay(60);
                 drawButton(26, 20, wATV, 3, sysMenu[1], 1, wFLT);
-                showMouse();
             }
 
             if (bRow == 20 && bCol >= 46 && bCol <= 59)
             {
                 slc = 1;
                 isOK = 1;
-                hideMouse();
                 drawButton(26, 20, _wATV, 3, sysMenu[1], 1, _wFLT);
                 clearScreen(47, 20, 59, 21, 11);
                 writeVRM(48, 20, wATV, sysMenu[4], wFLT);
-                delay(50);
+                delay(60);
                 drawButton(47, 20, wATV, 3, sysMenu[4], 1, wFLT);
-                showMouse();
             }
 
             if (bRow == 3 && bCol == 10 || bCol == 11)
@@ -1726,7 +1677,6 @@ void showRegisterInfo()
         }
     } while (!isOK);
 
-    hideMouse();
     if (slc) cleanup();
 }
 
@@ -1738,7 +1688,7 @@ void showRegisterInfo()
 /*--------------------------------------------*/
 void installProgram()
 {
-    uint8_t i;
+    uint8_t i = 0, isOK = 0;
 
     if (_dos_allocmem(0xffff, &segBuff))
     {
@@ -1747,44 +1697,29 @@ void installProgram()
         {
             setCursorSize(0x2020);
             fillFrame(1, 1, 80, 25, 0xF6, 178);
-            hideMouse();
             shadowBox(15, 8, 65, 17, 0x4F, sysInfo[1]);
             writeVRM(27, 10, 0x4E, sysInfo[31], 0);
             writeVRM(17, 11, 0x4F, sysInfo[53], 0);
             writeVRM(17, 12, 0x4F, sysInfo[54], 0);
             writeVRM(17, 13, 0x4F, sysInfo[55], 0);
             drawButton(35, 15, wATV, 4, sysMenu[0], 1, wFLT);
-            showMouse();
 
             while (kbhit()) getch();
             do {
-                if (kbhit())
+                if (kbhit() || clickMouse(&bCol, &bRow))
                 {
-                    hideMouse();
-                    clearScreen(35, 15, 46, 16, 4);
-                    writeVRM(36, 15, wATV, sysMenu[0], wFLT);
-                    delay(50);
-                    drawButton(35, 15, wATV, 4, sysMenu[0], 1, wFLT);
-                    showMouse();
-                    break;
-                }
-
-                if (clickMouse(&bCol, &bRow))
-                {
-                    if (bRow == 15 && bCol >= 35 && bCol <= 45)
+                    if (kbhit() || (bRow == 15 && bCol >= 35 && bCol <= 45))
                     {
-                        hideMouse();
+                        isOK = 1;
                         clearScreen(35, 15, 46, 16, 4);
                         writeVRM(36, 15, wATV, sysMenu[0], wFLT);
-                        delay(50);
+                        delay(60);
                         drawButton(35, 15, wATV, 4, sysMenu[0], 1, wFLT);
-                        showMouse();
-                        break;
                     }
 
-                    if (bRow == 8 && bCol == 15 || bCol == 16) break;
+                    if (bRow == 8 && bCol == 15 || bCol == 16) isOK = 1;
                 }
-            } while (!kbhit());
+            } while (!isOK);
             cleanup();            
         }
     }
@@ -1799,7 +1734,7 @@ void installProgram()
     writeVRM(18, 8, 0x9F, sysInfo[38], 0);
     writeVRM(18, 9, 0x9F, sysInfo[40], 0);
     writeChar(18, 12, 0x17, 45, 176);
-    writeVRM(53, 13, 0x9F, sysInfo[174], 0);
+    writeVRM(53, 13, 0x9F, sysInfo[171], 0);
     drawButton(35, 15, _wATV, 9, sysMenu[2], 1, _wFLT);
     countFiles(PROG_DIR);
     processDir(PROG_DIR, szInstallPath);
@@ -1808,13 +1743,13 @@ void installProgram()
     shadowBox(18, 10, 62, 15, 0x1F, sysInfo[5]);
     writeVRM(22, 12, 0x1E, sysInfo[41], 0);
     writeChar(22, 13, 0x17, 37, 176);
-    writeVRM(49, 14, 0x1A, sysInfo[174], 0);
+    writeVRM(49, 14, 0x1A, sysInfo[171], 0);
 
     for (i = 1; i < 38; i++)
     {
         writeChar(22, 13, 0x1F, i, 219);
         printVRM(46, 14, 0x1A, "%3d", 2 * i + 26);
-        delay(100);
+        delay(60);
     }
 
     fillFrame(15, 6, 69, 21, 0xF6, 178);
@@ -1835,7 +1770,6 @@ void restartProgram()
     char isOK = 0;
 
     system("font on");
-    showMouse();
     setCursorSize(0x2020);
     setBorder(50);
     fillFrame(1, 1, 80, 25, 0xF6, 178);
@@ -1850,6 +1784,7 @@ void restartProgram()
 
     slc = chs = key = 0;
     while (kbhit()) getch();
+
     do {
         if (kbhit())
         {
@@ -1883,12 +1818,10 @@ void restartProgram()
                 break;
             case ENTER:
                 isOK = 1;
-                hideMouse();
-                clearScreen(26, 13, 36, 14, 4);
+                clearScreen(26 + chs * 19, 13, 36 + chs * 19, 14, 4);
                 writeVRM(27 + chs * 19, 13, 0xB4, sysMenu[3 * chs], 0xB1);
-                delay(50);
+                delay(60);
                 drawButton(26 + chs * 19, 13, 0xB4, 4, sysMenu[3 * chs], 1, 0xB1);
-                showMouse();
                 break;
             }
         }
@@ -1898,49 +1831,41 @@ void restartProgram()
             if (bRow == 10 && bCol >= 18 && bCol <= 62)
             {
                 slc = 0;
-                hideMouse();
                 writeVRM(21, 11, 0x4A, sysMenu[11], 0x4B);
                 writeVRM(18, 11, 0x4A, sysMenu[21], 0);
                 writeVRM(21, 10, 0x4F, sysMenu[10], 0x4E);
                 writeVRM(18, 10, 0x4F, sysMenu[20], 0);
-                showMouse();
             }
 
             if (bRow == 11 && bCol >= 18 && bCol <= 61)
             {
                 slc = 1;
-                hideMouse();
                 writeVRM(21, 10, 0x4A, sysMenu[10], 0x4B);
                 writeVRM(18, 10, 0x4A, sysMenu[21], 0);
                 writeVRM(21, 11, 0x4F, sysMenu[11], 0x4E);
                 writeVRM(18, 11, 0x4F, sysMenu[20], 0);
-                showMouse();
             }
 
             if (bRow == 13 && bCol >= 26 && bCol <= 35)
             {
                 chs = 0;
                 isOK = 1;
-                hideMouse();
                 drawButton(45, 13, 0x9F, 4, sysMenu[3], 1, 0x94);
                 clearScreen(26, 13, 36, 14, 4);
                 writeVRM(27, 13, 0xB4, sysMenu[0], 0xB1);
-                delay(50);
+                delay(60);
                 drawButton(26, 13, 0xB4, 4, sysMenu[0], 1, 0xB1);
-                showMouse();
             }
 
             if (bRow == 13 && bCol >= 45 && bCol <= 56)
             {
                 chs = 1;
                 isOK = 1;
-                hideMouse();
                 drawButton(26, 13, 0x9F, 4, sysMenu[0], 1, 0x94);
                 clearScreen(45, 13, 57, 14, 4);
                 writeVRM(46, 13, 0xB4, sysMenu[3], 0xB1);
-                delay(50);
+                delay(60);
                 drawButton(45, 13, 0xB4, 4, sysMenu[3], 1, 0xB1);
-                showMouse();
             }
 
             if (bRow == 8 && bCol == 15 || bCol == 16) isOK = 1;
@@ -1968,7 +1893,7 @@ void chooseDrive()
     shadowBox(20, 8, 60, 18, 0x3F, sysInfo[7]);
     writeVRM(31, 10, 0x34, sysInfo[24], 0);
     writeChar(29, 11, 0x34, 22, 193);
-    for (i = 0; i < 4; i++) writeVRM(29, 12 + i, 0x30, sysMenu[12 + i], 0x3A);
+    for (i = 0; i < sizeof(drives) / sizeof(drives[0]); i++) writeVRM(29, 12 + i, 0x30, sysMenu[12 + i], 0x3A);
     drawButton(46, 12, wATV, 3, sysMenu[1], 1, wFLT);
     drawButton(46, 14, _wATV, 3, sysMenu[4], 1, _wFLT);
     writeVRM(23, 17, 0x30, sysMenu[22], 0);
@@ -2028,25 +1953,17 @@ void chooseDrive()
                             drawButton(46, 12 + 2 * chs, wATV, 3, sysMenu[3 * chs + 1], 1, wFLT);
                             break;
                         case ENTER:
-                            if (!chs)
-                            {
-                                isOK = 1;
-                                hideMouse();
-                                drawButton(46, 14, _wATV, 3, sysMenu[4], 1, _wFLT);
-                                clearScreen(46, 12, 57, 13, 3);
-                                writeVRM(47, 12, wATV, sysMenu[1], wFLT);
-                                delay(50);
-                                drawButton(46, 12, wATV, 3, sysMenu[1], 1, wFLT);
-                                showMouse();
-                            }
+                            clearScreen(46, 12 + 2 * chs, 57, 13 + 2 * chs, 3);
+                            writeVRM(47, 12 + 2 * chs, wATV, sysMenu[3 * chs + 1], wFLT);
+                            delay(60);
+                            drawButton(46, 12 + 2 * chs, wATV, 3, sysMenu[3 * chs + 1], 1, wFLT);
+                            if (!chs) isOK = 1;
                             else
                             {
-                                hideMouse();
                                 getScreenText(20, 10, 43, 9, szScreen);
                                 msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
                                 if (!msgSlc) cleanup();
                                 putScreenText(20, 10, 43, 9, szScreen);
-                                showMouse();
                             }
                             break;
                         case TAB:
@@ -2088,71 +2005,59 @@ void chooseDrive()
         {
             if (bRow == 12 && bCol >= 29 && bCol <= 41)
             {
-                hideMouse();
                 writeVRM(29, 12, 0x3F, sysMenu[12], 0x3E);
                 if (slc != 0) writeVRM(29, 12 + slc, 0x30, sysMenu[12 + slc], 0x3A);
-                showMouse();
-                slc = 0;
                 delay(20);
+                slc = 0;
             }
 
             if (bRow == 13 && bCol >= 29 && bCol <= 41)
             {
-                hideMouse();
                 writeVRM(29, 13, 0x3F, sysMenu[13], 0x3E);
                 if (slc != 1) writeVRM(29, 12 + slc, 0x30, sysMenu[12 + slc], 0x3A);
-                showMouse();
-                slc = 1;
                 delay(20);
+                slc = 1;
             }
 
             if (bRow == 14 && bCol >= 29 && bCol <= 41)
             {
-                hideMouse();
                 writeVRM(29, 14, 0x3F, sysMenu[14], 0x3E);
                 if (slc != 2) writeVRM(29, 12 + slc, 0x30, sysMenu[12 + slc], 0x3A);
-                showMouse();
-                slc = 2;
                 delay(20);
+                slc = 2;
             }
 
             if (bRow == 15 && bCol >= 29 && bCol <= 41)
             {
-                hideMouse();
                 writeVRM(29, 15, 0x3F, sysMenu[15], 0x3E);
                 if (slc != 3) writeVRM(29, 12 + slc, 0x30, sysMenu[12 + slc], 0x3A);
-                showMouse();
-                slc = 3;
                 delay(20);
+                slc = 3;
             }
 
             if (bRow == 12 && bCol >= 46 & bCol <= 57)
             {
                 chs = 0;
                 isOK = 1;
-                hideMouse();
                 drawButton(46, 14, _wATV, 3, sysMenu[4], 1, _wFLT);
                 clearScreen(46, 12, 57, 13, 3);
                 writeVRM(47, 12, wATV, sysMenu[1], wFLT);
-                delay(50);
+                delay(60);
                 drawButton(46, 12, wATV, 3, sysMenu[1], 1, wFLT);
-                showMouse();
             }
 
             if (bRow == 14 && bCol >= 46 & bCol <= 57)
             {
                 chs = 1;
-                hideMouse();
                 drawButton(46, 12, _wATV, 3, sysMenu[1], 1, _wFLT);
                 clearScreen(46, 14, 57, 16, 3);
                 writeVRM(47, 15, wATV, sysMenu[4], wFLT);
-                delay(50);
+                delay(60);
                 drawButton(46, 14, wATV, 3, sysMenu[4], 1, wFLT);
                 getScreenText(20, 10, 43, 9, szScreen);
                 msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
                 if (!msgSlc) cleanup();
                 putScreenText(20, 10, 43, 9, szScreen);
-                showMouse();                            
             }
 
             if (bRow == 17 && bCol >= 33 && bCol <= 53)
@@ -2243,10 +2148,13 @@ void updateProgram()
 /*--------------------------------------------*/
 uint8_t getDriveId(char drive)
 {
-    if (toupper(drive) == 'B') return 2;
-    if (toupper(drive) == 'C') return 3;
-    if (toupper(drive) == 'D') return 4;
-    if (toupper(drive) == 'E') return 5;
+    switch (toupper(drive))
+    {
+    case 'B': return 2;
+    case 'C': return 3;
+    case 'D': return 4;
+    case 'E': return 5;
+    }
     return 0;
 }
 
@@ -2258,10 +2166,10 @@ uint8_t getDriveId(char drive)
 /*--------------------------------------------------*/
 void checkDiskSpace()
 {
-    uint8_t i = 0;
-    double freeSpace, totalSpace;
     struct diskfree_t dsk;
-    
+    uint8_t i = 0, isOK = 0;
+    double freeSpace, totalSpace;
+        
     setBorder(50);
     setCursorSize(0x2020);
     fillFrame(1, 1, 80, 25, 0xF6, 178);
@@ -2269,7 +2177,7 @@ void checkDiskSpace()
     writeVRM(18, 7, 0x70, sysInfo[39], 0);
     writeVRM(18, 8, 0x70, sysInfo[40], 0);
     writeVRM(18, 10, 0x70, sysInfo[29], 0);
-    writeVRM(53, 12, 0x70, sysInfo[174], 0);
+    writeVRM(53, 12, 0x70, sysInfo[171], 0);
     writeChar(18, 11, 0x17, 45, 176);
     drawButton(36, 18, wATV, 7, sysMenu[2], 1, wFLT);
     moveMouse(39, 17);
@@ -2284,21 +2192,19 @@ void checkDiskSpace()
         {
             if (kbhit() || (bRow == 18 && bCol >= 36 && bCol <= 45))
             {
-                hideMouse();
                 clearScreen(36, 18, 45, 19, 7);
                 writeVRM(37, 18, wATV, sysMenu[2], wATV);
-                delay(50);
+                delay(60);
                 drawButton(36, 18, wATV, 7, sysMenu[2], 1, wFLT);
-                showMouse();
                 break;
             }
         }
-        delay(100);
+        delay(60);
     }
 
     writeVRM(18, 14, 0x70, sysInfo[30], 0);
     writeChar(18, 15, 0x17, 45, 176);
-    writeVRM(53, 16, 0x70, sysInfo[174], 0);
+    writeVRM(53, 16, 0x70, sysInfo[171], 0);
 
     while (kbhit()) getch();
     for (i = 0; i < 45; i++)
@@ -2310,16 +2216,14 @@ void checkDiskSpace()
         {
             if (kbhit() || (bRow == 18 && bCol >= 36 && bCol <= 45))
             {
-                hideMouse();
                 clearScreen(36, 18, 45, 19, 7);
                 writeVRM(37, 18, wATV, sysMenu[2], wATV);
-                delay(50);
+                delay(60);
                 drawButton(36, 18, wATV, 7, sysMenu[2], 1, wFLT);
-                showMouse();
                 break;
             }
         }
-        delay(100);
+        delay(60);
     }
 
     if (_dos_getdiskfree(getDriveId(szInstallPath[0]), &dsk))
@@ -2334,18 +2238,16 @@ void checkDiskSpace()
             {
                 if (kbhit() || (bRow == 13 && bCol >= 33 && bCol <= 43))
                 {
-                    hideMouse();
+                    isOK = 1;
                     clearScreen(33, 13, 43, 14, 4);
                     writeVRM(34, 13, wATV, sysMenu[0], wFLT);
-                    delay(50);
+                    delay(60);
                     drawButton(33, 13, wATV, 4, sysMenu[0], 1, wFLT);
-                    showMouse();
-                    break;
                 }
 
-                if (bRow == 9 && bCol == 20 || bCol == 21) break;
+                if (bRow == 9 && bCol == 20 || bCol == 21) isOK = 1;
             }
-        } while (!kbhit());
+        } while (!isOK);
         cleanup();
     }
 
@@ -2354,14 +2256,14 @@ void checkDiskSpace()
 
     fillFrame(1, 1, 80, 25, 0xF6, 178);
     shadowBox(15, 9, 63, 16, 0x9F, sysInfo[9]);
-    printVRM(20, 11, 0x9E, sysInfo[175], totalSpace);
-    printVRM(20, 12, 0x9E, sysInfo[176], freeSpace);
+    printVRM(20, 11, 0x9E, sysInfo[172], totalSpace);
+    printVRM(20, 12, 0x9E, sysInfo[173], freeSpace);
     drawButton(34, 14, wATV, 9, sysMenu[0], 1, wFLT);
     moveMouse(38, 12);
 
-    if (freeSpace < 4)
+    if (freeSpace < 5)
     {
-        writeVRM(18, 13, 0x1C, sysInfo[35], 0);
+        writeVRM(18, 13, 0x9C, sysInfo[35], 0);
 
         while (kbhit()) getch();
         do {
@@ -2369,37 +2271,18 @@ void checkDiskSpace()
             {
                 if (kbhit() || (bRow == 14 && bCol >= 34 && bCol <= 41))
                 {
+                    isOK = 1;
                     clearScreen(34, 14, 42, 15, 1);
                     writeVRM(35, 14, wATV, sysMenu[0], wFLT);
-                    delay(50);
+                    delay(60);
                     drawButton(34, 14, wATV, 9, sysMenu[0], 1, wFLT);
-                    break;
                 }
 
-                if (bRow == 9 && bCol == 15 || bCol == 16) break;
+                if (bRow == 9 && bCol == 15 || bCol == 16) isOK = 1;
             }
-        } while (!kbhit());
+        } while (!isOK);
         cleanup();
     }
-
-    while (kbhit()) getch();
-    do {
-        if (kbhit() || clickMouse(&bCol, &bRow))
-        {
-            if (kbhit() || (bRow == 14 && bCol >= 34 && bCol <= 41))
-            {
-                hideMouse();
-                clearScreen(34, 14, 42, 15, 1);
-                writeVRM(35, 14, wATV, sysMenu[0], wFLT);
-                delay(50);
-                drawButton(34, 14, wATV, 9, sysMenu[0], 1, wFLT);
-                showMouse();
-                break;
-            }
-            
-            if (bRow == 9 && bCol == 15 || bCol == 16) break;
-        }
-    } while (!kbhit());
 }
 
 /*------------------------------------*/
@@ -2568,34 +2451,27 @@ void showInstall()
                 }
                 break;
             case ENTER:
+                clearScreen(24 + chs * 24, 21, 37 + chs * 24, 22, 1);
+                writeVRM(25 + chs * 24, 21, wATV, sysMenu[3 * chs + 1], wFLT);
+                delay(60);
+                drawButton(24 + chs * 24, 21, wATV, 1, sysMenu[3 * chs + 1], 1, wFLT);
                 if (!chs)
                 {
-                    hideMouse();
-                    drawButton(48, 21, _wATV, 1, sysMenu[4], 1, _wFLT);
-                    clearScreen(24, 21, 37, 22, 1);
-                    writeVRM(25, 21, wATV, sysMenu[1], wFLT);
-                    delay(50);
-                    drawButton(24, 21, wATV, 1, sysMenu[1], 1, wFLT);
-                    showMouse();
                     if (fltStop[1] && fltStop[2]) isOK = 1;
                     else
                     {
-                        hideMouse();
                         getScreenText(20, 10, 44, 9, szScreen);
                         msgSlc = messageBox(20, 10, 61, 17, msgError, 2);
                         if (msgSlc) cleanup();
                         putScreenText(20, 10, 44, 9, szScreen);
-                        showMouse();
                     }
                 }
                 else
                 {
-                    hideMouse();
                     getScreenText(20, 10, 44, 9, szScreen);
                     msgSlc = messageBox(20, 10, 61, 16, msgExit, 1);
                     if (!msgSlc) cleanup();
                     putScreenText(20, 10, 44, 9, szScreen);
-                    showMouse();
                 }
                 break;
             }
@@ -2605,7 +2481,6 @@ void showInstall()
         {
             if (bRow == 7 && bCol >= 14 && bCol <= 48)
             {
-                hideMouse();
                 if (!fltStop[slc]) writeVRM(14, 7 + 4 * slc, 0x1C, sysMenu[16 + slc], 0x1E);
                 else
                 {
@@ -2626,13 +2501,11 @@ void showInstall()
                 }
 
                 setCursorPos(15, 7);
-                showMouse();
                 delay(150);
             }
 
             if (bRow == 11 && bCol >= 14 && bCol <= 57)
             {
-                hideMouse();
                 if (!fltStop[slc]) writeVRM(14, 7 + 4 * slc, 0x1C, sysMenu[16 + slc], 0x1E);
                 else
                 {
@@ -2653,13 +2526,11 @@ void showInstall()
                 }
 
                 setCursorPos(15, 11);
-                showMouse();
                 delay(150);
             }
 
             if (bRow == 15 && bCol >= 14 && bCol <= 52)
             {
-                hideMouse();
                 if (!fltStop[slc]) writeVRM(14, 7 + 4 * slc, 0x1C, sysMenu[16 + slc], 0x1E);
                 else
                 {
@@ -2680,48 +2551,39 @@ void showInstall()
                 }
 
                 setCursorPos(15, 15);
-                showMouse();
                 delay(150);
             }
 
             if (bRow == 21 && bCol >= 24 && bCol <= 36)
             {
-                hideMouse();
                 drawButton(48, 21, _wATV, 1, sysMenu[4], 1, _wFLT);
                 clearScreen(24, 21, 37, 22, 1);
                 writeVRM(25, 21, wATV, sysMenu[1], wFLT);
-                delay(50);
+                delay(60);
                 drawButton(24, 21, wATV, 1, sysMenu[1], 1, wFLT);
-                showMouse();
                 chs = 0;
                 if (fltStop[1] && fltStop[2]) isOK = 1;
                 else
                 {
-                    hideMouse();
                     getScreenText(20, 10, 44, 9, szScreen);
                     msgSlc = messageBox(20, 10, 61, 17, msgError, 2);
                     if (msgSlc) cleanup();
                     putScreenText(20, 10, 44, 9, szScreen);
-                    showMouse();
                 }
             }
 
             if (bRow == 21 && bCol >= 48 && bCol <= 60)
             {
-                hideMouse();
                 drawButton(24, 21, _wATV, 1, sysMenu[1], 1, _wFLT);
                 clearScreen(48, 21, 61, 22, 1);
                 writeVRM(49, 21, wATV, sysMenu[4], wFLT);
-                delay(50);
+                delay(60);
                 drawButton(48, 21, wATV, 1, sysMenu[4], 1, wFLT);
-                showMouse();
                 chs = 1;
-                hideMouse();
                 getScreenText(20, 10, 44, 9, szScreen);
                 msgSlc = messageBox(20, 10, 61, 16, msgExit, 1);
                 if (!msgSlc) cleanup();
                 putScreenText(20, 10, 44, 9, szScreen);
-                showMouse();
             }
         }
     } while (!isOK);

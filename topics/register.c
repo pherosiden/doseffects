@@ -938,14 +938,12 @@ void registerForm()
                 }
                 break;
             case ENTER:
+                clearScreen(26 + slc * 21, 15, 36 + slc * 21, 16, 1);
+                writeVRM(27 + slc * 21, 15, wATV, sysInfo[28 + slc], wFLT);
+                delay(50);
+                drawButton(26 + slc * 21, 15, wATV, 1, sysInfo[28 + slc], 1, wFLT);
                 if (!slc)
                 {
-                    hideMouse();
-                    clearScreen(26, 15, 36, 16, 1);
-                    writeVRM(27, 15, wATV, sysInfo[28], wFLT);
-                    delay(50);
-                    drawButton(26, 15, wATV, 1, sysInfo[28], 1, wFLT);
-
                     if (!strcmp(regUser, szUserName) && !strcmp(regSerial, szSerial))
                     {
                         isOK = 1;
@@ -960,10 +958,6 @@ void registerForm()
                 }
                 else
                 {
-                    clearScreen(47, 15, 59, 16, 1);
-                    writeVRM(48, 15, wATV, sysInfo[29], wFLT);
-                    delay(50);
-                    drawButton(47, 15, wATV, 5, sysInfo[29], 1, wFLT);
                     fclose(fptr);
                     cleanup();
                 }
@@ -976,7 +970,6 @@ void registerForm()
             if (row == 15 && col >= 24 && col <= 36)
             {
                 slc = 0;
-                hideMouse();
                 drawButton(47, 15, _wATV, 1, sysInfo[4], 1, _wFLT);
                 clearScreen(26, 15, 36, 16, 1);
                 writeVRM(27, 15, wATV, sysInfo[1], wFLT);
@@ -999,7 +992,6 @@ void registerForm()
             if (row == 15 && col >= 47 && col <= 59)
             {
                 slc = 1;
-                hideMouse();
                 drawButton(26, 15, _wATV, 1, sysInfo[1], 1, _wFLT);
                 clearScreen(47, 15, 59, 16, 1);
                 writeVRM(48, 15, wATV, sysInfo[4], wFLT);
@@ -1064,7 +1056,7 @@ void menuRegister()
                 break;
             case ENTER:
                 isOK = 1;
-                clearScreen(22, 20, 34, 21, 5);
+                clearScreen(22 + pos * 25, 20, 34 + pos * 25, 21, 5);
                 writeVRM(23 + pos * 25, 20, wATV, sysInfo[25 + pos], wFLT);
                 delay(50);
                 drawButton(22 + pos * 25, 20, wATV, 5, sysInfo[25 + pos], 1, wFLT);
@@ -1078,26 +1070,22 @@ void menuRegister()
             {
                 pos = 0;
                 isOK = 1;
-                hideMouse();
                 drawButton(47, 20, _wATV, 5, sysInfo[26], 1, _wFLT);
                 clearScreen(22, 20, 34, 21, 5);
                 writeVRM(23, 20, wATV, sysInfo[25], wFLT);
                 delay(50);
                 drawButton(22, 20, wATV, 5, sysInfo[25], 1, wFLT);
-                showMouse();
             }
 
             if (row == 20 && col >= 47 && col <= 57)
             {
                 pos = 1;
                 isOK = 1;
-                hideMouse();
                 drawButton(22, 20, _wATV, 5, sysInfo[25], 1, _wFLT);
                 clearScreen(47, 20, 58, 21, 5);
                 writeVRM(48, 20, wATV, sysInfo[26], wFLT);
                 delay(50);
                 drawButton(47, 20, wATV, 5, sysInfo[26], 1, wFLT);
-                showMouse();
             }
 
             if (col == 3 || col == 4 && row == 2) isOK = 1;
@@ -1166,12 +1154,12 @@ uint8_t isRegister()
 }
 
 /*--------------------------------------*/
-/* Funtion : checkExpired               */
+/* Funtion : licenseExpired               */
 /* Purpose : Checking the period in use */
 /* Expects : Nothing                    */
 /* Returns : Nothing                    */
 /*--------------------------------------*/
-void checkExpired()
+void licenseExpired()
 {
     uint16_t diff;
     FILE *fptr;
@@ -1205,7 +1193,7 @@ void main()
     initData();
     if (!isRegister())
     {
-        checkExpired();
+        licenseExpired();
         startRegister();
     }
     cleanup();

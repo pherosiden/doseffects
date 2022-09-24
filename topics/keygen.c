@@ -22,11 +22,11 @@
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + 80 * (y - 1)) << 1)
 
-#define KEY_UP		    72
-#define KEY_DOWN	    80
-#define KEY_ENTER	    13
-#define KEY_SPACER	    32
-#define KEY_ESC	        27
+#define UP		        72
+#define DOWN	        80
+#define ENTER	        13
+#define SPACER	        32
+#define ESC	            27
 
 #define ATV 	        0xF0
 #define FLT 	        0xFC
@@ -346,8 +346,8 @@ void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t bka)
 {
     drawFrame(x1, y1, x2, y2, bka);
     fillFrame(x1 + 1, y1 + 1, x2 - 1, y2 - 1, bka, 32);
-    changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, 0x08);
-    changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, 0x08);
+    changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, MASK_BG);
+    changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, MASK_BG);
 }
 
 /*----------------------------------------------*/
@@ -852,7 +852,6 @@ void startCracking()
 
     do {
         setCursorPos(18 + k, 9);
-
         if (kbhit())
         {
             if (noUserName)
@@ -881,7 +880,7 @@ void startCracking()
 
             switch (cKey)
             {
-            case KEY_UP:
+            case UP:
                 if (!isASCII)
                 {
                     drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
@@ -889,7 +888,7 @@ void startCracking()
                     drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
                 }
                 break;
-            case KEY_DOWN:
+            case DOWN:
                 if (!isASCII)
                 {
                     drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
@@ -897,50 +896,29 @@ void startCracking()
                     drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
                 }
                 break;
-            case KEY_ENTER:
+            case ENTER:
+                clearScreen(51, 8 + bSlc * 2, 64, 9 + bSlc * 2, 3);
+                writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
+                delay(60);
+                drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
                 switch (bSlc)
                 {
                 case 0:
-                    hideMouse();
-                    drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
-                    bSlc = 0;
-                    clearScreen(51, 8 + bSlc * 2, 64, 9, 3);
-                    writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
-                    delay(50);
-                    drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
-                    showMouse();
-                    
-                    if (!validUserName(szUserName))
-                    {
-                        noUserName = 1;
-                        setCursorSize(0x0B0A);
-                        writeVRM(18, 9, 0x1C, szHelp[7], 0);
-                    }
-                    else
+                    if (validUserName(szUserName))
                     {
                         setCursorSize(0x2020);
                         genSerialNumber(szUserName, CDKey);
                         writeVRM(18, 12, 0x1E, CDKey, 0);
                     }
+                    else
+                    {
+                        noUserName = 1;
+                        setCursorSize(0x0B0A);
+                        writeVRM(18, 9, 0x1C, szHelp[7], 0);
+                    }
                     break;
-                case 1:
-                    bSlc = 1;
-                    hideMouse();
-                    drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
-                    clearScreen(51, 8 + bSlc * 2, 64, 11, 3);
-                    writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
-                    delay(50);
-                    drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
-                    showMouse();
-                    return;
+                case 1: return;
                 case 2:
-                    bSlc = 2;
-                    drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
-                    clearScreen(51, 8 + bSlc * 2, 64, 13, 3);
-                    writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
-                    delay(50);
-                    drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
-                    hideMouse();
                     getScreenText(15, 6, 53, 12, scrBuff);
                     shadowBox(15, 6, 65, 16, 0x5F, szHelp[0]);
                     writeVRM(17, 8, 0x5E, szHelp[1], 0);
@@ -949,38 +927,26 @@ void startCracking()
                     writeVRM(17, 11, 0x5E, szHelp[4], 0);
                     writeVRM(17, 12, 0x5E, szHelp[5], 0);
                     drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
-                    showMouse();
                     setCursorSize(0x2020);
 
+                    while (kbhit()) getch();
                     do {
-                        if (kbhit())
+                        if (kbhit() || clickMouse(&bCol, &bRow))
                         {
-                            readKey(&cKey);
-                            if ((cKey == KEY_ENTER) || (cKey == KEY_SPACER) || (cKey == KEY_ESC))
+                            if (kbhit() || (bRow == 14 && bCol >= 36 && bCol <= 45))
                             {
-                                hideMouse();
                                 clearScreen(36, 14, 46, 15, 5);
                                 writeVRM(37, 14, ATV, szHelp[6], FLT);
-                                delay(50);
-                                drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
-                                break;
-                            }
-
-                            if (clickMouse(&bCol, &bRow) && (bRow == 14 && bCol >= 36 && bCol <= 45))
-                            {
-                                hideMouse();
-                                clearScreen(36, 14, 46, 15, 5);
-                                writeVRM(37, 14, ATV, szHelp[6], FLT);
-                                delay(50);
+                                delay(60);
                                 drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
                                 break;
                             }
                         }
                     } while (1);
-
+                    
+                    while (kbhit()) getch();
                     setCursorSize(0x0B0A);
                     putScreenText(15, 6, 53, 12, scrBuff);
-                    showMouse();
                     break;
                 }
                 break;
@@ -991,39 +957,34 @@ void startCracking()
         {
             if (bRow == 8 && bCol >= 51 && bCol <= 62)
             {
-                hideMouse();
                 drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
                 bSlc = 0;
                 clearScreen(51, 8 + bSlc * 2, 64, 9, 3);
                 writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
-                delay(50);
+                delay(60);
                 drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
-                showMouse();
-                
-                if (!validUserName(szUserName))
-                {
-                    noUserName = 1;
-                    setCursorSize(0x0B0A);
-                    writeVRM(18, 9, 0x1C, szHelp[7], 0);
-                }
-                else
+                if (validUserName(szUserName))
                 {
                     setCursorSize(0x2020);
                     genSerialNumber(szUserName, CDKey);
                     writeVRM(18, 12, 0x1E, CDKey, 0);
                 }
+                else
+                {
+                    noUserName = 1;
+                    setCursorSize(0x0B0A);
+                    writeVRM(18, 9, 0x1C, szHelp[7], 0);
+                }
             }
 
             if (bRow == 10 && bCol >= 51 && bCol <= 62)
             {
-                hideMouse();
                 drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
                 bSlc = 1;
-                clearScreen(51, 8 + bSlc * 2, 64, 11, 3);
+                clearScreen(51, 8 + bSlc * 2, 64, 9, 3);
                 writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
-                delay(50);
+                delay(60);
                 drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
-                showMouse();
                 return;
             }
 
@@ -1033,9 +994,8 @@ void startCracking()
                 bSlc = 2;
                 clearScreen(51, 8 + bSlc * 2, 64, 13, 3);
                 writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
-                delay(50);
+                delay(60);
                 drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
-                hideMouse();
                 getScreenText(15, 6, 53, 12, scrBuff);
                 shadowBox(15, 6, 65, 16, 0x5F, szHelp[0]);
                 writeVRM(17, 8, 0x5E, szHelp[1], 0);
@@ -1044,44 +1004,29 @@ void startCracking()
                 writeVRM(17, 11, 0x5E, szHelp[4], 0);
                 writeVRM(17, 12, 0x5E, szHelp[5], 0);
                 drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
-                showMouse();
                 setCursorSize(0x2020);
 
+                while (kbhit()) getch();
                 do {
-                    if (kbhit())
+                    if (kbhit() || clickMouse(&bCol, &bRow))
                     {
-                        isASCII = readKey(&cKey);
-                        if (!cKey) isASCII = readKey(&cKey);
-
-                        if ((cKey == KEY_ENTER) || (cKey == KEY_SPACER))
+                        if (kbhit() || (bRow == 14 && bCol >= 36 && bCol <= 45))
                         {
-                            hideMouse();
                             clearScreen(36, 14, 46, 15, 5);
                             writeVRM(37, 14, ATV, szHelp[6], FLT);
-                            delay(50);
-                            drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
-                            break;
-                        }
-                    }
-
-                    if (clickMouse(&bCol, &bRow))
-                    {
-                        if (bRow == 14 && bCol >= 36 && bCol <= 45)
-                        {
-                            hideMouse();
-                            clearScreen(36, 14, 46, 15, 5);
-                            writeVRM(37, 14, ATV, szHelp[6], FLT);
-                            delay(50);
+                            delay(60);
                             drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
                             break;
                         }
                     }
                 } while (1);
-
+                
+                while (kbhit()) getch();
                 setCursorSize(0x0B0A);
                 putScreenText(15, 6, 53, 12, scrBuff);
-                showMouse();
             }
+
+            if (bRow == 6 && bCol >= 15 && bCol <= 16) break;
         }
     } while (1);
 }
