@@ -54,13 +54,13 @@
 #define RESET_ADR	    ((DOS_SEG << 16) | RESET_FLAG)
 
 typedef struct {
-    uint8_t     key;        // Encode and decode key
+    uint16_t    key;        // Encode and decode key
     uint16_t    regs;       // Register code
     uint16_t    days;       // The number of days
     uint16_t    magic;      // Validate license code
     time_t      utime;      // Register timestamp
-    char        serial[20]; // License code
-    char        user[33];   // User name
+    uint8_t     serial[20]; // License code
+    uint8_t     user[33];   // User name
     char        path[33];   // The installation path
 } REG_INFO;
 
@@ -1314,7 +1314,7 @@ void checkProductKey()
 
     slc = key = 0;
     writeVRM(14, 11 + slc, 0x5B, sysMenu[slc + 8], 0x5A);
-        
+
     do {
         if (kbhit())
         {
@@ -1894,7 +1894,7 @@ void chooseDrive()
     writeVRM(31, 10, 0x34, sysInfo[24], 0);
     writeChar(29, 11, 0x34, 22, 193);
     for (i = 0; i < sizeof(drives) / sizeof(drives[0]); i++) writeVRM(29, 12 + i, 0x30, sysMenu[12 + i], 0x3A);
-    drawButton(46, 12, wATV, 3, sysMenu[1], 1, wFLT);
+    drawButton(46, 12, _wATV, 3, sysMenu[1], 1, _wATV);
     drawButton(46, 14, _wATV, 3, sysMenu[4], 1, _wFLT);
     writeVRM(23, 17, 0x30, sysMenu[22], 0);
     writeChar(33, 17, 0x1F, 25, 32);
@@ -1935,6 +1935,7 @@ void chooseDrive()
                 break;
             case TAB:
                 key = 0;
+                drawButton(46, 12 + 2 * chs, wATV, 3, sysMenu[3 * chs + 1], 1, wFLT);
                 do {
                     if (kbhit())
                     {

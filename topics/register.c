@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
+#include <direct.h>
 
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + 80 * (y - 1)) << 1)
@@ -29,8 +30,8 @@ typedef struct {
     uint16_t    days;       // The number of days
     uint16_t    magic;      // Validate license code
     time_t      utime;      // Register timestamp
-    char        serial[20]; // License code
-    char        user[33];   // User name
+    uint8_t     serial[20]; // License code
+    uint8_t     user[33];   // User name
     char        path[33];   // The installation path
 } REG_INFO;
 

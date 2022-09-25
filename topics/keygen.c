@@ -34,13 +34,13 @@
 #define _FLT 	        0x75
 
 typedef struct {
-    uint8_t     key;        // Encode and decode key
+    uint16_t    key;        // Encode and decode key
     uint16_t    regs;       // Register code
     uint16_t    days;       // The number of days
     uint16_t    magic;      // Validate license code
     time_t      utime;      // Register timestamp
-    char        serial[20]; // License code
-    char        user[33];   // User name
+    uint8_t     serial[20]; // License code
+    uint8_t     user[33];   // User name
     char        path[33];   // The installation path
 } REG_INFO;
 
@@ -761,9 +761,9 @@ uint8_t validUserName(char *szUserName)
 /*-----------------------------------------------*/
 void genSerialNumber(char *szUserName, char *CDKey)
 {
-    char cKey = 0;
     FILE *fptr;
     REG_INFO tmp;
+    char cKey = 0;
     uint16_t col = 0, row = 0;
     uint16_t i = 0, len = 0, k = 0;
 
@@ -785,7 +785,7 @@ void genSerialNumber(char *szUserName, char *CDKey)
     fptr = fopen("register.dat", "wb");
     if (!fptr) return;
 
-    tmp.key = 90 + (rand() % 120);
+    tmp.key = 100 + (rand() % 120);
 
     len = strlen(CDKey);
     for (i = 0; i < len; i++)
