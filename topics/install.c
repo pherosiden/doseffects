@@ -1441,14 +1441,14 @@ void checkProductKey()
             if (!key) isASCII = readKey(&key);
             if (selUserName)
             {
-                if ((isASCII && i < 30 && key != 8 && isalpha(key)) || (key == 32 && i < 30))
+                if ((isASCII && i < 30 && key != DEL && isalpha(key)) || (key == SPACE && i < 30))
                 {
                     szUserName[i] = key;
                     printChar(8 + i, 15, 0x1E, key);
                     i++;
                 }
 
-                if (key == 8 && i > 0)
+                if (key == DEL && i > 0)
                 {
                     i--;
                     printChar(8 + i, 15, 0x1E, 32);
@@ -1466,7 +1466,7 @@ void checkProductKey()
                     j++;
                 }
 
-                if (key == 8 && j > 0)
+                if (key == DEL && j > 0)
                 {
                     j--;
                     printChar(8 + j, 18, 0x1E, 32);
