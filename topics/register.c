@@ -8,6 +8,7 @@
 #include <string.h>
 #include <time.h>
 #include <direct.h>
+#include <process.h>
 
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + 80 * (y - 1)) << 1)
@@ -1189,13 +1190,28 @@ void licenseExpired()
     }
 }
 
+void getDiskSerial(char *serial)
+{
+    FILE *pipe;
+    char sbuff[128];
+
+    pipe = _popen("vol", "r");
+    if (!pipe) return;
+    while (fgets(sbuff, sizeof(sbuff), pipe)) strcat(serial, sbuff);
+    _pclose(pipe);
+}
+
 void main()
 {
-    initData();
+    /*initData();
     if (!isRegister())
     {
         licenseExpired();
         startRegister();
     }
-    cleanup();
+    cleanup();*/
+    char sbuff[128];
+    memset(sbuff, 0, sizeof(sbuff));
+    getDiskSerial(sbuff);
+    printf("%s", sbuff);
 }

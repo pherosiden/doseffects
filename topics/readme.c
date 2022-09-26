@@ -171,9 +171,9 @@ void clearScreen(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color)
 /*           (substr) The substring        */
 /* Returns : Position of substring         */
 /*-----------------------------------------*/
-int16_t strPos(char *str, char *sub)
+int16_t strPos(char *str, char *substr)
 {
-    char *ptr = strstr(str, sub);
+    char *ptr = strstr(str, substr);
     if (!ptr) return -1;
     return ptr - str;
 }
@@ -353,7 +353,7 @@ void fontVNI(char *str)
 /* Funtion : decodeFile               */
 /* Purpose : Decode file register.sys */
 /* Expects : (ifile) The source file  */
-/*           (ofile) The dest file  */
+/*           (ofile) The dest file    */
 /* Returns : Number of lines in file  */
 /*------------------------------------*/
 uint16_t decodeFile(const char *ifile, const char *ofile)
@@ -440,7 +440,7 @@ void releaseData()
 }
 
 /*---------------------------------------------*/
-/* Function : ViewFile                         */
+/* Function : viewFile                         */
 /* Mission  : Display the information on scren */
 /* Expects  : (fileName) The name of file      */
 /* Returns  : Nothing                          */

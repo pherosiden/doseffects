@@ -23,16 +23,15 @@
  nghie65p du7 Nguye64n Ngo5c Va6n.
 
  2. Ye6u ca62u ca61u hi2nh ma1y
-    Chu7o7ng tri2nh du7o75c ti1ch ho75p ne6n ra61t nho3 va2 de64 su73 du5ng. No1 cha5y ra61t to61t
+    Chu7o7ng tri2nh d9u7o75c ti1ch ho75p ne6n ra61t nho3 va2 de64 su73 du5ng. No1 cha5y ra61t to61t
  tre6n ma1y Pentium 133 Mhz, he65 d9ie62u ha2nh MS-DOS hay Windows 9x, d9i4a cu71ng co2n
- tro61ng 2MB, bo65 nho71 16MB, card d9o62 ho5a 2MB va2 loa nho3 trong ma1y ti1nh.
+ tro61ng 4MB, bo65 nho71 8MB, card d9o62 ho5a 2MB va2 loa nho3 trong ma1y ti1nh.
 
  3. Ca1c bu7o71c ca2i d9a85t chu7o7ng tri2nh
     Toa2n bo65 chu7o7ng tri2nh TOPICS d9u7o75c go1i go5n trong mo65t d9i4a me62m 1.44 ne6n ra61t
  de64 ca2i d9a85t va2 su73 du5ng.
- Bu7o71c 1: Ba5n kho73i d9o65ng ma1y ti1nh tu72 MSDOS (kho6ng va2o Windows) sau d9o1 do72i qua d9ia4
- chu71a pha62n me62m na2y ba5n cha5y file crack d9e63 la61y tho6ng so61 ma1y va2 tho6ng so61 ca2i
- d9a85t.
+ Bu7o71c 1: Ba5n kho73i d9o65ng ma1y ti1nh tu72 MSDOS (kho6ng va2o Windows) sau d9o1 do72i qua d9i4a
+ chu71a pha62n me62m na2y ba5n cha5y file keygen.com d9e63 la61y ma4 so61 ma1y d9e63 ca2i d9a85t.
  Bu7o71c 2: Ba5n cha5y file install d9e63 tie61n ha2nh ca2i d9a85t chu7o7ng  tri2nh. Ba5n la2m theo
  ca1c chi3 da64n tre6n ma2n hi2nh d9e63 ca2i d9a85t chu7o7ng tri2nh.
  Bu7o71c 3: Sau khi ca2i d9a85t tha2nh co6ng ba5n pha3i restart la5i ma1y ti1nh.
@@ -43,8 +42,8 @@
  4. Ca1c bu7o71c d9a8ng ky1 chu7o7ng tri2nh
     Ba5n go73i ma4 so61 ma1y (mo64i ma1y ti1nh se4 co1  mo65t ma4 so61 rie6ng) d9e61n ta1c gia3 se4
  go73i la5i cho ba5n ma4 so61 cu3a sa3n pha63m d9e63 ba5n d9a8ng ky1 va2o chu7o7ng tri2nh. Ne61u
- ca1c ba5n thi1ch co1 the63 go73i the6m $20 d9e63 khuye61n khi1ch tinh tha62n cua3 ta1c gia3
- va2 ba5n se4 nha65n d9u7o75c toa2n bo65 ma4 nguo62n cua3 chu7o7ng tri2nh na2y.
+ ca1c ba5n thi1ch co1 the63 go73i the6m $20 d9e63 khuye61n khi1ch tinh tha62n cu3a ta1c gia3
+ va2 ba5n se4 nha65n d9u7o75c toa2n bo65 ma4 nguo62n cu3a chu7o7ng tri2nh na2y.
  (Xin ca1m o7n ra61t nhie62u...).
 
  5. Ca1c tha2nh pha62n chi1nh cu3a chu7o7ng tri2nh
@@ -65,7 +64,7 @@
  tu72 na8m 1998 (Lu1c co2n d9ang d9i ho5c Pho63 tho6ng). D9ang co1 u7o71c mo7 tro73 tha2nh chuye6n
  vie6n Quo61c te61. Ta1c gia3 ra61t mong d9u7o75c trao d9o63i kinh nghie65m vo71i ta61t ca3 ca1c
  ba5n hie65n d9ang nghie6n cu71u va2 ho5c ta65p trong li4nh vu75c Co6ng Nghe65 Tho6ng Tin.
- Mo5i chi tie61t hay y1 kie61n d9o1ng go1p xin lie6n he65 vo71i ta1c gia3 ta5i ca1c d9i5a chi3 sau:
+ Mo5i chi tie61t hay y1 kie61n d9o1ng go1p xin lie6n he65 vo71i ta1c gia3 ta5i d9i5a chi3 sau:
    
    So61 nha2: 57A Cu2 Lao Nguye64n Kie65u. Phu7o72ng 1 Qua65n 4 Tha2nh pho61 Ho62 Chi1 Minh.
    D9i5a chi3 mail: sidensundling@yahoo.com
