@@ -798,7 +798,7 @@ void startDelete()
 /*----------------------------------------------------*/
 void showResults()
 {
-    uint16_t col = 0, row = 0;
+    uint16_t col = 0, row = 0, isOK = 0;
 
     fillFrame(1, 1, 80, 25, 0x1F, 32);
     shadowBox(18, 8, 62, 16, 0x7F, sysInf[1]);
@@ -813,16 +813,16 @@ void showResults()
         {
             if (kbhit() || (row == 14 && col >= 35 && col <= 45))
             {
+                isOK = 1;
                 clearScreen(35, 14, 46, 15,7);
                 writeVRM(36, 14, 0x4F, sysInf[13], 0x4A);
                 delay(60);
                 drawButton(35, 14, 0x4F, 7, sysInf[13], 1, 0x4A);
-                break;
             }
 
-            if (row == 8 && col == 18 || col == 19) break;
+            if (row == 8 && col == 18 || col == 19) isOK = 1;
         }
-    } while (!kbhit());
+    } while (!isOK);
 }
 
 /*--------------------------------------------------*/

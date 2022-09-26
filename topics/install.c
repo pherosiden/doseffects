@@ -1135,6 +1135,7 @@ void processDir(char *psrc, char *pdst)
 {
     size_t i;
     struct find_t entries;
+    int16_t progress, percent;
     
     char srcPath[64], srcExt[64], srcDir[64];
     char curFile[68], newFile[68], newDir[64];
@@ -1153,10 +1154,13 @@ void processDir(char *psrc, char *pdst)
             if (!copyFile(curFile, newFile, &entries)) errorFile(newFile, sysInfo[21]);
 
             numFiles++;
+            progress = 45.0 * numFiles / totalFiles;
+            percent = 100.0 * numFiles / totalFiles;
+
             writeChar(30, 11, 0x99, 33, 32);
             writeVRM(30, 11, 0x9E, newFile, 0);
-            writeChar(18, 12, 0xFF, 45 * (1.0 * numFiles / totalFiles), 219);
-            printVRM(50, 13, 0x9F, "%3d", (int16_t)(100 * (1.0 * numFiles / totalFiles)));
+            writeChar(18, 12, 0xFF, progress, 219);
+            printVRM(50, 13, 0x9F, "%3d", percent);
             delay(60);
         } while (!_dos_findnext(&entries));
     }
@@ -1185,7 +1189,7 @@ void processDir(char *psrc, char *pdst)
 /*            (n) The number of elements */
 /* Return   : Selected order             */
 /*---------------------------------------*/
-uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], uint8_t n)
+uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], int16_t n)
 {
     char key = 0, isOK = 0;
     uint8_t slc = 0, i = 0;
@@ -1273,7 +1277,7 @@ uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], 
 /*            (n) The elements of array  */
 /* Return   : 1 or 0                     */
 /*---------------------------------------*/
-void warningBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], uint8_t n)
+void warningBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], int16_t n)
 {
     int16_t i = 0;
     char key = 0, isOK = 0;
