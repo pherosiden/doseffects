@@ -1,6 +1,8 @@
 /*-----------------------------------------*/
 /*          ENCRYPTION MODULE              */
-/* Simple encoded/decoded file             */
+/*  Simple encoded/decoded text file       */
+/* Compiler:    Open Watcom C/C++ 1.9      */
+/* Environment: MS-DOS 16bits              */
 /*-----------------------------------------*/
 
 #include <stdio.h>
@@ -10,9 +12,9 @@
 
 int main(int argc, char *argv[])
 {
-    int16_t c, key = 98;
     FILE *fpIn, *fpOut;
-
+    int16_t c, key = 98;
+    
     if (argc < 3)
     {
         fprintf(stderr, "Usage: %s <en|de> <input> <output>\n", argv[0]);
@@ -29,7 +31,7 @@ int main(int argc, char *argv[])
 
     while ((c = fgetc(fpIn)) != EOF)
     {
-        if (!strcmp(argv[1], "en")) c = c + ~key;    // Giai ma/Ma hoa -/+
+        if (!strcmp(argv[1], "en")) c = c + ~key;    // decode/encode -/+
         else if (!strcmp(argv[1], "de")) c = c - ~key;
         fputc(c, fpOut);
     }
@@ -37,7 +39,7 @@ int main(int argc, char *argv[])
     fclose(fpIn);
     fclose(fpOut);
 
-    if (!strcmp(argv[1], "en")) fprintf(stderr, "File: %s encoded.\n", argv[3]);
-    else if (!strcmp(argv[1], "de")) fprintf(stderr, "File: %s decoded.\n", argv[3]);
+    if (!stricmp(argv[1], "en")) fprintf(stderr, "File: %s encoded.\n", argv[3]);
+    else if (!stricmp(argv[1], "de")) fprintf(stderr, "File: %s decoded.\n", argv[3]);
     return 1;
 }

@@ -46,11 +46,11 @@
 #define _eATV           0xE7
 #define _eFLT           0xE6
 
+#define DOS_SEG	        0x0040L
+#define RESET_FLAG      0x0072L
 #define BOOT_SEG        0xFFFFL
 #define BOOT_OFF        0x0000L
 #define BOOT_ADR        ((BOOT_SEG << 16) | BOOT_OFF)
-#define DOS_SEG	        0x0040L
-#define RESET_FLAG      0x0072L
 #define RESET_ADR	    ((DOS_SEG << 16) | RESET_FLAG)
 
 typedef struct {
@@ -1016,6 +1016,38 @@ void errorFile(char *msg, char *type)
 }
 
 /*---------------------------------------------*/
+/* Funtion : makePath                          */
+/* Purpose : Create directory with full path   */
+/* Expects : (spath) sources path              */
+/* Returns : Nothing                           */
+/*---------------------------------------------*/
+void makePath(char *spath)
+{
+    char sbuff[64];
+    char *next = spath;
+
+    if (!_access(spath, 0) || !spath || !strlen(spath)) return;
+
+    memset(sbuff, 0, sizeof(sbuff));
+    while (next && strlen(next) > 0)
+    {
+        next = strchr(next, '\\');
+        if (!next) strcpy(sbuff, spath);
+        else
+        {
+            strncpy(sbuff, spath, next - spath);
+            next++;
+        }
+        
+        if (_access(sbuff, 0))
+        {
+            printf("mkdir:%s\n", sbuff);
+            _mkdir(sbuff);
+        }
+    }
+}
+
+/*---------------------------------------------*/
 /* Funtion : countFiles                        */
 /* Purpose : Count total files from directory  */
 /* Expects : (dirName) sources directory       */
@@ -1137,7 +1169,7 @@ void processDir(char *psrc, char *pdst)
             {
                 sprintf(srcDir, "%s\\%s\\%s", srcPath, entries.name, srcExt);
                 sprintf(newDir, "%s\\%s", pdst, entries.name);
-                mkdir(newDir);
+                _mkdir(newDir);
                 _dos_setfileattr(newDir, entries.attrib);
                 processDir(srcDir, newDir);
             }
@@ -1237,7 +1269,7 @@ uint8_t messageBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], 
 /* Function : warningBox                 */
 /* Purpose  : Display the system message */
 /* Expects  : (x1,y1,x2,y2) coordinates  */
-/*            (msg) The messages array */
+/*            (msg) The messages array   */
 /*            (n) The elements of array  */
 /* Return   : 1 or 0                     */
 /*---------------------------------------*/
@@ -1341,7 +1373,7 @@ void checkProductKey()
                 else
                 {
                     getScreenText(20, 10, 43, 9, szScreen);
-                    msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
+                    msgSlc = messageBox(20, 10, 60, 16, msgExit, sizeof(msgExit) / sizeof(msgExit[0]));
                     if (!msgSlc) cleanup();
                     putScreenText(20, 10, 43, 9, szScreen);
                 }
@@ -1369,7 +1401,7 @@ void checkProductKey()
                 writeVRM(14, 12, 0x5B, sysMenu[9], 0x5A);
                 writeVRM(11, 12, 0x5B, sysMenu[20], 0);
                 getScreenText(20, 10, 43, 9, szScreen);
-                msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
+                msgSlc = messageBox(20, 10, 60, 16, msgExit, sizeof(msgExit) / sizeof(msgExit[0]));
                 if (!msgSlc) cleanup();
                 putScreenText(20, 10, 43, 9, szScreen);
             }
@@ -1525,7 +1557,7 @@ void checkProductKey()
                 else
                 {
                     getScreenText(20, 10, 43, 9, szScreen);
-                    msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
+                    msgSlc = messageBox(20, 10, 60, 16, msgExit, sizeof(msgExit) / sizeof(msgExit[0]));
                     if (!msgSlc) cleanup();
                     putScreenText(20, 10, 43, 9, szScreen);
                 }
@@ -1565,7 +1597,7 @@ void checkProductKey()
                 delay(60);
                 drawButton(47, 21, wATV, 5, sysMenu[4], 1, wFLT);
                 getScreenText(20, 10, 43, 9, szScreen);
-                msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
+                msgSlc = messageBox(20, 10, 60, 16, msgExit, sizeof(msgExit) / sizeof(msgExit[0]));
                 if (!msgSlc) cleanup();
                 putScreenText(20, 10, 43, 9, szScreen);
             }
@@ -1736,6 +1768,7 @@ void installProgram()
     writeChar(18, 12, 0x17, 45, 176);
     writeVRM(53, 13, 0x9F, sysInfo[171], 0);
     drawButton(35, 15, _wATV, 9, sysMenu[2], 1, _wFLT);
+    makePath(szInstallPath);
     countFiles(PROG_DIR);
     processDir(PROG_DIR, szInstallPath);
     delay(500);
@@ -1962,7 +1995,7 @@ void chooseDrive()
                             else
                             {
                                 getScreenText(20, 10, 43, 9, szScreen);
-                                msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
+                                msgSlc = messageBox(20, 10, 60, 16, msgExit, sizeof(msgExit) / sizeof(msgExit[0]));
                                 if (!msgSlc) cleanup();
                                 putScreenText(20, 10, 43, 9, szScreen);
                             }
@@ -2056,7 +2089,7 @@ void chooseDrive()
                 delay(60);
                 drawButton(46, 14, wATV, 3, sysMenu[4], 1, wFLT);
                 getScreenText(20, 10, 43, 9, szScreen);
-                msgSlc = messageBox(20, 10, 60, 16, msgExit, 1);
+                msgSlc = messageBox(20, 10, 60, 16, msgExit, sizeof(msgExit) / sizeof(msgExit[0]));
                 if (!msgSlc) cleanup();
                 putScreenText(20, 10, 43, 9, szScreen);
             }
@@ -2462,7 +2495,7 @@ void showInstall()
                     else
                     {
                         getScreenText(20, 10, 44, 9, szScreen);
-                        msgSlc = messageBox(20, 10, 61, 17, msgError, 2);
+                        msgSlc = messageBox(20, 10, 61, 17, msgError, sizeof(msgError) / sizeof(msgError[0]));
                         if (msgSlc) cleanup();
                         putScreenText(20, 10, 44, 9, szScreen);
                     }
@@ -2470,7 +2503,7 @@ void showInstall()
                 else
                 {
                     getScreenText(20, 10, 44, 9, szScreen);
-                    msgSlc = messageBox(20, 10, 61, 16, msgExit, 1);
+                    msgSlc = messageBox(20, 10, 61, 16, msgExit, sizeof(msgExit) / sizeof(msgExit[0]));
                     if (!msgSlc) cleanup();
                     putScreenText(20, 10, 44, 9, szScreen);
                 }
@@ -2567,7 +2600,7 @@ void showInstall()
                 else
                 {
                     getScreenText(20, 10, 44, 9, szScreen);
-                    msgSlc = messageBox(20, 10, 61, 17, msgError, 2);
+                    msgSlc = messageBox(20, 10, 61, 17, msgError, sizeof(msgError) / sizeof(msgError[0]));
                     if (msgSlc) cleanup();
                     putScreenText(20, 10, 44, 9, szScreen);
                 }
@@ -2582,7 +2615,7 @@ void showInstall()
                 drawButton(48, 21, wATV, 1, sysMenu[4], 1, wFLT);
                 chs = 1;
                 getScreenText(20, 10, 44, 9, szScreen);
-                msgSlc = messageBox(20, 10, 61, 16, msgExit, 1);
+                msgSlc = messageBox(20, 10, 61, 16, msgExit, sizeof(msgExit) / sizeof(msgExit[0]));
                 if (!msgSlc) cleanup();
                 putScreenText(20, 10, 44, 9, szScreen);
             }

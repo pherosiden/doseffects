@@ -25,7 +25,7 @@
 #define _wFLT           0x74
 
 typedef struct {
-    uint8_t     key;        // Encode and decode key
+    uint16_t    key;        // Encode and decode key
     uint16_t    regs;       // Register code
     uint16_t    days;       // The number of days
     uint16_t    magic;      // Validate license code
