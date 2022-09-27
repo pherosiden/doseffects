@@ -738,7 +738,7 @@ uint8_t validUserName(char *szUserName)
     uint16_t i = 0, len = 0;
 
     len = strlen(szUserName);
-    if (!len) return 0;
+    if (len < 5) return 0;
 
     i = 0;
     while (isspace(szUserName[i++]));

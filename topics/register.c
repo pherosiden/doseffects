@@ -8,7 +8,6 @@
 #include <string.h>
 #include <time.h>
 #include <direct.h>
-#include <process.h>
 
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + 80 * (y - 1)) << 1)
@@ -801,6 +800,65 @@ void fadeOut()
 }
 
 /*----------------------------------------------*/
+/* Function : getDiskSerial                     */
+/* Purpose  : Get the disk serial number        */
+/* Expects  : (serial) output serial number     */
+/* Returns  : Nothing                           */
+/*----------------------------------------------*/
+void getDiskSerial(char *serial, char drive)
+{
+    FILE *fp;
+    char sbuff[128];
+    const char * term = "Volume Serial Number is ";
+
+    sprintf(sbuff, "vol %c: > .vol", drive);
+    system(sbuff);
+    delay(100);
+
+    fp = fopen(".vol", "rt");
+    if (!fp) return;
+
+    while (fgets(sbuff, 128, fp))
+    {
+        if (strstr(sbuff, term)) break;
+    }
+    
+    unlink(".vol");
+    strcpy(serial, &sbuff[strlen(term) + 1]);
+}
+
+/*----------------------------------------------*/
+/* Function : initData                          */
+/* Purpose  : Initialize parameters for program */
+/* Expects  : Nothing                           */
+/* Returns  : Nothing                           */
+/*----------------------------------------------*/
+void makeLicenseKey(char *user, char *serial, char *license)
+{
+    char sbuff[22];
+    char cKey = 0;
+    int16_t i = 0, j = 0;
+
+    memset(sbuff, 0, sizeof(sbuff));
+
+    do {
+        cKey = 48 + (rand() % 49);
+        if (isdigit(cKey) || isupper(cKey)) sbuff[i++] = cKey;
+    } while (i < 10);
+    
+    sbuff[i] = '\0';
+    sbuff[4] = sbuff[9] = '-';
+    strcat(sbuff, serial);
+
+    i = 0;
+    while (*user) i += *user++;
+
+    j = 0;
+    while (sbuff[j]) sbuff[j++] += i;
+    strcpy(license, sbuff);
+}
+
+/*----------------------------------------------*/
 /* Function : initData                          */
 /* Purpose  : Initialize parameters for program */
 /* Expects  : Nothing                           */
@@ -854,7 +912,7 @@ void registerForm()
 
     for (i = 0; i < strlen(regInfo.user); i++) regUser[i] = regInfo.user[i] - regInfo.key;
     for (i = 0; i < strlen(regInfo.serial); i++) regSerial[i] = regInfo.serial[i] - regInfo.key;
-            
+
     setCursorSize(0x0B0A);
     drawButton(26, 15, wATV, 1, sysInfo[28], 1, wFLT);
     drawButton(47, 15, _wATV, 1, sysInfo[29], 1, _wFLT);
@@ -1190,28 +1248,13 @@ void licenseExpired()
     }
 }
 
-void getDiskSerial(char *serial)
-{
-    FILE *pipe;
-    char sbuff[128];
-
-    pipe = _popen("vol", "r");
-    if (!pipe) return;
-    while (fgets(sbuff, sizeof(sbuff), pipe)) strcat(serial, sbuff);
-    _pclose(pipe);
-}
-
 void main()
 {
-    /*initData();
+    initData();
     if (!isRegister())
     {
         licenseExpired();
         startRegister();
     }
-    cleanup();*/
-    char sbuff[128];
-    memset(sbuff, 0, sizeof(sbuff));
-    getDiskSerial(sbuff);
-    printf("%s", sbuff);
+    cleanup();
 }
