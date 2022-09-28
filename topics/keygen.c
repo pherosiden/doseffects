@@ -1,7 +1,7 @@
 /*------------------------------------------------------*/
 /*      UNIVERSITY OF TECHNOLOGY HO CHI MINH CITY       */
 /*          FACULTY OF INFORMATION TECHNOLOGY           */
-/*               THE CRACKING PROGRAM FILE              */
+/*           THE INSTALL KEY GENERATION FILE            */
 /*            Author : NGUYEN NGOC VAN                  */
 /*             Class : 00DTH1                           */
 /*      Student Code : 00DTH201                         */

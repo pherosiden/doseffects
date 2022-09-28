@@ -2311,7 +2311,7 @@ void checkDiskSpace()
     drawButton(34, 14, wATV, 9, sysMenu[0], 1, wFLT);
     moveMouse(38, 12);
 
-    if (freeSpace > 5) writeVRM(18, 13, 0x9C, sysInfo[35], 0);
+    if (freeSpace < 5) writeVRM(18, 13, 0x9C, sysInfo[35], 0);
 
     while (kbhit()) getch();
     do {
@@ -2330,7 +2330,7 @@ void checkDiskSpace()
         }
     } while (!isOK);
 
-    if (freeSpace > 5) cleanup();
+    if (freeSpace < 5) cleanup();
 }
 
 /*------------------------------------*/
