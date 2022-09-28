@@ -65,11 +65,11 @@ typedef struct {
     char        path[33];       // The installation path
 } REG_INFO;
 
-char szInstallPath[32];     // The installation path
+char szInstallPath[32];         // The installation path
 
-uint16_t numFiles = 0;      // Number of files in current directory
-uint16_t totalFiles = 0;    // Number files to read and write
-uint8_t bmAvalid = 0;       // Status of the mouse
+uint16_t numFiles = 0;          // Number of files in current directory
+uint16_t totalFiles = 0;        // Number files to read and write
+uint8_t bmAvalid = 0;           // Status of the mouse
 
 char **sysInfo, **sysMenu;
 uint16_t infoNum, menuNum;
@@ -1051,11 +1051,7 @@ void makePath(char *spath)
             next++;
         }
         
-        if (_access(sbuff, 0))
-        {
-            printf("mkdir:%s\n", sbuff);
-            _mkdir(sbuff);
-        }
+        if (_access(sbuff, 0)) _mkdir(sbuff);
     }
 }
 
@@ -1570,7 +1566,7 @@ void checkProductKey()
                         selUserName = 1;
                         selSerial = 0;
                         getScreenText(20, 10, 43, 9, szScreen);
-                        warningBox(20, 10, 60, 16, msgWarn, 1);
+                        warningBox(20, 10, 60, 16, msgWarn, sizeof(msgWarn) / sizeof(msgWarn[0]));
                         putScreenText(20, 10, 43, 9, szScreen);
                     }
                 }
@@ -1602,7 +1598,7 @@ void checkProductKey()
                     selUserName = 1;
                     selSerial = 0;
                     getScreenText(20, 10, 43, 9, szScreen);
-                    warningBox(20, 10, 60, 16, msgWarn, 1);
+                    warningBox(20, 10, 60, 16, msgWarn, sizeof(msgWarn) / sizeof(msgWarn[0]));
                     putScreenText(20, 10, 43, 9, szScreen);
                     showMouse();
                 }
@@ -1806,7 +1802,7 @@ void installProgram()
     }
 
     fillFrame(15, 6, 69, 21, 0xF6, 178);
-    warningBox(25, 10, 55, 16, msgCmp, 1);
+    warningBox(25, 10, 55, 16, msgCmp, sizeof(msgCmp) / sizeof(msgCmp[0]));
     
     _dos_freemem(segBuff);
     segBuff = 0;
@@ -2315,28 +2311,26 @@ void checkDiskSpace()
     drawButton(34, 14, wATV, 9, sysMenu[0], 1, wFLT);
     moveMouse(38, 12);
 
-    if (freeSpace < 5)
-    {
-        writeVRM(18, 13, 0x9C, sysInfo[35], 0);
+    if (freeSpace > 5) writeVRM(18, 13, 0x9C, sysInfo[35], 0);
 
-        while (kbhit()) getch();
-        do {
-            if (kbhit() || clickMouse(&bCol, &bRow))
+    while (kbhit()) getch();
+    do {
+        if (kbhit() || clickMouse(&bCol, &bRow))
+        {
+            if (kbhit() || (bRow == 14 && bCol >= 34 && bCol <= 41))
             {
-                if (kbhit() || (bRow == 14 && bCol >= 34 && bCol <= 41))
-                {
-                    isOK = 1;
-                    clearScreen(34, 14, 42, 15, 1);
-                    writeVRM(35, 14, wATV, sysMenu[0], wFLT);
-                    delay(60);
-                    drawButton(34, 14, wATV, 9, sysMenu[0], 1, wFLT);
-                }
-
-                if (bRow == 9 && bCol == 15 || bCol == 16) isOK = 1;
+                isOK = 1;
+                clearScreen(34, 14, 42, 15, 1);
+                writeVRM(35, 14, wATV, sysMenu[0], wFLT);
+                delay(60);
+                drawButton(34, 14, wATV, 9, sysMenu[0], 1, wFLT);
             }
-        } while (!isOK);
-        cleanup();
-    }
+
+            if (bRow == 9 && bCol == 15 || bCol == 16) isOK = 1;
+        }
+    } while (!isOK);
+
+    if (freeSpace > 5) cleanup();
 }
 
 /*------------------------------------*/
