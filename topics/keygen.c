@@ -34,14 +34,15 @@
 #define _FLT 	        0x75
 
 typedef struct {
-    uint16_t    key;        // Encode and decode key
-    uint16_t    regs;       // Register code
-    uint16_t    days;       // The number of days
-    uint16_t    magic;      // Validate license code
-    time_t      utime;      // Register timestamp
-    uint8_t     serial[20]; // License code
-    uint8_t     user[33];   // User name
-    char        path[33];   // The installation path
+    time_t      utime;          // Register timestamp
+    uint16_t    days;           // The number of days
+    uint16_t    key;            // Encryption key
+    uint16_t    magic;          // Validate installation key
+    uint16_t    verid;          // Validate license key
+    uint8_t     serial[20];     // Installation key
+    uint8_t     license[20];    // License key
+    uint8_t     user[33];       // User name
+    char        path[33];       // The installation path
 } REG_INFO;
 
 char scrBuff[1272] = {0};   // Screen buffer
@@ -766,7 +767,7 @@ void genSerialNumber(char *szUserName, char *CDKey)
     char cKey = 0;
     uint16_t col = 0, row = 0;
     uint16_t i = 0, len = 0, k = 0;
-
+        
     memset(&tmp, 0, sizeof(tmp));
 
     i = 0;
@@ -785,7 +786,8 @@ void genSerialNumber(char *szUserName, char *CDKey)
     fptr = fopen("register.dat", "wb");
     if (!fptr) return;
 
-    tmp.key = 100 + (rand() % 120);
+    len = strlen(szUserName);
+    for (i = 0; i < len; i++) tmp.key += szUserName[i];
 
     len = strlen(CDKey);
     for (i = 0; i < len; i++)

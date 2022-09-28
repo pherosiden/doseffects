@@ -25,14 +25,15 @@
 #define _wFLT           0x74
 
 typedef struct {
-    uint16_t    key;        // Encode and decode key
-    uint16_t    regs;       // Register code
-    uint16_t    days;       // The number of days
-    uint16_t    magic;      // Validate license code
-    time_t      utime;      // Register timestamp
-    uint8_t     serial[20]; // License code
-    uint8_t     user[33];   // User name
-    char        path[33];   // The installation path
+    time_t      utime;          // Register timestamp
+    uint16_t    days;           // The number of days
+    uint16_t    key;            // Encryption key
+    uint16_t    magic;          // Validate installation key
+    uint16_t    verid;          // Validate license key
+    uint8_t     serial[20];     // Installation key
+    uint8_t     license[20];    // License key
+    uint8_t     user[33];       // User name
+    char        path[33];       // The installation path
 } REG_INFO;
 
 uint8_t bmAvalid = 0;       // Status of the mouse
@@ -802,10 +803,11 @@ void fadeOut()
 /*----------------------------------------------*/
 /* Function : getDiskSerial                     */
 /* Purpose  : Get the disk serial number        */
-/* Expects  : (serial) output serial number     */
+/* Expects  : (drive) the drive letter          */
+/*            (serial) output serial number     */
 /* Returns  : Nothing                           */
 /*----------------------------------------------*/
-void getDiskSerial(char *serial, char drive)
+void getDiskSerial(char drive, char *serial)
 {
     FILE *fp;
     char sbuff[128];
@@ -828,34 +830,74 @@ void getDiskSerial(char *serial, char drive)
 }
 
 /*----------------------------------------------*/
-/* Function : initData                          */
-/* Purpose  : Initialize parameters for program */
-/* Expects  : Nothing                           */
-/* Returns  : Nothing                           */
+/* Function : encodeString                      */
+/* Purpose  : Generate encoded key              */
+/* Expects  : (user) input user name            */
+/* Returns  : The decoded key                   */
 /*----------------------------------------------*/
-void makeLicenseKey(char *user, char *serial, char *license)
+void encodeString(char *str, uint16_t key)
 {
-    char sbuff[22];
-    char cKey = 0;
-    int16_t i = 0, j = 0;
+    while (*str) *str++ += key;
+}
 
-    memset(sbuff, 0, sizeof(sbuff));
+/*----------------------------------------------*/
+/* Function : hexaString                        */
+/* Purpose  : Generate hexa string              */
+/* Expects  : (str) input user name             */
+/*            (out) output hexa string format   */
+/* Returns  : The decoded key                   */
+/*----------------------------------------------*/
+void hexaString(char *str, char *out)
+{
+    uint16_t i = 0, j = 0;
+    for (i = 0; i < strlen(str); i++)
+    {
+        sprintf(&out[j], "%.2d", str[i]);
+        j += 2;
+    }
+}
 
-    do {
-        cKey = 48 + (rand() % 49);
-        if (isdigit(cKey) || isupper(cKey)) sbuff[i++] = cKey;
-    } while (i < 10);
-    
-    sbuff[i] = '\0';
-    sbuff[4] = sbuff[9] = '-';
-    strcat(sbuff, serial);
+/*--------------------------------------*/
+/* Funtion : validLicense               */
+/* Purpose : Testing user serial number */
+/* Expects : Nothing                    */
+/* Returns : Nothing                    */
+/*--------------------------------------*/
+uint8_t validLicense(char *user, char *cdkey)
+{
+    FILE *fp;
+    REG_INFO regs;
 
-    i = 0;
-    while (*user) i += *user++;
+    char sbuff[30];
+    char hexstr[100];
+    uint16_t key = 0, i = 0;
 
-    j = 0;
-    while (sbuff[j]) sbuff[j++] += i;
-    strcpy(license, sbuff);
+    fp = fopen(sysInfo[21], "r+b");
+    if (!fp)
+    {
+        fprintf(stderr, sysInfo[22]);
+        cleanup();
+    }
+    fread(&regs, sizeof(REG_INFO), 1, fp);
+
+    while (*user) key += *user++;
+    getDiskSerial(regs.path[0], sbuff);
+    encodeString(sbuff, key);
+    hexaString(sbuff, hexstr);
+    if (!strcmp(hexstr, cdkey))
+    {
+        regs.key = key;
+        for (i = 0; i < strlen(sbuff); i++) regs.verid += sbuff[i];
+        regs.verid += regs.key;
+        strcpy(regs.license, sbuff);
+        rewind(fp);
+        fwrite(&regs, sizeof(regs), 1, fp);
+        fclose(fp);
+        return 1;
+    }
+
+    fclose(fp);
+    return 0;
 }
 
 /*----------------------------------------------*/
@@ -879,12 +921,8 @@ void initData()
 /*---------------------------------*/
 void registerForm()
 {
-    FILE *fptr;
-    REG_INFO regInfo;
-    
     char key = 0;
-    char regUser[33], regSerial[20];
-    char szUserName[33], szSerial[20];
+    char szUserName[33], szSerial[50];
 
     uint16_t col = 0, row = 0;
     uint8_t i = 0, j = 0, isASCII = 0, isOK = 0;
@@ -896,22 +934,8 @@ void registerForm()
     writeChar(36, 10, 0x4E, 26, 32);
     writeChar(36, 12, 0x4E, 26, 32);
 
-    fptr = fopen(sysInfo[21], "r+b");
-    if (!fptr)
-    {
-        fprintf(stderr, sysInfo[22]);
-        cleanup();
-    }
-
-    fread(&regInfo, sizeof(REG_INFO), 1, fptr);
-
     memset(szUserName, 0, sizeof(szUserName));
     memset(szSerial, 0, sizeof(szSerial));
-    memset(regSerial, 0, sizeof(regSerial));
-    memset(regUser, 0, sizeof(regUser));
-
-    for (i = 0; i < strlen(regInfo.user); i++) regUser[i] = regInfo.user[i] - regInfo.key;
-    for (i = 0; i < strlen(regInfo.serial); i++) regSerial[i] = regInfo.serial[i] - regInfo.key;
 
     setCursorSize(0x0B0A);
     drawButton(26, 15, wATV, 1, sysInfo[28], 1, wFLT);
@@ -1004,7 +1028,7 @@ void registerForm()
                 drawButton(26 + slc * 21, 15, wATV, 1, sysInfo[28 + slc], 1, wFLT);
                 if (!slc)
                 {
-                    if (!strcmp(regUser, szUserName) && !strcmp(regSerial, szSerial))
+                    if (validLicense(szUserName, szSerial))
                     {
                         isOK = 1;
                         writeVRM(30, 13, 0x1A, sysInfo[9], 0);
@@ -1018,7 +1042,6 @@ void registerForm()
                 }
                 else
                 {
-                    fclose(fptr);
                     cleanup();
                 }
                 break;
@@ -1036,7 +1059,7 @@ void registerForm()
                 delay(50);
                 drawButton(26, 15, wATV, 1, sysInfo[1], 1, wFLT);
 
-                if (!strcmp(regUser, szUserName) && !strcmp(regSerial, szSerial))
+                if (validLicense(szUserName, szSerial))
                 {
                     isOK = 1;
                     writeVRM(30, 13, 0x1A, sysInfo[9], 0);
@@ -1057,7 +1080,6 @@ void registerForm()
                 writeVRM(48, 15, wATV, sysInfo[4], wFLT);
                 delay(50);
                 drawButton(47, 15, wATV, 1, sysInfo[4], 1, wFLT);
-                fclose(fptr);
                 cleanup();
             }
 
@@ -1074,11 +1096,6 @@ void registerForm()
             }
         }
     } while (!isOK);
-
-    regInfo.regs = regInfo.magic + (rand() % 100) + 1;
-    rewind(fptr);
-    fwrite(&regInfo, sizeof(REG_INFO), 1, fptr);
-    fclose(fptr);
 }
 
 /*-------------------------------------*/
@@ -1200,6 +1217,8 @@ uint8_t isRegister()
 {
     FILE *fptr;
     REG_INFO regInfo;
+
+    char sbuff[22];
     uint16_t i = 0, magic = 0;
 
     fptr = fopen(sysInfo[21], "rb");
@@ -1207,14 +1226,21 @@ uint8_t isRegister()
     fread(&regInfo, sizeof(REG_INFO), 1, fptr);
     fclose(fptr);
 
-    for (i = 0; i < strlen(regInfo.user); i++) magic += regInfo.user[i];
-    for (i = 0; i < strlen(regInfo.serial); i++) magic += regInfo.serial[i];
+    if (!regInfo.verid || !strlen(regInfo.license)) return 0;
+
+    for (i = 0; i < strlen(regInfo.license); i++) magic += regInfo.license[i];
     magic += regInfo.key;
-    return (regInfo.regs > regInfo.magic) && (magic == regInfo.magic);
+
+    if (magic != regInfo.verid) return 0;
+
+    memset(sbuff, 0, sizeof(sbuff));
+    getDiskSerial(regInfo.path[0], sbuff);
+    encodeString(sbuff, regInfo.key);
+    return !strcmp(sbuff, regInfo.license);
 }
 
 /*--------------------------------------*/
-/* Funtion : licenseExpired               */
+/* Funtion : licenseExpired             */
 /* Purpose : Checking the period in use */
 /* Expects : Nothing                    */
 /* Returns : Nothing                    */

@@ -54,14 +54,15 @@
 #define RESET_ADR	    ((DOS_SEG << 16) | RESET_FLAG)
 
 typedef struct {
-    uint16_t    key;        // Encode and decode key
-    uint16_t    regs;       // Register code
-    uint16_t    days;       // The number of days
-    uint16_t    magic;      // Validate license code
-    time_t      utime;      // Register timestamp
-    uint8_t     serial[20]; // License code
-    uint8_t     user[33];   // User name
-    char        path[33];   // The installation path
+    time_t      utime;          // Register timestamp
+    uint16_t    days;           // The number of days
+    uint16_t    key;            // Encryption key
+    uint16_t    magic;          // Validate installation key
+    uint16_t    verid;          // Validate license key
+    uint8_t     serial[20];     // Installation key
+    uint8_t     license[20];    // License key
+    uint8_t     user[33];       // User name
+    char        path[33];       // The installation path
 } REG_INFO;
 
 char szInstallPath[32];     // The installation path
@@ -942,6 +943,17 @@ void fadeOut()
 }
 
 /*----------------------------------------------*/
+/* Function : encodeString                      */
+/* Purpose  : Generate encoded key              */
+/* Expects  : (user) input user name            */
+/* Returns  : The decoded key                   */
+/*----------------------------------------------*/
+void encodeString(char *str, uint16_t key)
+{
+    while (*str) *str++ += key;
+}
+
+/*----------------------------------------------*/
 /* Function : initData                          */
 /* Purpose  : Initialize parameters for program */
 /* Expects  : Nothing                           */
@@ -1315,6 +1327,37 @@ void warningBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], int
 }
 
 /*--------------------------------------*/
+/* Funtion : validProductKey            */
+/* Purpose : Testing user serial number */
+/* Expects : Nothing                    */
+/* Returns : Nothing                    */
+/*--------------------------------------*/
+uint8_t validProductKey(REG_INFO *regs, char *user, char *cdkey)
+{
+    uint16_t magic = 0, i = 0;
+    
+    for (i = 0; i < strlen(regs->user); i++) magic += regs->user[i];
+    for (i = 0; i < strlen(regs->serial); i++) magic += regs->serial[i];
+    magic += regs->key;
+
+    if (magic != regs->magic)
+    {
+        setBorder(47);
+        setCursorSize(0x2020);
+        clearScreen(1, 1, 80, 25, 1);
+        writeVRM(31, 10, 0x4F, sysInfo[11], 0);
+        writeVRM(20, 12, 0x1F, sysInfo[19], 0);
+        writeVRM(20, 13, 0x1F, sysInfo[25], 0);
+        getch();
+        cleanup();
+    }
+
+    encodeString(user, regs->key);
+    encodeString(cdkey, regs->key);
+    return !strcmp(user, regs->user) && !strcmp(cdkey, regs->serial);
+}
+
+/*--------------------------------------*/
 /* Funtion : checkProductKey            */
 /* Purpose : Testing user serial number */
 /* Expects : Nothing                    */
@@ -1324,7 +1367,6 @@ void checkProductKey()
 {
     FILE *fptr;
     REG_INFO regInfo;
-    uint16_t magic = 0;
     char szUserName[31], szSerial[20];
     uint8_t selUserName = 0, selSerial = 0;
     uint8_t i = 0, j = 0, isASCII = 0, isOK = 0;
@@ -1428,35 +1470,9 @@ void checkProductKey()
     fread(&regInfo, sizeof(REG_INFO), 1, fptr);
     fclose(fptr);
 
-    for (i = 0; i < strlen(regInfo.user); i++)
-    {
-        magic += regInfo.user[i];
-        regInfo.user[i] -= regInfo.key;
-    }
-    
-    for (i = 0; i < strlen(regInfo.serial); i++)
-    {
-        magic += regInfo.serial[i];
-        regInfo.serial[i] -= regInfo.key;
-    }
-    
-    magic += regInfo.key;
-
-    if (magic != regInfo.magic)
-    {
-        setBorder(47);
-        setCursorSize(0x2020);
-        clearScreen(1, 1, 80, 25, 1);
-        writeVRM(31, 10, 0x4F, sysInfo[11], 0);
-        writeVRM(20, 12, 0x1F, sysInfo[19], 0);
-        writeVRM(20, 13, 0x1F, sysInfo[25], 0);
-        getch();
-        cleanup();
-    }
-
     memset(szUserName, 0, sizeof(szUserName));
     memset(szSerial, 0, sizeof(szSerial));
-        
+
     setCursorSize(0x0B0A);
     setCursorPos(8, 15);
     drawButton(24, 21, wATV, 5, sysMenu[1], 1, wFLT);
@@ -1548,7 +1564,7 @@ void checkProductKey()
                 drawButton(24 + slc * 23, 21, wATV, 5, sysMenu[3 * slc + 1], 1, wFLT);
                 if (!slc)
                 {
-                    if (!strcmp(regInfo.user, szUserName) && !strcmp(regInfo.serial, szSerial)) isOK = 1;
+                    if (validProductKey(&regInfo, szUserName, szSerial)) isOK = 1;
                     else
                     {
                         selUserName = 1;
@@ -1580,7 +1596,7 @@ void checkProductKey()
                 delay(60);
                 drawButton(24, 21, wATV, 5, sysMenu[1], 1, wFLT);
 
-                if (!strcmp(regInfo.user, szUserName) && !strcmp(regInfo.serial, szSerial)) isOK = 1;
+                if (validProductKey(&regInfo, szUserName, szSerial)) isOK = 1;
                 else
                 {
                     selUserName = 1;
@@ -2144,7 +2160,7 @@ void updateProgram()
 {
     FILE *fp;
     REG_INFO regInfo;
-    char szPath[15];
+    char sbuff[22];
 
     fp = fopen(sysInfo[42], "r+b");
     if (!fp)
@@ -2161,7 +2177,7 @@ void updateProgram()
 
     strcat(szInstallPath, "\\");
     fread(&regInfo, sizeof(REG_INFO), 1, fp);
-    regInfo.regs = 0;
+
     regInfo.utime = time(0);
     regInfo.days = MAX_DAYS;
     strcpy(regInfo.path, szInstallPath);
@@ -2169,13 +2185,13 @@ void updateProgram()
     fwrite(&regInfo, sizeof(REG_INFO), 1, fp);
     fclose(fp);
 
-    strcpy(szPath, szInstallPath);
-    strcat(szPath, "keygen.com");
-    unlink(szPath);
+    strcpy(sbuff, szInstallPath);
+    strcat(sbuff, "keygen.com");
+    unlink(sbuff);
 
-    strcpy(szPath, szInstallPath);
-    strcat(szPath, "install.com");
-    unlink(szPath);
+    strcpy(sbuff, szInstallPath);
+    strcat(sbuff, "install.com");
+    unlink(sbuff);
 }
 
 /*--------------------------------------------*/
