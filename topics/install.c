@@ -57,11 +57,8 @@ typedef struct {
     time_t      utime;          // Register timestamp
     uint16_t    days;           // The number of days
     uint16_t    key;            // Encryption key
-    uint16_t    magic;          // Validate installation key
     uint16_t    verid;          // Validate license key
-    uint8_t     serial[20];     // Installation key
     uint8_t     license[20];    // License key
-    uint8_t     user[33];       // User name
     char        path[33];       // The installation path
 } REG_INFO;
 
@@ -1322,35 +1319,131 @@ void warningBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], int
     setCursorSize(oldCursor);
 }
 
+
+/*---------------------------------------*/
+/* Function : validUserName              */
+/* Mission  : Check user name is valid   */
+/* Expects  : (szUserName) the user name */
+/* Returns  : 1 for ok                   */
+/*            0 for invalid              */
+/*---------------------------------------*/
+uint8_t validUserName(char *szUserName)
+{
+    uint16_t i = 0, len = 0;
+
+    len = strlen(szUserName);
+    if (len < 5) return 0;
+
+    i = 0;
+    while (isspace(szUserName[i++]));
+    if (i >= len) return 0;
+
+    for (i = 0; i != len; i++)
+    {
+        if (!isalpha(szUserName[i]) && !isspace(szUserName[i])) return 0;
+    }
+
+    return 1;
+}
+
+/*----------------------------------------------*/
+/* Function : getDiskSerial                     */
+/* Purpose  : Get the disk serial number        */
+/* Expects  : (drive) the drive letter          */
+/*            (serial) output serial number     */
+/* Returns  : Nothing                           */
+/*----------------------------------------------*/
+void getDiskSerial(char drive, char *serial)
+{
+    FILE *fp;
+    char sbuff[128];
+    const char * term = "Volume Serial Number is ";
+
+    sprintf(sbuff, "vol %c: > .vol", drive);
+    system(sbuff);
+    delay(100);
+
+    fp = fopen(".vol", "rt");
+    if (!fp) return;
+
+    while (fgets(sbuff, 128, fp))
+    {
+        if (strstr(sbuff, term)) break;
+    }
+    
+    unlink(".vol");
+    strcpy(serial, &sbuff[strlen(term) + 1]);
+}
+
+/*----------------------------------------------*/
+/* Function : getEncryptKey                     */
+/* Purpose  : Generate encryption key           */
+/* Expects  : (str) input user name             */
+/* Returns  : encryption key                    */
+/*----------------------------------------------*/
+uint16_t getEncryptKey(char *str)
+{
+    uint16_t key = 0;
+    while (*str) key += *str++;
+    srand(key);
+    key += rand();
+    return key;
+}
+
+/*----------------------------------------------*/
+/* Function : makeProductKey                    */
+/* Purpose  : Generate license key              */
+/* Expects  : (key) input encryption key        */
+/*            (serial) input disk serial number */
+/*            (license) output license key      */
+/* Returns  : Nothing                           */
+/*----------------------------------------------*/
+void makeProductKey(uint16_t key, char *serial, char *license)
+{
+    char sbuff1[10];
+    char sbuff2[15];
+    uint16_t lo = 0, hi = 0;
+    uint16_t sum = 0, i = 0;
+
+    sscanf(serial, "%X-%X", &lo, &hi);
+    sprintf(sbuff1, "%.4X-%.4X", lo + key, hi + key);
+    for (i = 0; i < strlen(sbuff1); i++) sum += sbuff1[i];
+    sum += key;
+    sprintf(sbuff2, "%.4X-%s", sum, sbuff1);
+    sum = 0;
+    for (i = 0; i < strlen(sbuff2); i++) sum += sbuff2[i];
+    sum += key;
+    sprintf(license, "%.4X-%s", sum, sbuff2);
+}
+
+/*-----------------------------------------------*/
+/* Function : genProductKey                      */
+/* Mission  : Generate product installation key  */
+/* Expects  : (user) input user name             */
+/*            (cdkey) output product key         */
+/* Returns  : Nothing                            */
+/*-----------------------------------------------*/
+void genProductKey(char *user, char *cdkey)
+{
+    char serial[64];
+    uint16_t key = getEncryptKey(user);
+    getcwd(serial, 64);
+    getDiskSerial(serial[0], serial);
+    makeProductKey(key, serial, cdkey);
+}
+
 /*--------------------------------------*/
 /* Funtion : validProductKey            */
 /* Purpose : Testing user serial number */
 /* Expects : Nothing                    */
 /* Returns : Nothing                    */
 /*--------------------------------------*/
-uint8_t validProductKey(REG_INFO *regs, char *user, char *cdkey)
+uint8_t validProductKey(char *user, char *cdkey)
 {
-    uint16_t magic = 0, i = 0;
-    
-    for (i = 0; i < strlen(regs->user); i++) magic += regs->user[i];
-    for (i = 0; i < strlen(regs->serial); i++) magic += regs->serial[i];
-    magic += regs->key;
-
-    if (magic != regs->magic)
-    {
-        setBorder(47);
-        setCursorSize(0x2020);
-        clearScreen(1, 1, 80, 25, 1);
-        writeVRM(31, 10, 0x4F, sysInfo[11], 0);
-        writeVRM(20, 12, 0x1F, sysInfo[19], 0);
-        writeVRM(20, 13, 0x1F, sysInfo[25], 0);
-        getch();
-        cleanup();
-    }
-
-    encodeString(user, regs->key);
-    encodeString(cdkey, regs->key);
-    return !strcmp(user, regs->user) && !strcmp(cdkey, regs->serial);
+    char sbuff[20];
+    if (!validUserName(user)) return 0;
+    genProductKey(user, sbuff);
+    return !strcmp(sbuff, cdkey);
 }
 
 /*--------------------------------------*/
@@ -1361,8 +1454,6 @@ uint8_t validProductKey(REG_INFO *regs, char *user, char *cdkey)
 /*--------------------------------------*/
 void checkProductKey()
 {
-    FILE *fptr;
-    REG_INFO regInfo;
     char szUserName[31], szSerial[20];
     uint8_t selUserName = 0, selSerial = 0;
     uint8_t i = 0, j = 0, isASCII = 0, isOK = 0;
@@ -1449,22 +1540,6 @@ void checkProductKey()
             }
         }
     } while (!isOK);
-
-    fptr = fopen("register.dat", "rb");
-    if (!fptr)
-    {
-        setBorder(47);
-        setCursorSize(0x2020);
-        clearScreen(1, 1, 80, 25, 1);
-        writeVRM(31, 10, 0x4F, sysInfo[11], 0);
-        writeVRM(20, 12, 0x1F, sysInfo[19], 0);
-        writeVRM(20, 13, 0x1F, sysInfo[25], 0);
-        getch();
-        cleanup();
-    }
-
-    fread(&regInfo, sizeof(REG_INFO), 1, fptr);
-    fclose(fptr);
 
     memset(szUserName, 0, sizeof(szUserName));
     memset(szSerial, 0, sizeof(szSerial));
@@ -1560,7 +1635,7 @@ void checkProductKey()
                 drawButton(24 + slc * 23, 21, wATV, 5, sysMenu[3 * slc + 1], 1, wFLT);
                 if (!slc)
                 {
-                    if (validProductKey(&regInfo, szUserName, szSerial)) isOK = 1;
+                    if (validProductKey(szUserName, szSerial)) isOK = 1;
                     else
                     {
                         selUserName = 1;
@@ -1592,7 +1667,7 @@ void checkProductKey()
                 delay(60);
                 drawButton(24, 21, wATV, 5, sysMenu[1], 1, wFLT);
 
-                if (validProductKey(&regInfo, szUserName, szSerial)) isOK = 1;
+                if (validProductKey(szUserName, szSerial)) isOK = 1;
                 else
                 {
                     selUserName = 1;
@@ -1809,12 +1884,12 @@ void installProgram()
 }
 
 /*----------------------------------------------*/
-/* Funtion : restartProgram                     */
+/* Funtion : restartSystem                      */
 /* Purpose : Showing the restart system message */
 /* Expects : Nothing                            */
 /* Returns : Nothing                            */
 /*----------------------------------------------*/
-void restartProgram()
+void restartSystem()
 {
     char isOK = 0;
 
@@ -2157,8 +2232,8 @@ void updateProgram()
     FILE *fp;
     REG_INFO regInfo;
     char sbuff[22];
-
-    fp = fopen(sysInfo[42], "r+b");
+    
+    fp = fopen(sysInfo[42], "wb");
     if (!fp)
     {
         setBorder(47);
@@ -2172,22 +2247,11 @@ void updateProgram()
     }
 
     strcat(szInstallPath, "\\");
-    fread(&regInfo, sizeof(REG_INFO), 1, fp);
-
     regInfo.utime = time(0);
     regInfo.days = MAX_DAYS;
     strcpy(regInfo.path, szInstallPath);
-    rewind(fp);
     fwrite(&regInfo, sizeof(REG_INFO), 1, fp);
     fclose(fp);
-
-    strcpy(sbuff, szInstallPath);
-    strcat(sbuff, "keygen.com");
-    unlink(sbuff);
-
-    strcpy(sbuff, szInstallPath);
-    strcat(sbuff, "install.com");
-    unlink(sbuff);
 }
 
 /*--------------------------------------------*/
@@ -2349,7 +2413,7 @@ void startInstall()
     showRegisterInfo();
     fadeOut();
     system("readme");
-    restartProgram();
+    restartSystem();
 }
 
 /*---------------------------------------------*/
@@ -2645,6 +2709,7 @@ void showInstall()
 /* Expects : Nothing                         */
 /* Returns : Nothing                         */
 /*-------------------------------------------*/
+
 void main()
 {
     initData();

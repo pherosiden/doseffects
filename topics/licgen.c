@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
+#include <direct.h>
 
 #define SCR_WIDTH       160
 #define MASK_BG         0x08
@@ -33,18 +34,6 @@
 #define FLT 	        0xFC
 #define _ATV 	        0x78
 #define _FLT 	        0x75
-
-typedef struct {
-    time_t      utime;          // Register timestamp
-    uint16_t    days;           // The number of days
-    uint16_t    key;            // Encryption key
-    uint16_t    magic;          // Validate installation key
-    uint16_t    verid;          // Validate license key
-    uint8_t     serial[20];     // Installation key
-    uint8_t     license[20];    // License key
-    uint8_t     user[33];       // User name
-    char        path[33];       // The installation path
-} REG_INFO;
 
 char scrBuff[1272] = {0};   // Screen buffer
 uint8_t bmAvalid = 0;       // Status of the mouse
@@ -843,9 +832,10 @@ void makeLicenseKey(uint16_t key, char *serial, char *license)
 /*-----------------------------------------------*/
 void genLicenseKey(char *user, char *license)
 {
-    char serial[20];
+    char serial[64];
     uint16_t key = getEncryptKey(user);
-    getDiskSerial('C', serial);
+    getcwd(serial, 64);
+    getDiskSerial(serial[0], serial);
     makeLicenseKey(key, serial, license);
 }
 

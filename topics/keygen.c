@@ -1,7 +1,7 @@
 /*------------------------------------------------------*/
 /*      UNIVERSITY OF TECHNOLOGY HO CHI MINH CITY       */
 /*          FACULTY OF INFORMATION TECHNOLOGY           */
-/*           THE INSTALL KEY GENERATION FILE            */
+/*             THE LICENSE GENERATION FILE              */
 /*            Author : NGUYEN NGOC VAN                  */
 /*             Class : 00DTH1                           */
 /*      Student Code : 00DTH201                         */
@@ -10,6 +10,7 @@
 /*       Last Update : 12/11/2001                       */
 /*------------------------------------------------------*/
 #include <dos.h>
+#include <io.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <conio.h>
@@ -17,6 +18,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
+#include <direct.h>
 
 #define SCR_WIDTH       160
 #define MASK_BG         0x08
@@ -32,18 +34,6 @@
 #define FLT 	        0xFC
 #define _ATV 	        0x78
 #define _FLT 	        0x75
-
-typedef struct {
-    time_t      utime;          // Register timestamp
-    uint16_t    days;           // The number of days
-    uint16_t    key;            // Encryption key
-    uint16_t    magic;          // Validate installation key
-    uint16_t    verid;          // Validate license key
-    uint8_t     serial[20];     // Installation key
-    uint8_t     license[20];    // License key
-    uint8_t     user[33];       // User name
-    char        path[33];       // The installation path
-} REG_INFO;
 
 char scrBuff[1272] = {0};   // Screen buffer
 uint8_t bmAvalid = 0;       // Status of the mouse
@@ -753,59 +743,101 @@ uint8_t validUserName(char *szUserName)
     return 1;
 }
 
+/*----------------------------------------------*/
+/* Function : getDiskSerial                     */
+/* Purpose  : Get the disk serial number        */
+/* Expects  : (drive) the drive letter          */
+/*            (serial) output serial number     */
+/* Returns  : Nothing                           */
+/*----------------------------------------------*/
+void getDiskSerial(char drive, char *serial)
+{
+    FILE *fp;
+    char sbuff[128];
+    const char * term = "Volume Serial Number is ";
+
+    sprintf(sbuff, "vol %c: > .vol", drive);
+    system(sbuff);
+    delay(100);
+
+    fp = fopen(".vol", "rt");
+    if (!fp) return;
+
+    while (fgets(sbuff, 128, fp))
+    {
+        if (strstr(sbuff, term)) break;
+    }
+    
+    unlink(".vol");
+    strcpy(serial, &sbuff[strlen(term) + 1]);
+}
+
+/*----------------------------------------------*/
+/* Function : encodeString                      */
+/* Purpose  : Generate encoded key              */
+/* Expects  : (user) input user name            */
+/* Returns  : The decoded key                   */
+/*----------------------------------------------*/
+void encodeString(char *str, uint16_t key)
+{
+    while (*str) *str++ += key;
+}
+
+/*----------------------------------------------*/
+/* Function : getEncryptKey                     */
+/* Purpose  : Generate encryption key           */
+/* Expects  : (str) input user name             */
+/* Returns  : encryption key                    */
+/*----------------------------------------------*/
+uint16_t getEncryptKey(char *str)
+{
+    uint16_t key = 0;
+    while (*str) key += *str++;
+    srand(key);
+    key += rand();
+    return key;
+}
+
+/*----------------------------------------------*/
+/* Function : makeLicenseKey                    */
+/* Purpose  : Generate license key              */
+/* Expects  : (key) input encryption key        */
+/*            (serial) input disk serial number */
+/*            (license) output license key      */
+/* Returns  : Nothing                           */
+/*----------------------------------------------*/
+void makeLicenseKey(uint16_t key, char *serial, char *license)
+{
+    char sbuff1[10];
+    char sbuff2[15];
+    uint16_t lo = 0, hi = 0;
+    uint16_t sum = 0, i = 0;
+
+    sscanf(serial, "%X-%X", &lo, &hi);
+    sprintf(sbuff1, "%.4X-%.4X", lo + key, hi + key);
+    for (i = 0; i < strlen(sbuff1); i++) sum += sbuff1[i];
+    sum += key;
+    sprintf(sbuff2, "%.4X-%s", sum, sbuff1);
+    sum = 0;
+    for (i = 0; i < strlen(sbuff2); i++) sum += sbuff2[i];
+    sum += key;
+    sprintf(license, "%.4X-%s", sum, sbuff2);
+}
+
 /*-----------------------------------------------*/
-/* Function : genSerialNumber                    */
+/* Function : genProductKey                      */
 /* Mission  : Generate product installation key  */
 /* Expects  : (szUserName) input user name       */
 /*             (CDKey) output product key        */
 /* Returns  : Nothing                            */
 /*-----------------------------------------------*/
-void genSerialNumber(char *szUserName, char *CDKey)
+void genProductKey(char *user, char *license)
 {
-    FILE *fptr;
-    REG_INFO tmp;
-    char cKey = 0;
-    uint16_t col = 0, row = 0;
-    uint16_t i = 0, len = 0, k = 0;
-        
-    memset(&tmp, 0, sizeof(tmp));
-
-    i = 0;
-    do {
-        cKey = 48 + (rand() % 49);
-        if (isdigit(cKey) || isupper(cKey)) CDKey[i++] = cKey;
-    } while (i < 19);
-    
-    CDKey[i] = '\0';
-
-    for (i = 0; i < strlen(CDKey) - 1; i++)
-    {
-        if (!((i + 1) % 5)) CDKey[i] = 45;
-    }
-    
-    fptr = fopen("register.dat", "wb");
-    if (!fptr) return;
-
-    len = strlen(szUserName);
-    for (i = 0; i < len; i++) tmp.key += szUserName[i];
-
-    len = strlen(CDKey);
-    for (i = 0; i < len; i++)
-    {
-        tmp.serial[i] = CDKey[i] + tmp.key;
-        tmp.magic += tmp.serial[i];
-    }
-    
-    len = strlen(szUserName);
-    for (i = 0; i < len; i++)
-    {
-        tmp.user[i] = szUserName[i] + tmp.key;
-        tmp.magic += tmp.user[i];
-    }
-    
-    tmp.magic += tmp.key;
-    fwrite(&tmp, sizeof(tmp), 1, fptr);
-    fclose(fptr);
+    char serial[64];
+    uint16_t key = getEncryptKey(user);
+    getcwd(serial, 64);
+    getDiskSerial(serial[0], serial);
+    makeLicenseKey(key, serial, license);
 }
 
 /*-------------------------------------------------*/
@@ -830,8 +862,8 @@ void startCracking()
         "Hu7o71ng da64n la61y ma4 so61",
         "Ba5n ca62n nha65p te6n cu3a ba5n va2o o6 thu71 nha61t va2 nha61n",
         "nu1t La61y ma4 o73 phi1a be6n pha3i. Ba5n se4 nha65n d9u7o75c ma4",
-        "so61 ca2i d9a85t o73 o6 thu71 hai be6n du7o71i. Ba5n co1 the63 ghi",
-        "ma4 so61 na2y va2o gia61y  d9e63 tie61n ha2nh ca2i d9a85t chu7o7ng",
+        "so61 d9a8ng ky1 o73 o6 thu71 hai be6n du7o71i. Ba5n co1 the63 ghi",
+        "ma4 so61 na2y va2o gia61y  d9e63 tie61n ha2nh d9a8ng ky1 chu7o7ng",
         "tri2nh. Nha61n va2o nu1t Ke61t thu1c d9e63 thoa1t.",
         "  ~D9o62ng y1  ",
         "Te6n kho6ng ho75p le65!"
@@ -909,7 +941,7 @@ void startCracking()
                     if (validUserName(szUserName))
                     {
                         setCursorSize(0x2020);
-                        genSerialNumber(szUserName, CDKey);
+                        genProductKey(szUserName, CDKey);
                         writeVRM(18, 12, 0x1E, CDKey, 0);
                     }
                     else
@@ -968,7 +1000,7 @@ void startCracking()
                 if (validUserName(szUserName))
                 {
                     setCursorSize(0x2020);
-                    genSerialNumber(szUserName, CDKey);
+                    genProductKey(szUserName, CDKey);
                     writeVRM(18, 12, 0x1E, CDKey, 0);
                 }
                 else
@@ -1038,9 +1070,9 @@ void main()
     int16_t i = 0;
     char cKey = 0;
     char *szMenu[] = {
-        "La61y ma4 ca2i d9a85t",
+        "La61y ma4 d9a8ng ky1",
         "Nha65p te6n cu3a ba5n",
-        "Ma4 so61 ca2i d9a85t",
+        "Ma4 so61 d9a8ng ky1",
     };
     
     system("font on");
