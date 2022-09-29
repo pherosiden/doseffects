@@ -352,8 +352,8 @@ void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr)
 {
     drawFrame(x1, y1, x2, y2, attr);
     fillFrame(x1 + 1, y1 + 1, x2 - 1, y2 - 1, attr, 32);
-    changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, 0x08);
-    changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, 0x08);
+    changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, MASK_BG);
+    changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, MASK_BG);
 }
 
 /*----------------------------------------------*/
@@ -369,7 +369,7 @@ void shadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr, cha
 {
     const uint8_t bkc = attr << 4;
     const char styles[] = {229, 252, 0};
-    const uint16_t center = ((x2 - x1) >> 1) - (strlen(title) >> 1);
+    const uint16_t center = (x2 - x1 - strlen(title)) >> 1;
     changeAttrib(x2 + 1, y1 + 1, x2 + 2, y2 + 1, MASK_BG);
     changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, MASK_BG);
     drawBox(x1, y1, x2, y2, attr);
