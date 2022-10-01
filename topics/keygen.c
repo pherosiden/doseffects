@@ -859,16 +859,16 @@ void startCracking()
     };
 
     char *szHelp[] = {
-        "Hu7o71ng da64n la61y ma4 so61",
+        "Hu7o71ng da64n la61y ma4 ca2i d9a85t",
         "Ba5n ca62n nha65p te6n cu3a ba5n va2o o6 thu71 nha61t va2 nha61n",
         "nu1t La61y ma4 o73 phi1a be6n pha3i. Ba5n se4 nha65n d9u7o75c ma4",
-        "so61 d9a8ng ky1 o73 o6 thu71 hai be6n du7o71i. Ba5n co1 the63 ghi",
+        "so61 ca2i d9a85t o73 o6 thu71 hai be6n du7o71i. Ba5n co1 the63 ghi",
         "ma4 so61 na2y va2o gia61y  d9e63 tie61n ha2nh d9a8ng ky1 chu7o7ng",
         "tri2nh. Nha61n va2o nu1t Ke61t thu1c d9e63 thoa1t.",
         "  ~D9o62ng y1  ",
         "Te6n kho6ng ho75p le65!"
     };
-        
+
     uint16_t k = 0, i = 0;
     uint16_t bCol = 0, bRow = 0;
     uint8_t bSlc = 0, isASCII = 1, noUserName = 0;
@@ -1070,9 +1070,9 @@ void main()
     int16_t i = 0;
     char cKey = 0;
     char *szMenu[] = {
-        "La61y ma4 d9a8ng ky1",
-        "Nha65p te6n cu3a ba5n",
-        "Ma4 so61 d9a8ng ky1",
+        "La61y ma4 ca2i d9a85t",
+        "Nha65p ho5 va2 te6n",
+        "Ma4 so61 ca2i d9a85t",
     };
     
     system("font on");

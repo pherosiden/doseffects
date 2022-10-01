@@ -25,6 +25,8 @@
 #define SCR_WIDTH       160
 #define MASK_BG         0x08
 #define OFFSET(x, y)    (((x - 1) + (y - 1) * 80) << 1)
+
+#define INST_DIR        "B:\\INSTALL"
 #define PROG_DIR        "C:\\TOPICS\\*.*"
 
 #define UP              72
@@ -2026,7 +2028,7 @@ void chooseDrive()
     moveMouse(38, 11);
 
     slc = chs = key = 0;
-    strcpy(szInstallPath, "B:\\INSTALL");
+    strcpy(szInstallPath, INST_DIR);
     writeVRM(29, 12 + slc, 0x3F, sysMenu[12 + slc], 0x3E);
     
     while (kbhit()) getch();

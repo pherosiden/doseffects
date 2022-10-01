@@ -1068,9 +1068,10 @@ void main()
 {
     int16_t i = 0;
     char cKey = 0;
+    
     char *szMenu[] = {
         "La61y ma4 d9a8ng ky1",
-        "Nha65p te6n cu3a ba5n",
+        "Nha65p ho5 va2 te6n",
         "Ma4 so61 d9a8ng ky1",
     };
     
