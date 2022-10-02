@@ -36,7 +36,9 @@ typedef struct {
 } regs_t;
 
 typedef struct {
-    int16_t day, month, year;
+    uint16_t day;               // day of month [1..31]
+    uint16_t month;             // month of year [1..12]
+    uint16_t year;              // year since 1980
 } date_t;
 
 uint8_t bmAvalid = 0;           // Status of the mouse
@@ -106,7 +108,7 @@ void printChar(uint8_t x, uint8_t y, uint8_t attr, char chr)
 /* Funtion : writeChar                            */
 /* Purpose : Writting a character with attribute  */
 /* Expects : (x,y) cordinate to write a character */
-/*           (attr) attribute of character       */
+/*           (attr) attribute of character        */
 /*           (bLen) length area                   */
 /*           (Chr) symbol needs to write          */
 /* Returns : Nothing                              */
@@ -120,7 +122,7 @@ void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 }
 
 /*-----------------------------------------------*/
-/* Function : writeVRM                           */
+/* Function : writeText                          */
 /* Purpose  : Writing a character with attribute */
 /* Notices  : Intervention in video memory       */
 /* Expects  : (x,y) cordinate needs to writting  */
@@ -129,7 +131,7 @@ void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 /*            (lets) The attr of first letter    */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void writeVRM(uint8_t x, uint8_t y, uint8_t attr, const char *str, uint8_t lets)
+void writeText(uint8_t x, uint8_t y, uint8_t attr, const char *str, uint8_t lets)
 {
     uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
 
@@ -178,13 +180,13 @@ void drawButton(uint8_t x, uint8_t y, uint8_t attr, uint8_t bkc, const char *tit
     {
         if (lets)
         {
-            writeVRM(x, y, attr, title, lets);
+            writeText(x, y, attr, title, lets);
             writeChar(x + 1, y + 1, bka, len - 1, styles[2]);
             writeChar(x + len - 1, y, bka, 1, styles[3]);
         }
         else
         {
-            writeVRM(x, y, attr, title, 0);
+            writeText(x, y, attr, title, 0);
             writeChar(x + 1, y + 1, bka, len, styles[2]);
             writeChar(x + len, y, bka, 1, styles[3]);
         }
@@ -193,7 +195,7 @@ void drawButton(uint8_t x, uint8_t y, uint8_t attr, uint8_t bkc, const char *tit
     {
         if (lets)
         {
-            writeVRM(x, y, attr, title, lets);
+            writeText(x, y, attr, title, lets);
             printChar(x, y, attr, styles[0]);
             printChar(x + len - 2, y, attr, styles[1]);
             writeChar(x + 1, y + 1, bka, len - 1, styles[2]);
@@ -201,7 +203,7 @@ void drawButton(uint8_t x, uint8_t y, uint8_t attr, uint8_t bkc, const char *tit
         }
         else
         {
-            writeVRM(x, y, attr, title, 0);
+            writeText(x, y, attr, title, 0);
             printChar(x, y, attr, styles[0]);
             printChar(x + len - 1, y, attr, styles[1]);
             writeChar(x + 1, y + 1, bka, len, styles[2]);
@@ -359,9 +361,9 @@ void shadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr, cha
     changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, MASK_BG);
     drawBox(x1, y1, x2, y2, attr);
     writeChar(x1 + 3, y1, bkc, x2 - x1 - 2, 32);
-    writeVRM(x1 + center, y1, bkc, title, 0);
+    writeText(x1 + center, y1, bkc, title, 0);
     printChar(x1 + 2, y1, bkc, 226);
-    writeVRM(x1, y1, bkc >> 4, styles, 0);
+    writeText(x1, y1, bkc >> 4, styles, 0);
 }
 
 /*----------------------------------*/
@@ -397,32 +399,6 @@ uint16_t clickMouse(uint16_t *col, uint16_t *row)
     *col = (regs.x.cx >> 3) + 1;
     *row = (regs.x.dx >> 3) + 1;
     return regs.x.bx == 1;
-}
-
-/*-----------------------------------*/
-/* Function : hideMouse              */
-/* Purpose  : Hide the mouse pointer */
-/* Expects  : Nothing                */
-/* Returns  : Nothing                */
-/*-----------------------------------*/
-void hideMouse()
-{
-    union REGS regs;
-    regs.x.ax = 0x02;
-    int86(0x33, &regs, &regs);
-}
-
-/*--------------------------------------*/
-/* Function : showMouse                 */
-/* Purpose  : Showing the mouse pointer */
-/* Expects  : Nothing                   */
-/* Returns  : Nothing                   */
-/*--------------------------------------*/
-void showMouse()
-{
-    union REGS regs;
-    regs.x.ax = 0x01;
-    int86(0x33, &regs, &regs);
 }
 
 /*--------------------------------------------*/
@@ -471,7 +447,6 @@ void moveMouse(uint16_t x, uint16_t y)
 void closeMouse()
 {
     union REGS regs;
-    hideMouse();
     regs.x.ax = 0;
     int86(0x33, &regs, &regs);
 }
@@ -935,12 +910,12 @@ int16_t countLeapYears(date_t d)
 }
 
 /*----------------------------------------------*/
-/* Function : diffDate                          */
+/* Function : diffDays                          */
 /* Purpose  : Difference days between two dates */
 /* Expects  : (dt1, dt2) The date_t struct      */
 /* Returns  : Number of days                    */
 /*----------------------------------------------*/
-int16_t diffDate(date_t dt1, date_t dt2)
+int16_t diffDays(date_t dt1, date_t dt2)
 {
     int16_t i;
     size_t n1, n2;
@@ -979,15 +954,15 @@ void initData()
 void registerForm()
 {
     char key = 0;
-    char szUserName[33], szSerial[50];
+    char szUserName[33], szSerial[22];
 
     uint16_t col = 0, row = 0;
     uint8_t i = 0, j = 0, isASCII = 0, isOK = 0;
     uint8_t selUserName = 0, selSerial = 0, slc = 0;
         
     shadowBox(20, 8, 65, 17, 0x1F, sysInfo[27]);
-    writeVRM(23, 10, 0x1F, sysInfo[5], 0);
-    writeVRM(23, 12, 0x1F, sysInfo[6], 0);
+    writeText(23, 10, 0x1F, sysInfo[5], 0);
+    writeText(23, 12, 0x1F, sysInfo[6], 0);
     writeChar(36, 10, 0x4E, 26, 32);
     writeChar(36, 12, 0x4E, 26, 32);
 
@@ -1080,7 +1055,7 @@ void registerForm()
                 break;
             case ENTER:
                 clearScreen(26 + slc * 21, 15, 36 + slc * 21, 16, 1);
-                writeVRM(27 + slc * 21, 15, wATV, sysInfo[28 + slc], wFLT);
+                writeText(27 + slc * 21, 15, wATV, sysInfo[28 + slc], wFLT);
                 delay(50);
                 drawButton(26 + slc * 21, 15, wATV, 1, sysInfo[28 + slc], 1, wFLT);
                 if (!slc)
@@ -1088,13 +1063,13 @@ void registerForm()
                     if (validLicense(szUserName, szSerial))
                     {
                         isOK = 1;
-                        writeVRM(30, 13, 0x1A, sysInfo[9], 0);
+                        writeText(30, 13, 0x1A, sysInfo[9], 0);
                     }
                     else
                     {
                         selUserName = 1;
                         selSerial = 0;
-                        writeVRM(30, 13, 0x1A, sysInfo[10], 0);
+                        writeText(30, 13, 0x1A, sysInfo[10], 0);
                     }                    
                 }
                 else
@@ -1112,20 +1087,20 @@ void registerForm()
                 slc = 0;
                 drawButton(47, 15, _wATV, 1, sysInfo[4], 1, _wFLT);
                 clearScreen(26, 15, 36, 16, 1);
-                writeVRM(27, 15, wATV, sysInfo[1], wFLT);
+                writeText(27, 15, wATV, sysInfo[1], wFLT);
                 delay(50);
                 drawButton(26, 15, wATV, 1, sysInfo[1], 1, wFLT);
 
                 if (validLicense(szUserName, szSerial))
                 {
                     isOK = 1;
-                    writeVRM(30, 13, 0x1A, sysInfo[9], 0);
+                    writeText(30, 13, 0x1A, sysInfo[9], 0);
                 }
                 else
                 {
                     selUserName = 1;
                     selSerial = 0;
-                    writeVRM(30, 13, 0x1A, sysInfo[10], 0);
+                    writeText(30, 13, 0x1A, sysInfo[10], 0);
                 }
             }
 
@@ -1134,7 +1109,7 @@ void registerForm()
                 slc = 1;
                 drawButton(26, 15, _wATV, 1, sysInfo[1], 1, _wFLT);
                 clearScreen(47, 15, 59, 16, 1);
-                writeVRM(48, 15, wATV, sysInfo[4], wFLT);
+                writeText(48, 15, wATV, sysInfo[4], wFLT);
                 delay(50);
                 drawButton(47, 15, wATV, 1, sysInfo[4], 1, wFLT);
                 cleanup();
@@ -1191,7 +1166,7 @@ void menuRegister()
             case ENTER:
                 isOK = 1;
                 clearScreen(22 + pos * 25, 20, 34 + pos * 25, 21, 5);
-                writeVRM(23 + pos * 25, 20, wATV, sysInfo[25 + pos], wFLT);
+                writeText(23 + pos * 25, 20, wATV, sysInfo[25 + pos], wFLT);
                 delay(50);
                 drawButton(22 + pos * 25, 20, wATV, 5, sysInfo[25 + pos], 1, wFLT);
                 break;
@@ -1206,7 +1181,7 @@ void menuRegister()
                 isOK = 1;
                 drawButton(47, 20, _wATV, 5, sysInfo[26], 1, _wFLT);
                 clearScreen(22, 20, 34, 21, 5);
-                writeVRM(23, 20, wATV, sysInfo[25], wFLT);
+                writeText(23, 20, wATV, sysInfo[25], wFLT);
                 delay(50);
                 drawButton(22, 20, wATV, 5, sysInfo[25], 1, wFLT);
             }
@@ -1217,7 +1192,7 @@ void menuRegister()
                 isOK = 1;
                 drawButton(22, 20, _wATV, 5, sysInfo[25], 1, _wFLT);
                 clearScreen(47, 20, 58, 21, 5);
-                writeVRM(48, 20, wATV, sysInfo[26], wFLT);
+                writeText(48, 20, wATV, sysInfo[26], wFLT);
                 delay(50);
                 drawButton(47, 20, wATV, 5, sysInfo[26], 1, wFLT);
             }
@@ -1248,19 +1223,19 @@ void startRegister()
     setBlinking(0);
     fillFrame(1, 1, 80, 25, 0xFD, 178);
     shadowBox(3, 3, 77, 22, 0x5F, sysInfo[0]);
-    writeVRM(8, 5, 0x5E, sysInfo[1], 0);
-    writeVRM(15, 6, 0x5E, sysInfo[2], 0);
-    writeVRM(5, 8, 0x5F, sysInfo[3], 0);
-    writeVRM(5, 9, 0x5F, sysInfo[4], 0);
-    writeVRM(5, 10, 0x5F, sysInfo[12], 0);
-    writeVRM(5, 11, 0x5F, sysInfo[13], 0);
-    writeVRM(15, 12, 0x5A, sysInfo[14], 0);
-    writeVRM(15, 13, 0x5A, sysInfo[15], 0);
-    writeVRM(15, 14, 0x5A, sysInfo[16], 0);
-    writeVRM(5, 15, 0x5F, sysInfo[17], 0);
-    writeVRM(5, 16, 0x5F, sysInfo[18], 0);
-    writeVRM(5, 17, 0x5F, sysInfo[19], 0);
-    writeVRM(7, 18, 0x5E, sysInfo[20], 0);
+    writeText(8, 5, 0x5E, sysInfo[1], 0);
+    writeText(15, 6, 0x5E, sysInfo[2], 0);
+    writeText(5, 8, 0x5F, sysInfo[3], 0);
+    writeText(5, 9, 0x5F, sysInfo[4], 0);
+    writeText(5, 10, 0x5F, sysInfo[12], 0);
+    writeText(5, 11, 0x5F, sysInfo[13], 0);
+    writeText(15, 12, 0x5A, sysInfo[14], 0);
+    writeText(15, 13, 0x5A, sysInfo[15], 0);
+    writeText(15, 14, 0x5A, sysInfo[16], 0);
+    writeText(5, 15, 0x5F, sysInfo[17], 0);
+    writeText(5, 16, 0x5F, sysInfo[18], 0);
+    writeText(5, 17, 0x5F, sysInfo[19], 0);
+    writeText(7, 18, 0x5E, sysInfo[20], 0);
     menuRegister();
 }
 
@@ -1307,14 +1282,12 @@ uint8_t isRegister()
 /*--------------------------------------*/
 void checkExpired()
 {
-    char szPath[33];
-    uint16_t diff;
     FILE *fptr;
+    char szPath[33];
     regs_t regInfo;
     date_t dt1, dt2;
     struct dosdate_t date;
     
-    strcpy(szPath, sysInfo[24]);
     fptr = fopen(sysInfo[21], "rb");
     if (!fptr)
     {
@@ -1324,22 +1297,20 @@ void checkExpired()
 
     fread(&regInfo, sizeof(regs_t), 1, fptr);
     fclose(fptr);
-
+    
     strcpy(szPath, regInfo.path);
     strcat(szPath, sysInfo[24]);
 
     _dos_getdate(&date);
-    
-    dt1.year = regInfo.year;
-    dt1.month = regInfo.month;
-    dt1.day = regInfo.day;
-    
     dt2.year = date.year;
     dt2.month = date.month;
     dt2.day = date.day;
+   
+    dt1.year = regInfo.year;
+    dt1.month = regInfo.month;
+    dt1.day = regInfo.day;
 
-    diff = diffDate(dt1, dt2);
-    if (diff > regInfo.days)
+    if (diffDays(dt1, dt2) > regInfo.days)
     {
         system(szPath);
         cleanup();

@@ -115,7 +115,7 @@ void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 }
 
 /*-----------------------------------------------*/
-/* Function : writeVRM                           */
+/* Function : writeText                          */
 /* Purpose  : Writing a character with attribute */
 /* Notices  : Intervention in video memory       */
 /* Expects  : (x,y) cordinate needs to writting  */
@@ -124,7 +124,7 @@ void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 /*            (lets) The attr of first letter    */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void writeVRM(uint8_t x, uint8_t y, uint8_t attr, const char *str, uint8_t lets)
+void writeText(uint8_t x, uint8_t y, uint8_t attr, const char *str, uint8_t lets)
 {
     uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
 
@@ -173,13 +173,13 @@ void drawButton(uint8_t x, uint8_t y, uint8_t attr, uint8_t bkc, const char *tit
     {
         if (lets)
         {
-            writeVRM(x, y, attr, title, lets);
+            writeText(x, y, attr, title, lets);
             writeChar(x + 1, y + 1, bka, len - 1, styles[2]);
             writeChar(x + len - 1, y, bka, 1, styles[3]);
         }
         else
         {
-            writeVRM(x, y, attr, title, 0);
+            writeText(x, y, attr, title, 0);
             writeChar(x + 1, y + 1, bka, len, styles[2]);
             writeChar(x + len, y, bka, 1, styles[3]);
         }
@@ -188,7 +188,7 @@ void drawButton(uint8_t x, uint8_t y, uint8_t attr, uint8_t bkc, const char *tit
     {
         if (lets)
         {
-            writeVRM(x, y, attr, title, lets);
+            writeText(x, y, attr, title, lets);
             printChar(x, y, attr, styles[0]);
             printChar(x + len - 2, y, attr, styles[1]);
             writeChar(x + 1, y + 1, bka, len - 1, styles[2]);
@@ -196,7 +196,7 @@ void drawButton(uint8_t x, uint8_t y, uint8_t attr, uint8_t bkc, const char *tit
         }
         else
         {
-            writeVRM(x, y, attr, title, 0);
+            writeText(x, y, attr, title, 0);
             printChar(x, y, attr, styles[0]);
             printChar(x + len - 1, y, attr, styles[1]);
             writeChar(x + 1, y + 1, bka, len, styles[2]);
@@ -355,9 +355,9 @@ void shadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t bka, char
     changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, MASK_BG);
     drawBox(x1, y1, x2, y2, bka);
     writeChar(x1 + 3, y1, bkc, x2 - x1 - 2, 32);
-    writeVRM(x1 + center, y1, bkc, title, 0);
+    writeText(x1 + center, y1, bkc, title, 0);
     printChar(x1 + 2, y1, bkc, 226);
-    writeVRM(x1, y1, bkc >> 4, styles, 0);
+    writeText(x1, y1, bkc >> 4, styles, 0);
 }
 
 /*----------------------------------*/
@@ -393,32 +393,6 @@ uint8_t clickMouse(uint16_t *col, uint16_t *row)
     *col = (regs.x.cx >> 3) + 1;
     *row = (regs.x.dx >> 3) + 1;
     return regs.x.bx == 1;
-}
-
-/*-----------------------------------*/
-/* Function : hideMouse              */
-/* Purpose  : Hide the mouse pointer */
-/* Expects  : Nothing                */
-/* Returns  : Nothing                */
-/*-----------------------------------*/
-void hideMouse()
-{
-    union REGS regs;
-    regs.x.ax = 0x02;
-    int86(0x33, &regs, &regs);
-}
-
-/*--------------------------------------*/
-/* Function : showMouse                 */
-/* Purpose  : Showing the mouse pointer */
-/* Expects  : Nothing                   */
-/* Returns  : Nothing                   */
-/*--------------------------------------*/
-void showMouse()
-{
-    union REGS regs;
-    regs.x.ax = 0x01;
-    int86(0x33, &regs, &regs);
 }
 
 /*--------------------------------------------*/
@@ -467,7 +441,6 @@ void moveMouse(uint16_t x, uint16_t y)
 void closeMouse()
 {
     union REGS regs;
-    hideMouse();
     regs.x.ax = 0;
     int86(0x33, &regs, &regs);
 }
@@ -931,7 +904,7 @@ void startCracking()
                 break;
             case ENTER:
                 clearScreen(51, 8 + bSlc * 2, 64, 9 + bSlc * 2, 3);
-                writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
+                writeText(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
                 delay(60);
                 drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
                 switch (bSlc)
@@ -941,24 +914,24 @@ void startCracking()
                     {
                         setCursorSize(0x2020);
                         genLicenseKey(szUserName, CDKey);
-                        writeVRM(18, 12, 0x1E, CDKey, 0);
+                        writeText(18, 12, 0x1E, CDKey, 0);
                     }
                     else
                     {
                         noUserName = 1;
                         setCursorSize(0x0B0A);
-                        writeVRM(18, 9, 0x1C, szHelp[7], 0);
+                        writeText(18, 9, 0x1C, szHelp[7], 0);
                     }
                     break;
                 case 1: return;
                 case 2:
                     getScreenText(15, 6, 53, 12, scrBuff);
                     shadowBox(15, 6, 65, 16, 0x5F, szHelp[0]);
-                    writeVRM(17, 8, 0x5E, szHelp[1], 0);
-                    writeVRM(17, 9, 0x5E, szHelp[2], 0);
-                    writeVRM(17, 10, 0x5E, szHelp[3], 0);
-                    writeVRM(17, 11, 0x5E, szHelp[4], 0);
-                    writeVRM(17, 12, 0x5E, szHelp[5], 0);
+                    writeText(17, 8, 0x5E, szHelp[1], 0);
+                    writeText(17, 9, 0x5E, szHelp[2], 0);
+                    writeText(17, 10, 0x5E, szHelp[3], 0);
+                    writeText(17, 11, 0x5E, szHelp[4], 0);
+                    writeText(17, 12, 0x5E, szHelp[5], 0);
                     drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
                     setCursorSize(0x2020);
 
@@ -969,7 +942,7 @@ void startCracking()
                             if (kbhit() || (bRow == 14 && bCol >= 36 && bCol <= 45))
                             {
                                 clearScreen(36, 14, 46, 15, 5);
-                                writeVRM(37, 14, ATV, szHelp[6], FLT);
+                                writeText(37, 14, ATV, szHelp[6], FLT);
                                 delay(60);
                                 drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
                                 break;
@@ -993,20 +966,20 @@ void startCracking()
                 drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
                 bSlc = 0;
                 clearScreen(51, 8 + bSlc * 2, 64, 9, 3);
-                writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
+                writeText(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
                 delay(60);
                 drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
                 if (validUserName(szUserName))
                 {
                     setCursorSize(0x2020);
                     genLicenseKey(szUserName, CDKey);
-                    writeVRM(18, 12, 0x1E, CDKey, 0);
+                    writeText(18, 12, 0x1E, CDKey, 0);
                 }
                 else
                 {
                     noUserName = 1;
                     setCursorSize(0x0B0A);
-                    writeVRM(18, 9, 0x1C, szHelp[7], 0);
+                    writeText(18, 9, 0x1C, szHelp[7], 0);
                 }
             }
 
@@ -1015,7 +988,7 @@ void startCracking()
                 drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
                 bSlc = 1;
                 clearScreen(51, 8 + bSlc * 2, 64, 9, 3);
-                writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
+                writeText(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
                 delay(60);
                 drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
                 return;
@@ -1026,16 +999,16 @@ void startCracking()
                 drawButton(51, 8 + bSlc * 2, _ATV, 3, szMenu[bSlc], 1, _FLT);
                 bSlc = 2;
                 clearScreen(51, 8 + bSlc * 2, 64, 13, 3);
-                writeVRM(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
+                writeText(52, 8 + bSlc * 2, ATV, szMenu[bSlc], FLT);
                 delay(60);
                 drawButton(51, 8 + bSlc * 2, ATV, 3, szMenu[bSlc], 0, FLT);
                 getScreenText(15, 6, 53, 12, scrBuff);
                 shadowBox(15, 6, 65, 16, 0x5F, szHelp[0]);
-                writeVRM(17, 8, 0x5E, szHelp[1], 0);
-                writeVRM(17, 9, 0x5E, szHelp[2], 0);
-                writeVRM(17, 10, 0x5E, szHelp[3], 0);
-                writeVRM(17, 11, 0x5E, szHelp[4], 0);
-                writeVRM(17, 12, 0x5E, szHelp[5], 0);
+                writeText(17, 8, 0x5E, szHelp[1], 0);
+                writeText(17, 9, 0x5E, szHelp[2], 0);
+                writeText(17, 10, 0x5E, szHelp[3], 0);
+                writeText(17, 11, 0x5E, szHelp[4], 0);
+                writeText(17, 12, 0x5E, szHelp[5], 0);
                 drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
                 setCursorSize(0x2020);
 
@@ -1046,7 +1019,7 @@ void startCracking()
                         if (kbhit() || (bRow == 14 && bCol >= 36 && bCol <= 45))
                         {
                             clearScreen(36, 14, 46, 15, 5);
-                            writeVRM(37, 14, ATV, szHelp[6], FLT);
+                            writeText(37, 14, ATV, szHelp[6], FLT);
                             delay(60);
                             drawButton(36, 14, ATV, 5, szHelp[6], 1, FLT);
                             break;
@@ -1083,8 +1056,8 @@ void main()
     setBlinking(0);
     fillFrame(1, 1, 80, 25, 0x7D, 178);
     shadowBox(15, 6, 65, 14, 0x3F, szMenu[0]);
-    writeVRM(18, 8, 0x3F, szMenu[1],  0);
-    writeVRM(18, 11, 0x3F, szMenu[2],  0);
+    writeText(18, 8, 0x3F, szMenu[1],  0);
+    writeText(18, 11, 0x3F, szMenu[2],  0);
     writeChar(18, 12, 0x1E, 30, 32);
 
     if (!initMouse()) system("mouse");

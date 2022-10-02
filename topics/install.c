@@ -2219,8 +2219,9 @@ void updateProgram()
     }
 
     memset(&regInfo, 0, sizeof(regInfo));
-    _dos_getdate(&date);
     strcat(szInstallPath, "\\");
+    
+    _dos_getdate(&date);
     regInfo.year = date.year;
     regInfo.month = date.month;
     regInfo.day = date.day;

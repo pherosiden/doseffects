@@ -134,7 +134,7 @@ void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 }
 
 /*-----------------------------------------------*/
-/* Function : writeVRM                           */
+/* Function : writeText                          */
 /* Purpose  : Writing a character with attribute */
 /* Notices  : Intervention in video memory       */
 /* Expects  : (x,y) cordinate needs to writting  */
@@ -143,7 +143,7 @@ void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 /*            (lets) The attr of first letter    */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void writeVRM(uint8_t x, uint8_t y, uint8_t attr, const char *str, uint8_t lets)
+void writeText(uint8_t x, uint8_t y, uint8_t attr, const char *str, uint8_t lets)
 {
     uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
 
@@ -173,7 +173,7 @@ void writeVRM(uint8_t x, uint8_t y, uint8_t attr, const char *str, uint8_t lets)
 }
 
 /*-----------------------------------------------*/
-/* Function : printVRM                           */
+/* Function : printText                          */
 /* Purpose  : Writing a character with attribute */
 /* Notices  : Intervention in video memory       */
 /* Expects  : (x,y) cordinate needs to writting  */
@@ -181,23 +181,23 @@ void writeVRM(uint8_t x, uint8_t y, uint8_t attr, const char *str, uint8_t lets)
 /*            (str) the string to format         */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
-void printVRM(uint8_t x, uint8_t y, uint8_t attr, char *str, ...)
+void printText(uint8_t x, uint8_t y, uint8_t attr, char *str, ...)
 {
     char buffer[80];
     va_list params;
     va_start(params, str);
     vsprintf(buffer, str, params);
-    writeVRM(x, y, attr, buffer, 0);
+    writeText(x, y, attr, buffer, 0);
 }
 
 /*-----------------------------------------------*/
 /* Function : drawButton                         */
 /* Purpose  : Define the button shadow           */
 /* Expects  : (x,y) cordinate needs to writting  */
-/*            (attr) the attribute of a title */
-/*            (title) the string to format     */
-/*            (type) The type of button         */
-/*            (lets) The attr of first letter */
+/*            (attr) the attribute of a title    */
+/*            (title) the string to format       */
+/*            (type) The type of button          */
+/*            (lets) The attr of first letter    */
 /* Returns : Nothing                             */
 /*-----------------------------------------------*/
 void drawButton(uint8_t x, uint8_t y, uint8_t attr, uint8_t bkc, const char *title, uint8_t type, uint8_t lets)
@@ -210,13 +210,13 @@ void drawButton(uint8_t x, uint8_t y, uint8_t attr, uint8_t bkc, const char *tit
     {
         if (lets)
         {
-            writeVRM(x, y, attr, title, lets);
+            writeText(x, y, attr, title, lets);
             writeChar(x + 1, y + 1, bka, len - 1, styles[2]);
             writeChar(x + len - 1, y, bka, 1, styles[3]);
         }
         else
         {
-            writeVRM(x, y, attr, title, 0);
+            writeText(x, y, attr, title, 0);
             writeChar(x + 1, y + 1, bka, len, styles[2]);
             writeChar(x + len, y, bka, 1, styles[3]);
         }
@@ -225,7 +225,7 @@ void drawButton(uint8_t x, uint8_t y, uint8_t attr, uint8_t bkc, const char *tit
     {
         if (lets)
         {
-            writeVRM(x, y, attr, title, lets);
+            writeText(x, y, attr, title, lets);
             printChar(x, y, attr, styles[0]);
             printChar(x + len - 2, y, attr, styles[1]);
             writeChar(x + 1, y + 1, bka, len - 1, styles[2]);
@@ -233,7 +233,7 @@ void drawButton(uint8_t x, uint8_t y, uint8_t attr, uint8_t bkc, const char *tit
         }
         else
         {
-            writeVRM(x, y, attr, title, 0);
+            writeText(x, y, attr, title, 0);
             printChar(x, y, attr, styles[0]);
             printChar(x + len - 1, y, attr, styles[1]);
             writeChar(x + 1, y + 1, bka, len, styles[2]);
@@ -370,9 +370,9 @@ void shadowBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr, cha
     changeAttrib(x1 + 2, y2 + 1, x2 + 2, y2 + 1, MASK_BG);
     drawBox(x1, y1, x2, y2, attr);
     writeChar(x1 + 3, y1, bkc, x2 - x1 - 2, 32);
-    writeVRM(x1 + center, y1, bkc, title, 0);
+    writeText(x1 + center, y1, bkc, title, 0);
     printChar(x1 + 2, y1, bkc, 226);
-    writeVRM(x1, y1, bkc >> 4, styles, 0);
+    writeText(x1, y1, bkc >> 4, styles, 0);
 }
 
 /*----------------------------------*/
@@ -410,34 +410,8 @@ uint16_t clickMouse(uint16_t *col, uint16_t *row)
     return regs.x.bx == 1;
 }
 
-/*-----------------------------------*/
-/* Function : hideMouse              */
-/* Purpose  : Hide the mouse pointer */
-/* Expects  : Nothing                */
-/* Returns  : Nothing                */
-/*-----------------------------------*/
-void hideMouse()
-{
-    union REGS regs;
-    regs.x.ax = 0x02;
-    int86(0x33, &regs, &regs);
-}
-
-/*--------------------------------------*/
-/* Function : showMouse                 */
-/* Purpose  : Showing the mouse pointer */
-/* Expects  : Nothing                   */
-/* Returns  : Nothing                   */
-/*--------------------------------------*/
-void showMouse()
-{
-    union REGS regs;
-    regs.x.ax = 0x01;
-    int86(0x33, &regs, &regs);
-}
-
 /*--------------------------------------------*/
-/* Function : SetPos                          */
+/* Function : setMousePos                     */
 /* Purpose  : Setting the limit col and row   */
 /* Expects  : Nothing                         */
 /* Returns  : Nothing                         */
@@ -482,7 +456,6 @@ void moveMouse(uint16_t x, uint16_t y)
 void closeMouse()
 {
     union REGS regs;
-    hideMouse();
     regs.x.ax = 0;
     int86(0x33, &regs, &regs);
 }
@@ -744,7 +717,7 @@ void processDir(char *psrc)
             sprintf(curFile, "%s\\%s", srcPath, entries.name);
             _dos_setfileattr(curFile, _A_NORMAL);
             unlink(curFile);
-            printVRM(17, 10, 0x5E, sysInf[2], curFile);
+            printText(17, 10, 0x5E, sysInf[2], curFile);
             writeChar(17, 11, 0x1F, nFiles++ % 48, 219);
             delay(50);
         } while (!_dos_findnext(&entries));
@@ -798,9 +771,9 @@ void showResults()
 
     fillFrame(1, 1, 80, 25, 0x1F, 32);
     shadowBox(18, 8, 62, 16, 0x7F, sysInf[1]);
-    printVRM(28, 10, 0x70, sysInf[15], nFiles);
-    printVRM(28, 11, 0x70, sysInf[16], nDirs);
-    writeVRM(22, 12, 0x70, sysInf[11], 0);
+    printText(28, 10, 0x70, sysInf[15], nFiles);
+    printText(28, 11, 0x70, sysInf[16], nDirs);
+    writeText(22, 12, 0x70, sysInf[11], 0);
     drawButton(35, 14, 0x4F, 7, sysInf[13], 1, 0x4A);
 
     while (kbhit()) getch();
@@ -811,7 +784,7 @@ void showResults()
             {
                 isOK = 1;
                 clearScreen(35, 14, 46, 15,7);
-                writeVRM(36, 14, 0x4F, sysInf[13], 0x4A);
+                writeText(36, 14, 0x4F, sysInf[13], 0x4A);
                 delay(60);
                 drawButton(35, 14, 0x4F, 7, sysInf[13], 1, 0x4A);
             }
@@ -866,7 +839,7 @@ void showMenu()
             case ENTER:
                 isOK = 1;
                 clearScreen(24 + slc * 22, 18, 34 + slc * 22, 19, 4);
-                writeVRM(25 + slc * 22, 18, 0xF0, sysInf[13 + slc], 0xF4);
+                writeText(25 + slc * 22, 18, 0xF0, sysInf[13 + slc], 0xF4);
                 delay(50);
                 drawButton(24 + slc * 22, 18, 0xF0, 4, sysInf[13 + slc], 1, 0xF4);
                 break;
@@ -881,7 +854,7 @@ void showMenu()
                 isOK = 1;
                 drawButton(46, 18, 0xE7, 4, sysInf[14], 1, 0xE8);
                 clearScreen(24, 18, 34, 19, 4);
-                writeVRM(25, 18, 0xF0, sysInf[13], 0xF4);
+                writeText(25, 18, 0xF0, sysInf[13], 0xF4);
                 delay(50);
                 drawButton(24, 18, 0xF0, 4, sysInf[13], 1, 0xF4);
             }
@@ -891,7 +864,7 @@ void showMenu()
                 slc = 1;
                 drawButton(24, 18, 0xE7, 4, sysInf[13], 1, 0xE8);
                 clearScreen(46, 18, 56, 19, 4);
-                writeVRM(47, 18, 0xF0, sysInf[14], 0xF4);
+                writeText(47, 18, 0xF0, sysInf[14], 0xF4);
                 delay(50);
                 drawButton(46, 18, 0xF0, 4, sysInf[14], 1, 0xF4);
             }
@@ -920,14 +893,14 @@ void showRemove()
     fillFrame(1, 1, 80, 25, 0x1F, 32);
     setBlinking(0);
     shadowBox(10, 4, 70, 20, 0x4F, sysInf[12]);
-    writeVRM(12, 6, 0x4B, sysInf[3], 0);
-    writeVRM(12, 7, 0x4B, sysInf[4], 0);
-    writeVRM(12, 8, 0x4B, sysInf[5], 0);
-    writeVRM(12, 9, 0x4B, sysInf[6], 0);
-    writeVRM(12, 10, 0x4B, sysInf[7], 0);
-    writeVRM(12, 11, 0x4B, sysInf[8], 0);
-    writeVRM(40, 13, 0x4A, sysInf[9], 0);
-    writeVRM(40, 14, 0x4A, sysInf[10], 0);
+    writeText(12, 6, 0x4B, sysInf[3], 0);
+    writeText(12, 7, 0x4B, sysInf[4], 0);
+    writeText(12, 8, 0x4B, sysInf[5], 0);
+    writeText(12, 9, 0x4B, sysInf[6], 0);
+    writeText(12, 10, 0x4B, sysInf[7], 0);
+    writeText(12, 11, 0x4B, sysInf[8], 0);
+    writeText(40, 13, 0x4A, sysInf[9], 0);
+    writeText(40, 14, 0x4A, sysInf[10], 0);
     writeChar(11, 16, 0x4F, 59, 196);
     printChar(10, 16, 0x4F, 195);
     printChar(70, 16, 0x4F, 180);
