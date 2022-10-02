@@ -25,13 +25,19 @@
 #define _wFLT           0x74
 
 typedef struct {
-    time_t      utime;          // Register timestamp
+    uint16_t    year;           // Register year
+    uint16_t    month;          // Register month
+    uint16_t    day;            // Register day
     uint16_t    days;           // The number of days
     uint16_t    key;            // Encryption key
     uint16_t    verid;          // Validate license key
     uint8_t     license[20];    // License key
     char        path[33];       // The installation path
-} REG_INFO;
+} regs_t;
+
+typedef struct {
+    int16_t day, month, year;
+} date_t;
 
 uint8_t bmAvalid = 0;           // Status of the mouse
 char **sysInfo = NULL;          // Text message
@@ -93,7 +99,7 @@ void setCursorPos(uint8_t x, uint8_t y)
 void printChar(uint8_t x, uint8_t y, uint8_t attr, char chr)
 {
     uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
-    *pmem = (attr << 8) + chr;
+    *pmem = (attr << 8) | chr;
 }
 
 /*------------------------------------------------*/
@@ -108,7 +114,7 @@ void printChar(uint8_t x, uint8_t y, uint8_t attr, char chr)
 void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 {
     uint8_t i;
-    const uint16_t txt = (attr << 8) + chr;
+    const uint16_t txt = (attr << 8) | chr;
     uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
     for (i = 0; i < len; i++) *pmem++ = txt;
 }
@@ -143,12 +149,12 @@ void writeVRM(uint8_t x, uint8_t y, uint8_t attr, const char *str, uint8_t lets)
         pos = i - 1;
 
         ptmp = buff;
-        while (*ptmp) *pmem++ = (attr << 8) + *ptmp++;
+        while (*ptmp) *pmem++ = (attr << 8) | *ptmp++;
         printChar(currx + pos, y, lets, buff[pos]);
     }
     else
     {
-        while (*str) *pmem++ = (attr << 8) + *str++;
+        while (*str) *pmem++ = (attr << 8) | *str++;
     }
 }
 
@@ -249,11 +255,7 @@ void changeAttrib(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr)
 
     for (y0 = y1; y0 <= y2; y0++)
     {
-        for (x0 = x1; x0 <= x2; x0++)
-        {
-            *(pmem + 1) = attr;
-            pmem += 2;
-        }
+        for (x0 = x1; x0 <= x2; x0++, pmem += 2) *(pmem + 1) = attr;
         pmem += addofs;
     }
 }
@@ -558,7 +560,7 @@ void chr2Str(char chr, char n, char *str)
 /*--------------------------------------*/
 void fontVNI(char *str)
 {
-    char buff[4] = {0};
+    char buff[3] = {0};
     schRepl(str, "a8", 128);
     chr2Str(128, '1', buff);
     schRepl(str, buff, 129);
@@ -822,6 +824,7 @@ void getDiskSerial(char drive, char *serial)
         if (strstr(sbuff, term)) break;
     }
     
+    fclose(fp);
     unlink(".vol");
     strcpy(serial, &sbuff[strlen(term) + 1]);
 }
@@ -847,6 +850,8 @@ uint16_t getEncryptKey(char *str)
 {
     uint16_t key = 0;
     while (*str) key += *str++;
+    srand(key);
+    key += rand();
     return key;
 }
 
@@ -885,11 +890,10 @@ void makeLicenseKey(uint16_t key, char *serial, char *license)
 uint8_t validLicense(char *user, char *license)
 {
     FILE *fp;
-    REG_INFO regs;
+    regs_t regs;
 
     char serial[20];
-    char sbuff[20];
-    uint16_t key = 0, i = 0;
+    uint16_t i = 0;
 
     fp = fopen(sysInfo[21], "r+b");
     if (!fp)
@@ -897,18 +901,16 @@ uint8_t validLicense(char *user, char *license)
         fprintf(stderr, sysInfo[22]);
         cleanup();
     }
-    fread(&regs, sizeof(REG_INFO), 1, fp);
+    fread(&regs, sizeof(regs_t), 1, fp);
 
-    key = getEncryptKey(user);
+    regs.key = getEncryptKey(user);
     getDiskSerial(regs.path[0], serial);
-    makeLicenseKey(key, serial, sbuff);
-    if (!strcmp(sbuff, license))
+    makeLicenseKey(regs.key, serial, regs.license);
+    if (!strcmp(regs.license, license))
     {
-        regs.key = key;
-        encodeString(sbuff, key);
-        for (i = 0; i < strlen(sbuff); i++) regs.verid += sbuff[i];
+        encodeString(regs.license, regs.key);
+        for (i = 0; i < strlen(regs.license); i++) regs.verid += regs.license[i];
         regs.verid += regs.key;
-        strcpy(regs.license, sbuff);
         rewind(fp);
         fwrite(&regs, sizeof(regs), 1, fp);
         fclose(fp);
@@ -920,6 +922,42 @@ uint8_t validLicense(char *user, char *license)
 }
 
 /*----------------------------------------------*/
+/* Function : countLeapYears                    */
+/* Purpose  : Calculate leap years              */
+/* Expects  : (d) The date_t struct             */
+/* Returns  : number of days                    */
+/*----------------------------------------------*/
+int16_t countLeapYears(date_t d)
+{
+    int16_t years = d.year;
+    if (d.month <= 2) years--;
+    return years / 4 - years / 100 + years / 400;
+}
+
+/*----------------------------------------------*/
+/* Function : diffDate                          */
+/* Purpose  : Difference days between two dates */
+/* Expects  : (dt1, dt2) The date_t struct      */
+/* Returns  : Number of days                    */
+/*----------------------------------------------*/
+int16_t diffDate(date_t dt1, date_t dt2)
+{
+    int16_t i;
+    size_t n1, n2;
+    const int16_t monthDays[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    
+    n1 = dt1.year * 365 + dt1.day;
+    for (i = 0; i < dt1.month - 1; i++) n1 += monthDays[i];
+    n1 += countLeapYears(dt1);
+ 
+    n2 = dt2.year * 365 + dt2.day;
+    for (i = 0; i < dt2.month - 1; i++) n2 += monthDays[i];
+    n2 += countLeapYears(dt2);
+ 
+    return (n2 - n1);
+}
+
+/*----------------------------------------------*/
 /* Function : initData                          */
 /* Purpose  : Initialize parameters for program */
 /* Expects  : Nothing                           */
@@ -927,9 +965,9 @@ uint8_t validLicense(char *user, char *license)
 /*----------------------------------------------*/
 void initData()
 {
+    srand(time(0));
     getTextFile("register.sys", "register.$$$");
     system("font on");
-    srand(time(0));
 }
 
 /*---------------------------------*/
@@ -1235,7 +1273,7 @@ void startRegister()
 uint8_t isRegister()
 {
     FILE *fptr;
-    REG_INFO regInfo;
+    regs_t regInfo;
 
     char serial[20];
     char license[20];
@@ -1243,7 +1281,7 @@ uint8_t isRegister()
 
     fptr = fopen(sysInfo[21], "rb");
     if (!fptr) return 0;
-    fread(&regInfo, sizeof(REG_INFO), 1, fptr);
+    fread(&regInfo, sizeof(regs_t), 1, fptr);
     fclose(fptr);
 
     if (!regInfo.verid || !strlen(regInfo.license)) return 0;
@@ -1269,10 +1307,12 @@ uint8_t isRegister()
 /*--------------------------------------*/
 void checkExpired()
 {
+    char szPath[33];
     uint16_t diff;
     FILE *fptr;
-    REG_INFO regInfo;
-    char szPath[33];
+    regs_t regInfo;
+    date_t dt1, dt2;
+    struct dosdate_t date;
     
     strcpy(szPath, sysInfo[24]);
     fptr = fopen(sysInfo[21], "rb");
@@ -1282,13 +1322,23 @@ void checkExpired()
         cleanup();
     }
 
-    fread(&regInfo, sizeof(REG_INFO), 1, fptr);
+    fread(&regInfo, sizeof(regs_t), 1, fptr);
     fclose(fptr);
 
     strcpy(szPath, regInfo.path);
     strcat(szPath, sysInfo[24]);
 
-    diff = difftime(time(0), regInfo.utime) / 86400;
+    _dos_getdate(&date);
+    
+    dt1.year = regInfo.year;
+    dt1.month = regInfo.month;
+    dt1.day = regInfo.day;
+    
+    dt2.year = date.year;
+    dt2.month = date.month;
+    dt2.day = date.day;
+
+    diff = diffDate(dt1, dt2);
     if (diff > regInfo.days)
     {
         system(szPath);

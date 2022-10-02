@@ -23,15 +23,15 @@
 #define _wFLT   0x74
 
 typedef struct {
-    uint16_t    key;        // Encode and decode key
-    uint16_t    regs;       // Register code
-    uint16_t    days;       // The number of days
-    uint16_t    magic;      // Validate license code
-    time_t      utime;      // Register timestamp
-    uint8_t     serial[20]; // License code
-    uint8_t     user[33];   // User name
-    char        path[33];   // The installation path
-} REG_INFO;
+    uint16_t    year;           // Register year
+    uint16_t    month;          // Register month
+    uint16_t    day;            // Register day
+    uint16_t    days;           // The number of days
+    uint16_t    key;            // Encryption key
+    uint16_t    verid;          // Validate license key
+    uint8_t     license[20];    // License key
+    char        path[33];       // The installation path
+} regs_t;
 
 char szInstallPath[32];     // Installation path
 uint8_t bmAvalid = 0;       // Status of the mouse
@@ -113,7 +113,7 @@ void setCursorPos(uint8_t x, uint8_t y)
 void printChar(uint8_t x, uint8_t y, uint8_t attr, char chr)
 {
     uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
-    *pmem = (attr << 8) + chr;
+    *pmem = (attr << 8) | chr;
 }
 
 /*------------------------------------------------*/
@@ -128,7 +128,7 @@ void printChar(uint8_t x, uint8_t y, uint8_t attr, char chr)
 void writeChar(uint8_t x, uint8_t y, uint8_t attr, uint8_t len, char chr)
 {
     uint8_t i;
-    const uint16_t txt = (attr << 8) + chr;
+    const uint16_t txt = (attr << 8) | chr;
     uint16_t far *pmem = (uint16_t far*)(txtMem + OFFSET(x, y));
     for (i = 0; i < len; i++) *pmem++ = txt;
 }
@@ -163,12 +163,12 @@ void writeVRM(uint8_t x, uint8_t y, uint8_t attr, const char *str, uint8_t lets)
         bPos = i - 1;
 
         ptmp = szTmp;
-        while (*ptmp) *pmem++ = (attr << 8) + *ptmp++;
+        while (*ptmp) *pmem++ = (attr << 8) | *ptmp++;
         printChar(currX + bPos, y, lets, szTmp[bPos]);
     }
     else
     {
-        while (*str) *pmem++ = (attr << 8) + *str++;
+        while (*str) *pmem++ = (attr << 8) | *str++;
     }
 }
 
@@ -287,11 +287,7 @@ void changeAttrib(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t attr)
 
     for (y0 = y1; y0 <= y2; y0++)
     {
-        for (x0 = x1; x0 <= x2; x0++)
-        {
-            *(pmem + 1) = attr;
-            pmem += 2;
-        }
+        for (x0 = x1; x0 <= x2; x0++, pmem += 2) *(pmem + 1) = attr;
         pmem += addofs;
     }
 }
@@ -575,7 +571,7 @@ void chr2Str(char chr, char n, char *str)
 /*--------------------------------------*/
 void fontVNI(char *str)
 {
-    char buff[4] = {0};
+    char buff[3] = {0};
     schRepl(str, "a8", 128);
     chr2Str(128, '1', buff);
     schRepl(str, buff, 129);
@@ -686,7 +682,7 @@ void initData()
 {
     FILE *fp;
     int16_t i;
-    REG_INFO reg;
+    regs_t reg;
 
     fp = fopen("register.dat", "rb");
     if (!fp)
