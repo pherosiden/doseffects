@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:English (United States)
 :DOSBOX-X:CODEPAGE:437
-:DOSBOX-X:VERSION:2022.09.0
+:DOSBOX-X:VERSION:2022.12.26
 :DOSBOX-X:REMARK:
 :AUTOEXEC_CONFIGFILE_HELP
 Lines in this section will be run at startup.
@@ -630,14 +630,14 @@ LOADFIX -f [-xms] [-ems]
   -ems        Allocates memory from EMS rather than conventional memory
   -{ram}      Specifies the amount of memory to allocate in KB
               Defaults to 64KB for conventional memory; 1MB for XMS/EMS memory
-  -a          Auto allocates enough memory to fill the lowest 64KB memory
+  -a          Auto-allocates enough conventional memory to fill the lowest 64KB
   -f (or -d)  Frees previously allocated memory
   {program}   Runs the specified program
   {options}   Program options (if any)
 
 Examples:
   ←[32;1mLOADFIX game.exe←[0m     Allocates 64KB of conventional memory and runs game.exe
-  ←[32;1mLOADFIX -a←[0m           Auto-allocates enough memory conventional memory
+  ←[32;1mLOADFIX -a←[0m           Auto-allocates the first 64KB of conventional memory
   ←[32;1mLOADFIX -128←[0m         Allocates 128KB of conventional memory
   ←[32;1mLOADFIX -xms←[0m         Allocates 1MB of XMS memory
   ←[32;1mLOADFIX -f←[0m           Frees allocated conventional memory
@@ -2598,6 +2598,9 @@ OpenGL perfect
 .
 :MENU:output_ttf
 TrueType font
+.
+:MENU:output_gamelink
+Game Link
 .
 :MENU:doublescan
 Doublescan

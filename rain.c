@@ -26,7 +26,7 @@
 #define MAXIMO          150
 #define ANCHO_PUNTOS    320
 
-uint8_t     vbuff[64000] = {0};
+uint8_t     *vbuff = NULL;
 uint8_t     *vmem = (uint8_t*)0xA0000000L;
 
 uint8_t     densityAdd = 0;
@@ -92,6 +92,9 @@ const uint16_t lkpCol[] = {
 
 void init13h()
 {
+    vbuff = (uint8_t*)calloc(64000, 1);
+    if (!vbuff) exit(0);
+
     __asm {
         mov     ax, 0x13
         int     0x10
@@ -100,6 +103,8 @@ void init13h()
 
 void textMode()
 {
+    free(vbuff);
+
     __asm {
         mov     ax, 0x03
         int     0x10
