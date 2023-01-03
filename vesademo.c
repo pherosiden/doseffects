@@ -768,7 +768,7 @@ void graphDemo12()
         if (y2 < 0) y2 = 0;
 
         if (frames % 8 == 0) waitRetrace();
-        diagonalLine(x1, y1, x2, y2);
+        drawLineBob(x1, y1, x2, y2);
         frames++;
     }
 }
