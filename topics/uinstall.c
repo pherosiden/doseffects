@@ -690,14 +690,14 @@ void cleanup()
 }
 
 /*---------------------------------------------*/
-/* Funtion : processDir                        */
+/* Funtion : removeFiles                       */
 /* Purpose : Copy all files from the disk      */
 /* Expects : (psrc) sources directory          */
 /*           (pdst) destination directory      */
 /* Returns : 1 for success                     */
 /*           0 for failure                     */
 /*---------------------------------------------*/
-void processDir(char *psrc)
+void removeFiles(char *psrc)
 {
     uint16_t i;
     struct find_t entries;
@@ -731,7 +731,7 @@ void processDir(char *psrc)
             {
                 sprintf(srcDir, "%s\\%s\\%s", srcPath, entries.name, srcExt);
                 sprintf(newDir, "%s\\%s", srcPath, entries.name);
-                processDir(srcDir);
+                removeFiles(srcDir);
                 _dos_setfileattr(newDir, _A_NORMAL);
                 rmdir(newDir);
                 nDirs++;
@@ -741,12 +741,12 @@ void processDir(char *psrc)
 }
 
 /*---------------------------------------*/
-/* Funtion : startDelete                 */
+/* Funtion : startRemove                 */
 /* Mission : Deleting the topics program */
 /* Expects : Nothing                     */
 /* Returns : Nothing                     */
 /*---------------------------------------*/
-void startDelete()
+void startRemove()
 {
     char path[33];
     strcpy(path, szInstallPath);
@@ -756,7 +756,8 @@ void startDelete()
     shadowBox(15, 8, 65, 15, 0x5F, sysInf[0]);
     drawButton(35, 13, 0xF7, 5, sysInf[14], 1, 0xF8);
     writeChar(17, 11, 0x17, 47, 176);
-    processDir(path);
+    removeFiles(path);
+    rmdir(szInstallPath);
 }
 
 /*----------------------------------------------------*/
@@ -875,7 +876,7 @@ void showMenu()
 
     if (!slc)
     {
-        startDelete();
+        startRemove();
         showResults();
     }
 }

@@ -1022,13 +1022,13 @@ void makePath(char *spath)
             next++;
         }
         
-        if (_access(sbuff, 0)) _mkdir(sbuff);
+        if (_access(sbuff, 0)) mkdir(sbuff);
     }
 }
 
 /*---------------------------------------------*/
 /* Funtion : countFiles                        */
-/* Purpose : Count total files from directory  */
+/* Purpose : Count total files of a directory  */
 /* Expects : (dirName) sources directory       */
 /* Returns : Number of files in directory      */
 /*---------------------------------------------*/
@@ -1065,7 +1065,7 @@ void countFiles(char *dirName)
 }
 
 /*---------------------------------------------*/
-/* Funtion : copyFile                          */
+/* Funtion : cloneFile                         */
 /* Purpose : Copy file from source to dest     */
 /* Expects : (src) sources file path           */
 /*           (dst) destination file path       */
@@ -1073,7 +1073,7 @@ void countFiles(char *dirName)
 /* Returns : 1 for success                     */
 /*           0 for failure                     */
 /*---------------------------------------------*/
-uint8_t copyFile(char *src, char *dst, struct find_t *fileInfo)
+uint8_t cloneFile(char *src, char *dst, struct find_t *fileInfo)
 {
     int srcHandle, dstHandle;
     size_t numBytes = bytesCount;
@@ -1103,14 +1103,14 @@ uint8_t copyFile(char *src, char *dst, struct find_t *fileInfo)
 }
 
 /*---------------------------------------------*/
-/* Funtion : processDir                        */
+/* Funtion : copyFiles                         */
 /* Purpose : Copy all files from the disk      */
 /* Expects : (psrc) sources directory          */
 /*           (pdst) destination directory      */
 /* Returns : 1 for success                     */
 /*           0 for failure                     */
 /*---------------------------------------------*/
-void processDir(char *psrc, char *pdst)
+void copyFiles(char *psrc, char *pdst)
 {
     size_t i;
     struct find_t entries;
@@ -1130,7 +1130,7 @@ void processDir(char *psrc, char *pdst)
         do {
             sprintf(curFile, "%s\\%s", srcPath, entries.name);
             sprintf(newFile, "%s\\%s", pdst, entries.name);
-            if (!copyFile(curFile, newFile, &entries)) errorFile(newFile, sysInfo[21]);
+            if (!cloneFile(curFile, newFile, &entries)) errorFile(newFile, sysInfo[21]);
 
             numFiles++;
             progress = 45.0 * numFiles / totalFiles;
@@ -1152,9 +1152,9 @@ void processDir(char *psrc, char *pdst)
             {
                 sprintf(srcDir, "%s\\%s\\%s", srcPath, entries.name, srcExt);
                 sprintf(newDir, "%s\\%s", pdst, entries.name);
-                _mkdir(newDir);
+                mkdir(newDir);
                 _dos_setfileattr(newDir, entries.attrib);
-                processDir(srcDir, newDir);
+                copyFiles(srcDir, newDir);
             }
         } while (!_dos_findnext(&entries));
     }
@@ -1292,7 +1292,6 @@ void warningBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, char *msg[], int
     while (kbhit()) getch();
     setCursorSize(oldCursor);
 }
-
 
 /*---------------------------------------*/
 /* Function : validUserName              */
@@ -1833,7 +1832,7 @@ void installProgram()
     drawButton(35, 15, _wATV, 9, sysMenu[2], 1, _wFLT);
     makePath(szInstallPath);
     countFiles(PROG_DIR);
-    processDir(PROG_DIR, szInstallPath);
+    copyFiles(PROG_DIR, szInstallPath);
     delay(500);
     fillFrame(15, 6, 69, 21, 0xF6, 178);
     shadowBox(18, 10, 62, 15, 0x1F, sysInfo[5]);
@@ -2679,7 +2678,6 @@ void showInstall()
 /* Expects : Nothing                         */
 /* Returns : Nothing                         */
 /*-------------------------------------------*/
-
 void main()
 {
     initData();

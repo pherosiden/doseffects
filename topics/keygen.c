@@ -267,7 +267,7 @@ void setBlinking(uint8_t doblink)
     union REGS regs;
     regs.h.ah = 0x10;
     regs.h.al = 0x03;
-    regs.h.bl = doblink ? 1 : 0;
+    regs.h.bl = doblink;
     int86(0x10, &regs, &regs);
 }
 

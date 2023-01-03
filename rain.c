@@ -182,7 +182,9 @@ void setPalette()
         xor     al, al
         out     dx, al
         inc     dx
-        lea     si, palette
+        mov     ax, seg palette
+        mov     ds, ax
+        mov     si, offset palette
         mov     cx, 450
         rep     outsb
     }
