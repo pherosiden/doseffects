@@ -26,18 +26,6 @@
 #define MAXIMO          150
 #define ANCHO_PUNTOS    320
 
-uint8_t     *vbuff = NULL;
-uint8_t     *vmem = (uint8_t*)0xA0000000L;
-
-uint8_t     densityAdd = 0;
-
-uint16_t    randVal = 0;
-uint16_t    actualPage = 0;
-uint16_t    otherPage = ALTO * ANCHO * 2;
-
-uint16_t    tblFil[5] = {0};
-uint16_t    tblCol[5] = {0};
-
 const uint8_t palette[] = {
     0x3F,0x3F,0x3F,0x3C,0x3F,0x3F,0x3A,0x3F,0x3F,0x37,0x3E,0x3F,0x34,0x3E,0x3F,0x32,
     0x3E,0x3F,0x2F,0x3E,0x3F,0x2D,0x3D,0x3F,0x2A,0x3D,0x3F,0x29,0x3C,0x3F,0x28,0x3B,
@@ -90,11 +78,20 @@ const uint16_t lkpCol[] = {
      17, 16, 16, 15, 0xFF
 };
 
+uint8_t     vbuff[64000] = {0};
+uint8_t     *vmem = (uint8_t*)0xA0000000L;
+
+uint8_t     densityAdd = 0;
+
+uint16_t    randVal = 0;
+uint16_t    actualPage = 0;
+uint16_t    otherPage = ALTO * ANCHO * 2;
+
+uint16_t    tblFil[5] = {0};
+uint16_t    tblCol[5] = {0};
+
 void init13h()
 {
-    vbuff = (uint8_t*)calloc(64000, 1);
-    if (!vbuff) exit(0);
-
     __asm {
         mov     ax, 0x13
         int     0x10
@@ -103,8 +100,6 @@ void init13h()
 
 void textMode()
 {
-    free(vbuff);
-
     __asm {
         mov     ax, 0x03
         int     0x10
@@ -183,13 +178,13 @@ void zeroPal()
 void setPalette()
 {
     __asm {
+        mov     ax, seg palette
+        mov     ds, ax
+        mov     si, offset palette
         mov     dx, 0x03C8
         xor     al, al
         out     dx, al
         inc     dx
-        mov     ax, seg palette
-        mov     ds, ax
-        mov     si, offset palette
         mov     cx, 450
         rep     outsb
     }
@@ -244,7 +239,7 @@ void putFrame()
 
         di += 2;
     }
-    
+
     if (kbhit()) theEnd();
 }
 
@@ -263,9 +258,9 @@ void stabylize()
     uint32_t eax, edx;
     uint16_t si, di, bx, cx;
 
-	si = actualPage;
+    si = actualPage;
     di = otherPage;
-	actualPage = di;
+    actualPage = di;
     otherPage = si;
     si += BORDE * ALTO;
     di += BORDE * ALTO;
