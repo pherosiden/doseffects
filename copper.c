@@ -17,9 +17,10 @@
 
 void main()
 {
-    uint16_t i, j, col;
     uint16_t pos[] = {3, 2, 2, 1, 1, 0};
 
+    /*=========== C VERSION ==========*/
+    /*uint16_t i, j, col;
     while (!kbhit())
     {
         for (i = 390; i > 0; i--)
@@ -49,10 +50,10 @@ void main()
                 outp(0x03C9, col);
             }
         }
-    }
+    }*/
 
-    /*============ ASM VERSION ============*/
-    /*while (!kbhit())
+    /*============ OPTIMIZE VERSION ============*/
+    while (!kbhit())
     {
         __asm {
             mov     ah, 8
@@ -98,5 +99,5 @@ void main()
             mov     ah, 1
             loop    st0
         }
-    }*/
+    }
 }
