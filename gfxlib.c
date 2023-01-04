@@ -30,7 +30,6 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <float.h>
-#include <graph.h>
 
 // Enable MMX features
 #define _USE_MMX
@@ -1166,7 +1165,6 @@ void getMemoryInfo()
 // Initialize the timer to use system time or cpu clock time
 void setTimerType(uint8_t type)
 {
-    _clearscreen(0);
     printf("GFXLIB initializing....\n");
 
     timeType = type;
