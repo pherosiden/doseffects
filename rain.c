@@ -199,46 +199,91 @@ void theEnd()
 
 void putFrame()
 {
+    /*========= OPTIMIZE VERSION =========*/
+    __asm {
+        mov     ax, seg vbuff
+        mov     ds, ax
+        mov     si, offset vbuff
+        mov     ax, 0xA000
+        mov     es, ax
+        mov     di, 64000 - 320
+        mov     cx, 160
+    lp4:
+        push    di
+        push    cx
+        xor     ax, ax
+        xor     bx, bx
+        xor     dx, dx
+    lp3:
+        xor     cx, cx
+        mov     cx, [si]
+        sar     cx, 7
+        add     cx, ax
+        sub     cx, dx
+        jle     lp1
+        add     dx, cx
+    lp2:
+        mov     es:[di], bx
+        sub     di, 320
+        loop    lp2
+    lp1:
+        add     si, 2
+        add     bx, 0x101
+        inc     ax
+        cmp     ax, 100
+        jnz     lp3
+        mov     dh, dl
+    lp5:
+        sub     di, 320
+        mov     es:[di], dx
+        add     dx, 0x101
+        cmp     dx, MAXIMO * 0x101;
+        jnz     lp5
+        pop     cx
+        pop     di
+        add     di, 2
+        loop    lp4
+    }
+
+    /*========= C VERSION ==========
     int16_t val;
     uint16_t cx, ax, dx, bx;
-    uint16_t si = actualPage;
-    uint16_t di = 63999 - 319, ofs;
+    uint16_t *si = (uint16_t*)&vbuff;
+    uint16_t *di = (uint16_t*)&vmem[64000 - 320];
+    uint16_t *ofs = NULL;
 
-    waitRetrace();
-
-    for (cx = 0; cx != ANCHO; cx++)
+    for (cx = 0; cx < ANCHO; cx++)
     {
         bx = 0;
         dx = 0;
         ofs = di;
 
-        for (ax = 0; ax != ALTO; ax++)
+        for (ax = 0; ax < ALTO; ax++)
         {
-            val = *((uint16_t*)&vbuff[si]);
+            val = *si;
             val = (val >> 7) + ax - dx;
             if (val > 0)
             {
                 dx += val;
                 while (val--)
                 {
-                    *((uint16_t*)&vmem[ofs]) = bx;
-                    ofs -= ANCHO_PUNTOS;
+                    *ofs = bx;
+                    ofs -= ANCHO;
                 } 
             }
-            si += 2;
+            si++;
             bx += 0x101;
         }
         
         dx = (dx << 8) | (dx & 0x00FF);
-        while (dx != MAXIMO * 0x101)
+        while (dx < MAXIMO * 0x101)
         {
-            ofs -= ANCHO_PUNTOS;
-            *((uint16_t*)&vmem[ofs]) = dx;
+            ofs -= ANCHO;
+            *ofs = dx;
             dx += 0x101;
         }
-
-        di += 2;
-    }
+        di++;
+    }*/
 
     if (kbhit()) theEnd();
 }
@@ -255,7 +300,7 @@ inline uint32_t rotl(uint32_t value, uint8_t count)
 
 void stabylize()
 {
-    uint32_t eax, edx;
+    /*uint32_t eax, edx;
     uint16_t si, di, bx, cx;
 
     si = actualPage;
@@ -286,6 +331,60 @@ void stabylize()
         *(uint32_t*)&vbuff[di] = eax;
         di += 4;
         si += 4;
+    }*/
+
+    void *psrc = vbuff;
+    //uint16_t tmp = actualPage;
+    //actualPage = otherPage;
+    //otherPage = tmp;
+
+    __asm {
+        
+        mov     si, actualPage
+        mov     di, otherPage
+        mov     actualPage, di
+        mov     otherPage, si
+        //lds     si, psrc
+        //les     di, psrc
+        //mov     ax, seg vbuff
+        //mov     es, ax
+        //les     di, psrc
+        //les     si, psrc
+        mov     ax, seg vbuff
+        mov     es, ax
+        mov     ds, ax
+        mov     di, offset vbuff
+        //mov     si, offset vbuff
+        //mov     ds, ax
+        //mov     di, offset vbuff
+        //mov     si, offset vbuff
+        add     si, BORDE * ALTO
+        add     di, BORDE * ALTO
+        //add     si, otherPage
+        //add     di, actualPage
+        mov     cl, densityAdd
+        mov     bx, (ANCHO * ALTO - BORDE * ALTO) / 2
+    again:
+        mov     eax, [si - ALTO * 2]
+        add     eax, [si + ALTO * 2]
+        add     eax, [si + 2]
+        add     eax, [si - 2]
+        ror     eax, 16
+        sar     ax, 1
+        ror     eax, 16
+        sar     ax, 1
+        sub     eax, es:[di]
+        mov     edx, eax
+        sar     dx, cl
+        ror     edx, 16
+        sar     dx, cl
+        ror     edx, 16
+        sub     eax, edx
+        mov     es:[di], eax
+        add     di, 4
+        add     si, 4
+        dec     bx
+        jnz     again
     }
 }
 
@@ -677,7 +776,7 @@ void main()
         randVal = SEMILLA_INIT;
         densityAdd = DENSITY_INIT;
         P001();
-        P002();
+        /*P002();
         densityAdd = DENSITY_SET;
         P003();
         printFrame(100);
@@ -696,6 +795,6 @@ void main()
         densityAdd = DENSITY_SET;
         P006(1, 0);
         P006(1, 1);
-        P006(0, 1);
+        P006(0, 1);*/
     }
 }
