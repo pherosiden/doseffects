@@ -200,7 +200,7 @@ void theEnd()
 void putFrame()
 {
     int16_t val;
-    uint16_t cx, ax, dx, bx, tx;
+    uint16_t cx, ax, dx, bx;
     uint16_t si = actualPage;
     uint16_t di = 63999 - 319, ofs;
 
@@ -482,7 +482,7 @@ void printFrame(int16_t num)
 void P001()
 {
     int16_t i, j;
-    uint16_t idx = 0;
+    int16_t idx = 0;
 
     for (i = 0; i < 40; i++)
     {
