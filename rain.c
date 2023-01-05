@@ -15,6 +15,7 @@
 #include <string.h>
 #include <conio.h>
 #include <stdio.h>
+#include <i86.h>
 
 #define SEMILLA_INIT    0x9234
 #define ANCHO_OLAS      2
@@ -248,7 +249,7 @@ void putFrame()
     /*========= C VERSION ==========
     int16_t val;
     uint16_t cx, ax, dx, bx;
-    uint16_t *si = (uint16_t*)&vbuff;
+    uint16_t *si = (uint16_t*)vbuff;
     uint16_t *di = (uint16_t*)&vmem[64000 - 320];
     uint16_t *ofs = NULL;
 
@@ -300,7 +301,7 @@ inline uint32_t rotl(uint32_t value, uint8_t count)
 
 void stabylize()
 {
-    /*uint32_t eax, edx;
+    uint32_t eax, edx;
     uint16_t si, di, bx, cx;
 
     si = actualPage;
@@ -331,60 +332,6 @@ void stabylize()
         *(uint32_t*)&vbuff[di] = eax;
         di += 4;
         si += 4;
-    }*/
-
-    void *psrc = vbuff;
-    //uint16_t tmp = actualPage;
-    //actualPage = otherPage;
-    //otherPage = tmp;
-
-    __asm {
-        
-        mov     si, actualPage
-        mov     di, otherPage
-        mov     actualPage, di
-        mov     otherPage, si
-        //lds     si, psrc
-        //les     di, psrc
-        //mov     ax, seg vbuff
-        //mov     es, ax
-        //les     di, psrc
-        //les     si, psrc
-        mov     ax, seg vbuff
-        mov     es, ax
-        mov     ds, ax
-        mov     di, offset vbuff
-        //mov     si, offset vbuff
-        //mov     ds, ax
-        //mov     di, offset vbuff
-        //mov     si, offset vbuff
-        add     si, BORDE * ALTO
-        add     di, BORDE * ALTO
-        //add     si, otherPage
-        //add     di, actualPage
-        mov     cl, densityAdd
-        mov     bx, (ANCHO * ALTO - BORDE * ALTO) / 2
-    again:
-        mov     eax, [si - ALTO * 2]
-        add     eax, [si + ALTO * 2]
-        add     eax, [si + 2]
-        add     eax, [si - 2]
-        ror     eax, 16
-        sar     ax, 1
-        ror     eax, 16
-        sar     ax, 1
-        sub     eax, es:[di]
-        mov     edx, eax
-        sar     dx, cl
-        ror     edx, 16
-        sar     dx, cl
-        ror     edx, 16
-        sub     eax, edx
-        mov     es:[di], eax
-        add     di, 4
-        add     si, 4
-        dec     bx
-        jnz     again
     }
 }
 
