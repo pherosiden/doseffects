@@ -299,7 +299,7 @@ inline uint32_t rotl(uint32_t value, uint8_t count)
 
 void stabylize()
 {
-    /*uint32_t eax, edx;
+    uint32_t eax, edx;
     uint16_t si, di, bx, cx;
 
     si = actualPage;
@@ -330,44 +330,25 @@ void stabylize()
         *(uint32_t*)&vbuff[di] = eax;
         di += 4;
         si += 4;
-    }*/
+    }
 
-    void *psrc = vbuff;
-    //uint16_t tmp = actualPage;
-    //actualPage = otherPage;
-    //otherPage = tmp;
-
+    /*========= ASM VERSION ===========
     __asm {
-        
         mov     si, actualPage
         mov     di, otherPage
         mov     actualPage, di
         mov     otherPage, si
-        //lds     si, psrc
-        //les     di, psrc
-        //mov     ax, seg vbuff
-        //mov     es, ax
-        //les     di, psrc
-        //les     si, psrc
         mov     ax, seg vbuff
         mov     es, ax
-        mov     ds, ax
-        mov     di, offset vbuff
-        //mov     si, offset vbuff
-        //mov     ds, ax
-        //mov     di, offset vbuff
-        //mov     si, offset vbuff
         add     si, BORDE * ALTO
         add     di, BORDE * ALTO
-        //add     si, otherPage
-        //add     di, actualPage
         mov     cl, densityAdd
-        mov     bx, (ANCHO * ALTO - BORDE * ALTO) / 2
+        mov     bx, ANCHO * ALTO / 2 - BORDE * ALTO / 2
     again:
-        mov     eax, [si - ALTO * 2]
-        add     eax, [si + ALTO * 2]
-        add     eax, [si + 2]
-        add     eax, [si - 2]
+        mov     eax, es:[si - ALTO * 2]
+        add     eax, es:[si + ALTO * 2]
+        add     eax, es:[si + 2]
+        add     eax, es:[si - 2]
         ror     eax, 16
         sar     ax, 1
         ror     eax, 16
@@ -384,7 +365,7 @@ void stabylize()
         add     si, 4
         dec     bx
         jnz     again
-    }
+    }*/
 }
 
 void stabylize2()
@@ -775,7 +756,7 @@ void main()
         randVal = SEMILLA_INIT;
         densityAdd = DENSITY_INIT;
         P001();
-        /*P002();
+        P002();
         densityAdd = DENSITY_SET;
         P003();
         printFrame(100);
@@ -794,6 +775,6 @@ void main()
         densityAdd = DENSITY_SET;
         P006(1, 0);
         P006(1, 1);
-        P006(0, 1);*/
+        P006(0, 1);
     }
 }
