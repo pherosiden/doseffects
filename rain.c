@@ -749,7 +749,7 @@ void main()
     zeroPal();
     setPalette();
     
-    memset(&vmem[320 * 100], 99, 320);    
+    memset(&vmem[320 * 100], 99, 320);
 
     while (!kbhit())
     {
