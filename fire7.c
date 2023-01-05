@@ -31,7 +31,7 @@
 #define M_PI        3.141592f
 
 uint8_t rgb[256][3] = {0};
-uint8_t flames[WIDTH] = {0};
+uint8_t flames[WIDTH + 1] = {0};
 uint8_t *vmem = (uint8_t*)0xA0000000L;
 uint8_t *tmem = (uint8_t*)0xB8000000L;
 
@@ -133,6 +133,7 @@ void putPixel(int16_t x, int16_t y, uint8_t c)
 uint8_t getPixel(int16_t x, int16_t y)
 {
     __asm {
+        push    ds
         lds     si, vmem
         mov     bx, y
         shl     bx, 6
@@ -140,6 +141,7 @@ uint8_t getPixel(int16_t x, int16_t y)
         add     bx, x
         add     si, bx
         lodsb
+        pop     ds
     }
 }
 
@@ -230,7 +232,7 @@ void main()
             flames[WIDTH - x - 1] = 0;
         }
 
-        for (i = SMOOTH; i < WIDTH - SMOOTH; i++)
+        for (i = SMOOTH; i <= WIDTH - SMOOTH; i++)
         {
             x = 0;
             for (j = -SMOOTH; j <= SMOOTH; j++) x += flames[i + j];

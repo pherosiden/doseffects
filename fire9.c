@@ -161,8 +161,6 @@ void main()
     }
 
     srand(time(NULL));
-    //memset(randomize, 0, 19200);
-    //memset(sinus, 0, 1000);
 
     for (i = 0; i < 1000; i++) sinus[i] = sin(i * 0.00628318530718);
 
