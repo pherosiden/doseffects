@@ -13044,17 +13044,24 @@ void drawQuadBezier(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, 
     {
         if ((y * (y2 - y1) > 0) && fabs((y0 - 2 * y1 + y2) / t * x) > abs(y))
         {
-            x0 = x2; x2 = x + x1; y0 = y2; y2 = y + y1;
+            x0 = x2;
+            x2 = x + x1;
+            y0 = y2;
+            y2 = y + y1;
         }
+        
         t = (x0 - x1) / t;
         r = (1 - t) * ((1 - t) * y0 + 2.0 * t * y1) + t * t * y2;
         t = (x0 * x2 - x1 * x1) * t / (x0 - x1);
         x = floor(t + 0.5);
         y = floor(r + 0.5);      
         r = (y1 - y0) * (t - x0) / (x1 - x0) + y0;
+        
         drawQuadBezierSeg(x0, y0, x, floor(r + 0.5), x, y, rgb);
         r = (y1 - y2) * (t - x2) / (x1 - x2) + y2;
-        x0 = x1 = x; y0 = y; y1 = floor(r + 0.5);
+        x0 = x1 = x;
+        y0 = y;
+        y1 = floor(r + 0.5);
     }
 
     if ((y0 - y1) * (y2 - y1) > 0)
@@ -13067,8 +13074,11 @@ void drawQuadBezier(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, 
         y = floor(t + 0.5);
         r = (x1 - x0) * (t - y0) / (y1 - y0) + x0;
         drawQuadBezierSeg(x0, y0, floor(r + 0.5), y, x, y, rgb);
+        
         r = (x1 - x2) * (t - y2) / (y1 - y2) + x2;
-        x0 = x; x1 = floor(r + 0.5); y0 = y1 = y;
+        x0 = x;
+        x1 = floor(r + 0.5);
+        y0 = y1 = y;
     }
     drawQuadBezierSeg(x0, y0, x1, y1, x2, y2, rgb);
 }
@@ -13128,10 +13138,23 @@ void drawQuadRationalBezierSeg(int32_t x0, int32_t y0, int32_t x1, int32_t y1, i
         do {
             putPixel(x0, y0, rgb);
             if (x0 == x2 && y0 == y2) return;
+            
             x1 = 2 * err > dy;
             y1 = 2 * (err + yy) < -dy;
-            if (2 * err < dx || y1) { y0 += sy; dy += xy; err += dx += xx; }
-            if (2 * err > dx || x1) { x0 += sx; dx += xy; err += dy += yy; }
+
+            if (2 * err < dx || y1)
+            {
+                y0 += sy;
+                dy += xy;
+                err += dx += xx;
+            }
+
+            if (2 * err > dx || x1)
+            {
+                x0 += sx;
+                dx += xy;
+                err += dy += yy;
+            }
         } while (dy <= xy && dx >= xy);
     }
     drawLine(x0, y0, x2, y2, rgb);
@@ -13152,7 +13175,7 @@ void drawQuadRationalBezier(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int3
             y2 = yy + y1;
         }
 
-        if (x0 == x2 || w == 1.0) t = (x0 - x1) / (double)x;
+        if (x0 == x2 || w == 1.0) t = (double)(x0 - x1) / x;
         else
         {
             q = sqrt(4.0 * w * w * (x0 - x1) * (x2 - x1) + (x2 - x0) * (x2 - x0));
@@ -13208,11 +13231,17 @@ void drawRotatedEllipseRect(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int3
     int32_t xd = x1 - x0, yd = y1 - y0;
     double w = xd * yd;
 
-    if (zd == 0) { drawEllipseRect(x0, y0, x1, y1, rgb); return; }
+    if (zd == 0)
+    {
+        drawEllipseRect(x0, y0, x1, y1, rgb);
+        return;
+    }
+
     if (w != 0.0) w = (w - zd) / (w + w);
 
     xd = floor(xd * w + 0.5);
     yd = floor(yd * w + 0.5);
+
     drawQuadRationalBezierSeg(x0, y0 + yd, x0, y0, x0 + xd, y0, 1.0 - w, rgb);
     drawQuadRationalBezierSeg(x0, y0 + yd, x0, y1, x1 - xd, y1, w, rgb);
     drawQuadRationalBezierSeg(x1, y1 - yd, x1, y1, x1 - xd, y1, 1.0 - w, rgb);
@@ -13223,8 +13252,14 @@ void drawRotatedEllipse(int32_t x, int32_t y, int32_t a, int32_t b, double angle
 {
     double xd = a * a, yd = b * b;
     double s = sin(angle), zd = (xd - yd) * s;
-    xd = sqrt(xd - zd * s), yd = sqrt(yd + zd * s);
-    a = xd + 0.5; b = yd + 0.5; zd = zd * a * b / (xd * yd);
+
+    xd = sqrt(xd - zd * s);
+    yd = sqrt(yd + zd * s);
+
+    a = xd + 0.5;
+    b = yd + 0.5;
+    zd = zd * a * b / (xd * yd);
+
     drawRotatedEllipseRect(x - a, y - b, x + a, y + b, 4 * zd * cos(angle), rgb);
 }
 
@@ -13252,8 +13287,13 @@ void drawCubicBezierSeg(int32_t x0, int32_t y0, double x1, double y1, double x2,
         ac = xa * yc - xc * ya;
         bc = xb * yc - xc * yb;
         ex = ab * (ab + ac - 3 * bc) + ac * ac;
+        
         f = ex > 0 ? 1 : sqrt(1 + 1024 / x1);
-        ab *= f; ac *= f; bc *= f; ex *= f * f;
+        ab *= f;
+        ac *= f;
+        bc *= f;
+        ex *= f * f;
+
         xy = 9 * (ab + ac + bc) / 8;
         cb = 8 * (xa - ya);
         dx = 27 * (8 * ab * (yb * yb - ya * yc) + ex * (ya + 2 * yb + yc)) / 64 - ya * ya * (xy - ya);
@@ -13261,20 +13301,35 @@ void drawCubicBezierSeg(int32_t x0, int32_t y0, double x1, double y1, double x2,
 
         xx = 3 * (3 * ab * (3 * yb * yb - ya * ya - 2 * ya * yc) - ya * (3 * ac * (ya + yb) + ya * cb)) / 4;
         yy = 3 * (3 * ab * (3 * xb * xb - xa * xa - 2 * xa * xc) - xa * (3 * ac * (xa + xb) + xa * cb)) / 4;
-        xy = xa * ya * (6 * ab + 6 * ac - 3 * bc + cb); ac = ya * ya; cb = xa * xa;
+        xy = xa * ya * (6 * ab + 6 * ac - 3 * bc + cb);
+        ac = ya * ya;
+        cb = xa * xa;
         xy = 3 * (xy + 9 * f * (cb * yb * yc - xb * xc * ac) - 18 * xb * yb * ab) / 8;
 
         if (ex < 0)
         {
-            dx = -dx; dy = -dy; xx = -xx; yy = -yy; xy = -xy; ac = -ac; cb = -cb;
+            dx = -dx;
+            dy = -dy;
+            xx = -xx;
+            yy = -yy;
+            xy = -xy;
+            ac = -ac;
+            cb = -cb;
         }
 
-        ab = 6 * ya * ac; ac = -6 * xa * ac; bc = 6 * ya * cb; cb = -6 * xa * cb;
-        dx += xy; ex = dx + dy; dy += xy;
+        ab = 6 * ya * ac;
+        ac = -6 * xa * ac;
+        bc = 6 * ya * cb;
+        cb = -6 * xa * cb;
+
+        dx += xy;
+        ex = dx + dy;
+        dy += xy;
 
         for (pxy = &xy, fx = fy = f; x0 != x3 && y0 != y3;)
         {
             putPixel(x0, y0, rgb);
+
             do {
                 if (dx > *pxy || dy < *pxy) goto exit;
                 y1 = 2 * ex - dy;
@@ -13296,13 +13351,35 @@ void drawCubicBezierSeg(int32_t x0, int32_t y0, double x1, double y1, double x2,
                 }
             } while (fx > 0 && fy > 0);
 
-            if (2 * fx <= f) { x0 += sx; fx += f; }
-            if (2 * fy <= f) { y0 += sy; fy += f; }
+            if (2 * fx <= f)
+            {
+                x0 += sx;
+                fx += f;
+            }
+
+            if (2 * fy <= f)
+            {
+                y0 += sy;
+                fy += f;
+            }
+
             if (pxy == &xy && dx < 0 && dy > 0) pxy = &EP;
         }
+
         exit:
-        xx = x0; x0 = x3; x3 = xx; sx = -sx; xb = -xb;
-        yy = y0; y0 = y3; y3 = yy; sy = -sy; yb = -yb; x1 = x2;
+        xx = x0;
+        x0 = x3;
+        x3 = xx;
+        sx = -sx;
+        xb = -xb;
+
+        yy = y0;
+        y0 = y3;
+        y3 = yy;
+        sy = -sy;
+        yb = -yb;
+        
+        x1 = x2;
     } while (leg--);
     drawLine(x0, y0, x3, y3, rgb);
 }
@@ -13324,8 +13401,12 @@ void drawCubicBezier(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2,
     else if (t1 > 0.0)
     {
         t2 = sqrt(t1);
-        t1 = (xb - t2) / xa; if (fabs(t1) < 1.0) t[n++] = t1;
-        t1 = (xb + t2) / xa; if (fabs(t1) < 1.0) t[n++] = t1;
+
+        t1 = (xb - t2) / xa;
+        if (fabs(t1) < 1.0) t[n++] = t1;
+
+        t1 = (xb + t2) / xa;
+        if (fabs(t1) < 1.0) t[n++] = t1;
     }
 
     t1 = yb * yb - ya * yc;
@@ -13336,8 +13417,12 @@ void drawCubicBezier(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2,
     else if (t1 > 0.0)
     {
         t2 = sqrt(t1);
-        t1 = (yb - t2) / ya; if (fabs(t1) < 1.0) t[n++] = t1;
-        t1 = (yb + t2) / ya; if (fabs(t1) < 1.0) t[n++] = t1;
+        
+        t1 = (yb - t2) / ya;
+        if (fabs(t1) < 1.0) t[n++] = t1;
+        
+        t1 = (yb + t2) / ya;
+        if (fabs(t1) < 1.0) t[n++] = t1;
     }
 
     for (i = 1; i != n; i++)
@@ -13350,7 +13435,9 @@ void drawCubicBezier(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2,
         }
     }
 
-    t1 = -1.0; t[n] = 1.0;
+    t1 = -1.0;
+    t[n] = 1.0;
+
     for (i = 0; i <= n; i++)
     {
         t2 = t[i];
@@ -13360,12 +13447,29 @@ void drawCubicBezier(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2,
         fy2 = (t2 * (t2 * yb - 2 * yc) - t1 * (t2 * (t2 * ya - 2 * yb) + yc) + yd) / 8 - fy0;
         fx0 -= fx3 = (t2 * (t2 * (3 * xb - t2 * xa) - 3 * xc) + xd) / 8;
         fy0 -= fy3 = (t2 * (t2 * (3 * yb - t2 * ya) - 3 * yc) + yd) / 8;
+        
         x3 = floor(fx3 + 0.5);
         y3 = floor(fy3 + 0.5);
-        if (fx0 != 0.0) { fx1 *= fx0 = (x0 - x3) / fx0; fx2 *= fx0; }
-        if (fy0 != 0.0) { fy1 *= fy0 = (y0 - y3) / fy0; fy2 *= fy0; }
+        
+        if (fx0 != 0.0)
+        {
+            fx1 *= fx0 = (x0 - x3) / fx0;
+            fx2 *= fx0;
+        }
+
+        if (fy0 != 0.0)
+        {
+            fy1 *= fy0 = (y0 - y3) / fy0;
+            fy2 *= fy0;
+        }
+
         if (x0 != x3 || y0 != y3) drawCubicBezierSeg(x0, y0, x0 + fx1, y0 + fy1, x0 + fx2, y0 + fy2, x3, y3, rgb);
-        x0 = x3; y0 = y3; fx0 = fx3; fy0 = fy3; t1 = t2;
+        
+        x0 = x3;
+        y0 = y3;
+        fx0 = fx3;
+        fy0 = fy3;
+        t1 = t2;
     }
 }
 
@@ -13384,7 +13488,9 @@ void drawLineWidthAlpha(int32_t x0, int32_t y0, int32_t x1, int32_t y1, double w
     {
         putPixelAlpha(x0, y0, rgb, max(0, 255 * (abs(err - dx + dy) / ed - wd + 1)));
 
-        e2 = err; x2 = x0;
+        e2 = err;
+        x2 = x0;
+
         if (2 * e2 >= -dx)
         {
             for (e2 += dy, y2 = y0; e2 < ed * wd && (y1 != y2 || dx > dy); e2 += dx) putPixelAlpha(x0, y2 += sy, rgb, max(0, 255 * (abs(e2) / ed - wd + 1)));
@@ -13393,6 +13499,7 @@ void drawLineWidthAlpha(int32_t x0, int32_t y0, int32_t x1, int32_t y1, double w
             err -= dy;
             x0 += sx; 
         }
+
         if (2 * e2 <= dy)
         {
             for (e2 = dx-e2; e2 < ed * wd && (x1 != x2 || dx < dy); e2 += dy) putPixelAlpha(x2 += sx, y0, rgb, max(0, 255 * (abs(e2) / ed - wd + 1)));
@@ -13423,11 +13530,14 @@ void drawQuadBezierSegBlend(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int3
 
     if (cur != 0)
     {
-        xx += sx; xx *= sx = x0 < x2 ? 1 : -1;
-        yy += sy; yy *= sy = y0 < y2 ? 1 : -1;
+        xx += sx;
+        xx *= sx = x0 < x2 ? 1 : -1;
+        yy += sy;
+        yy *= sy = y0 < y2 ? 1 : -1;
         xy = 2 * xx * yy;
         xx *= xx;
         yy *= yy;
+
         if (cur * sx * sy < 0)
         {
             xx = -xx;
@@ -13438,7 +13548,9 @@ void drawQuadBezierSegBlend(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int3
 
         dx = 4.0 * sy * (x1 - x0) * cur + xx - xy;
         dy = 4.0 * sx * (y0 - y1) * cur + yy - xy;
-        xx += xx; yy += yy; err = dx + dy + xy;
+        xx += xx;
+        yy += yy;
+        err = dx + dy + xy;
 
         do {
             cur = min(dx + xy, -xy - dy);
@@ -13448,16 +13560,23 @@ void drawQuadBezierSegBlend(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int3
 
             if (x0 == x2 || y0 == y2) break;
 
-            x1 = x0; cur = dx - err; y1 = 2 * err + dy < 0;
+            x1 = x0;
+            cur = dx - err;
+            y1 = 2 * err + dy < 0;
             if (2 * err + dx > 0)
             {
                 if (err - dy < ed) putPixelAlpha(x0, y0 + sy, rgb, 255 * fabs(err - dy) / ed);
-                x0 += sx; dx -= xy; err += dy += yy;
+                x0 += sx;
+                dx -= xy;
+                err += dy += yy;
             }
+
             if (y1)
             {
                 if (cur < ed) putPixelAlpha(x1 + sx, y0, rgb, 255 * fabs(cur) / ed);
-                y0 += sy; dy -= xy; err += dx += xx;
+                y0 += sy;
+                dy -= xy;
+                err += dx += xx;
             }
         } while (dy < dx);
     }
@@ -13478,13 +13597,19 @@ void drawQuadRationalBezierSegAlpha(int32_t x0, int32_t y0, int32_t x1, int32_t 
     {
         if (sx * sx + sy * sy > xx * xx + yy * yy)
         {
-            x2 = x0; x0 -= dx; y2 = y0; y0 -= dy; cur = -cur;
+            x2 = x0;
+            x0 -= dx;
+            y2 = y0;
+            y0 -= dy;
+            cur = -cur;
         }
 
         xx = 2.0 * (4.0 * w * sx * xx + dx * dx);
         yy = 2.0 * (4.0 * w * sy * yy + dy * dy);
+
         sx = x0 < x2 ? 1 : -1;
         sy = y0 < y2 ? 1 : -1;
+
         xy = -2.0 * sx * sy * (2.0 * w * xy + dx * dy);
 
         if (cur * sx * sy < 0)
@@ -13517,20 +13642,29 @@ void drawQuadRationalBezierSegAlpha(int32_t x0, int32_t y0, int32_t x1, int32_t 
             cur = min(dx - xy, xy - dy);
             ed = max(dx - xy, xy - dy);
             ed += 2 * ed * cur * cur / (4. * ed * ed + cur * cur);
+
             x1 = 255 * fabs(err - dx - dy + xy) / ed;
             if (x1 < 256) putPixelAlpha(x0, y0, rgb, x1);
+            
             if (f = 2 * err + dy < 0)
             {
                 if (y0 == y2) return;
                 if (dx - err < ed) putPixelAlpha(x0 + sx, y0, rgb, 255 * fabs(dx - err) / ed);
             }
+
             if (2 * err + dx > 0)
             {
                 if (x0 == x2) return;
                 if (err - dy < ed) putPixelAlpha(x0, y0 + sy, rgb, 255 * fabs(err - dy) / ed);
                 x0 += sx; dx += xy; err += dy += yy;
             }
-            if (f) { y0 += sy; dy += xy; err += dx += xx; }
+
+            if (f)
+            {
+                y0 += sy;
+                dy += xy;
+                err += dx += xx;
+            }
         } while (dy < dx);
     }
     drawLineAlpha(x0, y0, x2, y2, rgb);
@@ -13565,7 +13699,12 @@ void drawCubicBezierSegAlpha(int32_t x0, int32_t y0, double x1, double y1, doubl
         ip = 4 * ab * bc - ac * ac;
         ex = ab * (ab + ac - 3 * bc) + ac * ac;
         f = ex > 0 ? 1 : sqrt(1 + 1024 / x1);
-        ab *= f; ac *= f; bc *= f; ex *= f * f;
+        
+        ab *= f;
+        ac *= f;
+        bc *= f;
+        ex *= f * f;
+
         xy = 9 * (ab + ac + bc) / 8;
         ba = 8 * (xa - ya);
         dx = 27 * (8 * ab * (yb * yb - ya * yc) + ex * (ya + 2 * yb + yc)) / 64 - ya * ya * (xy - ya);
@@ -13573,16 +13712,27 @@ void drawCubicBezierSegAlpha(int32_t x0, int32_t y0, double x1, double y1, doubl
 
         xx = 3 * (3 * ab * (3 * yb * yb - ya * ya - 2 * ya * yc) - ya * (3 * ac * (ya + yb) + ya * ba)) / 4;
         yy = 3 * (3 * ab * (3 * xb * xb - xa * xa - 2 * xa * xc) - xa * (3 * ac * (xa + xb) + xa * ba)) / 4;
-        xy = xa * ya * (6 * ab + 6 * ac - 3 * bc + ba); ac = ya * ya; ba = xa * xa;
+        xy = xa * ya * (6 * ab + 6 * ac - 3 * bc + ba);
+        ac = ya * ya;
+        ba = xa * xa;
         xy = 3 * (xy + 9 * f * (ba * yb * yc - xb * xc * ac) - 18 * xb * yb * ab) / 8;
 
         if (ex < 0)
         {
-            dx = -dx; dy = -dy; xx = -xx; yy = -yy; xy = -xy; ac = -ac; ba = -ba;
+            dx = -dx; dy = -dy;
+            xx = -xx; yy = -yy;
+            xy = -xy; ac = -ac;
+            ba = -ba;
         }
 
-        ab = 6 * ya * ac; ac = -6 * xa * ac; bc = 6 * ya * ba; ba = -6 * xa * ba;
-        dx += xy; ex = dx + dy; dy += xy;
+        ab = 6 * ya * ac;
+        ac = -6 * xa * ac;
+        bc = 6 * ya * ba;
+        ba = -6 * xa * ba;
+        
+        dx += xy;
+        ex = dx + dy;
+        dy += xy;
 
         for (fx = fy = f; x0 != x3 && y0 != y3;)
         {
@@ -13591,32 +13741,45 @@ void drawCubicBezierSegAlpha(int32_t x0, int32_t y0, double x1, double y1, doubl
             ed = f * (ed + 2 * ed * y1 * y1 / (4 * ed * ed + y1 * y1));
             y1 = 255 * fabs(ex - (f - fx + 1) * dx - (f - fy + 1) * dy + f * xy) / ed;
             if (y1 < 256) putPixelAlpha(x0, y0, rgb, y1);
+
             px = fabs(ex - (f - fx + 1) * dx + (fy - 1) * dy);
             py = fabs(ex + (fx - 1) * dx - (f - fy + 1) * dy);
             y2 = y0;
+
             do {
                 if ((ip >= -EP) && (dx + xx > xy || dy + yy < xy)) goto exit;
                 y1 = 2 * ex + dx;
                 if (2 * ex + dy > 0)
                 {
-                    fx--; ex += dx += xx; dy += xy += ac; yy += bc; xx += ab;
+                    fx--;
+                    ex += dx += xx;
+                    dy += xy += ac;
+                    yy += bc;
+                    xx += ab;
                 } else if (y1 > 0) goto exit;
+
                 if (y1 <= 0)
                 {
-                    fy--; ex += dy += yy; dx += xy += bc; xx += ac; yy += ba;
+                    fy--;
+                    ex += dy += yy;
+                    dx += xy += bc;
+                    xx += ac;
+                    yy += ba;
                 }
             } while (fx > 0 && fy > 0);
 
             if (2 * fy <= f)
             {
                 if (py < ed) putPixelAlpha(x0 + sx, y0, rgb, 255 * py / ed);
-                y0 += sy; fy += f;
+                y0 += sy;
+                fy += f;
             }
 
             if (2 * fx <= f)
             {
                 if (px < ed) putPixelAlpha(x0, y2 + sy, rgb, 255 * px / ed);
-                x0 += sx; fx += f;
+                x0 += sx;
+                fx += f;
             }
         }
 
@@ -13633,8 +13796,19 @@ void drawCubicBezierSegAlpha(int32_t x0, int32_t y0, double x1, double y1, doubl
             x0 += sx;
         }
 
-        xx = x0; x0 = x3; x3 = xx; sx = -sx; xb = -xb;
-        yy = y0; y0 = y3; y3 = yy; sy = -sy; yb = -yb; x1 = x2;
+        xx = x0;
+        x0 = x3;
+        x3 = xx;
+        sx = -sx;
+        xb = -xb;
+
+        yy = y0;
+        y0 = y3;
+        y3 = yy;
+        sy = -sy;
+        yb = -yb;
+        
+        x1 = x2;
     } while (leg--);
     drawLineAlpha(x0, y0, x3, y3, rgb);
 }
