@@ -14095,9 +14095,10 @@ void blurImageEx(GFX_IMAGE *dst, GFX_IMAGE *src, int32_t blur)
     __asm {
         mov     esi, psrc
         mov     edi, pdst
+        mov     eax, blur
+        shl     eax, 1
         mov     ecx, size
-        sub     ecx, blur
-        sub     ecx, blur
+        sub     ecx, eax
         push    ecx
         mov     eax, 4
         xor     ebx, ebx
