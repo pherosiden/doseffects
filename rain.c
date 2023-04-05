@@ -198,7 +198,7 @@ void theEnd()
 
 void putFrame()
 {
-    /*========= OPTIMIZE VERSION =========*/
+    /*========= ASM VERSION =========*/
     __asm {
         mov     ax, seg vbuff
         mov     ds, ax
@@ -244,8 +244,8 @@ void putFrame()
         loop    lp4
     }
 
-    /*========= C VERSION ==========
-    int16_t val;
+    /*========= C VERSION ==========*/
+    /*int16_t val;
     uint16_t cx, ax, dx, bx;
     uint16_t *si = (uint16_t*)&vbuff;
     uint16_t *di = (uint16_t*)&vmem[64000 - 320];
@@ -299,8 +299,9 @@ inline uint32_t rotl(uint32_t value, uint8_t count)
 
 void stabylize()
 {
+    /*========= C VERSION =========*/
     uint32_t eax, edx;
-    uint16_t si, di, bx, cx;
+    uint16_t si, di, cx;
 
     si = actualPage;
     di = otherPage;
@@ -310,7 +311,7 @@ void stabylize()
     di += BORDE * ALTO;
     cx = (ANCHO * ALTO - BORDE * ALTO) >> 1;
 
-    for (bx = 0; bx != cx; bx++)
+    while (cx--)
     {
         eax =  *(uint32_t*)&vbuff[si - ALTO * 2];
         eax += *(uint32_t*)&vbuff[si + ALTO * 2];
@@ -332,14 +333,14 @@ void stabylize()
         si += 4;
     }
 
-    /*========= ASM VERSION ===========
-    __asm {
+    /*========= ASM VERSION (FIXME) =========*/
+    /*__asm {
+        mov     ax, seg vbuff
+        mov     es, ax
         mov     si, actualPage
         mov     di, otherPage
         mov     actualPage, di
         mov     otherPage, si
-        mov     ax, seg vbuff
-        mov     es, ax
         add     si, BORDE * ALTO
         add     di, BORDE * ALTO
         mov     cl, densityAdd
@@ -370,8 +371,9 @@ void stabylize()
 
 void stabylize2()
 {
+    /*========= C VERSION =========*/
     int16_t ax;
-    uint16_t si, di, bx, cx;
+    uint16_t si, di, cx;
 
     si = actualPage;
     di = otherPage;
@@ -380,8 +382,7 @@ void stabylize2()
     si += BORDE * ALTO;
     di += BORDE * ALTO;
     cx = ANCHO * ALTO - BORDE * ALTO - 100;
-
-    for (bx = 0; bx != cx; bx++)
+    while (cx--)
     {
         ax =  *(uint16_t*)&vbuff[si - ALTO * 2];
         ax += *(uint16_t*)&vbuff[si + ALTO * 2];
@@ -396,11 +397,64 @@ void stabylize2()
         di += 2;
         si += 2;
     }
+
+    /*========= ASM VERSION (FIXME) =========*/
+    /*__asm {
+        mov     ax, seg vbuff
+        mov     es, ax
+        mov     ds, ax
+        mov     si, actualPage
+        mov     di, otherPage
+        mov     actualPage, di
+        mov     otherPage, si
+        add     si, BORDE * ALTO
+        add     di, BORDE * ALTO
+        mov     cx, ANCHO * ALTO - BORDE * ALTO - 100
+    again:
+        mov     ax, [si - ALTO * 2]
+        add     ax, [si + ALTO * 2]
+        add     ax, [si + 2]
+        add     ax, [si - 2]
+        add     ax, [si - ALTO * 2 - 2]
+        add     ax, [si - ALTO * 2 - 2]
+        add     ax, [si + ALTO * 2 - 2]
+        add     ax, [si + ALTO * 2 - 2]
+        sar     ax, 3
+        stosw
+        add     si, 2
+        dec     cx
+        jnz     again
+    }*/
 }
 
 void putPoint(int16_t idx, uint16_t rnd1, uint16_t rnd2)
 {
-    uint16_t di;
+    /*=========== ASM VERSION ==========*/
+    __asm {
+        mov     si, idx
+        rol     esi, 16
+        mov     si, idx
+        mov     ax, 100
+        mul     rnd1
+        mov     bx, rnd2
+        add     bx, ax
+        shl     bx, 1
+        add     bx, actualPage
+        mov     ax, seg vbuff
+        mov     ds, ax
+        mov     di, bx
+        mov     [di              ], esi
+        mov     [di + 4          ], esi
+        mov     [di + 100 * 2    ], esi
+        mov     [di + 100 * 2 + 4], esi
+        mov     [di + 100 * 4    ], esi
+        mov     [di + 100 * 4 + 4], esi
+        mov     [di + 100 * 6    ], esi
+        mov     [di + 100 * 6 + 4], esi
+    }
+
+    /*========= C VERSION =========*/
+    /*uint16_t di;
     uint32_t esi = idx;
 
     esi = rotl(esi, 16);
@@ -414,12 +468,53 @@ void putPoint(int16_t idx, uint16_t rnd1, uint16_t rnd2)
     *(uint32_t*)&vbuff[di + ALTO * 4    ] = esi;
     *(uint32_t*)&vbuff[di + ALTO * 4 + 4] = esi;
     *(uint32_t*)&vbuff[di + ALTO * 6    ] = esi;
-    *(uint32_t*)&vbuff[di + ALTO * 6 + 4] = esi;
+    *(uint32_t*)&vbuff[di + ALTO * 6 + 4] = esi;*/  
 }
 
 void putBigPoint(int16_t idx, uint16_t rnd1, uint16_t rnd2)
 {
-    uint16_t di;
+    /*=========== ASM VERSION ==========*/
+    __asm {
+        mov     si, idx
+        rol     esi, 16
+        mov     si, idx
+        mov     ax, 100
+        mul     rnd1
+        mov     bx, rnd2
+        add     bx, ax
+        shl     bx, 1
+        add     bx, actualPage
+        mov     ax, seg vbuff
+        mov     ds, ax
+        mov     di, bx
+        mov     [di                ], esi
+        mov     [di + 4            ], esi
+        mov     [di + 8            ], esi
+        mov     [di + 10           ], esi
+        mov     [di + 100 * 2      ], esi
+        mov     [di + 100 * 2 + 4  ], esi
+        mov     [di + 100 * 2 + 8  ], esi
+        mov     [di + 100 * 2 + 10 ], esi
+        mov     [di + 100 * 4      ], esi
+        mov     [di + 100 * 4 + 4  ], esi
+        mov     [di + 100 * 4 + 8  ], esi
+        mov     [di + 100 * 4 + 10 ], esi
+        mov     [di + 100 * 6      ], esi
+        mov     [di + 100 * 6 + 4  ], esi
+        mov     [di + 100 * 6 + 8  ], esi
+        mov     [di + 100 * 6 + 10 ], esi
+        mov     [di + 100 * 8      ], esi
+        mov     [di + 100 * 8 + 4  ], esi
+        mov     [di + 100 * 8 + 8  ], esi
+        mov     [di + 100 * 8 + 10 ], esi
+        mov     [di + 100 * 10     ], esi
+        mov     [di + 100 * 10 + 4 ], esi
+        mov     [di + 100 * 10 + 8 ], esi
+        mov     [di + 100 * 10 + 10], esi
+    }
+
+    /*========= C VERSION =========*/
+    /*uint16_t di;
     uint32_t esi = idx;
 
     esi = rotl(esi, 16);
@@ -449,7 +544,7 @@ void putBigPoint(int16_t idx, uint16_t rnd1, uint16_t rnd2)
    *(uint32_t*)&vbuff[di + ALTO * 10     ] = esi;
    *(uint32_t*)&vbuff[di + ALTO * 10 + 4 ] = esi;
    *(uint32_t*)&vbuff[di + ALTO * 10 + 8 ] = esi;
-   *(uint32_t*)&vbuff[di + ALTO * 10 + 10] = esi;
+   *(uint32_t*)&vbuff[di + ALTO * 10 + 10] = esi;*/
 }
 
 uint16_t calcRand()
@@ -481,14 +576,39 @@ void bigTouch(int16_t idx)
 
 void putLine(int16_t idx, uint16_t rnd1)
 {
-    uint16_t di, cx;
+    /*=========== ASM VERSION ==========*/
+    __asm {
+        mov     si, idx
+        rol     esi, 16
+        mov     si, idx
+        mov     ax, 200
+        mul     rnd1
+        mov     bx, ax
+        add     bx, ANCHO_OLAS + 2 * 8
+        mov     ax, seg vbuff
+        mov     ds, ax
+        mov     di, bx
+        mov     cx, (100 / 2 - ANCHO_OLAS - 2 * 8)
+    again:
+        mov     [di           ], esi
+        mov     [di + 100 * 2 ], esi
+        mov     [di + 100 * 4 ], esi
+        mov     [di + 100 * 6 ], esi
+        mov     [di + 100 * 8 ], esi
+        mov     [di + 100 * 10], esi
+        add     di, 4
+        loop    again
+    }
+
+    /*========= C VERSION =========*/
+    /*uint16_t di, cx;
     uint32_t esi = idx;
 
     esi = rotl(esi, 16);
     esi = (esi & 0xFFFF0000) + idx;
     di = (ANCHO_OLAS + 2 * 8) + (2 * ALTO * rnd1);
-
-    for (cx = 0; cx != (ALTO / 2 - ANCHO_OLAS - 2 * 8); cx++)
+    cx = ALTO / 2 - ANCHO_OLAS - 2 * 8;
+    while (cx--)
     {
         *(uint32_t*)&vbuff[di            ] = esi;
         *(uint32_t*)&vbuff[di + ALTO * 2 ] = esi;
@@ -497,7 +617,7 @@ void putLine(int16_t idx, uint16_t rnd1)
         *(uint32_t*)&vbuff[di + ALTO * 8 ] = esi;
         *(uint32_t*)&vbuff[di + ALTO * 10] = esi;
         di += 4;
-    }
+    }*/
 }
 
 void readSinus(uint16_t val, uint16_t *rnd1, uint16_t *rnd2)
@@ -741,7 +861,7 @@ void main()
     getch();
 
     init13h();
-
+    
     densityAdd = DENSITY_INIT;
 
     printFrame(1);

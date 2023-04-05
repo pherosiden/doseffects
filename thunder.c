@@ -150,7 +150,7 @@ void processItem(int16_t x, int16_t y, int16_t ints, int16_t dx)
 {
     int16_t part, dy;
 
-    while (ints > 0 && y < 200 && x > 0 && x < 320 && !kbhit())
+    while (ints > 0 && y < 190 && x > 10 && x < 310 && !kbhit())
     {
         addItem(x + 1, y, (ints - 3) * 20 + 50);
         addItem(x,     y, (ints * 20) + 50);

@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:German
 :DOSBOX-X:CODEPAGE:850
-:DOSBOX-X:VERSION:2022.12.26
+:DOSBOX-X:VERSION:2023.03.31
 :DOSBOX-X:REMARK:
 :AUTOEXEC_CONFIGFILE_HELP
 Befehle in diesen Zeilen werden zum Start ausgeführt.
@@ -234,7 +234,7 @@ Wähle ein Event oder klick auf die Buttons Hinzf/Entf/Weiter.
 Joystick bewegen oder Button drücken.
 .
 :CAPTURE_ENABLED
-Capture enabled. Hit ESC to release capture.
+Aufnahme aktiv. ESC drücken zum Beenden.
 .
 :MAPPER_FILE_SAVED
 Mapper-Datei gespeichert
@@ -2285,7 +2285,7 @@ Starte Gastsystem neu
 :MENU:mapper_loadmap
 Lade Mapper-Datei...
 .
-:MENU:mapper_loadlanguage
+:MENU:loadlang
 Lade Sprachdatei...
 .
 :MENU:mapper_quickrun
