@@ -10825,7 +10825,8 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t refreshRate)
 
     // Calculate linear address size and map physical address to linear address
     lfbSize = modeInfo.YResolution * modeInfo.BytesPerScanline;
-    if (!(lfbPtr = (uint8_t*)mapPhysicalAddress(modeInfo.PhysBasePtr, lfbSize))) return 0;
+    lfbPtr = (uint8_t*)mapPhysicalAddress(modeInfo.PhysBasePtr, lfbSize);
+    if (!lfbPtr) return 0;
 
     // Only DIRECT COLOR and PACKED PIXEL mode are allowed
     if (modeInfo.MemoryModel == VBE_MM_DCOLOR || modeInfo.MemoryModel == VBE_MM_PACKED)
@@ -11331,7 +11332,7 @@ void scrollPalette(int32_t from, int32_t to, int32_t step)
 {
     RGB tmp = {0};
     RGB pal[256] = {0};
-    uint32_t count = (to - from) * sizeof(RGB);
+    const uint32_t count = (to - from) * sizeof(RGB);
 
     getPalette(pal);
     
@@ -11351,7 +11352,7 @@ void rotatePalette(int32_t from, int32_t to, int32_t loop)
 {
     RGB tmp = {0};
     RGB pal[256] = {0};
-    uint32_t count = (to - from) * sizeof(RGB);
+    const uint32_t count = (to - from) * sizeof(RGB);
 
     getPalette(pal);
 
@@ -11772,7 +11773,9 @@ void fadeCircle(int32_t dir, uint32_t col)
         {
             waitRetrace();
             for (y = 0; y <= cmaxY / 40; y++)
-            for (x = 0; x <= cmaxX / 40; x++) fillCircle(x * 40 + 20, y * 40 + 20, i, col);
+            {
+                for (x = 0; x <= cmaxX / 40; x++) fillCircle(x * 40 + 20, y * 40 + 20, i, col);
+            }
         }
         break;
 
@@ -11781,8 +11784,12 @@ void fadeCircle(int32_t dir, uint32_t col)
         {
             waitRetrace();
             for (y = 0; y <= cmaxY / 40; y++)
-            for (x = 0; x <= cmaxX / 40; x++)
-            if (cmaxY / 40 - y + i < 29) fillCircle(x * 40 + 20, y * 40 + 20, cmaxY / 40 - y + i, col);
+            {
+                for (x = 0; x <= cmaxX / 40; x++)
+                {
+                    if (cmaxY / 40 - y + i < 29) fillCircle(x * 40 + 20, y * 40 + 20, cmaxY / 40 - y + i, col);
+                }
+            }
         }
         break;
 
@@ -11791,8 +11798,12 @@ void fadeCircle(int32_t dir, uint32_t col)
         {
             waitRetrace();
             for (y = 0; y <= cmaxY / 40; y++)
-            for (x = 0; x <= cmaxX / 40; x++)
-            if (cmaxX / 40 - x + i < 29) fillCircle(x * 40 + 20, y * 40 + 20, cmaxX / 40 - x + i, col);
+            {
+                for (x = 0; x <= cmaxX / 40; x++)
+                {
+                    if (cmaxX / 40 - x + i < 29) fillCircle(x * 40 + 20, y * 40 + 20, cmaxX / 40 - x + i, col);
+                }
+            }
         }
         break;
 
@@ -11801,8 +11812,12 @@ void fadeCircle(int32_t dir, uint32_t col)
         {
             waitRetrace();
             for (y = 0; y <= cmaxY / 40; y++)
-            for (x = 0; x <= cmaxX / 40; x++)
-            if (cmaxX / 40 - x - y + i < 29) fillCircle(x * 40 + 20, y * 40 + 20, cmaxX / 40 - x - y + i, col);
+            {
+                for (x = 0; x <= cmaxX / 40; x++)
+                {
+                    if (cmaxX / 40 - x - y + i < 29) fillCircle(x * 40 + 20, y * 40 + 20, cmaxX / 40 - x - y + i, col);
+                }
+            }
         }
         break;
     }
@@ -12646,10 +12661,7 @@ void drawPoly(POINT *points, int32_t num, uint32_t col)
     int32_t i;
 
     if (num < 3) return;
-    for (i = 0; i < num; i++)
-    {
-        drawLine(points[i].x, points[i].y, points[(i + 1) % num].x, points[(i + 1) % num].y, col);
-    }
+    for (i = 0; i < num; i++) drawLine(points[i].x, points[i].y, points[(i + 1) % num].x, points[(i + 1) % num].y, col);
 }
 
 void drawPolyAdd(POINT *points, int32_t num, uint32_t col)
@@ -12657,10 +12669,7 @@ void drawPolyAdd(POINT *points, int32_t num, uint32_t col)
     int32_t i;
 
     if (num < 3) return;
-    for (i = 0; i < num; i++)
-    {
-        drawLineAdd(points[i].x, points[i].y, points[(i + 1) % num].x, points[(i + 1) % num].y, col);
-    }
+    for (i = 0; i < num; i++) drawLineAdd(points[i].x, points[i].y, points[(i + 1) % num].x, points[(i + 1) % num].y, col);
 }
 
 void drawPolySub(POINT *points, int32_t num, uint32_t col)
@@ -12668,10 +12677,7 @@ void drawPolySub(POINT *points, int32_t num, uint32_t col)
     int32_t i;
 
     if (num < 3) return;
-    for (i = 0; i < num; i++)
-    {
-        drawLineSub(points[i].x, points[i].y, points[(i + 1) % num].x, points[(i + 1) % num].y, col);
-    }
+    for (i = 0; i < num; i++) drawLineSub(points[i].x, points[i].y, points[(i + 1) % num].x, points[(i + 1) % num].y, col);
 }
 
 void moveTo(int32_t x, int32_t y)
@@ -14383,34 +14389,41 @@ void fadeOutCircle(double pc, int32_t size, int32_t type, uint32_t col)
     {
     case 0:
         for (y = 0; y < lfbHeight / dsize; y++)
-        for (x = 0; x < lfbWidth / dsize; x++)
-        fillCircle(x * dsize + size, y * dsize + size, max * pc / 100, col);
+        {
+            for (x = 0; x < lfbWidth / dsize; x++) fillCircle(x * dsize + size, y * dsize + size, max * pc / 100, col);
+        }
         break;
     case 1:
         for (y = 0; y < lfbHeight / dsize; y++)
-        for (x = 0; x < lfbWidth / dsize; x++)
         {
-            val = (max + (lfbHeight / dsize - y) * 2) * pc / 100;
-            if (val > max) val = max;
-            fillCircle(x * dsize + size, y * dsize + size, val, col);
+            for (x = 0; x < lfbWidth / dsize; x++)
+            {
+                val = (max + (lfbHeight / dsize - y) * 2) * pc / 100;
+                if (val > max) val = max;
+                fillCircle(x * dsize + size, y * dsize + size, val, col);
+            }
         }
         break;
     case 2:
         for (y = 0; y < lfbHeight / dsize; y++)
-        for (x = 0; x < lfbWidth / dsize; x++)
         {
-            val = (max + (lfbWidth / dsize - x) * 2) * pc / 100;
-            if (val > max) val = max;
-            fillCircle(x * dsize + size, y * dsize + size, val, col);
+            for (x = 0; x < lfbWidth / dsize; x++)
+            {
+                val = (max + (lfbWidth / dsize - x) * 2) * pc / 100;
+                if (val > max) val = max;
+                fillCircle(x * dsize + size, y * dsize + size, val, col);
+            }
         }
         break;
     case 3:
         for (y = 0; y < lfbHeight / dsize; y++)
-        for (x = 0; x < lfbWidth / dsize; x++)
         {
-            val = (max + (lfbWidth / size - (x + y))) * pc / 100;
-            if (val > max) val = max;
-            fillCircle(x * dsize + size, y * dsize + size, val, col);
+            for (x = 0; x < lfbWidth / dsize; x++)
+            {
+                val = (max + (lfbWidth / size - (x + y))) * pc / 100;
+                if (val > max) val = max;
+                fillCircle(x * dsize + size, y * dsize + size, val, col);
+            }
         }
         break;
     }
