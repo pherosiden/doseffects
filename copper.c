@@ -52,7 +52,7 @@ void main()
         }
     }*/
 
-    /*============ OPTIMIZE VERSION ============*/
+    /*============ ASM VERSION ============*/
     while (!kbhit())
     {
         __asm {

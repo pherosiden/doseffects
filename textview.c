@@ -296,8 +296,8 @@ void main(int argc, char *argv[])
     if (argc < 2)
     {
         clearScreen();
-        printText(1, 1, 0x0F, "Text View - View Text File v1.0 (c) 1998 by Nguyen Ngoc Van");
-        printText(1, 2, 0x0F, "Syntax: textview <text file>"); return;
+        printText(1, 1, 0x0F, "Text View - The Text File Viewer v1.0 (c) 1998 by Nguyen Ngoc Van");
+        printText(1, 2, 0x0F, "Syntax: textview <txtfile>"); return;
     }
 
     setColor();
