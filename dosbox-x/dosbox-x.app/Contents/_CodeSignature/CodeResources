@@ -18,11 +18,11 @@
 		</data>
 		<key>Resources/dosbox-x.reference.conf</key>
 		<data>
-		yZrpCLJdXtVT6rZz9PgjN1HQG0M=
+		BGj/u6CitJ8AAIOzvLNqnde6Ld8=
 		</data>
 		<key>Resources/dosbox-x.reference.full.conf</key>
 		<data>
-		Z+R5GnOfyflvJ1Zkbh4Zzx2HqaU=
+		Nh3pCHi5A9snKT5ogUXH4Pmn88k=
 		</data>
 		<key>Resources/drivez/readme.txt</key>
 		<data>
@@ -30,7 +30,7 @@
 		</data>
 		<key>Resources/freecg98.bmp</key>
 		<data>
-		cc1zBEqb7rqlcjIxiYxVSF/8wkI=
+		4At3yr1ZYGRqvF285VaPEh03rkg=
 		</data>
 		<key>Resources/glshaders/ScanLine.glsl</key>
 		<data>
@@ -194,47 +194,47 @@
 		</data>
 		<key>Resources/languages/de_DE.lng</key>
 		<data>
-		OGLgLmNbLtTXRXJnshqN+7iFVWc=
+		D+7+NoDJYsWlKN6JlkMvbmV/Fm0=
 		</data>
 		<key>Resources/languages/en_US.lng</key>
 		<data>
-		pwOpa4VffINB56L/bCN9iHoJe2k=
+		TOxC8gDsHN3Fliif70xhaQx49+c=
 		</data>
 		<key>Resources/languages/es_ES.lng</key>
 		<data>
-		fIx7XN0OieRGRVzh/Fye+pesodQ=
+		3RxmlbPyefgvqvvG8ZY9MCAwHU4=
 		</data>
 		<key>Resources/languages/fr_FR.lng</key>
 		<data>
-		XVKGFVq1QVgtmcpDhNEeMhmqLrE=
+		3AOLPyBAwlf2W6y5J9E2jqtzQwo=
 		</data>
 		<key>Resources/languages/ja_JP.lng</key>
 		<data>
-		aPR7K13IXgYeJEPJ0z8ZYKzIQzo=
+		9mWgqqgncCLcZGuwp7w5zO2TpN8=
 		</data>
 		<key>Resources/languages/ko_KR.lng</key>
 		<data>
-		AFbqUn9nAdLYk+9rXdUD32/3u2g=
+		2onkS+jFo+ytmQHPBUvHGWULF7o=
 		</data>
 		<key>Resources/languages/nl_NL.lng</key>
 		<data>
-		HSMfMdO+l1YhhLAg2wrmDtcJP18=
+		napboH+hM3cOb9RBNH/L7wVhf68=
 		</data>
 		<key>Resources/languages/pt_BR.lng</key>
 		<data>
-		wabxS17nnmo8zgakAQ+N3cTP/lA=
+		jSjCi6C7eOjfcfM7i6lWJvw9P74=
 		</data>
 		<key>Resources/languages/tr_TR.lng</key>
 		<data>
-		oB2ijxq4k0lFKntfvbWqrjMg3uY=
+		uY9UyeRoIi595lPDO9hYRIPMZm8=
 		</data>
 		<key>Resources/languages/zh_CN.lng</key>
 		<data>
-		yF8cMF5VMq+sDnQYLqraNGCRWQU=
+		p7W3GymkKbbOf4RxgtJRN0uRb1w=
 		</data>
 		<key>Resources/languages/zh_TW.lng</key>
 		<data>
-		VcmBFXblol17JRUZBTKKYKgvmvI=
+		ApC9buDeqw733/H/OFQZVp5rNWA=
 		</data>
 		<key>Resources/wqy_11pt.bdf</key>
 		<data>
@@ -839,14 +839,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			zOrQuDJrAYlaIel85leOBs83Pt2jWqGGCVorr/SRFEQ=
+			mBDmNoIkdKjgFGjXKXAA/dDT5eZJU47yXzYdIdT1nL8=
 			</data>
 		</dict>
 		<key>Resources/dosbox-x.reference.full.conf</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			wBPbCt4N8YabrjAbtI3TNsEJvkSPKLgMK9SaZRsAj3w=
+			ymns2z8VPAKIrV1FaU3ra75VJVi4916ln/BNqFpWL0A=
 			</data>
 		</dict>
 		<key>Resources/drivez/readme.txt</key>
@@ -860,7 +860,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			EsH1iihBkZZLM7dcK9jDED3bL7pq5frnjHf23Uh24No=
+			kddTFKxPlAqxOzwz+yYO8XE4ZdAlqU8J9oFKcuR9+oc=
 			</data>
 		</dict>
 		<key>Resources/glshaders/ScanLine.glsl</key>
@@ -1147,77 +1147,77 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			zP+f2Hh7zBcXfgg/CfxwCXatjaG09ydUnXXbfCr8PI4=
+			yhIb5WjCTRbA9BMbsXvGcCZE7g2yPHy9/tZyFfKgzog=
 			</data>
 		</dict>
 		<key>Resources/languages/en_US.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			H4JGlYPjjGWwemUy5+8cis2I+1q7pkUGUD+27rddn80=
+			SZYTCTXQfq/ks0+WBtaUuKJ3KG1tm0IUburYmHdVaAk=
 			</data>
 		</dict>
 		<key>Resources/languages/es_ES.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			yoWCm+k+xi3PWO1waK6dKcFhoJB8V7VtO3d06TX2umE=
+			sA7+BRC5Jljx0LvHsWSiMvjJoFYFqnCHF5W3GroPGeo=
 			</data>
 		</dict>
 		<key>Resources/languages/fr_FR.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			Wwzb6PxcKNe5je1kbJJlLsMwn7M3B/hDUG/GwdFQPVw=
+			FzJHhEYnC0iuqZfIKhzG63mTOtDAc59P4kT/EdBTT0U=
 			</data>
 		</dict>
 		<key>Resources/languages/ja_JP.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			hk0AUgpojceeVbxD6PzecE1ZmKluun1kg1yLlS3mQlw=
+			L5t2HrwkrJRUqyl3y5jpGGKpjX+nJqPx9XBTvVZA3oQ=
 			</data>
 		</dict>
 		<key>Resources/languages/ko_KR.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			dNGhqGIUPKSWLvJDQjKb0RyHCMgeGyVL7qWNppMZDM4=
+			GPyXA6yv/Tnqgcdcy+nOhJw+3wXNXYLhtmOV+fTvkEI=
 			</data>
 		</dict>
 		<key>Resources/languages/nl_NL.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			/iiN5TuY/19/ac4dG67m3Y+y4c2OJD3Oo1fzVdn02TY=
+			LJ/pHgKTZYUBZWDKjAOz6hxin5OzWbdyOFb8LN4hVF0=
 			</data>
 		</dict>
 		<key>Resources/languages/pt_BR.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			h6CXR5/c0S/X9oabesvkPbWTh2bUsp27Q6IDUTX0a6c=
+			Qrm0qzXdmIJUifWo3YWwykhFqsJV64pP0lUJjnG2rdI=
 			</data>
 		</dict>
 		<key>Resources/languages/tr_TR.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			b5OgVrTMb/pdzb236mA0cA3K3nZ4JCuCTXmrJAg00/E=
+			g/SmP+X2ZL/mDCqCRsf1C88bkKflfBLIKjO08QynzFQ=
 			</data>
 		</dict>
 		<key>Resources/languages/zh_CN.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			h7jYyT8e5gEcRc7Y32ukmuA1BUKAJuA6cx0cP+jzM38=
+			StMdYrZmMbeXEvv8Bz+cGByxNZywCxJTBqwjeC6+HVI=
 			</data>
 		</dict>
 		<key>Resources/languages/zh_TW.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			U6e4e3YMK5euEKSwnhWBY4xLguR86ncRrw+oNNK76ps=
+			dESVgqaAL5pwmPzKj8q4mPVllK4nqm1wTiFvBKCYNzk=
 			</data>
 		</dict>
 		<key>Resources/wqy_11pt.bdf</key>
