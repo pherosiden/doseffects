@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:Nederlands (Nederland)
 :DOSBOX-X:CODEPAGE:858
-:DOSBOX-X:VERSION:2023.09.01
+:DOSBOX-X:VERSION:2023.10.06
 :DOSBOX-X:REMARK:
 :AUTOEXEC_CONFIGFILE_HELP
 Lijnen in dit gedeelte worden uitgevoerd bij opstarten.
@@ -452,6 +452,14 @@ Schijf %c is gekoppeld als %s
 .
 :PROGRAM_MOUNT_STATUS_1
 De huidige gekoppelde schijven zijn:
+
+.
+:PROGRAM_MOUNT_NOT_FORMATTED
+Drive not formatted. Format it before accessing the drive.
+
+.
+:PROGRAM_MOUNT_UNSUPPORTED_EXT
+Unsupported extension %s: Mounted as raw IMG image.
 
 .
 :PROGRAM_IMGMOUNT_STATUS_FORMAT

@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:Simplified Chinese
 :DOSBOX-X:CODEPAGE:936
-:DOSBOX-X:VERSION:2023.09.01
+:DOSBOX-X:VERSION:2023.10.06
 :DOSBOX-X:REMARK:建议将国家和代码页设为 86,936 并搭配中文字体; 或使用 chs 或 cn 中文 DOS/V 模式以直接支持中文显示和打印
 :AUTOEXEC_CONFIGFILE_HELP
 Lines in this section will be run at startup.
@@ -449,6 +449,14 @@ MOUSE [/?] [/U] [/V]
 .
 :PROGRAM_MOUNT_STATUS_1
 当前已挂载的驱动器为:
+
+.
+:PROGRAM_MOUNT_NOT_FORMATTED
+Drive not formatted. Format it before accessing the drive.
+
+.
+:PROGRAM_MOUNT_UNSUPPORTED_EXT
+Unsupported extension %s: Mounted as raw IMG image.
 
 .
 :PROGRAM_IMGMOUNT_STATUS_FORMAT

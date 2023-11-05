@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:Traditional Chinese
 :DOSBOX-X:CODEPAGE:950
-:DOSBOX-X:VERSION:2023.09.01
+:DOSBOX-X:VERSION:2023.10.06
 :DOSBOX-X:REMARK:建議將國家和字碼頁設為 886,950 並搭配中文字型; 或使用 cht 或 tw 中文 DOS/V 模式以直接支援中文顯示和列印
 :AUTOEXEC_CONFIGFILE_HELP
 段落中的指令行會在啟動時執行.
@@ -449,6 +449,14 @@ MOUSE [/?] [/U] [/V]
 .
 :PROGRAM_MOUNT_STATUS_1
 目前已掛載的磁碟機有:
+
+.
+:PROGRAM_MOUNT_NOT_FORMATTED
+Drive not formatted. Format it before accessing the drive.
+
+.
+:PROGRAM_MOUNT_UNSUPPORTED_EXT
+Unsupported extension %s: Mounted as raw IMG image.
 
 .
 :PROGRAM_IMGMOUNT_STATUS_FORMAT

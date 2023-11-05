@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:French (France)
 :DOSBOX-X:CODEPAGE:859
-:DOSBOX-X:VERSION:2023.09.01
+:DOSBOX-X:VERSION:2023.10.06
 :DOSBOX-X:REMARK:
 :AUTOEXEC_CONFIGFILE_HELP
 Les lignes de cette section seront exécutées au démarrage.
@@ -452,6 +452,14 @@ Le lecteur %c est monté en tant que %s
 .
 :PROGRAM_MOUNT_STATUS_1
 Les lecteurs actuellement montés sont :
+
+.
+:PROGRAM_MOUNT_NOT_FORMATTED
+Le lecteur n'est pas formaté. Formatez-le avant d'accéder au lecteur.
+
+.
+:PROGRAM_MOUNT_UNSUPPORTED_EXT
+Extension non supportée %s: Monté comme une image RAW.
 
 .
 :PROGRAM_IMGMOUNT_STATUS_FORMAT
