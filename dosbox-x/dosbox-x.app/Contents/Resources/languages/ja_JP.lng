@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:Japanese
 :DOSBOX-X:CODEPAGE:932
-:DOSBOX-X:VERSION:2023.09.01
+:DOSBOX-X:VERSION:2024.03.01
 :DOSBOX-X:REMARK:PC-98, JEGA, DOS/V エミュレーション、または とコード ページ 932 の日本語フォントを使用して、日本語の表示と印刷を直接サポートします
 :AUTOEXEC_CONFIGFILE_HELP
 このセクションに記載の行は起動時に実行されます。
@@ -444,6 +444,14 @@ MOUSE [/?] [/U] [/V]
 現在マウントされているドライブ:
 
 .
+:PROGRAM_MOUNT_NOT_FORMATTED
+ドライブがフォーマットされてません。フォーマットしてください。
+
+.
+:PROGRAM_MOUNT_UNSUPPORTED_EXT
+サポートされてない拡張子 %s: raw IMG ファイルとしてマウントします。
+
+.
 :PROGRAM_IMGMOUNT_STATUS_FORMAT
 %-5s  %-41s  %-10s  %s
 
@@ -799,7 +807,6 @@ dosbox-x [name] [-exit] [-version] [-fastlaunch] [-fullscreen]
 
 マウントに関する基本的な情報は、[34;1mintro mount[0m と入力
 CD-ROMサポートに関する情報は、  [34;1mintro cdrom[0m と入力
-特殊キーに関する情報は、        [34;1mintro special[0m と入力
 使用法に関する情報は、          [34;1mintro usage[0m と入力
 
 DOSBox-Xの最新版はホームページにあります:[34;1m

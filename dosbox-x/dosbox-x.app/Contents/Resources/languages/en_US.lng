@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:English (United States)
 :DOSBOX-X:CODEPAGE:437
-:DOSBOX-X:VERSION:2023.09.01
+:DOSBOX-X:VERSION:2024.03.01
 :DOSBOX-X:REMARK:
 :AUTOEXEC_CONFIGFILE_HELP
 Lines in this section will be run at startup.
@@ -454,6 +454,14 @@ Drive %c is mounted as %s
 The currently mounted drives are:
 
 .
+:PROGRAM_MOUNT_NOT_FORMATTED
+Drive not formatted. Format it before accessing the drive.
+
+.
+:PROGRAM_MOUNT_UNSUPPORTED_EXT
+Unsupported extension %s: Mounted as raw IMG image.
+
+.
 :PROGRAM_IMGMOUNT_STATUS_FORMAT
 %-5s  %-47s  %-12s  %s
 
@@ -809,7 +817,6 @@ dosbox-x [name] [-exit] [-version] [-fastlaunch] [-fullscreen]
 
 For information about basic mount, type ←[34;1mintro mount←[0m
 For information about CD-ROM support, type ←[34;1mintro cdrom←[0m
-For information about special keys, type ←[34;1mintro special←[0m
 For information about usage, type ←[34;1mintro usage←[0m
 
 For the latest version of DOSBox-X, go to its homepage:←[34;1m
@@ -1272,7 +1279,7 @@ You'll have to manually rename the newly created VHD image.
 
 .
 :PROGRAM_VHDMAKE_SUCCESS
-New VHD image succesfully created. You can mount it with ←[34;1mIMGMOUNT←[0m.
+New VHD image successfully created. You can mount it with ←[34;1mIMGMOUNT←[0m.
 
 .
 :PROGRAM_VHDMAKE_ERROPEN
@@ -1349,7 +1356,7 @@ into Fixed VHD.
  -l | -link     create a new Differencing VHD new.vhd and link it to the
                 pre-existing parent image parent.vhd
  -f | -force    force overwriting a pre-existing image file
- -i | -info     show useful informations about a.vhd image
+ -i | -info     show useful information about a.vhd image
  -m | -merge    merge differencing delta.vhd to its parent
  new.vhd        name of the new Dynamic VHD image to create
  size           disk size (eventually with size unit, Bytes is implicit)
@@ -2320,7 +2327,7 @@ Runs program with video or audio capture.
 DX-CAPTURE [/V|/-V] [/A|/-A] [/M|/-M] [command] [options]
 
 It will start video or audio capture, run program, and then automatically stop capture when the program exits.
-
+/V for video, /A for audio, /M multi-track audio and /O for OPL FM (DROv2 format).
 .
 :SHELL_CMD_DEBUGBOX_HELP
 Runs program and breaks into debugger at entry point.

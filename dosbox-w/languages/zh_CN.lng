@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:Simplified Chinese
 :DOSBOX-X:CODEPAGE:936
-:DOSBOX-X:VERSION:2023.09.01
+:DOSBOX-X:VERSION:2024.03.01
 :DOSBOX-X:REMARK:建议将国家和代码页设为 86,936 并搭配中文字体; 或使用 chs 或 cn 中文 DOS/V 模式以直接支持中文显示和打印
 :AUTOEXEC_CONFIGFILE_HELP
 Lines in this section will be run at startup.
@@ -451,6 +451,14 @@ MOUSE [/?] [/U] [/V]
 当前已挂载的驱动器为:
 
 .
+:PROGRAM_MOUNT_NOT_FORMATTED
+Drive not formatted. Format it before accessing the drive.
+
+.
+:PROGRAM_MOUNT_UNSUPPORTED_EXT
+Unsupported extension %s: Mounted as raw IMG image.
+
+.
 :PROGRAM_IMGMOUNT_STATUS_FORMAT
 %-5s  %-47s  %-12s  %s
 
@@ -800,7 +808,6 @@ dosbox-x [名称] [-exit] [-version] [-fastlaunch] [-fullscreen]
 
 关于基本挂载的信息, 请输入 [34;1mintro mount[0m
 关于光驱支持的信息, 请输入 [34;1mintro cdrom[0m
-关于特殊按键的信息, 请输入 [34;1mintro special[0m
 关于使用的信息, 请输入 [34;1mintro usage[0m
 
 关于最新版本的 DOSBox-X, 请访问其主页:[34;1m
@@ -1259,7 +1266,7 @@ You'll have to manually rename the newly created VHD image.
 
 .
 :PROGRAM_VHDMAKE_SUCCESS
-New VHD image succesfully created. You can mount it with [34;1mIMGMOUNT[0m.
+New VHD image successfully created. You can mount it with [34;1mIMGMOUNT[0m.
 
 .
 :PROGRAM_VHDMAKE_ERROPEN
@@ -1336,7 +1343,7 @@ into Fixed VHD.
  -l | -link     create a new Differencing VHD new.vhd and link it to the
                 pre-existing parent image parent.vhd
  -f | -force    force overwriting a pre-existing image file
- -i | -info     show useful informations about a.vhd image
+ -i | -info     show useful information about a.vhd image
  -m | -merge    merge differencing delta.vhd to its parent
  new.vhd        name of the new Dynamic VHD image to create
  size           disk size (eventually with size unit, Bytes is implicit)

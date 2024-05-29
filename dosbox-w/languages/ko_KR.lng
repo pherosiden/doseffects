@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:Korean
 :DOSBOX-X:CODEPAGE:949
-:DOSBOX-X:VERSION:2023.09.01
+:DOSBOX-X:VERSION:2024.03.01
 :DOSBOX-X:REMARK:DOS/V 에뮬레이션 또는 코드 페이지 949의 한국어 글꼴을 사용하여 한국어 표시 및 인쇄를 직접 지원합니다.
 :AUTOEXEC_CONFIGFILE_HELP
 이 섹션에 나열된 줄은 시작할 때 실행됩니다.
@@ -454,6 +454,14 @@ MOUSE [/?] [/U] [/V]
 현재 탑재된 드라이브:
 
 .
+:PROGRAM_MOUNT_NOT_FORMATTED
+Drive not formatted. Format it before accessing the drive.
+
+.
+:PROGRAM_MOUNT_UNSUPPORTED_EXT
+Unsupported extension %s: Mounted as raw IMG image.
+
+.
 :PROGRAM_IMGMOUNT_STATUS_FORMAT
 %-5s  %-41s  %-10s  %s
 
@@ -811,7 +819,6 @@ dosbox-x [name] [-exit] [-version] [-fastlaunch] [-fullscreen]
 
 탑재에 대한 기본 정보는 [34;1mintro mount[0m 을 입력
 CD-ROM 지원에 대한 정보는 [34;1mintro cdrom[0m 을 입력
-특수 키에 대한 정보는 [34;1mintro special[0m 을 입력
 사용법에 대한 정보는 [34;1mintro usage[0m 을 입력
 
 DOSBox-X의 최신판은 홈페이지에 있습니다:[34;1m
@@ -1278,7 +1285,7 @@ You'll have to manually rename the newly created VHD image.
 
 .
 :PROGRAM_VHDMAKE_SUCCESS
-New VHD image succesfully created. You can mount it with [34;1mIMGMOUNT[0m.
+New VHD image successfully created. You can mount it with [34;1mIMGMOUNT[0m.
 
 .
 :PROGRAM_VHDMAKE_ERROPEN
@@ -1355,7 +1362,7 @@ into Fixed VHD.
  -l | -link     create a new Differencing VHD new.vhd and link it to the
                 pre-existing parent image parent.vhd
  -f | -force    force overwriting a pre-existing image file
- -i | -info     show useful informations about a.vhd image
+ -i | -info     show useful information about a.vhd image
  -m | -merge    merge differencing delta.vhd to its parent
  new.vhd        name of the new Dynamic VHD image to create
  size           disk size (eventually with size unit, Bytes is implicit)

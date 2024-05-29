@@ -18,11 +18,11 @@
 		</data>
 		<key>Resources/dosbox-x.reference.conf</key>
 		<data>
-		Th00Gyhs1+YnDoWYVdSBU9TM2qk=
+		aa0pbvg5ifW/AMXUPZgNCml8RwY=
 		</data>
 		<key>Resources/dosbox-x.reference.full.conf</key>
 		<data>
-		T+UjApxsE0BNwejBZXA9otcMuus=
+		NKISUiWzqwrKKfAIkZbWSl29y6w=
 		</data>
 		<key>Resources/drivez/readme.txt</key>
 		<data>
@@ -54,7 +54,7 @@
 		</data>
 		<key>Resources/glshaders/crt-aperture.glsl</key>
 		<data>
-		d/FV26Ss8IoXDxG4HbXkyewGhXs=
+		YYF8yhxOYBMbXlERdUxeLgsXRs4=
 		</data>
 		<key>Resources/glshaders/crt-caligari.glsl</key>
 		<data>
@@ -82,15 +82,15 @@
 		</data>
 		<key>Resources/glshaders/crt-lottes-fast.glsl</key>
 		<data>
-		8mxRq8ZqYEEBA793ucoU0ezfd60=
+		5kYx8pCDfO7jr1sqjoCkPD9HuOo=
 		</data>
 		<key>Resources/glshaders/crt-lottes-fast.subtle+gain.glsl</key>
 		<data>
-		EnWiuopKrNXpClFfk9xrabgvvTY=
+		D/0gd/ByDfvHTSgp52l75XBHURU=
 		</data>
 		<key>Resources/glshaders/crt-lottes.glsl</key>
 		<data>
-		6Fjz4PlzU3lTFRQOE+kiJsYFH0E=
+		iTIVwpMzt58GPX1ZK/fEKBB7paA=
 		</data>
 		<key>Resources/glshaders/crt-lottes.tweaked.glsl</key>
 		<data>
@@ -102,7 +102,7 @@
 		</data>
 		<key>Resources/glshaders/crt-pi.glsl</key>
 		<data>
-		rgo44hV4MxFu1zcf3hq/qm8K+Ok=
+		CxiwfbUC0D5TH1IJKY9hW/HzcOU=
 		</data>
 		<key>Resources/glshaders/default.glsl</key>
 		<data>
@@ -110,11 +110,11 @@
 		</data>
 		<key>Resources/glshaders/fakelottes.glsl</key>
 		<data>
-		OVvLKLz+Q0g8ORVM1mcqL5k9inY=
+		E9ZK6QHaFxZ3o4cSeHR7l7JFAgI=
 		</data>
 		<key>Resources/glshaders/fakelottes.tweaked.glsl</key>
 		<data>
-		w9SyUZBf0z1oMXlUAv9va5aydAA=
+		sIQ52u5RvNuNVr/fl1ix0dXkiyo=
 		</data>
 		<key>Resources/glshaders/glshaders.txt</key>
 		<data>
@@ -126,11 +126,11 @@
 		</data>
 		<key>Resources/glshaders/pixel_perfect-scanlines.glsl</key>
 		<data>
-		Mms89yHbBQsJ/LUCVcl2dx7d2Qw=
+		XSNju8Yq8eP09d990oeEr0/5mCE=
 		</data>
 		<key>Resources/glshaders/pixel_perfect.glsl</key>
 		<data>
-		3BZTpIjSFFFGdREUjWbZbho7FPw=
+		Usxi8BdvDMgvuTIl3+gyTbeDzFk=
 		</data>
 		<key>Resources/glshaders/pixellate.glsl</key>
 		<data>
@@ -186,59 +186,71 @@
 		</data>
 		<key>Resources/glshaders/yeetron.glsl</key>
 		<data>
-		2HDj4886l5qzeu6WZa1LJqJFSHM=
+		qch+JoomMdCfpU7IZ7Ufy2VbViI=
 		</data>
 		<key>Resources/glshaders/zfast_crt.glsl</key>
 		<data>
-		OsK8L2q6jS/9unRZ02geXSUC1aI=
+		oQc6C+LU4cZk1n7A3OSUULbX0vI=
 		</data>
 		<key>Resources/languages/de_DE.lng</key>
 		<data>
-		kiNSRbXm0EUvsgTvzsWq0iEWgFw=
+		i9O3+vFqgN6FHOTS1/MxBuXEHB8=
 		</data>
 		<key>Resources/languages/de_pc98.lng</key>
 		<data>
-		4wr6nmbPGRPp67iULc3lGX3Vrek=
+		iIWc+GTk1PXS51MdSpEToVswO+Y=
 		</data>
 		<key>Resources/languages/en_US.lng</key>
 		<data>
-		FC1X5ij35hMIOuBddh+wAHMBDYU=
+		nXZRUl69FWfKbmcKltdgPGujBN8=
 		</data>
 		<key>Resources/languages/es_ES.lng</key>
 		<data>
-		326BvDxdgWMuxWI0ZjUBrujh+zA=
+		RQYQz95HxNSurevOTVtVmDjHKfE=
 		</data>
 		<key>Resources/languages/fr_FR.lng</key>
 		<data>
-		C/O9tPHkN+MIToHh+6dddb8FKhw=
+		2IUHuYL7NYO+JtAl59BcySBNX3k=
+		</data>
+		<key>Resources/languages/hu_HU.lng</key>
+		<data>
+		nJG9VaeH3PkyC7h21Xf1xFAJq4I=
+		</data>
+		<key>Resources/languages/it_IT.lng</key>
+		<data>
+		I4q0zRrTeXNXclpqiue7se2iVcM=
 		</data>
 		<key>Resources/languages/ja_JP.lng</key>
 		<data>
-		hsW0IgOf0SCMrfE6YdvWxFNi/Mw=
+		bT2AW48naMAgrcULu5Oe//4YMIE=
 		</data>
 		<key>Resources/languages/ko_KR.lng</key>
 		<data>
-		Yr5tZ5Z2cFUZfJkYdAlmDP5/Ux4=
+		QJvWSqLkmUuVqIySTCcS+sEn93w=
 		</data>
 		<key>Resources/languages/nl_NL.lng</key>
 		<data>
-		7JHvhJCAsnggYnJLHAMG/m3z0sM=
+		5MLY1tVBr6BIO9PVXvRTNPJCczU=
 		</data>
 		<key>Resources/languages/pt_BR.lng</key>
 		<data>
-		dN1xtL4BxuQmx2UG5LopeI17WC0=
+		j0vmraJWbTSigAv64LlJtCTk/sM=
+		</data>
+		<key>Resources/languages/ru_RU.lng</key>
+		<data>
+		ezEEOf4aeO1j+HFpswWNdMGRMqg=
 		</data>
 		<key>Resources/languages/tr_TR.lng</key>
 		<data>
-		WEHMY3RpKidLDqRVC77WYlK5AOg=
+		KKTHT0dN9XbWMv66xfXCQDJOQ6k=
 		</data>
 		<key>Resources/languages/zh_CN.lng</key>
 		<data>
-		HoRO8rSXzYBlbCERBr4qvImSQjA=
+		0NBOuhGaBckLgH+IR5Sp8lmk1fU=
 		</data>
 		<key>Resources/languages/zh_TW.lng</key>
 		<data>
-		bB62IRBG2pYDqknsSmCFxKcMD4g=
+		b7rtU27bGtzyhBHnB4Dy4Fy+WSI=
 		</data>
 		<key>Resources/wqy_11pt.bdf</key>
 		<data>
@@ -259,6 +271,24 @@
 			</data>
 			<key>requirement</key>
 			<string>cdhash H"bb1d3df9669812662bf3fddb3c59a5e50fa9c459"</string>
+		</dict>
+		<key>MacOS/arm64/libSDL2-2.0.0.dylib</key>
+		<dict>
+			<key>cdhash</key>
+			<data>
+			5a4PEcJOFLoYcc8PK6Tzmgcv5Ig=
+			</data>
+			<key>requirement</key>
+			<string>cdhash H"e5ae0f11c24e14ba1871cf0f2ba4f39a072fe488"</string>
+		</dict>
+		<key>MacOS/arm64/libSDL2_net-2.0.0.dylib</key>
+		<dict>
+			<key>cdhash</key>
+			<data>
+			NWZZu35h1GemnYJBWY/3MB7kuR8=
+			</data>
+			<key>requirement</key>
+			<string>cdhash H"356659bb7e61d467a69d8241598ff7301ee4b91f"</string>
 		</dict>
 		<key>MacOS/arm64/libSvtAv1Enc.1.dylib</key>
 		<dict>
@@ -300,10 +330,10 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			73Nj63P68jvVwzZAymhdDZIFAOs=
+			yPUjcDcgMZaMJOL9uv23+p3bjoE=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"ef7363eb73faf23bd5c33640ca685d0d920500eb"</string>
+			<string>cdhash H"c8f52370372031968c24e2fdbafdb7fa9ddb8e81"</string>
 		</dict>
 		<key>MacOS/arm64/libaribb24.0.dylib</key>
 		<dict>
@@ -354,28 +384,28 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			osNL1xDiQk5dm9bBGjhKEKftl/w=
+			UmsgT9HwVTZs0saxzrgGcYEOjwI=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"a2c34bd710e2424e5d9bd6c11a384a10a7ed97fc"</string>
+			<string>cdhash H"526b204fd1f055366cd2c6b1ceb80671810e8f02"</string>
 		</dict>
 		<key>MacOS/arm64/libbrotlidec.1.dylib</key>
 		<dict>
 			<key>cdhash</key>
 			<data>
-			8QFBWbnMMW/UtNa3Oa2pQjh2Snw=
+			UHWnuSQkoh5G3OJ+hsYPBt2wgUM=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"f1014159b9cc316fd4b4d6b739ada94238764a7c"</string>
+			<string>cdhash H"5075a7b92424a21e46dce27e86c60f06ddb08143"</string>
 		</dict>
 		<key>MacOS/arm64/libbrotlienc.1.dylib</key>
 		<dict>
 			<key>cdhash</key>
 			<data>
-			rNZmCh3C9bWqeN1o8AQNH1J4I2c=
+			UZBbwox0cJLheU47mPeTyhYEcOI=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"acd6660a1dc2f5b5aa78dd68f0040d1f52782367"</string>
+			<string>cdhash H"51905bc28c747092e1794e3b98f793ca160470e2"</string>
 		</dict>
 		<key>MacOS/arm64/libcjson.1.dylib</key>
 		<dict>
@@ -390,10 +420,10 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			wIfXjkzICerC8y5N9IcyZGLtW5U=
+			3MOW6vJjWQb5h3MS/5Knui2f0BQ=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"c087d78e4cc809eac2f32e4df487326462ed5b95"</string>
+			<string>cdhash H"dcc396eaf2635906f9877312ff92a7ba2d9fd014"</string>
 		</dict>
 		<key>MacOS/arm64/libdav1d.6.dylib</key>
 		<dict>
@@ -408,10 +438,10 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			XWNcady4C7hAAl6IlQlckizh92E=
+			C+LEK/YSxINm1sMJRmBZkrz6wTk=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"5d635c69dcb80bb840025e8895095c922ce1f761"</string>
+			<string>cdhash H"0be2c42bf612c48366d6c30946605992bcfac139"</string>
 		</dict>
 		<key>MacOS/arm64/libfontconfig.1.dylib</key>
 		<dict>
@@ -435,10 +465,10 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			q3ipvRPsmJl7fBvNanwnX3XbuhA=
+			+fjnfQfygIQkX0916V4l7Y2EBOs=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"ab78a9bd13ec98997b7c1bcd6a7c275f75dbba10"</string>
+			<string>cdhash H"f9f8e77d07f28084245f4f75e95e25ed8d8404eb"</string>
 		</dict>
 		<key>MacOS/arm64/libgmp.10.dylib</key>
 		<dict>
@@ -462,10 +492,10 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			8SFDZLU9QdH1j94oL3r2pZhwG58=
+			DZ7J64JP7U3JklWUZtTgADToQWM=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"f1214364b53d41d1f58fde282f7af6a598701b9f"</string>
+			<string>cdhash H"0d9ec9eb824fed4dc992559466d4e00034e84163"</string>
 		</dict>
 		<key>MacOS/arm64/libhogweed.6.dylib</key>
 		<dict>
@@ -480,10 +510,10 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			qhh4sWJxKtWqwRN9BsYddXIjb/M=
+			hCERb3MkBYLZDl/9NFoEaxfRClQ=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"aa1878b162712ad5aac1137d06c61d7572236ff3"</string>
+			<string>cdhash H"8421116f73240582d90e5ffd345a046b17d10a54"</string>
 		</dict>
 		<key>MacOS/arm64/libidn2.0.dylib</key>
 		<dict>
@@ -498,19 +528,19 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			IWeOzJp/K9XVz4CP7yVlPA07/JY=
+			Qv3QhBLxO7JUBk8yasDRqJdUet8=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"21678ecc9a7f2bd5d5cf808fef25653c0d3bfc96"</string>
+			<string>cdhash H"42fdd08412f13bb254064f326ac0d1a897547adf"</string>
 		</dict>
 		<key>MacOS/arm64/libjxl.0.8.dylib</key>
 		<dict>
 			<key>cdhash</key>
 			<data>
-			icFro//I+evNWi7dSrTynBEEHz4=
+			mUS8tpmyllknw5e7ok7zLfT6qoU=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"89c16ba3ffc8f9ebcd5a2edd4ab4f29c11041f3e"</string>
+			<string>cdhash H"9944bcb699b2965927c397bba24ef32df4faaa85"</string>
 		</dict>
 		<key>MacOS/arm64/liblcms2.2.dylib</key>
 		<dict>
@@ -552,10 +582,10 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			z+dMwH0E88OpwrfVXKRBGvTIN/o=
+			/r9a4I9+b/ucHFXW3FttNovosV0=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"cfe74cc07d04f3c3a9c2b7d55ca4411af4c837fa"</string>
+			<string>cdhash H"febf5ae08f7e6ffb9c1c55d6dc5b6d368be8b15d"</string>
 		</dict>
 		<key>MacOS/arm64/libnettle.8.dylib</key>
 		<dict>
@@ -678,10 +708,10 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			i9/FcSj+kCKfgBGSN+CbpZZa6sY=
+			XrpDbplU+XxJGa5vFjDvKp9UfO0=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"8bdfc57128fe90229f80119237e09ba5965aeac6"</string>
+			<string>cdhash H"5eba436e9954f97c4919ae6f1630ef2a9f547ced"</string>
 		</dict>
 		<key>MacOS/arm64/libslirp.0.dylib</key>
 		<dict>
@@ -741,19 +771,19 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			B+FjtrOSHvGDzRPatQ5kR4JdHag=
+			kkjVspoFSxVodhzGx2d2DEycikI=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"07e163b6b3921ef183cd13dab50e6447825d1da8"</string>
+			<string>cdhash H"9248d5b29a054b1568761cc6c767760c4c9c8a42"</string>
 		</dict>
 		<key>MacOS/arm64/libssl.3.dylib</key>
 		<dict>
 			<key>cdhash</key>
 			<data>
-			tnyD/dG6WgkWWQEwa2IGSfnFSow=
+			f0hAi+yTIB39cu4atID2bhdvbp0=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"b67c83fdd1ba5a09165901306b620649f9c54a8c"</string>
+			<string>cdhash H"7f48408bec93201dfd72ee1ab480f66e176f6e9d"</string>
 		</dict>
 		<key>MacOS/arm64/libswresample.4.dylib</key>
 		<dict>
@@ -840,28 +870,28 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			3rgj7p9aTKk1VxWgOQxye8xyDjg=
+			xVH1eOhSwbSuuSm6TAsOBvMo5w0=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"deb823ee9f5a4ca9355715a0390c727bcc720e38"</string>
+			<string>cdhash H"c551f578e852c1b4aeb929ba4c0b0e06f328e70d"</string>
 		</dict>
 		<key>MacOS/arm64/libwebp.7.dylib</key>
 		<dict>
 			<key>cdhash</key>
 			<data>
-			FO5diXyB+9Jt7NPGOPV4SkmQeZA=
+			yLP6AGKE8P9i434J3zYR3KoHcUw=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"14ee5d897c81fbd26decd3c638f5784a49907990"</string>
+			<string>cdhash H"c8b3fa006284f0ff62e37e09df3611dcaa07714c"</string>
 		</dict>
 		<key>MacOS/arm64/libwebpmux.3.dylib</key>
 		<dict>
 			<key>cdhash</key>
 			<data>
-			P5sOR7MDsDBQrCtf4EytbdN3Am0=
+			NtYc07krgYia+ucZ1ZLjnY+o7b0=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"3f9b0e47b303b03050ac2b5fe04cad6dd377026d"</string>
+			<string>cdhash H"36d61cd3b92b81889afae719d592e39d8fa8edbd"</string>
 		</dict>
 		<key>MacOS/arm64/libx264.164.dylib</key>
 		<dict>
@@ -885,10 +915,10 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			kT4WuBgFue9PBfGfdQPmwGA9HWU=
+			wvuucr7zw4Pe+tRCAZir+d4qiz8=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"913e16b81805b9ef4f05f19f7503e6c0603d1d65"</string>
+			<string>cdhash H"c2fbae72bef3c383defad4420198abf9de2a8b3f"</string>
 		</dict>
 		<key>MacOS/arm64/libzmq.5.dylib</key>
 		<dict>
@@ -924,14 +954,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			V3TxcGHFiEXl/PIPnq2Sp6UgW9FoXR5SE7AVwaBaQRg=
+			E300oAQV4boYRHG+tokOQCNQw410bOX6CdgNhkACNLE=
 			</data>
 		</dict>
 		<key>Resources/dosbox-x.reference.full.conf</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			cGU+Vg2TxET2lw55CuLoSxljfC2ajq3M0Yt1SzBKRSY=
+			MXLX0FdTC3+TLypVHOchsrih1TrjnEOs20cHxMw+Cp4=
 			</data>
 		</dict>
 		<key>Resources/drivez/readme.txt</key>
@@ -987,7 +1017,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			ZJONhdyJ4zzvNVZZf0/xLySd9FUGu8n5jD9WVPIBGE8=
+			eSoWdBDwN20fw2urdQetRSdxWGq0BQ6ZZQOKFWhG6Kk=
 			</data>
 		</dict>
 		<key>Resources/glshaders/crt-caligari.glsl</key>
@@ -1036,21 +1066,21 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			Z2gdzUBlPDA8Wb8fJkU9Ug13HMyh8x1hKehbMAK7Tv0=
+			NWjOGTslF5CQEeHxuCZo5bs1BPzGG1xTH/xXIxiM7vU=
 			</data>
 		</dict>
 		<key>Resources/glshaders/crt-lottes-fast.subtle+gain.glsl</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			fICX0ZMjAwn4ONxSAoRa7PDXw8asCQ20HtGbzMSMO38=
+			4Pp8hkSuMq4gkNmaJYysQDFk4sEUPZ5txvXgJOWsiVQ=
 			</data>
 		</dict>
 		<key>Resources/glshaders/crt-lottes.glsl</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			arQID5wfX9+CK7wd1TA6AWx7v2zbeCEdk9us//h09D4=
+			OQavPiQougJmCf40wGQ7AXdgOpRqaGpGVZPyPhwP4zM=
 			</data>
 		</dict>
 		<key>Resources/glshaders/crt-lottes.tweaked.glsl</key>
@@ -1071,7 +1101,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			H6/308s8VvAjW/n6a0kPjiZC2TL3v5syPwvkfpi1dkI=
+			JUBD4nm2Nv1L4UlCU456yuyDJvPPmSuGgNBosihiVCo=
 			</data>
 		</dict>
 		<key>Resources/glshaders/default.glsl</key>
@@ -1085,14 +1115,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			UqtzIBGEdat8lf5cky8mpMyOVpLWGg8sl4yT0KMU81s=
+			ZBT0ixxIo5PXXsFJv/xIaDVpsny/R2Uuxz+3hbVo6bs=
 			</data>
 		</dict>
 		<key>Resources/glshaders/fakelottes.tweaked.glsl</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			Uj9zkbBWW3MIGTqPDQtelCBbhKAUOjJ4eH9583Mc5Zs=
+			DKGIjexthJ3Qy3aNVIhTRyv1aooWNraKRW/XnThQ6Mo=
 			</data>
 		</dict>
 		<key>Resources/glshaders/glshaders.txt</key>
@@ -1113,14 +1143,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			7ApmPgWxF+NZcTKn39GfqLU8Gj2SIu/LCBnVM1+6328=
+			WPl2zVl7AY+I05yO18ACFTeFeJ8W4jY/wQgQUBXsTmg=
 			</data>
 		</dict>
 		<key>Resources/glshaders/pixel_perfect.glsl</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			PyVP6XOW+5dUlHcLq71vlncSgEZ3PdUbjt9yagwGBh0=
+			2nRswcxGGt2AQV4uD8SiqrL4ZxC1YWqRJTo0ulC39Rs=
 			</data>
 		</dict>
 		<key>Resources/glshaders/pixellate.glsl</key>
@@ -1218,98 +1248,119 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			6Hvv+ZWjowUN8cxJyXokZN7dYojsNW5tWBpxx6/vbL0=
+			wyq0l/EplFeOXwCCXEpPp1xskKZeEB+PG69GHoUeWRU=
 			</data>
 		</dict>
 		<key>Resources/glshaders/zfast_crt.glsl</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			AI/J96AV8IBn6m4hEAybPaYfI5Mj9zO868r3dRLkYtY=
+			kuDJxM3rqopCh2u2Nwh/zRLu01OLbxJgltfE5PPpW8c=
 			</data>
 		</dict>
 		<key>Resources/languages/de_DE.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			gaeu3ZTE1fX1/1ugs+221E4qk05dQ392GdJD6206aUA=
+			/d/T85cUb4jycDEdGOyxeUju/RoQPH/T9AC2tcEZ3U4=
 			</data>
 		</dict>
 		<key>Resources/languages/de_pc98.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			X5bQDJs2iv+9+2+fi9csQ71m73IJ1DDqt1+HO4MUE6k=
+			Pz2MuWTc5QR16xKPLV2JZ2DxpZBNrdW7VMa/8uxVEgM=
 			</data>
 		</dict>
 		<key>Resources/languages/en_US.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			u7VENTtqgVcgMv4LDZuHZ75OadxzRMazmGhtxBIh66c=
+			wQWdA9Hm2JKOvWnOyQmmHk4K2xWxvVPzEikanPNoo8Y=
 			</data>
 		</dict>
 		<key>Resources/languages/es_ES.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			WIlUAVPZlG3wzmvHCS5vFuAGRR5/9ZBfMV5C//D73CQ=
+			fCDAL3cHBhaGCDOm6+yJC/zj1EBF3UvShJMz11E6Yxg=
 			</data>
 		</dict>
 		<key>Resources/languages/fr_FR.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			BZOs7g921ZyTkkmqRn18Qmlsqx1RTRMYbZUUgnNqRLE=
+			8JzV3HXBFjLJD5dT2ZIEw+5d6vZzdvlsbTKurv1cUWc=
+			</data>
+		</dict>
+		<key>Resources/languages/hu_HU.lng</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			X+cNegHCKk+PgGk5Zke25hVdQ2I//1j6bo4ZmRQnH0E=
+			</data>
+		</dict>
+		<key>Resources/languages/it_IT.lng</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			Jfz4pX3epWZG5BDpfwGUfFQIXJnxaMbXKoBbdm15lGs=
 			</data>
 		</dict>
 		<key>Resources/languages/ja_JP.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			YnF1H+brwHzgV64WiVPvRYlTa2mngdV2U6ghoi8eX4A=
+			BDa1v/n0+G31NTo9PBDitG3TgFKiPVOGaQBks1TQQHE=
 			</data>
 		</dict>
 		<key>Resources/languages/ko_KR.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			5+JxHboLE2lMBjUSDyjz+zP2iMD95+GThsBEMXtp6Ew=
+			goJZCmsD1zjaz447VcL6rM7yeJGdoWW7i7JXsBLlUdE=
 			</data>
 		</dict>
 		<key>Resources/languages/nl_NL.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			b8AngzBWTZTGHdgAV70qMfSSt1jX3/xTszalY+WFuwU=
+			EDH0iau7sJAUjGn9RXrBP4kPvvkRxknVY+1ZAldUTHs=
 			</data>
 		</dict>
 		<key>Resources/languages/pt_BR.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			uobBdZijwrlxBy4oUpJjdaZ04MSdiNxEFWlOk76r+pw=
+			sM+Koam393jKwdZK9kymcB8urD2qQjA3yWaDvYIz0TE=
+			</data>
+		</dict>
+		<key>Resources/languages/ru_RU.lng</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			mt/x1kfO/2lv/N4faZFAxu+YBufb8sQw15nKu8oHOZM=
 			</data>
 		</dict>
 		<key>Resources/languages/tr_TR.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			cTJNGdE2WqtMIgfIKAmRQRi5C+hCjGvRK/uuij4DnY0=
+			fHX7YFoZSSM1yXcQ8+peDR5jHudVUhmsYFrHlisdHR4=
 			</data>
 		</dict>
 		<key>Resources/languages/zh_CN.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			G7ZvHx7saxDrMPl9fjveA+fqdKgE28AhTUGVnfC5jl8=
+			vu/NZZowHHVfdtA7Qn71Bxofwq8ENajGJb0S0HspARc=
 			</data>
 		</dict>
 		<key>Resources/languages/zh_TW.lng</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			PrFi3gQl9tT9N8epaojjz8SJaCvssGW3SjZ10cZf420=
+			64I/9Q/jtVgWZdUba/xnJHlh83aouEG0ys/rxaPBrO4=
 			</data>
 		</dict>
 		<key>Resources/wqy_11pt.bdf</key>
