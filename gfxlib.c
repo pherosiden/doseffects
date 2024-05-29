@@ -770,7 +770,7 @@ uint32_t    randSeed = 0;                       // global random seed
 uint32_t    factor = 0x8088405;                 // global factor
 uint32_t    stackOffset = 0;                    // kernel stack offset
 
-// Pattern filled styles
+// Patterns filled styles
 uint8_t     ptnLine[]           = {0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00};
 uint8_t     ptnLiteSlash[]      = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
 uint8_t     ptnSlash[]          = {0x07, 0x0E, 0x1C, 0x38, 0x70, 0xE0, 0xC1, 0x83};
@@ -874,6 +874,7 @@ uint64_t getRDTSC()
         mov     [edi    ], eax
         mov     [edi + 4], edx
     }
+
     return val;
 }
 
@@ -907,6 +908,7 @@ uint64_t getPIT()
         mov     [edi    ], eax
         mov     [edi + 4], edx
     }
+
     return val;
 }
 
@@ -1731,6 +1733,7 @@ void setPaletteRange(PAL *pal, int32_t from, int32_t to)
     PAL *palData = tmp;
 
     if (!fnSetPalette) return;
+    if (!pal) return;
     if (from < 0) from = 0;
     if (from > 255) from = 255;
     if (to < 0) to = 0;
@@ -1849,7 +1852,7 @@ void displayVesaInfo()
     getVesaDriverInfo(&drvInfo);
 
     printf("VESA DRIVER INFO\n");
-    printf("----------------\n");
+    printf("================\n");
 
     printf("     Signature: '%c%c%c%c'\n", drvInfo.VBESignature[0], drvInfo.VBESignature[1], drvInfo.VBESignature[2], drvInfo.VBESignature[3]);
     printf("       Version: %x.%x\n", (drvInfo.VBEVersion >> 8), (drvInfo.VBEVersion & 0xFF));
@@ -1879,7 +1882,7 @@ void displayVesaInfo()
         memset(&modeInfo, 0, sizeof(VBE_MODE_INFO));
         if (getVesaModeInfo(*modePtr, &modeInfo) != 0)
         {
-            printf("---------------------------------------------------------\n");
+            printf("=========================================================\n");
             printf("              Mode Number: %0.4X\n", *modePtr);
             printf("               Attributes: %.4X\n", modeInfo.ModeAttributes);
             printf("       Hardware Supported: %s\n", (modeInfo.ModeAttributes & VBE_MASK_MODEHW) ? "Yes" : "No");
@@ -11324,6 +11327,7 @@ void setBlackPalette()
 void setWhitePalette()
 {
     RGB pal[256] = {255};
+    memset(pal, 255, sizeof(pal));
     setPalette(pal);
 }
 

@@ -1,3 +1,17 @@
+
+/*----------------------------------------------------*/
+/* Packet  : Demo & Effect                            */
+/* Effect  : Arty Color                               */
+/* Author  : Nguyen Ngoc Van                          */
+/* Memory  : Compact                                  */
+/* Heaps   : 640K                                     */
+/* Address : siden@codedemo.net                       */
+/* Website : http://www.codedemo.net                  */
+/* Created : 21/02/1998                               */
+/* Please sent to me any bugs or suggests.            */
+/* You can use freely this code. Have fun :)          */
+/*----------------------------------------------------*/
+
 #include "svga.c"
 
 #define MEMORY      50
@@ -144,7 +158,7 @@ void doArt()
 
         drawCurrentLine();
         updateLine();
-        delay(1);
+        waitRetrace();
     }
 }
 
