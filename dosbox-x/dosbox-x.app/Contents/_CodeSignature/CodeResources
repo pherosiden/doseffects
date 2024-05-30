@@ -272,23 +272,23 @@
 			<key>requirement</key>
 			<string>cdhash H"bb1d3df9669812662bf3fddb3c59a5e50fa9c459"</string>
 		</dict>
-		<key>MacOS/arm64/libSDL2-2.0.0.dylib</key>
+		<key>MacOS/arm64/libSDL-1.2.0.dylib</key>
 		<dict>
 			<key>cdhash</key>
 			<data>
-			5a4PEcJOFLoYcc8PK6Tzmgcv5Ig=
+			IIqyZsAND1njOdAWW0xLCoKJlPQ=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"e5ae0f11c24e14ba1871cf0f2ba4f39a072fe488"</string>
+			<string>cdhash H"208ab266c00d0f59e339d0165b4c4b0a828994f4"</string>
 		</dict>
-		<key>MacOS/arm64/libSDL2_net-2.0.0.dylib</key>
+		<key>MacOS/arm64/libSDL_net-1.2.0.dylib</key>
 		<dict>
 			<key>cdhash</key>
 			<data>
-			NWZZu35h1GemnYJBWY/3MB7kuR8=
+			enz2BMFu+B4WqpkDVzv9AvPTwZQ=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"356659bb7e61d467a69d8241598ff7301ee4b91f"</string>
+			<string>cdhash H"7a7cf604c16ef81e16aa9903573bfd02f3d3c194"</string>
 		</dict>
 		<key>MacOS/arm64/libSvtAv1Enc.1.dylib</key>
 		<dict>
