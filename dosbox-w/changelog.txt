@@ -1,3 +1,260 @@
+2024.07.01
+  - Correct Hercules InColor memory emulation. Read and write planar
+    behavior was incorrect due to a misunderstanding of available
+    documentation. (joncampbell123).
+  - Hercules/MDA and InColor integration broke the Hercules blend mode
+    render, fix the render so that adjacent lit pixels are brighter
+    again. (joncampbell123).
+  - Fix "VRD" debugger command bug that didn't properly render out the
+    rest of the VGA display frame. (joncampbell123).
+  - Fixed debugger mapper shortcut bug where entering the debugger
+    completes the 1 ms "tick" early, effectively jumping emulator time
+    up to start of the next ms. This might explain the mysterious cases
+    where a program always fails to work unless you are debugging it.
+    (joncampbell123).
+  - Added debugger command "VRT" which resumes running the guest until
+    vertical retrace. Added for programmers who wish to write something
+    to screen and then see it show up. (joncampbell123).
+  - Fix IMGMOUNT, when mounting FAT disk images, to provide the DPB the
+    actual media id byte instead of assuming 0xF8 or 0xF0. INT AH=1Ch
+    should now report the proper media id byte for any floppy format,
+    instead of always reporting 0xF0 (1.44MB floppy). (joncampbell123).
+  - Allow BOOT to load and execute the boot sector of a guest OS even if
+    memory size is too small (in IBM PC emulation, less than 32KB of RAM).
+    MS-DOS 1.x of course will crash if you try that because of the
+    assumptions made in the boot sector, but it's there if you are feeling
+    adventurous or are in an experimental mood (joncampbell123).
+  - If memsize is 4KB, place the COMMAND.COM PSP segment in the private
+    UMB area instead of the normal MCB allocation chain (joncampbell123).
+  - DOS kernel will always allocate kernel memory from private UMB area
+    if memory size < 16KB, in order to continue to work (joncampbell123).
+  - DOS kernel will allocate from segment 0x60 instead of 0x70 if the
+    memory size is less than 64KB. (joncampbell123).
+  - files= and fcbs= default value now automatically scales according to
+    available conventional memory (640KB or lower) in order for memsize 64KB
+    or lower to free up or memory and run properly. (joncampbell123).
+  - dosbox.conf files= and fcbs= settings have been changed to allow
+    "0" as a value to mean choose a reasonable default. (joncampbell123).
+  - Fix bug where DOS kernel crashes on startup because of the initial
+    stack pointer set by BIOS startup that points past available memory
+    when memsize is 64KB or less. (joncampbell123).
+  - If minimum mcb free is not set and memory size is less than 256KB,
+    automatically set minimum mcb free to minimum mcb segment, in order
+    to release more available memory within the limited space (joncampbell123).
+  - Do not enable XMS emulation if system memory size is 1MB or less. (joncampbell123)
+  - DOS drive cache: When listing a directory, defer the filename sort until
+    the entire list is built. This improves directory listing performance
+    in directories with many files. (joncampbell123).
+  - INT 10h, if instructed, will now use the video parameter table to set
+    standard VGA modes instead of internal logic. (joncampbell123).
+  - Removed erroneous VGA display compensation code for certain EGA/VGA
+    registers that really only caused incorrect display of the EGA 640x350
+    4-color mode. (joncampbell123).
+  - Corrected EGA and VGA video parameter tables by copying the parameters
+    from actual IBM EGA VGA ROM BIOS images. They should be 100% correct
+    now. (joncampbell123).
+  - Corrected register values and video rendering of machine=EGA 640x350
+    mode when emulating 64KB of RAM. This should fix rendering and display
+    issues with EGA 640x350 4-color emulation. Also corrected INT 10h
+    character printing functions to filter the color attribute value for
+    640x350 4-color mode so the DOS prompt does not have alternating
+    colors, in the same manner the real IBM EGA BIOS does. (joncampbell123).
+  - Fix BIOS screen to use CGA 640x200 2-color mode if machine=ega with
+    less than 128KB of video ram, or machine=ega200, instead of showing
+    a garbled 640x350 display. (joncampbell123).
+  - Fix memory buffer overrun with machine=ega that can occur with
+    640x350 mode and less than 256KB of video RAM. (joncampbell123).
+  - The DOSBox clipboard API (via INT 2Fh) is now disabled by default, because
+    some programs use it's presence to detect whether they are running under
+    Windows. This fixes a program where Norton Desktop 1.0 does not use it's
+    "graphical" text UI elements because it thinks it's running within a
+    Windows DOS box. (joncampbell123).
+  - Remove unnecessary and useless Win32 fcntl() on some memory typecast
+    to int which is causing a segfault whenever a ZIP file is mounted
+    as a drive with an overlay filesystem atop it. (joncampbell123)
+  - Update caption control feature to use equivalent APIs on Mac OS. (joncampbell123)
+  - Add dosbox.conf and menu option to control whether the DOSBox-X window
+    can be seen in screen captures in Windows 7/8/10/11. Windows 11 "Recall"
+    is very concerning and users might not want their DOS gaming to be
+    part of it's memory. (joncampbell123).
+  - Correct EGA switch readback from port 3C2h to reflect a value of 0x8
+    instead of 0x9 when machine=ega200 (joncampbell123).
+  - Correct BIOS data area value that holds the "EGA switches" to reflect
+    200-line EGA "emulation" when machine=ega200. Value 0x08 instead of 0x09
+    (joncampbell123).
+  - Correct mode parameters for CGA 640x200 2-color mode when using
+    machine=ega200 so that it displays correctly. (joncampbell123)
+  - DOS kernel: Remove fixed hacks for SFT and dynamically allocate the
+    second SFT table for the last N - 5 file handles. Add code to zero
+    SFT table memory to ensure that random data doesn't cause issues.
+    Windows 3.1 is still perfectly fine with it, so the SFT table update
+    and cleanup is complete. (joncampbell123).
+  - DOS kernel: Move the magic "CON" strings into the first SFT and
+    mimic the 5 default open file handles that every DOS process starts
+    with: CON CON CON AUX PRN. Windows 3.1 is still happy with it, which
+    is good. (joncampbell123).
+  - DOS kernel: Put the CON driver somewhere else because allowing it
+    to overlap the SFT is messy. Fix SFT generation to match the way that
+    MS-DOS 5.0 does it where the first table is always 5 entries and the
+    second table is always N - 5 entries. Cleanup the DOS memory allocation
+    a bit. So far, Windows 3.1 doesn't have a problem with it. (joncampbell123).
+  - DOS kernel: Interrupt handler IRET was accidentally placed within
+    the SFT table, move it up to resolve the conflict. (joncampbell123).
+  - Local DOS drive support: On Windows, if the guest is attempting to
+    create a hidden file, make sure to call the right APIs to create a
+    hidden file on the host. Not only is this needed to create a hidden
+    file, but if the guest tries to create a hidden file and the file
+    already exists as a hidden file, the file creation needs to succeed.
+    Fix for "Facts of Life" by Witan because the demo creates a hidden
+    WITAN.92 every time it is run (joncampbell123).
+  - XMS: Add dosbox.conf option to XMS driver to switch on flat real mode
+    when a) the XMS driver initializes and/or b) when the XMS driver is
+    called on to move/copy memory. (joncampbell123).
+  - INT 21h: If a DOS program frees a memory block, and then resizes the
+    freed memory block, reassign ownership of that block to the program
+    as if allocated. This is apparently canonical MS-DOS behavior. Added
+    dosbox.conf option to control whether resizing a freed block silently
+    assigns ownership (default setting) or whether it returns an error.
+    DOS resize memory function for the most part DID assign ownership but
+    not in the case where the size of the MCB was exactly the size requested
+    to resize to. (joncampbell123).
+  - Sound Blaster: Fix bug where "force autoinit" prevented Sound Blaster
+    playback from working at all, fix for "Jump" by Public NMI (joncampbell123).
+  - Debugger UI now shows PIC_FullIndex() and whether or not the CPU is
+    in the HLT state. Single stepping does not do anything when the CPU is
+    in the HLT state, so at least let the user know (joncampbell123).
+  - Keyboard controller (IBM PC): Cancel the IRQ signal upon reading I/O
+    port 60h. The reason for the IRQ, the pending data, was just read, so
+    now there is no point in keeping the IRQ signal up. This fixes Escape
+    key problems with "Cronologia" by Cascada that causes part 3 "Time"
+    to immediately exit and continue to the credits. Part 1 and 2 are not
+    affected by the pending IRQ because those parts mask IRQ 1 and poll
+    the keyboard controller directly. (joncampbell123).
+  - Fix complexity test code to determine when Odd/Even mode is enabled
+    in all cases and to resolve a problem with garbled scrolling text
+    in the "Vectorballs" part of "Unreal" (joncampbell123).
+  - M_EGA display mode now applies CRTC BYTE/WORD/DWORD shift to display
+    start address, same as M_VGA, to ensure correct display when demos
+    and games set the CRTC to non-BYTE modes. This fixes page flipping
+    flickering during the "Vectorballs" part of "Unreal" by Future Crew.
+    (joncampbell123).
+  - Update Configuration GUI to use radio buttons for selection, meaning the
+    circular buttons that resemble those in Windows, not the check boxes.
+    The GUI toolkit had them all along, the Configuration GUI was using
+    check boxes for that for some reason. (joncampbell123).
+  - Linux ALSA MIDI output: Any attempt to send RESET or other Fx commands
+    to the ALSA library causes a segfault in the ALSA library. Revise the
+    code to send without crashing. (joncampbell123).
+  - Linux ALSA MIDI output: Add code to list and enumerate the MIDI sequencer
+    devices available so the user can use it to determine what magic numbers
+    to put into the midiconfig setting, especially if the user wants to send
+    MIDI to an external synthesizer. (joncampbell123).
+  - Suddenly Mac OS 14 and XCode consider the "id" and "int" datatypes
+    different and assigning or returning one to the other is now a compiler
+    error. Add typecast to enable compile on latest XCode. (joncampbell123)
+  - INT 33 mouse emulation: Add dosbox.conf options to force a specific
+    coordinate system for the DOS game with respect to host/guest mouse
+    cursor integration (getting the DOS cursor to match the host cursor
+    within the window). Add dosbox.conf option where additional adjustments
+    are available. The maximum x/y and max-adjust options are ideal for
+    Lemmings 2, which uses INT 33h in a way that confuses the automatic
+    range detection code used to synchronize cursor position and therefore
+    needs this option, and the first Lemmings as well. (joncampbell123).
+  - PIT timer: Fix restart_counter(), the delay computation was completely
+    backwards. This is particularly important where it concerns programs
+    that use the PIT to detect the rate at which the Pentium time stamp
+    (RDTSC) advances as the previous code caused wildly inaccurate measurements
+    and bad timing (GRUB bootloader, the Microsoft CD-ROM boot "press a key
+    to boot from CD" message). (joncampbell123).
+  - IDE: Make sure to set feature/error register to 0x01 when the guest
+    soft or hard resets the IDE devices through the controller. The Linux
+    kernel uses a soft/hard reset on startup to detect PATA devices and
+    if it does not see the correct value after reset, it will either ignore
+    the device or complain about diagnostic failure and cautiously talk to
+    the primary IDE hard drive while ignoring any ATAPI CD-ROM emulation.
+    This allows the Linux kernel to boot and see the CD-ROM drive. (joncampbell123).
+  - IDE: Do not clear registers unnecessarily when finishing IDENTIFY DEVICE.
+  - The BOOT command now supports El Torito "no emulation" booting from a
+    CD-ROM drive, which is needed to boot install CDs for Windows XP, Linux,
+    etc. or Linux-based live CDs. Note that at this time, BOOT only supports
+    "no emulation" and IMGMOUNT only supports "floppy emulation" (joncampbell123).
+  - INT 13h extensions: If a read was interrupted by an error, update the
+    block transfer count so the caller knows (joncampbell123).
+  - DOS: Move version parsing farther up, so that the initial DOS version
+    can affect memory layout and tables as needed. (joncampbell123)
+  - DOS DPB and FAT driver: If the DOS version is 4.0 or higher, write a
+    DOS 4.0+ compatible DPB structure (as DOSBox-X already has been doing
+    since forking from DOSBox). If the DOS version is lower than 4.0,
+    write an MS-DOS 3.30 compatible DPB structure. This allows Popful Mail
+    to run without getting into an infinite loop scanning the DPB linked list
+    when [dos] section ver=3 30 (MS-DOS 3.30), aside from the fact that the
+    game will also run without this change if you set ver=4 0 since the game
+    appears to be aware of the change in structure between MS-DOS 3.30 and
+    MS-DOS 4.0, though for whatever reason the game refuses to run on
+    MS-DOS 5.0 or higher. (joncampbell123).
+  - IDE: Silently ignore SET FEATURES command 0x03. Any negative response
+    to feature 0x03 causes the Linux kernel to reject the IDE device.
+    (joncampbell123)
+  - Add support for PIT timer 0 mode 4. Linux kernel 6.1.29 compiled in
+    "tickless" mode uses mode 4 instead of mode 0 as a delay timeout. Prior
+    to this fix, the Linux kernel would switch into tickless mode and then
+    nothing would happen because IRQ 0 would never fire again. See also Linux
+    kernel source code, drivers/clocksource/i8253.c function pit_set_oneshot()
+    to see what I mean. (joncampbell123)
+  - Windows 95 S3 driver behavior suggests that S3 16-color VESA modes
+    0x202 to 0x208 are NOT planar modes, but packed modes. Change modes to
+    M_PACKED4 and update modelist building to allow that range even if the
+    dosbox.conf is configured not to list 4bpp packed VESA modes. This fixes
+    Windows 95 S3 driver 16-color modes 800x600, 1024x768, 1280x1024.
+    Noted: Windows 95 is the last version of Windows to support 4bpp packed.
+           Windows 98 and higher refuses to support it and the Display settings
+           will not allow you to select any 16-color mode other than the stock
+           VGA 640x480 16-color planar mode. (joncampbell123)
+  - Add --load-seg option to BOOT in case any PC-98 game boot floppy expects
+    to be loaded somewhere other than the default. PC-98 game "Private School
+    Adventure" will crash if loaded to segment 0x1FC0 but runs fine if booted
+    with --load-seg 0x0FC0 instead. (joncampbell123)
+  - Add dosbox.conf option to direct the EMS page frame segment, in a limited
+    fashion, though only effective for PC-98 mode. PC-98 segment is still
+    0xD000 by default, but apparently there are games that require the EMS
+    page frame to exist at 0xC000. For these games, you can now set under the
+    [dos] section "ems frame=C000". (joncampbell123)
+  - Restored libslirp support for 32-bit MinGW CI builds which was temporarily
+    dropped in 2024.03.01 release. Also since MinGW plans to gradually phase
+    out 32-bit support, added code to manually build on our own. (maron2000)
+  - Fixed build errors of Windows installers. Windows Vista support for standard
+    installer is dropped to fix this issue. Vista users can either use the XP
+    installer or portable builds instead. (maron2000) 
+  - Fixed compile error of speexdsp/fftwrap.c on gcc-14 (maron2000)
+  - PC-98: Fixed US keyboard support for tilde (Shift+grave) key (maron2000)
+  - Fixed DOSBox-X freezed when codepages regarding EGA18.CPX were set (maron2000)
+  - Fixed CUE sheets of GOG games were rejected. Still requires "-t iso" or 
+    "-t cdrom" option for uncommon file extensions except ".CUE". (maron2000)
+  - Added loongarch64 support (donmor)
+  - Disable FP exceptions in a portable way (xry111, donmor)
+  - Added "*.ccd" in file open dialog (maron2000)
+  - Added CI builds for ARM mac (maron2000)
+  - Bump tinyfiledialogs to ver 3.17.4 (maron2000)
+  - Obtain geometry info of non-standard sized floppy from BPB (maron2000)
+  - PC-98: Implemented int 18h ah=47h,48h,49h (nanshiki)
+  - Added breakpoint type "Freeze memory" (Enmet)
+  - Implemented seeking in MSCDEX
+    (Imported from dosbox-staging/dosbox-staging#3516 authored by weirddan455)
+  - Fixed built-in COPY command failed to obtain free space when reported DOS 
+    version is set to 7.1 (maron2000)
+  - Fixed some file extensions in the filter list were ignored in the file open
+    dialogs (maron2000)
+  - Fixed mounting a non-FAT VHD image (maxpat78)
+  - Fixed VHD geometry detection (maxpat78)
+  - Fixed issue that IMGSWAP command did not work for CD drives. (maron2000)
+  - Fixed loaded language file unexpectedly changes on launch. (maron2000)
+  - Fixed reported size issues in builtin DIR command (maxpat78)
+  - Added missing language file in Windows standard & XP installers. (maron2000)
+  - Fixed a bug in IME character display on macOS Sonoma (nanshiki)
+  - Fixed build errors of SDL1 code when built with gcc-14 (maron2000)
+  - Fixed static link errors of libslirp >= 4.8.0 (maron2000)
+  - PC-98: Added MEM command for PC-98 mode (maron2000)
+
 2024.03.01
   - If an empty CD-ROM drive is attached to IDE emulation, return "Medium Not
     Present" instead of a read error, when asked to read. (joncampbell123).
@@ -40,7 +297,7 @@
     state table in BIOS has also been added, though at the moment, the tables
     are incomplete. (joncampbell123).
   - MegaZeux from the MS-DOS days had a 256-color tweakmode that worked on some
-    popular SVGA chipsets of it's time though on others it does nothing but halve
+    popular SVGA chipsets of its time though on others it does nothing but halve
     the display resolution of text mode. The basic idea is that it makes the VGA
     card latch two 4-bit outputs of the VGA text mode into one 8-bit value, thus,
     256 colors possible. Add support for this. However I am not sure whether this
@@ -347,7 +604,7 @@
     bits for the interleave emulation and can be properly emulated
     with the M_EGA renderer. M_CGA2 is still used for the CGA and
     MCGA machine types for those modes. The DCGA DOS/V mode has been
-    carefully made into it's own render mode instead of part of the
+    carefully made into its own render mode instead of part of the
     M_CGA2 case. (joncampbell123).
   - Fixed refcount -1 error and abort when multiple floppies are
     attached to a floppy drive and the "Swap floppy" mapper shortcut
@@ -456,7 +713,7 @@
     stubs to be developed on going forward to emulate the HGC+ and
     InColor cards. Note that InColor will require the MCH_HERC case
     to generate 64-color EGA-like output going forward even if the
-    documented stratup state still emulates the MDA-like monochrome
+    documented startup state still emulates the MDA-like monochrome
     attributes. (joncampbell123)
   - SDL2: Stop checking for compiler flags that make it an error to
     declare variables after statements in a function or any other
@@ -583,7 +840,7 @@
     reports events through the interrupt. Added dosbox.conf option
     to allow the user to force a report rate, which can be used to
     force a lower than normal report rate for games that cannot
-    proprly handle higher ones. Allow PS/2 mouse emulation, if
+    properly handle higher ones. Allow PS/2 mouse emulation, if
     rate not set by user, to control report rate. (joncampbell123).
   - Add code to COMMAND.COM to flush keyboard input before running
     the command given by the user, and flush again when the command
@@ -1672,7 +1929,7 @@
     on mounted local and overlay drives for non-Windows
     platforms by using special file(s). (Wengier)
   - Added config option "special operation file prefix"
-    (in [dos] section) to speciay an alterantive file
+    (in [dos] section) to specify an alternative file
     prefix for DOSBox-X's special operations on mounted
     local and overlay drives. (Wengier)
   - Added code page 3021 for the MIK character set used
@@ -1861,7 +2118,7 @@
   - Mac OS X builds from now on will use an in-tree tool
     to replace dylib references in all executable files.
     XCode install_name_tool is no longer used, it became
-    a hypocondriac and is sitting in the corner screaming
+    a hypochondriac and is sitting in the corner screaming
     about link edit data that doesn't fill a __LINKEDIT
     segment. It is once again possible to make Mac OS X
     ARM releases and to use dylib files from Brew doing
@@ -2438,11 +2695,11 @@
     config option "getsysfont" is added which when set
     to "false" will disable the font acquisition on
     Windows and Linux platforms. (Wengier & nanshiki)
-  - Implemented support for inputing CJK characters
+  - Implemented support for inputting CJK characters
     on Linux SDL1 builds using Linux system IMEs. Code
     imported from SDL-IM-plus by nanshiki and confirmed
     to work on Linux/X11 platform by him.
-  - Added support for inputing Japanese and Korean
+  - Added support for inputting Japanese and Korean
     characters using system input method (IME) using
     the default "windib" video driver in Windows SDL1
     build (in addition to "directx" driver). (nanshiki)
@@ -2604,7 +2861,7 @@
     help will show correctly for these languages). You
     can change the DBCS font used by Configuration Tool
     interface via fontxdbcs14 config option. (Wengier)
-  - Added support for inputing DBCS characters using
+  - Added support for inputting DBCS characters using
     system input method (IME) in Windows SDL1 build.
     Chinese (Simplified and Traditional) IMEs may work
     with the default video setting and a Chinese code
@@ -2685,7 +2942,7 @@
     addition of some files/programs, such as additional
     4DOS files, text utilities in TEXTUTIL directory
     and TITLE command to change window title. Default
-    value of the %PATH% envonment variable has been
+    value of the %PATH% environment variable has been
     expanded to include these subdirectories, but if
     you use a custom path then you may want to include
     these directories in your %PATH%. (Wengier)
@@ -2739,7 +2996,7 @@
     and command "CONFIG -ln" will show current language
     name (if any), or you can use command "CONFIG -ln
     <lang_name> -wl <lang_file>" to specify a language
-    name when writting to a language file. (Wengier)
+    name when writing to a language file. (Wengier)
   - Added special properties to CONFIG command such as
     "hostos", "programdir", "workdir", "configdir", and
     "userconfigdir" so that commands like "CONFIG -GET
@@ -2960,7 +3217,7 @@
     COLOR_CMP. DirectX-based Windows 95 games are now
     able to blit in 256-color mode with a transparent
     color key value.
-  - ANSI.SYS emulaion now supports the "Device Status
+  - ANSI.SYS emulation now supports the "Device Status
     Report" escape when asked through code 6 (report
     cursor position)
   - Fixed RAM mapping bugs related to MDA/CGA/Hercules
@@ -3047,7 +3304,7 @@
     video switches) unless the machine type is
     EGA or VGA. Those fields do not exist otherwise.
     Certain games like Mindscape's "Road Runner" game
-    require those fields to be zero as part of it's
+    require those fields to be zero as part of its
     Tandy detection routine.
   - PCjr mode will omit the reserved graphics RAM
     MCB block, and will subtract 16KB from the top
@@ -3184,7 +3441,7 @@
     at startup instead of the graphical one. If the
     TrueType font (TTF) output is enabled the text-
     mode BIOS screen is used automatically. (Wengier)
-  - Added a simple BIOS Setup Utlity, which will show
+  - Added a simple BIOS Setup Utility, which will show
     a summary of the current system configuration and
     allow users to change the date and time. Press Del
     key at the BIOS boot screen to enter. (Wengier)
@@ -4069,7 +4326,7 @@
     video setting from the command line. Also added a
     config option "high intensity blinking" which when
     set will display high intensity background colors
-    instad of blinking foreground text. The menu item
+    instead of blinking foreground text. The menu item
     "Allow 9-pixel wide fonts" is moved from the menu
     group "Compatibility" to here. (Wengier)
   - Added "Debugging" menu group under "Help" menu, and
@@ -4190,7 +4447,7 @@
     pasting from the Windows clipboard. (Wengier)
   - The mouse wheel movements will be automatically
     converted into up/down arrows by default for the
-    intergrated DOS now. You can also enable it for
+    integrated DOS now. You can also enable it for
     the guest system from the "Main" menu ("mouse wheel
     movements" -> "Enable for guest systems also") or
     from the config file. (Wengier)
@@ -4282,7 +4539,7 @@
     CGA or EGA emulation modes. (Wengier)
   - DOSBox-X will now try to use the internal DOS date
     and time (instead of always using the host date and
-    date) for file modication timestamps. (Wengier)
+    date) for file modification timestamps. (Wengier)
   - Added menu item "Expanded memory (EMS)" under "DOS"
     menu to dynamically enable or disable EMS memory
     at run-time. You can now also modify EMS memory
@@ -4714,7 +4971,7 @@
     It now saves PC-98 FM interrupt state so that reloading
     state does not cause hung music;
     It is also fixed not to crash when used within a guest
-    operting system (when the DOS kernel has been shut down
+    operating system (when the DOS kernel has been shut down
     using the BOOT command);
     It now supports memory size up to 1GB;
     It will save and verify the DOSBox-X version and build.
@@ -4803,7 +5060,7 @@
     is Windows 98-style LBA FAT16 or FAT32.
   - IMGMOUNT now assumes ISO type by default if the image file
     extension is .iso/.cue/.bin/.mdf. No need for "-t iso" in
-    this case; but (if appliable) it can be overridden by for
+    this case; but (if applicable) it can be overridden by for
     example "-t hdd". (Wengier)
   - IMGMOUNT command (no parameters) now lists mounted FAT/ISO
     drives and mounted drive numbers, also SUBST command (no
@@ -4840,7 +5097,7 @@
     all options as in Unix/Linux platform (Wengier)
   - DIR /O & /OG supported in addition to /ON|/OE|/OS|/OD options.
     Options such as /-O & /-A can be used to override /O, /A etc if
-    they are specified in the DIRCMD environment varaible (Wengier)
+    they are specified in the DIRCMD environment variable (Wengier)
   - DIR and VOL commands now display real serial numbers for mounted
     local drives (Windows only) and FAT drives (Wengier)
   - Fixed SYS command not working properly (Wengier)
@@ -4868,7 +5125,7 @@
   - Fixed clip_key_modifier setting not working when it is
     set to alt, ctrl or shift in the SDL2 build. (Wengier)
   - Sending "Ctrl+Alt+Del" key from the menu will now reset
-    the system within DOSBox-X when the intergrated DOS or a
+    the system within DOSBox-X when the integrated DOS or a
     real DOS booted from a disk image is active. (Wengier)
   - PC speaker output fixed not to timeout and stop rendering
     unless the PC speaker output is not emitting anything
@@ -4931,7 +5188,7 @@
     loud popping (DC offset) problems with Tandy DAC
     sound effects in Prince of Persia. This new behavior
     also seems to match real Tandy 1000 hardware according
-    to video captures of it's audio/video outputs while
+    to video captures of its audio/video outputs while
     playing Prince of Persia on it.
   - Tandy/PCjr 3-voice fixed to respond to I/O port 0xC0
     regardless of 8-bit or 16-bit I/O (fixes Prince of
@@ -5285,7 +5542,7 @@
     sānguózhì), a game with strange and elaborate timing
     code, to run without hanging at the second title screen.
   - VGA port 3DAh "undefined bits" setting changed to 0x04
-    to accomodate "Blues Brothers"
+    to accommodate "Blues Brothers"
   - Configuration GUI: If the settings are scrollable,
     tabbing between fields will now auto-scroll to the
     field and make it visible.
@@ -5570,7 +5827,7 @@
     window no longer "freezes" the display in SDL2 builds.
   - IDE emulation now minimally emulates PC-98 I/O port
     arrangement in PC-98 mode.
-  - Running a build that draws it's own menus, setting
+  - Running a build that draws its own menus, setting
     output=opengl, and hiding the menus no longer causes
     lag redrawing the screen every time the mouse cursor
     moves.
@@ -5697,7 +5954,7 @@
     - Use a more compatible offset for DOS redirected interrupt
     vector. Works around a null pointer bug in the notes dropdown
     list of Jack the Ripper.
-    - Reqrite pop_ev so it can trigger pagefaults again. Fixes
+    - Rewrite pop_ev so it can trigger pagefaults again. Fixes
     Win 3.11.
     - Fix uninitialized access to some isoDrive fields. Pause audio
     before switching. Use right subunit with multiple CDs on one
@@ -6226,7 +6483,7 @@
     the RS-232C port.
   - IDE emulation bug fixed that prevented BIOS to IDE
     geometry translation when BIOS head count == 255. This
-    fix also allows Windows 95 to use it's IDE driver with
+    fix also allows Windows 95 to use its IDE driver with
     >= 4GB hard drives instead of running in MS-DOS compatibility
     mode.
   - Disk image support fixed to allow 4GB or larger hard disk
@@ -6242,7 +6499,7 @@
   - Changed MPU-401 reset duration (DOSBox SVN).
 0.82.16
   - SDL1 support fixed to gracefully handle a case where,
-    under Windows XP, with a audio device that is not cycling
+    under Windows XP, with an audio device that is not cycling
     any audio DMA, DOSBox-X can hang on shutdown.
   - SDL drawn menus now shift and adjust popup menu position
     to ensure the popup is entirely within the screen in cases
@@ -6405,7 +6662,7 @@
     stable every time you resize or do anything to trigger
     window recreation. Resizing the window no longer causes it
     to re-center to your screen.
-  - SDL initializion fixed not to bail out on startup if
+  - SDL initialization fixed not to bail out on startup if
     DOSBox-X is unable to initialize SDL1 CD-ROM support (ccawley2011)
   - Segfault fixed (NULL pointer de-reference) that
     occurs when running DOSBox SVN on anything older than
@@ -6823,7 +7080,7 @@
     This is to prevent dosbox.conf settings from polluting the
     available commands at the shell and conflicting with shell and
     executable names.
-  - EGA emulaton fixed to obey Color Plane Enable register in
+  - EGA emulation fixed to obey Color Plane Enable register in
     16-color planar modes.
   - Fixed BIOS model byte to report PS/2 model 30 correctly when
     machine=mcga, to allow certain DOS games to detect MCGA that way.
@@ -6974,7 +7231,7 @@
     only for non-VESA modes. 1024x768 16-color mode works again.
   - Fixed user-defined VESA BIOS modes to validate the required video
     memory against the available memory on the emulated SVGA hardware.
-  - VESA BIOS modelist generation moved into it's own function. Modelist
+  - VESA BIOS modelist generation moved into its own function. Modelist
     is regenerated upon editing/deletion of modes.
   - VESA BIOS modes added as suggested by hail-to-the-ryzen
   - VESA BIOS emulation now allows scriptable editing, deletion, and
@@ -7180,7 +7437,7 @@
   - Conditional support for Direct3D (9) output enabled for
     MinGW builds, if the MinGW headers are available (yksoft1).
     Option is disabled by default.
-  - Configuration GUI dialog box widened to accomodate buttons
+  - Configuration GUI dialog box widened to accommodate buttons
     that were previously cut off on the right.
   - Replace E_Exit() with LOG_MSG() for key codes from the mapper
     that a keyboard scan code generator does not recognize. This
@@ -7884,7 +8141,7 @@
   - Maximize/restore fullscreen cleanup.
   - Removed DDRAW output.
   - Fix FAT filesystem driver to clear "success" flag at all failure
-    return points. This fixes problems where unrecognizeable FAT
+    return points. This fixes problems where unrecognizable FAT
     filesystems are nonetheless presented as a drive letter with
     garbled filenames, when IMGMOUNT should have displayed an error
     instead.
@@ -8087,7 +8344,7 @@ https://github.com/joncampbell123/dosbox-x/pull/290
   - Modify movie recording code so that the movies aren't corrupt when
     you exit dosbox without stopping the movie.
   - Change RGB3x scaler to look more pretty.
-  - Improve initial register values compatility of the GUS.
+  - Improve initial register values compatibility of the GUS.
   - Added autodetection for Gameblaster. (games can find it now)
   - Change render preferences a bit to be more compatible with Windows 7.
   - Add DOS fixes to terminate program. (fixes Fortune Teller) 
@@ -8208,7 +8465,7 @@ https://github.com/joncampbell123/dosbox-x/pull/290
   - Fix mixer 16bit direct transfers on bigendian hosts.
   
 0.72
-  - Fixed unitialized variable in joystick. (Fixes crashes on Vista and
+  - Fixed uninitialized variable in joystick. (Fixes crashes on Vista and
     Mac OS X)
   - Some bugfixes and speedups to the 64 bit recompiling core.
   - Fixed sign flag on soundblaster dma transfers (Space Quest 6 intro)
@@ -8382,7 +8639,7 @@ https://github.com/joncampbell123/dosbox-x/pull/290
   - Fixed a bug in the mixer code, that muted the music in certain games.
   - Added an assembly fpu core.
   - Made the shell more flexible for batch files.
-  - Check for unaligned memory acces fixes hangups on ARM processors.
+  - Check for unaligned memory access fixes hangups on ARM processors.
   - Some 64 bit fixes.
   - Added code to change configuration at runtime.
   - Improved ADPCM emulation.
@@ -8506,7 +8763,7 @@ https://github.com/joncampbell123/dosbox-x/pull/290
   - Added a keymapper.
   - Added basic IPX emulation.
   - Added cdrom iso support and floppy images support.
-  - Added the possibity to boot another dos version.
+  - Added the possibility to boot another dos version.
   - Added Serial passthrough support (win32 only).
   - Added the possibility to pause dosbox.
   - Changed OpenGL so that it is initialized only when used.
@@ -8567,7 +8824,7 @@ https://github.com/joncampbell123/dosbox-x/pull/290
   - Added another way to switch to protected mode. (Thanks Morten Eriksen!)
   - Fixed some odd badly documented behaviour with PSP/DTA
   - Added some warnings on opening of readonly files in writemode(DOS default).
-  - Many shell enhanchements
+  - Many shell enhancements
   - Fixed a win32 specific bug dealing with filenames starting with a "."
   - Fixed some bugs with the directory structure: not found/can't save errors
   
@@ -8606,7 +8863,7 @@ https://github.com/joncampbell123/dosbox-x/pull/290
 0.58
   - fixed date and time issues with fcbs
   - added more commands to the internal Shell
-  - corrected config system when a old configfile was used
+  - corrected config system when an old configfile was used
   - fixed cga put and get pixel
   - fixed some vga register getting reset to wrong values
   - improved support for foreign keyboards
@@ -8690,7 +8947,7 @@ https://github.com/joncampbell123/dosbox-x/pull/290
   - Rewrote most of the fcb calls to use normal dos calls.
   
 0.55
-  - fixed the errors/warnings in prefix_66.h and prefix_66_of.h (decimal too large becomming unsigned).
+  - fixed the errors/warnings in prefix_66.h and prefix_66_of.h (decimal too large becoming unsigned).
   - fixed compilation error on FreeBSD when #disable_joystick was defined
   - int10_writechar has been updated to move the cursor position.
   - changed the basedir routines to use the current working dir instead of argv[0]. This will fix and brake things :)
