@@ -602,14 +602,14 @@ void runBumpImage()
 
 void runPlasmaScale(int32_t sx, int32_t sy)
 {
-    uint8_t *data = NULL;
+    uint32_t *data = NULL;
     GFX_IMAGE plasma, screen;
 
     uint8_t sinx[256] = {0};
-    uint32_t frames, tectr, ofs, y;
+    uint32_t endx, frames, tectr, y;
+    uint16_t cr, cg, cb, a, b, c;
     uint16_t x1, x2, x3, y1, y2, y3;
-    uint16_t cr, cg, cb, endx, a, b, c;
-
+    
     // initialized lookup table and preload image
     for (y = 0; y < 256; y++) sinx[y] = sin(y * M_PI / 128) * 127 + 128;
     if (!newImage(lfbWidth >> 2, lfbHeight >> 2, &plasma)) fatalError("Cannot open image plasma.\n");; 
@@ -617,17 +617,16 @@ void runPlasmaScale(int32_t sx, int32_t sy)
 
     frames  = 0;
     endx    = plasma.mWidth >> 1;
-    data    = plasma.mData;
 
     do {
-        ofs = 0;
+        data = (uint32_t*)plasma.mData;
         tectr = frames * 10;
         x1 = sinx[(tectr / 12) & 0xFF];
         x2 = sinx[(tectr / 11) & 0xFF];
         x3 = sinx[frames & 0xFF];
         y1 = sinx[((tectr >> 3) + 64) & 0xFF];
-        y2 = sinx[(tectr / 7 + 64) & 0xFF];
-        y3 = sinx[(tectr / 12 + 64) & 0xFF];
+        y2 = sinx[((tectr / 7) + 64) & 0xFF];
+        y3 = sinx[((tectr / 12) + 64) & 0xFF];
 
         // calculate plasma buffer
         for (y = 0; y < plasma.mHeight; y++)
@@ -641,15 +640,14 @@ void runPlasmaScale(int32_t sx, int32_t sy)
             cb = sinx[(c >> 6) & 0xFF];
             
             __asm {
-                xor    ax, ax
                 mov    edi, data
-                add    edi, ofs
-                xor    dx, dx
-            lp:
+                xor    eax, eax
+                xor    edx, edx
+            next:
                 xor    ebx, ebx
                 mov    cl, 6
-                mov    bx, ax
-                push   ax
+                mov    ebx, eax
+                push   eax
                 sub    bx, x3
                 add    bx, c
                 mov    c, bx
@@ -690,12 +688,12 @@ void runPlasmaScale(int32_t sx, int32_t sy)
                 mov    bh, byte ptr cg
                 mov    [edi + 4], ebx
                 add    edi, 8
-                pop    ax
-                inc    ax
-                cmp    ax, endx
-                jnae   lp
+                pop    eax
+                inc    eax
+                cmp    eax, endx
+                jnae   next
             }
-            ofs += plasma.mRowBytes;
+            data += plasma.mWidth;
         }
 
         // bilinear scale plasma buffer
@@ -758,7 +756,7 @@ int main()
     newImage(xc - 19, cmaxY - yc - 9, &txt);
     getImage(tx, yc, xc - 19, cmaxY - yc - 9, &txt);
     
-    writeString(xc + tx, 70, "GFXLIB v1.2.WC", gray127, 2);
+    writeString(xc + tx, 70, GFXLIB_VERSION_STRING, gray127, 2);
     writeString(xc + tx, 90, "A short show of some abilities", gray127, 2);
     writeString(xc + tx, 100, "GFXLIB does provide. Note that", gray127, 2);
     writeString(xc + tx, 110, "this is only a small amount of", gray127, 2);

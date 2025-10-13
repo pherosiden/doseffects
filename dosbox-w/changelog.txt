@@ -1,3 +1,563 @@
+2025.10.07
+  - INT 21h AH=4Ah resize memory: Compact free blocks only at or after the
+    segment being resized, as MS-DOS is documented to do (joncampbell123).
+  - INT 21h AH=4Ah resize memory: Fix bug where, if asked to resize a previously
+    freed memory block and the block is not the last block in the MCB chain,
+    and the next block in the MCB chain is also free, the MCB management code
+    would correctly compact free blocks but then allocate according to the
+    old size of the freed MCB block, causing truncation of the MCB chain.
+    Fix for MCB chain truncation caused by California Games II DOS memory
+    management when running in Tandy graphics mode. (joncampbell123).
+  - Add dosbox.conf option, disabled by default, where if the MCB memory
+    chain is corrupted anywhere past the running program's memory block,
+    and it does anything to cause allocation, a new free memory block is
+    created to satisfy allocations instead of halting emulation. Some DOS
+    programs are a bit sloppy in a way that can corrupt the MCB chain.
+    When enabled, this behavior matches apparent MS-DOS behavior (joncampbell123).
+  - Debugger: DOS MCBS command now also prints the segment immediately
+    following the last MCB block (joncampbell123).
+  - Tseng ET3000/ET4000: Update Status register 3DAh behavior when emulating
+    Tseng chipsets to reflect Tseng datasheet, and VGAKIT SVGA detection code
+    expectations. Bit 7 is expected, as documented by Tseng, to be the inverse
+    of bit 3 (vertical retrace). Extended Start Register CRTC 33h must not
+    allow setting the upper 4 bits because Tseng only documents the bottom
+    four, and because VGAKIT requires it for Tseng detection (joncampbell123).
+  - Fix bug that, for machine=hercules, prevented Hercules palette shortcut
+    from changing colors when in graphics mode (joncampbell123).
+  - Remove mixer and VGA capture test modes from integration device. Update
+    integration device version number. Convert hardcoded magic constants used
+    in IG into constants in iglib.h which is now shared explicitly with the
+    iglib.h in DOSLIB. Add integration device interface to allow the guest
+    to read and set the CPU cycle count of the emulator. (joncampbell123).
+  - Fix INT 10h AH=0Eh bug where printing BEL triggered screen scroll up if
+    cursor beyond the last line. Fix for the Elder Scrolls Arena installer.
+    (joncampbell123).
+  - FAT filesystem driver (for disk images): If Elder Scrolls Arena calls
+    INT 21h to find files named *.65 (such as STATES.65) with an attribute mask
+    of 0xA (VOLUME LABEL | HIDDEN), ignore the VOLUME LABEL bit and scan
+    normally. The 0xA value is leftover from a divide operation used to make
+    the file name and is technically a bug in the game, though that happens
+    to work on real MS-DOS and the DOSBox/DOSBox-X local folder support code
+    anyway. This fix allows Elder Scrolls Arena to run from a mounted disk
+    image. (joncampbell123).
+  - FAT filesystem driver (for disk images): If Elder Scrolls Arena calls
+    INT 21h to find SAVEGAME.00 (yes, a specific name for some reason) with
+    an attribute mask of 0x7C (which represents... um... what?), ignore the
+    VOLUME LABEL bit so that players can load their saved games from the
+    menu instead of being told that the saved game that is clearly there on
+    the screen does not exist. What other weird random values of CX attribute
+    mask does this game use? (joncampbell123).
+  - PCI bus improvements : Allow device to see full size access (smunaut)
+  - Fix build error of SDL1 version on ArchLinux (possibly gcc-15) (maron2000)
+  - Enable building DOSBox-X on older macOS versions and add instructions
+    (maron2000)
+  - Add code page 951 in dialog box (1abcd)
+  - Fix failure of create/opening a temporary file for piping (maron2000)
+  - Create/open a temporary file to device_TMP for piping on Z: drive.
+    (maron2000)
+  - Convert message to UTF16 before calling messagebox function (Windows)
+    (maron2000)
+  - Added some new members to the MMX_reg union for big-endian platforms.
+    (alarixnia)
+  - Create directory if not exist before writing conf file. (maron2000)
+  - Fixed language files were still locked after loading is completed.
+    (maron2000)
+  - Fixed freeze when codepage switched to 3846, 3848. (maron2000)
+  - Fixed build error when internal debugger is disabled (maron2000)
+  - Show loaded conf file in log in full path (maron2000)
+  - Print syntax error if pipe has no command to pass output (maron2000)
+  - Add permanent option for initial DOSBox-X shell (maron2000)
+  - Fix errors when initializing fluidsynth (maron2000)
+  - PC-98: Redraw the function keys after updating them (bobsayshilol)
+  - Do not carriage return with a single LF('\n') (maron2000)
+  - Fix mapper not rendering anything on SDL2/Windows (aybe)
+  - Scale mapper according display resolution (aybe)
+  - Added applicable changes from SVN. (Allofich)
+    r4485: Enable writing to all planes when drawing pixels in EGA modes.
+    r4487: Correct panning of VESA text modes.
+    r4488: Correct comment about odd/even bit.
+    r4490: Set MCB ownership when *blocks==total at end of DOS_ResizeMemory.
+    r4492: Don't clear message queues of MPU-401 and compatibles on reset.
+    r4493: Handle EOF character in batch files as actual end of file.
+    r4494: Use 4-byte partial page mapping data.
+  - Replaced deprecated functions to enable building with FFmpeg 8 (maron2000)
+  - Fixed screen blanked when restoring minimized window in TTF mode (Windows
+    SDL1) (maron2000) 
+  - PC-98: Save Kanji CG access mode setting, restrict output accordingly
+    (OPNA2608)
+  - Added missing language options to Windows installers (maron2000)
+  - Debugger: IV must not truncate addresses to 16-bit (cmsautter)
+  - Debugger: Warn single-stepping may not work as expected with Dynamic core
+    (maron2000)
+  - MIDI: Show loaded Soundfont/ROM path only when required to. (maron2000)
+  - SDL2: Updated SDL2 library to version 2.32.10 (maron2000) 
+  - Apply aspect/scaling/clipping when using OpenGL shaders in windowed-mode
+    (rebb)
+  - Fixed file locking problem on Linux port (loops)
+  - Fixed typo in Linux man page (-date-host-forced option) (maron2000)
+  - Mention OPL in MIDI/OPL configuration dialog menu (maron2000)  
+
+2025.05.03
+  - Show TURBO status in title bar. (maron2000)
+  - Fixed MinGW32 builds failed using gcc15, due to a conflict in __inline__ 
+    macro. (lazka)
+  - Revise EGA/VGA emulation to treat the CRTC CGA/Hercules
+    CRTC bit remapping as bits to mask out, instead of defining
+    the upper limit of the memory mask. This makes the CGA mode
+    Engine page flipping test work. I initially had reservations
+    about whether or not real hardware did this, but, it would
+    make sense for hardware to do it that way. (joncampbell123)
+  - Updated libpng to version 1.6.47 (maron2000)
+  - Updated XCOPY to version 1.9a (maron2000)
+  - Updated SDL2 library to version 2.32.4 (maron2000)
+  - Fixed a build/install error due to using wildcards in Makefile.am, which is
+    not supported in GNU Automake. (maron2000)
+  - macOS: Install SDL2_net in CI workflow to enable internal modem support on
+    Release and Nightly SDL2 builds. (maron2000)
+  - Fixed buffer size to allocate missing byte for string terminator for 
+    savestate filename to prevent buffer overflow (arifogel)
+  - Fixed settings of yellow color in COLOR command (maron2000)
+  - Fixed COLOR command to match behavior on Windows (maron2000)
+  - Fixed INT21h AH=0a cursor position moved by bell due to keyboard buffer full
+    (maron2000)
+  - Fixed INT21h AH=01 echo behavior (maron2000)
+  - Replaced SetPixel with DIB Section Direct Memory Access for faster printing
+    (DwayneSelsig)
+  - Fixed creation of overlay special files (zyebytevt)
+  - PC-98 mode: Add INT 18h function AH=10h to control cursor blink.
+    Emulate documented side effect in that this call also hides the
+    cursor. The PC-98 port of Lemmings will no longer show a blinking
+    black box in the lower left corner. (joncampbell123)
+  - Fixed Host key (F11, F12) handling in Codepage 932 (Japanese Shift-JIS).
+    (maron2000)
+  - Bumped ESFMu to ver 1.2.6 (maron2000)
+  - Fixed regression of adding a dot to CD labels when longer than 8 characters,
+    required for games such as Descent 2 CD installer (maron2000)
+  - Added Modeswitch toggle option (DieSkaarj)
+  - Fixed glitch of DBCS character at the end of a line (maron2000)
+  - Fixed dialog for showing error of loading language files (maron2000)
+  - Removed two and 226 duplicate Chinese character mappings from code
+    pages 950 and 951, respectively, ensuring more accurate Big5 and
+    Big5-UAO character mappings for Chinese IME users. (1abcd)
+  - Enabled changing drives mounted prior to switching to securemode (maron2000)
+  - Enabled some messages to be translated in the translation files (maron2000)
+  - Fixed fullscreen mode occasionally switched to windowed mode (maron2000)
+  - Updated French translation (FredBezies)
+  - Fixed blank screen when output=ttf on PC-98 mode (maron2000)
+  - Fixed crash when switching from fullscreen to window mode in TTF output
+    (maron2000)
+  - Fixed mounting zip files with white space in their names failed (maron2000)
+  - Fixed crash on reboot when output=ttf (maron2000)
+  - Fixed blank BIOS screen when output=ttf (maron2000)
+  - Fixed direct input of half-width kana (maron2000)
+  - Fixed PC-98 INT 1Fh, AH=90h source and destination address (drachen6jp)
+  - Fixed unnecessary trailing backslash in path name (maron2000)
+  - Fixed SSE MOVSS, MOVHPS, UNPCKLPS, UNPCKHPS, and PSADBW as well as
+    MMX PMULLW, PSUBUSB, and PSUBUSW, instruction implementations (fuel-pcbox)
+
+2025.02.01
+  - Added new experimental dosbox.conf option that turns off the
+    A20 gate automatically if loading a COM/EXE file to a memory
+    location below 64KB. Option is off by default. This is intended
+    for the startup routines of programs that assume 8086 wraparound
+    to prevent them from crashing (joncampbell123).
+  - Bump tinyfiledialogs to v3.19.1 (maron2000)
+  - Fix VGA render-on-demand bug that causes all screen updates to
+    stop working if something changes video state without changing
+    any other attribute (width, height, frame rate, etc.). In
+    PC-98 mode this bug could be triggered by leaving the text
+    layer open while switching off the graphics layer when the
+    graphics layer is in 256-color PEGC mode. Fix for KOARMADA.EXE
+    when exiting back to the DOS prompt. (joncampbell123).
+  - In PC-98 mode, add I/O port 43Bh which guest applications can
+    then read to determine whether the 15MB "memory hole" is open.
+    The guest can use this bit to determine whether the PEGC 256-color
+    framebuffer is available at that location, or whether that is
+    just plain system memory. Added for homebrew PC-9821 project
+    KOARMADA.EXE which uses that bit to determine how to talk to
+    the framebuffer. (joncampbell123).
+  - Fix keyboard ISR in PC-98 mode to assume there is data waiting
+    from the keyboard I/O ports (then check the status for more).
+    The reason is that CWSDPMI.EXE for PC-98 has a keyboard ISR
+    of it's own that reads the scan code first (which clears the
+    "data available" bit) before then passing control to the
+    real-mode keyboard ISR. If our keyboard ISR first checks for
+    status in that case it will never see any keyboard data and
+    keyboard input will never register to the guest while running
+    under CWSDPMI (joncampbell123).
+  - Fix BIOS POST location (F000:FFF0) JMP instruction in PC-98 mode
+    so that the segment value of the JMP instruction matches a
+    specific value that the DJGPP C runtime checks for to detect
+    PC-98. (joncampbell123). 
+  - Stop serving IBM PC-specific CWSDPMI.EXE in NEC PC-98 mode.
+    It happens to work unless any interrupt or exception happens.
+    Instead, provide an alternate common version of CWSDPMI.EXE
+    that was patched to support PC-98 machines when machine=pc98
+    (joncampbell123).
+  - Add support for ucrt64 builds (maron2000)
+  - DOS CTRL+C handling: Remove NULL vector check because built-in
+    COMMAND.COM long ago was fixed to provide a CTRL+C vector. Fix
+    code to use a different value for the C++ exception so that it
+    cannot be confused for any other common signal in the emulator
+    (joncampbell123).
+  - Remove DOSBox Integration Device VGA "self capture",
+    which was never used much anyway, as part of cleanup (joncampbell123).
+  - x86 paging: Remove unused non-"full TLB" code. (joncampbell123).
+  - Use mmap() to allocate system memory if available. This is
+    for future work that may involve something that requires
+    page-aligned allocation, such as KVM support in Linux (joncampbell123).
+  - VGA cleanup, organization (joncampbell123).
+  - Fixed regression of specifying DBCS fontx file was ignored. (maron2000)
+  - Fixed mistakes in adding double quotes to filenames to pass to IMGMOUNT
+    command, and syntax errors in showing a message dialog box. (maron2000)
+  - Fixed bug where bios memSize was not set when using TTF. (maitchison)
+  - Fixed CMS was always disabled regardless of config settings. (xrip)
+  - Switch off TTF mode in text modes not working in TTF mode. (maron2000)
+  - Gravis Ultrasound: Add dosbox.conf option that when enabled,
+    prints a warning to the log file every time the guest pokes
+    data into GUS RAM beyond the 1MB supported by the card,
+    in order to better identify errant Demoscene code and/or
+    any bugs in new tracker code currently in development. (joncampbell123)
+  - VGA: Fix buffer overrun that can occur with 4bpp planar
+    16-color modes if the guest writes beyond the first 2MB
+    of video RAM. The planar support code also copies the 3rd
+    bitplane to a font RAM array used in EGA/VGA text mode.
+    This font RAM array is only 512KB, therefore in planar
+    memory space, writes beyond (2MB/4) = 512KB cause corruption
+    of emulator state and possibly crashes. Solve the issue
+    therefore by not copying to font RAM beyond 512KB. (joncampbell123)
+  - VESA BIOS support: Fix VGA draw and bank switching code
+    to ensure that the guest cannot write outside video RAM
+    limits, and fix VBE bank switching code to consider 4bpp
+    planar SVGA modes properly. (joncampbell123)
+  - VESA BIOS support: Fix scan line and page calculations related
+    to 4bpp planar 16-color SVGA modes. (joncampbell123)
+  - VESA BIOS support: Fix 24bpp RGB bugs related to VBE calls
+    that control scan line length and display panning/scrolling.
+    Now VBETEST can test 24bpp panning without potentially giving
+    the user an epileptic seizure, and there are no more overlong
+    scanlines. (joncampbell123)
+  - VESA BIOS support: Correct mode information for SVGA text modes (joncampbell123)
+  - VESA BIOS support: Like real Pentium-era hardware, do not
+    list 4bpp planar 16-color modes as having a linear framebuffer.
+    Most SVGA cards only support planar VGA memory within the
+    standard VGA A0000-BFFFFh region and do not support the same
+    up in the linear framebuffer area. (joncampbell123)
+  - Save state support: Let the option to control whether or not
+    compression is applied, apply to the ZIP compression. If you
+    turn off compression, the ZIP file uses "store" mode instead,
+    otherwise compresses as normal. (joncampbell123)
+  - It turns out that for whatever reason, the savestate code was
+    compressing the state twice. Once by itself, and then again when
+    writing to the ZIP archive. Furthermore, storing the original
+    length at the end of the compressed data using size_t is a big
+    problem. Remove the extra compression/decompression and let the
+    ZIP file support do the compression. Save states from now on
+    will be marked as "No compression" for at least some backwards
+    compatibility. (joncampbell123)
+  - Volume label cleanup and fixes. Do not pad labels with white spaces. (maron2000)
+  - Some NEC PC-98 games that support MIDI through MPU-401 like to use
+    Roland GS-specific SysEx messages to control master volume and
+    reset the MIDI synth, instead of standard messages. These games
+    were known in DOSBox-X to have problems with MIDI stuck notes and
+    hanging notes for this reason. Added code to recognize Roland GS
+    reset SysEx and reissue it as standard MIDI reset, to resolve that.
+    Added code to Fluidsynth MIDI support to recognize the Roland GS
+    master volume SysEx commands and apply it to the output, which
+    allows these games to "fade out" the MIDI properly. PC-98 games
+    should no longer have hanging/stuck MIDI notes (joncampbell123).
+  - Fix VESA BIOS modelist mistake that marked all "high definition"
+    modes as modes to round bytes per line up to a power of 2 (joncampbell123)
+  - Fix memory size register determination for S3 Virge/VX (clbianco)
+  - Fixed a Y2038 bug by replacing Int32x32To64 with regular multiplication.
+    (CookiePLMonster)
+  - Fixed pasting Bell code (0x07) from clipboard was ignored. (maron2000)
+  - Fixed a segfault crash when pasting the content of clipboard is empty 
+    or consists of invalid characters only. (maron2000)
+  - Fixed crash when trying to access MOUNTed empty physical CD/Floppy
+    drives. (maron2000)
+
+2025.01.01
+  - Fix bug that prevented the Configuration GUI from saving to dosbox.conf
+    the last Windows 3.1 theme you applied using the dropdown menu.
+    (joncampbell123).
+  - Add option to apply vmemdelay to SVGA and linear framebuffer
+    modes (such as VESA BIOS modes), which reduces emulator performance
+    for those modes, but allows you to emulate slower SVGA cards.
+    Due to how some machine types are emulated, this option also enables
+    vmemdelay to affect the PC-98 linear framebuffer, Tandy & PCjr
+    video modes, as well as MDA/Hercules. (joncampbell123).
+  - Add workaround to CPU reset logic that allows it to work correctly
+    even with dynamic core. Previously, if the guest reset the system,
+    the emulator would crash with an error message about an uncaught
+    C++ exception because C++ exception handling doesn't work with
+    dynamically generated code. (joncampbell123).
+  - Correct CPUID family/model/brand values for cputype=pentium_iii.
+    Add CPUID level 2, which returns "processor configuration
+    descriptors", and return documented Pentium III values. Apparently
+    Windows XP really REALLY cares about these configuration
+    descriptors and will hang in-kernel in an infinite loop at bootup
+    without these apparently really important values. This change
+    makes it possible to boot Windows XP with Pentium III emulation.
+    (joncampbell123).
+  - Allow values of memsize to represent 4GB or more of RAM. Up to
+    1TB, if Pentium PSE extensions are enabled, the memalias setting
+    is 40, and "enable pse=pse40" in the conf file. Memalias maximum
+    is now 40, instead of 32. Add code to provide that memory above
+    the 4GB address mark when PSE is in use by the guest OS. Added
+    dosbox.conf option to specify a memory file. When specified, all
+    guest memory is memory-mapped from a file on disk, rather than
+    allocated from host memory or host swap file. To avoid consuming
+    too much RAM on the host, a memory file is REQUIRED to emulate
+    memory at or above 4GB. For best performance with the memory file,
+    make sure the filesystem you place it on supports sparse files,
+    including Linux ext4 and Windows NTFS. (joncampbell123).
+  - Fix EGA machine type to determine whether CGA RGBI or EGA RrGgBb
+    display is active by vsync polarity, instead of the length of
+    htotal. Several online references state that vsync is negative
+    for 350-line modes, including 350-line to an MDA monitor. This
+    also allows the "enhanced" EGA 320x200 modes in Rambo III to display
+    colors correctly. (joncampbell123).
+  - Dynamic x86 core: Reflect STI instruction to normal core so that
+    the 1-instruction delay is correctly emulated. This makes it
+    possible to run Windows XP or Server 2003 with dynamic core and
+    SYSENTER/SYSEXIT emulation without random BSODs (joncampbell123).
+  - Fix default code page. Instead of assuming 437 at all times, use
+    437 for all IBM PC compatible modes and 932 for PC-98 emulation.
+    (joncampbell123).
+  - Normal core: Fix STI emulation to enforce the 1-instruction delay
+    by forcing the normal core to execute another instruction right
+    away without providing any opportunity for interrupt processing.
+    This does not break Peret Em Heru, Keen games, and it seems to fix
+    the random BSOD issues with Windows XP and Windows Server 2003
+    when emulating a Pentium II that supports SYSENTER/SYSEXIT. I'm
+    not clear on why this fix prevents them from crashing, but there
+    you go. (joncampbell123).
+  - Keyboard emulation: Fix PCjr key delay to match IBM documentation
+    stating how long it takes to transmit one scan code, which is
+    obviously much slower than normal to accomodate the slow CPU and
+    the optical nature of the transmission. This is needed in order
+    for emulation to correctly send Fn+key combinations. At normal
+    key delay, the guest will miss scan codes and function keys will
+    not be reliable. (joncampbell123).
+  - Keyboard emulation: The 83-keyboard scan codes work differently on
+    the PCjr keyboard because half of them are only accessible by holding
+    the Fn key. The keyboard only sends the base key scan code and the Fn
+    key scan code and the BIOS is expected to convert that to the normal
+    83-key scan codes expected by DOS software. The problem is some games
+    like "Agent USA" for PCjr are written to directly handle scan codes
+    through IRQ 1 (the fact that PCjr handles keyboard via NMI and reflects
+    to INT 9 is ignored here). Fix this by sending scan codes that emulate
+    holding Fn and pressing the appropriate key. Agent USA expects the
+    user to press F1 by holding Fn and pressing "1". (joncampbell123).
+  - Revise VGA doublescan mode, vs bit 7 of the Max scanline register, to
+    correct how VGA doublescans 200-line modes. Revise EGA/VGA text code
+    to divide line by 2 in rendering to match double scanned scanlines,
+    so that the "graphical" text of "After the War" can render properly
+    for machine=vgaonly. (joncampbell123).
+  - INT 10: If machine=ega, check the EGA switches on INT 10h modeset.
+    Some games force the EGA BIOS to use CGA 200-line text modes by
+    modifying those bits and then setting the mode ("After the War").
+    (joncampbell123).
+  - INT 10: Fix "load font" functions to correctly recompute video
+    display end for machine=vgaonly and machine=ega. (joncampbell123).
+  - INT 10: Like any other 200-line 16-color graphics mode, 200-line
+    VGA text mode needs to program the AC and VGA palette using the
+    CGA RGBI-type palette, not the EGA 64-color type palette. (joncampbell123).
+  - CPU: Disallow clearing PE bit from LMSW by default, always.
+    You can still allow it through dosbox.conf. It turns out that
+    x86 CPUs never allowed you to clear it that way, even from the
+    Pentium up, even though Intel documentation beyond the 386 never
+    mentions it again. This fixes problems with DOS extenders and
+    VCPI, particularly DOS4GW which for some reason with VCPI likes
+    to try to clear the PE bit when switching to VM86 even though
+    it clearly understands it's not supposed to be able to clear it.
+    (joncampbell123).
+  - VCPI: It turns out the VCPI server GDT selectors are expected to
+    be 32-bit, because the protected mode VCPI entry point is expected
+    to be called as if 32-bit far pointer. Correct VCPI entry point
+    to return using RETF, not IRETD, which solves crashing issues with
+    DOS extenders. For the first time, DOS extenders are working with
+    the DOSBox-X built-in implementation of VCPI and most DOS games
+    run fine now with it. (joncampbell123).
+  - VCPI: Add code to INT 2Fh handler regarding Windows startup/shutdown
+    messages to fill in DS:SI. If EMM386 and VCPI emulation is active
+    and running the DOS machine in virtual 8086 mode, give Windows the
+    proper callback procedure to allow Windows to switch off VCPI vm86
+    mode on startup and turn it back on during shutdown. (joncampbell123).
+  - BIOS "POST" screen: Change BIOS logo to PNG format. To avoid having
+    to render a PNG in roughly 10 different video modes, add code to
+    VGA draw code to allow a BIOS logo "overlay" to be rendered
+    independent of the video mode. Depending on machine type load one
+    of four PNG files from disk or from inside DOSBox-X itself.
+    PNG requirements: 224x224 or smaller, bit depth of 8bpp or less,
+    color palette (not grayscale), no alpha channel, and must not be
+    interlaced. For best compatibility, use less than 64 colors, or
+    perhaps just 16 colors. Much like the Windows 95 LOGO.SYS, you can
+    change the logo to your taste by placing specifically named PNG
+    files in the same directory as your dosbox.conf or current working
+    directory. Have fun. Note that this addition requires that you
+    compile DOSBox-X with libpng enabled. (joncampbell123).
+  - Added dosbox.conf option to specify BIOS logo file. (joncampbell123).
+  - Added dosbox.conf option to specify a text message, up to 3 lines,
+    at the bottom of the screen during BIOS POST screen. (joncampbell123).
+  - Fix color glitches in EGA, Tandy, Hercules mode on macOS SDL2 build 
+    (output=opengl)(maron2000)
+  - Add int33 mickey threshold option (Fixes Ultima Underworld) (jpernst)
+  - Fix configure.ac (disable-screenshot option) (maron2000) 
+  - Fixed codepage switching when loading language file in Traditional
+    Chinese (maron2000)
+  - Fixed display of some Chinese characters (Traditional Chinese)(maron2000)
+  - Fixed garbled text and menubar on reset (maron2000)
+  - Fixed codepage switching when a language file was loaded (maron2000)
+  - sdlmain: Fixed crashing if no config files are found. (skitt)
+
+2024.12.04
+  - Arrange memory device allocation so that it is possible to allocate
+    up to about 3900MB of memory instead of 3500MB. (joncampbell123).
+  - Fix S3 LFB PCI base alignment error if system memory pushes it
+    to a higher address (joncampbell123).
+  - Fix EGA 640x350 4-color mode (when EGA memory size is 64KB) to
+    display correctly. Prior to this fix, 640x350 4-color only worked
+    properly if the INT 10h Video Parameter Table was enabled. (joncampbell123).
+  - Fix S3 VGA memory size reported through register CR36 to cap at 4MB
+    and set the value correctly. This fixes a known issue where setting
+    vmemsize to 8MB caused Windows 98 to report memory size as 2.5MB. (joncampbell123).
+  - Fixed a problem when VZ Editor is resident in PC-98 mode. (nanshiki).
+  - INT 10: SVGA mode 0x6A does not exist on plain VGA hardware. (joncampbell123).
+  - INT 10: Fix mode 0x6A (800x600 4-color SVGA) to use a correct dot
+    clock so that the refresh rate is >= 60Hz instead of 37Hz, and make
+    sure mode 0x6A is a 100% clone of VESA BIOS MODE 0x102. (joncampbell123).
+  - Fix MMX/SSE instruction decoding, correct some mistakes in MMX emulation. (joncampbell123).
+  - IMGMAKE: Add -partofs option to allow control of where the partition
+    begins in the image (joncampbell123).
+  - IMGMAKE: Add -align option so that the FAT filesystem can be arranged
+    for more optimal I/O on devices with larger sectors, such as modern
+    4096-byte/sector drives. (joncampbell123).
+  - IMGMAKE: Add -label option so that the generated FAT filesystem has the
+    specified volume label. (joncampbell123).
+  - MDA emulation: Fix non-blink attributes 0xF0 and 0xF8 to correctly render
+    bright green background. (joncampbell123).
+  - Fixed crash when a CD image was loaded to an "empty" drive (maron2000)
+  - Log loaded .conf file (maron2000)
+  - Supress redundant screen reports in log (maron2000)
+  - Fixed mouse capture locking by middle button (maron2000) 
+  - Fixed toggling the menu option "Autolock mouse" did nothing (maron2000)
+  - Fixed build failure with libc++ 19 (DimitryAndric)
+  - Fixed fullscreen mode not responding when launched in TTF mode 
+    in Windows (maron2000)
+  - Fixed crashes when changing floppies mounted by drive numbers on
+    a booted guest OS (maron2000)
+  - Fixed launching host programs with white spaces in path (Windows)
+    (maron2000)
+  - Convert paths from relative to absolute when launching host programs
+    in a mounted drive (Windows) (maron2000) 
+  - Added an option not to pause after host program execution is 
+    completed (maron2000)
+  - Fixed corrupted display when loading language files at launch
+    (maron2000)
+  - Fixed Z Drive path expansion to be case insensitive (maron2000)
+
+2024.10.01
+  - Allow the ".inst" extension for CUE sheets. (Allofich)
+  - Add SET /FIRST, a DOSBox-X extension, that takes the specified
+    variable if it exists and moves it to the front of the environment
+    block. (joncampbell123).
+  - SET command processing has been cleaned up and streamlined.
+    Added /ERASE command line switch to clear the environment
+    block (DOSBox-X extension). (joncampbell123).
+  - VESA BIOS: Add new option to adjust reported linear framebuffer
+    address by a specific number of pixels. This is needed by
+    "Out of Control" by Contract which for whatever reason,
+    will always draw to the LFB base minus 128 bytes. This option
+    makes it possible to correct the demo graphics. (joncampbell123).
+  - Gravis Ultrasound: Officially, registers 0x0-0xF, the voice
+    control registers, are documented to have a 0x0-0xF write and
+    0x80-0x8F read alias. Unofficially, according to the behavior
+    of 1997 demo "Out of Control" by Contract, all GUS registers
+    have a N and (N+0x80) alias, or at least register 0x4C, and
+    you can read them back from either index. Or else the demo
+    fails to detect the GUS. So add this alias, but only if
+    enabled in dosbox.conf. Real hardware testing is required to
+    know if the actual GUS behaves this way and which versions.
+    (joncampbell123).
+  - Move the INT 3 default vector to well within the initial 16
+    bytes of the DOS kernel, away from the List of Lists and SFT.
+    The previous placement caused certain versions of Windows 3.2
+    (yes, the Chinese version) to crash on startup. (joncampbell123).
+  - When using the running program to name screenshots and such,
+    filter out all invalid characters so that Windows users can
+    take snapshots even if junk characters are there (joncampbell123).
+  - DOS FAT driver: If INT 13h reports disk change, adapt floppy
+    disk geometry to new disk image according to media byte. This
+    allows DS_BLISS to present it's 720K fake floppy even if the
+    user initially mounted a 1.44MB floppy to drive A: (joncampbell123).
+  - INT 10 mode list: Add "pitch" parameter. If nonzero, the value
+    (in pixels) is how to program the pixels per scanline when
+    setting the mode.
+  - VESAMOED: Add -pitch option to control the pitch (pixels per
+    scanline). The intent is to work around DOS games that assume
+    nonstandard pixels per scanline by allowing the VESA BIOS mode
+    to use a different one. For example, Line Wars II has an S3
+    acceleration mode that uses 800x600, but for whatever reason,
+    assumes the video mode is 1024 pixels per scanline, and will
+    render garbled graphics if that is not the case. (joncampbell123).
+  - S3 emulation: Follow S3 Trio64 documentation and mask the Linear
+    Window Position bits according to the size of the memory. You
+    can only place it on a multiple of the memory size. This silences
+    warnings caused by Line Wars II which appears to modify only the
+    upper byte but not the lower when modifying this register, which
+    then leaves 0xA0 in the lower half. That lower half would be
+    ignored for 1MB or larger video memory sizes. (joncampbell123).
+  - S3 XGA emulation: Add XGA acceleration for 4bpp packed 16-color
+    SVGA modes. A CAD package has S3 support drivers that use the
+    16-color 4bpp packed modes and expects XGA acceleration to work.
+    (joncampbell123).
+  - Add "-o int13" option to IMGMOUNT to direct the FAT driver to do
+    all disk I/O through INT 13h instead of directly. This is intended
+    for certain demoscene productions that apparently like to make
+    files appear out of thin air by intercepting INT 13h floppy disk
+    I/O and then asking MS-DOS to run something from it. Hack for
+    "DS_BLISS" demo. (joncampbell123).
+  - Fixed crash when a language file is loaded on a Windows host with
+    US keyboard (maron2000)
+  - Added Added sharp-bilinear Direct3D shader (RibShark)
+  - Pass output dimensions to Direct3D shaders (RibShark)
+  - Fixed BPB of floppy images made by IMGMAKE command (maron2000)
+  - Fixed timestamp of volume label changed by LABEL command (maron2000)
+  - Fixed pathname issues when mounting differencial VHD images (maxpat78)
+  - Corrected relative/absolute track offset in subchannel data for
+    CD-ROM images (RibShark).
+  - Fixed particular dead keys were not working to input characters
+    with diacritics (maron2000).
+  - Enabled "Edit and Continue" option for debug builds of Visual Studio
+    Intel builds (aybe).
+  - Updated libchdr to latest (treloret).
+  - Fixed icon in Gnome dock bar (FredBezies).
+  - add option "[dos] automount drive directories" for Windows builds,
+    this will mount existing drive directories from C to Y drive (aybe).
+  - fix off-center and off-screen window after entering the
+    configuration tool while using TTF output mode (aybe).
+  - add menu item for centering window "Video/Center window" (aybe).
+  - Fixed update-version-number script to patch all *.iss files, not 
+    just the specific one it did before, to ensure future releases have
+    correct version numbers. (joncampbell123).
+  - Updated Nuked-OPL3 code to nukeykt/Nuked-OPL3@cfedb09 (StevenSYS) 
+  - Updated SDL2 library to 2.30.4 (maron2000)
+  - Fixed TTF mode didn't change to graphic mode when machine = Hercules
+    (maron2000)
+  - Configuration tool: (aybe)
+    - more Windows 3.1 look'n'feel (themes w/ host dark mode detection)
+    - enhance main window layout, it is now visible in its entirety
+    - fix layout issues, off by one in rectangle drawing functions
+    - fix 'list iterators incompatible' when pressing the Tab key
+    - properties/help: sorted alphabetically, mouse wheel scrollable
+    - remove few rendundant labels, adjust names of some others
+    - retain 'show advanced options' state throughout session
+  - SVN r4483: Fix compilation in Visual Studio 2008 (Allofich)
+  - DOSBox Staging: Decouple CMS and OPL emulations (Allofich)
+  - Fixed reading NEC specific character font data.(nanshiki)
+
 2024.07.01
   - Correct Hercules InColor memory emulation. Read and write planar
     behavior was incorrect due to a misunderstanding of available

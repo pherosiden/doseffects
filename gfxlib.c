@@ -10,8 +10,8 @@
 /*             Target OS: DOS32A / PMODEW                        */
 /*                Author: Nguyen Ngoc Van                        */
 /*                Create: 25/05/2001                             */
-/*           Last update: 10/06/2022                             */
-/*               Version: 1.2.6                                  */
+/*           Last update: 09/10/2025                             */
+/*               Version: 1.2.8                                  */
 /*               Website: http://codedemo.net                    */
 /*                 Email: pherosiden@gmail.com                   */
 /*            References: http://crossfire-designs.de            */
@@ -33,6 +33,9 @@
 
 // Enable MMX features
 #define _USE_MMX
+
+// GFXLIB version string
+#define GFXLIB_VERSION_STRING   "GFXLIB v1.2.8.WC (2025-10-09)"
 
 // VBE Capabilities flags
 #define VBE_CAPS_DAC8           1           // bit 0
@@ -77,7 +80,7 @@
 
 // Rountine functions
 #define GetTicks()              *((uint32_t*)0x046C)
-#define Swap(a, b)              {a ^= b; b ^= a; a ^= b;}
+#define swap(a, b)              {a ^= b; b ^= a; a ^= b;}
 #define clamp(x, lo, hi)        (min(max(x, lo), hi))
 
 // Standard timing default parameters
@@ -1553,6 +1556,7 @@ int32_t keyPressed(int32_t keyQuit)
     int32_t key = 0;
 
     // Check for pressed key
+    fflush(stdin);
     while (kbhit())
     {
         // Read pressed key input
@@ -1563,6 +1567,7 @@ int32_t keyPressed(int32_t keyQuit)
             if (quitCallback) quitCallback();
             exit(1);
         }
+        fflush(stdin);
     }
 
     return key;
@@ -1738,7 +1743,7 @@ void setPaletteRange(PAL *pal, int32_t from, int32_t to)
     if (from > 255) from = 255;
     if (to < 0) to = 0;
     if (to > 255) to = 255;
-    if (from > to) Swap(from, to);
+    if (from > to) swap(from, to);
 
     // swap the palette into the funny order VESA uses
     for (i = from; i <= to; i++)
@@ -11253,6 +11258,7 @@ void makeFunkyPalette()
     gy = 1;
     by = 1;
 
+    srand(time(NULL));
     rx = (rand() % 5) + 1;
     gx = (rand() % 5) + 1;
     bx = (rand() % 5) + 1;
@@ -11982,32 +11988,39 @@ void drawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t rgb)
     }
 }
 
-void drawLineBob(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
+void drawLineBob(int32_t x1, int32_t y1, int32_t x2, int32_t y2)
 {
-    int32_t e2 = 0;
-    int32_t dx = abs(x1 - x0);
-    int32_t sx = (x0 < x1) ? 1 : -1;
-    int32_t dy = -abs(y1 - y0);
-    int32_t sy = (y0 < y1) ? 1 : -1;
-    int32_t err = dx + dy;
+    int32_t dx, dy, err, ystep, x, y;
+    int32_t step = abs(y2 - y1) > abs(x2 - x1);
 
-    while (1)
+    if (step)
     {
-        putPixelBob(x0, y0);
-        e2 = err << 1;
+        swap(x1, y1);
+        swap(x2, y2);
+    }
 
-        if (e2 >= dy)
-        {
-            if (x0 == x1) break;
-            err += dy;
-            x0 += sx;
-        }
+    if (x1 > x2)
+    {
+        swap(x1, x2);
+        swap(y1, y2);
+    }
 
-        if (e2 <= dx)
+    dx = x2 - x1;
+    dy = abs(y2 - y1);
+    err = dx >> 1;
+    ystep = (y1 < y2) ? 1 : -1;
+    y = y1;
+
+    for (x = x1; x <= x2; ++x)
+    {
+        if (step) putPixelBob(y, x);
+        else putPixelBob(x, y);
+
+        err -= dy;
+        if (err < 0)
         {
-            if (y0 == y1) break;
+            y += ystep;
             err += dx;
-            y0 += sy;
         }
     }
 }

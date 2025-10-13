@@ -737,38 +737,44 @@ void graphDemo12()
     int32_t x1, y1, x2, y2;
     int32_t dx1, dx2, dy1, dy2;
     
-    srand(time(NULL));
-
-    x1 = rand() % lfbWidth;
-    x2 = rand() % lfbWidth;
-    y1 = rand() % lfbHeight;
-    y2 = rand() % lfbHeight;
-    
-    dx1 = 1;
-    dx2 = -1;
-    dy1 = 1;
-    dy2 = -1;
-    
-    while (!keyPressed(27) && frames < 4000)
+    while (1)
     {
-        x1 += dx1;
-        x2 += dx2;
-        y1 += dy1;
-        y2 += dy2;
-        
-        checkBounds(x1, cmaxX, &dx1);
-        checkBounds(x2, cmaxX, &dx2);
-        checkBounds(y1, cmaxY, &dy1);
-        checkBounds(y2, cmaxY, &dy2);
-        
-        if (x1 < 0) x1 = 0;
-        if (x2 < 0) x2 = 0;
-        if (y1 < 0) y1 = 0;
-        if (y2 < 0) y2 = 0;
+        clearScreen(0);
+        makeFunkyPalette();
 
-        if (frames % 8 == 0) waitRetrace();
-        drawLineBob(x1, y1, x2, y2);
-        frames++;
+        frames = 0;
+        x1 = rand() % lfbWidth;
+        x2 = rand() % lfbWidth;
+        y1 = rand() % lfbHeight;
+        y2 = rand() % lfbHeight;
+        
+        dx1 = 1;
+        dx2 = -1;
+        dy1 = 1;
+        dy2 = -1;
+        
+        while (frames < 2000)
+        {
+            x1 += dx1;
+            x2 += dx2;
+            y1 += dy1;
+            y2 += dy2;
+            
+            checkBounds(x1, cmaxX, &dx1);
+            checkBounds(x2, cmaxX, &dx2);
+            checkBounds(y1, cmaxY, &dy1);
+            checkBounds(y2, cmaxY, &dy2);
+            
+            if (x1 < 0) x1 = 0;
+            if (x2 < 0) x2 = 0;
+            if (y1 < 0) y1 = 0;
+            if (y2 < 0) y2 = 0;
+
+            if (frames % 8 == 0) waitRetrace();
+            drawLineBob(x1, y1, x2, y2);
+            if (keyPressed(27)) return;
+            frames++;
+        }
     }
 }
 
@@ -1859,7 +1865,6 @@ int main(int argc, const char* argv[])
     fadeRollo(2, 0);
     
     clearScreen(0);
-    makeFunkyPalette();
     graphDemo12();
     if (argc > 1 && !strcmp(argv[1], "-s")) saveScreen("screen20.bmp");
     fadeRollo(1, 0);
