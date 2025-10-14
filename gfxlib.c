@@ -1832,17 +1832,17 @@ int32_t setDisplayStart(uint32_t xpos, uint32_t ypos)
 }
 
 // Set drawable page
-void setActivePage(uint32_t page)
+void setActivePage(uint32_t pageIndex)
 {
-    if (page > numOfPages - 1) fatalError("setActivePage: out of visual screen page: %u\n", numOfPages);
+    if (pageIndex >= numOfPages - 1) fatalError("setActivePage: out of visual screen page: %u\n", numOfPages);
     activePage = page;
     pageOffset = page * lfbHeight;
 }
 
 // Set visible page
-void setVisualPage(uint32_t page)
+void setVisualPage(uint32_t pageIndex)
 {
-    if (page > numOfPages - 1) fatalError("setVisualPage: out of visual screen page: %u\n", numOfPages);
+    if (pageIndex >= numOfPages - 1) fatalError("setVisualPage: out of visual screen page: %u\n", numOfPages);
     setDisplayStart(0, page * lfbHeight);
 }
 
@@ -10824,6 +10824,8 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t refreshRate)
             regs.ebx |= 0x0800;
             regs.es  = crtcSegment;
             regs.edi = 0;
+
+            fprintf(stderr, "Pixel Clock: %u\n", pixelClock);
         }
     }
 

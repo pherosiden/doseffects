@@ -1641,8 +1641,6 @@ int main(int argc, const char* argv[])
     char strLoading[] = "D9ang ta3i du74 lie65u a3nh PNG & BMP 32bit ma2u, vui lo2ng d9o75i mo65t la1t....";
     const int32_t numTitle = sizeof(strTitle) / sizeof(strTitle[0]);
     
-    displayVesaInfo();
-    
     // init clock time and random number generation
     setQuitCallback(quitMessage);
     if (!loadFont("assets/fontvn.xfn", 0)) fatalError("Cannot load font!\n");
