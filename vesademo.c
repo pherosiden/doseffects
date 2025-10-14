@@ -1644,7 +1644,7 @@ int main(int argc, const char* argv[])
     // init clock time and random number generation
     setQuitCallback(quitMessage);
     if (!loadFont("assets/fontvn.xfn", 0)) fatalError("Cannot load font!\n");
-    if (!setVesaMode(800, 600, 32, 85)) fatalError("Cannot init video mode.\n");
+    if (!setVesaMode(800, 600, 32, 120)) fatalError("Cannot init video mode.\n");
 
     makeFont(strLoading);
     writeString(centerX - (getFontWidth(strLoading) >> 1), centerY - getFontHeight(strLoading), strLoading, fromRGB(255, 255, 64), 0);
@@ -1666,7 +1666,7 @@ int main(int argc, const char* argv[])
     closeFont(0);
     closeVesaMode();
 
-    if (!setVesaMode(800, 600, 8, 85)) fatalError("Cannot init video mode.\n");
+    if (!setVesaMode(800, 600, 8, 120)) fatalError("Cannot init video mode.\n");
     introy = centerY - ((numTitle * CHR_HEIGHT + 20 + b * 2) >> 1);
     
     switch (lfbWidth)
