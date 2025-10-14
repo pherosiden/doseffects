@@ -5,7 +5,6 @@
 #include <dos.h>
 #include <stdint.h>
 
-#define VBE_BIOS_BASE   0xC0000     /* VESA BIOS physical base address */
 #define VBE_CODE_SIZE   0x8000      /* 32KB BIOS area copy */
 #define VBE_DATA_SIZE   0x2000      /* scratch data area */
 #define VBE_STACK_SIZE  0x2000      /* call stack size */
@@ -238,12 +237,13 @@ int32_t checksum(uint8_t *bios, uint32_t len) {
 }
 
 /* find PMID block in BIOS copy buffer */
-VBE_PM_INFO_BLOCK *findVesaBlock(uint8_t *bios, uint32_t size) {
+VBE_PM_INFO_BLOCK *findBlock(uint8_t *bios, uint32_t size) {
     uint32_t i = 0;
     uint32_t limit = size - sizeof(VBE_PM_INFO_BLOCK);
 
     for (i = 0; i < limit; i++) {
-        if (bios[i] == 'P' && bios[i + 1] == 'M' && bios[i + 2] == 'I' && bios[i + 3] == 'D') {
+        if (!memcmp(&bios[i], "PMID", 4)) {
+            fprintf(stderr, "Found PMID block at offset 0x%lX\n", i);
             if (checksum(&bios[i], sizeof(VBE_PM_INFO_BLOCK))) return (VBE_PM_INFO_BLOCK*)&bios[i];
         }
     }
@@ -360,14 +360,14 @@ void cleanup() {
  * 3. allocate selectors
  * 4. call PMInitialize + EntryPoint
  */
-int32_t initVBE3() {
+int32_t initDriver() {
     /* 1. copy BIOS data from C0000..C7FFF (physical) to real-mode. */
     g_biosCode = (uint8_t*)malloc(VBE_CODE_SIZE);
     if (!g_biosCode) return 0;
-    memcpy(g_biosCode, (uint8_t*)VBE_BIOS_BASE, VBE_CODE_SIZE);
+    memcpy(g_biosCode, (uint8_t*)0xC0000000UL, VBE_CODE_SIZE);
     
     /* 2. find PMID block */
-    g_pmInfo = findVesaBlock(g_biosCode, VBE_CODE_SIZE);
+    g_pmInfo = findBlock(g_biosCode, VBE_CODE_SIZE);
     if (!g_pmInfo) {
         free(g_biosCode);
         fprintf(stderr, "PMID block not found! Card not support VESA 3.0\n");
@@ -378,30 +378,29 @@ int32_t initVBE3() {
     g_biosData = (uint8_t*)calloc(1, VBE_DATA_SIZE);
     if (!g_biosData) {
         free(g_biosCode);
-        fprintf(stderr, "calloc VBE_DATA_SIZE error!\n");
         return 0;
     }
 
     g_biosDataSel = createSelectorLinear(g_biosData, VBE_DATA_SIZE);
-    if (!g_biosDataSel) goto cleanup;
+    if (!g_biosDataSel) goto error;
 
     g_biosCodeSel = createSelectorLinear(g_biosCode, VBE_CODE_SIZE);
-    if (!g_biosCodeSel) goto cleanup;
+    if (!g_biosCodeSel) goto error;
 
     g_a0000Sel = createSelectorPhysical(0x000A0000UL, 0x10000);
-    if (!g_a0000Sel) goto cleanup;
+    if (!g_a0000Sel) goto error;
 
     g_b0000Sel = createSelectorPhysical(0x000B0000UL, 0x10000);
-    if (!g_b0000Sel) goto cleanup;
+    if (!g_b0000Sel) goto error;
 
     g_b8000Sel = createSelectorPhysical(0x000B8000UL, 0x8000);
-    if (!g_b8000Sel) goto cleanup;
+    if (!g_b8000Sel) goto error;
 
     g_biosStack = (uint8_t*)malloc(VBE_STACK_SIZE);
-    if (!g_biosStack) goto cleanup;
+    if (!g_biosStack) goto error;
 
     g_biosStackSel = createSelectorLinear(g_biosStack, VBE_STACK_SIZE);
-    if (!g_biosStackSel) goto cleanup;
+    if (!g_biosStackSel) goto error;
 
     /* 4. patch PMI fields inside bios copy */
     g_pmInfo->CodeSegSel = g_biosCodeSel;
@@ -423,28 +422,28 @@ int32_t initVBE3() {
 
     /* 6. allocate selector for VBE driver info buffer and call EntryPoint AX=4F00 to get driver info */
     g_vbeInfoSel = createSelectorLinear(&g_drvInfo, sizeof(VBE_DRIVER_INFO));
-    if (!g_vbeInfoSel) goto cleanup;
+    if (!g_vbeInfoSel) goto error;
 
     fprintf(stderr, "Calling VBE3 EntryPoint (4F00) via PM entry...\n");
     if (!callEntry(g_pmInfo->EntryPoint, g_pmInfo->CodeSegSel, 0x4F00, 0, g_vbeInfoSel)) {
         fprintf(stderr, "VBE3 EntryPoint call failed!\n");
-        goto cleanup;
+        goto error;
     }
     else {
         if (memcmp(g_drvInfo.VBESignature, "VESA", 4)) {
             fprintf(stderr, "VBE3 EntryPoint did not return valid driver info signature\n");
-            goto cleanup;
+            goto error;
         }
         fprintf(stderr, "Initialize VBE3 success (signature: %.4s version=%04X)\n", g_drvInfo.VBESignature, g_drvInfo.VBEVersion);
         return 1;
     }
 
-cleanup:
+error:
     cleanup();
     return 0;
 }
 
-int32_t setVesaMode(int32_t xres, int32_t yres, int32_t bpp) {
+int32_t setModeInfo(int32_t xres, int32_t yres, int32_t bpp) {
     VBE_MODE_INFO minfo;
     uint16_t mode = 0;
     uint16_t minfSel = 0;
@@ -459,8 +458,10 @@ int32_t setVesaMode(int32_t xres, int32_t yres, int32_t bpp) {
         return 0;
     }
     
-    /* find request mode with resolution and bits plan */
+    /* convert real pointer (seg:ofs) to linear pointer */
     modeList = (uint16_t*)MK_FP(g_drvInfo.VideoModePtr >> 16, g_drvInfo.VideoModePtr & 0xFFFF);
+    
+    /* find request mode with resolution and bits plan */
     while (*modeList != 0xFFFF) {
         /* call vbe 0x4F01 function to get mode info */
         mode = *modeList;
@@ -474,13 +475,13 @@ int32_t setVesaMode(int32_t xres, int32_t yres, int32_t bpp) {
 
     freeSelector(minfSel);
 
-    /* not found coresponse mode*/
+    /* request mode not found*/
     if (mode == 0xFFFF) {
         fprintf(stderr, "Requested mode %dx%d@%d not found\n", xres, yres, bpp);
         return 0;
     }
 
-    /* request LFB by setting bit 14 of BX */
+    /* request LFB by setting bit 14 of mode */
     mode |= 0x4000;
     if (!callEntry(g_pmInfo->EntryPoint, g_pmInfo->CodeSegSel, 0x4F02, mode, 0)) {
         fprintf(stderr, "Set VBE3 mode failed\n");
@@ -509,16 +510,15 @@ void drawPixel(int x, int y, uint32_t color) {
 int main() {
     int32_t i = 0;
 
-    /* initialize VBE3 */
-    if (!initVBE3()) {
+    /* initialize VBE3 driver */
+    if (!initDriver()) {
         cleanup();
-        fprintf(stderr, "initVBE3 failed.\n");
+        fprintf(stderr, "initialize VBE3 failed.\n");
         return 0;
     }
 
-    /* find a mode and set it (mode hard-coded or take from driver info) */
-    /* example: 1024x768 (depends on card) */
-    if (!setVesaMode(1024, 768, 32)) {
+    /* try to set vbe3 mode */
+    if (!setModeInfo(1024, 768, 32)) {
         cleanup();
         fprintf(stderr, "VBE3 set mode failed\n");
         return 1;
