@@ -1835,15 +1835,15 @@ int32_t setDisplayStart(uint32_t xpos, uint32_t ypos)
 void setActivePage(uint32_t pageIndex)
 {
     if (pageIndex >= numOfPages - 1) fatalError("setActivePage: out of visual screen page: %u\n", numOfPages);
-    activePage = page;
-    pageOffset = page * lfbHeight;
+    activePage = pageIndex;
+    pageOffset = pageIndex * lfbHeight;
 }
 
 // Set visible page
 void setVisualPage(uint32_t pageIndex)
 {
     if (pageIndex >= numOfPages - 1) fatalError("setVisualPage: out of visual screen page: %u\n", numOfPages);
-    setDisplayStart(0, page * lfbHeight);
+    setDisplayStart(0, pageIndex * lfbHeight);
 }
 
 // Display all VBE info and mode info
