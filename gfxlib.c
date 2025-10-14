@@ -1907,7 +1907,7 @@ void displayVesaInfo()
                 default: printf("%.2X\n", modeInfo.MemoryModel);
             }
             
-            if ((modeInfo.MemoryModel == VBE_MM_DCOLOR) || (modeInfo.MemoryModel == VBE_MM_YUV))
+            if ((modeInfo.MemoryModel == VBE_MM_DCOLOR) || (modeInfo.MemoryModel == VBE_MM_PACKED))
             {
                 if (drvInfo.VBEVersion >= 0x0300)
                 {
@@ -10766,6 +10766,7 @@ void fadeOutImage15(GFX_IMAGE *img, uint8_t step)
 // Initialize VESA mode by resolution and bits per pixel
 int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t refreshRate)
 {
+    FILE *fp;
     RM_REGS             regs;
     VBE_DRIVER_INFO     drvInfo;
     VBE_MODE_INFO       modeInfo;
@@ -10824,8 +10825,6 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t refreshRate)
             regs.ebx |= 0x0800;
             regs.es  = crtcSegment;
             regs.edi = 0;
-
-            fprintf(stderr, "Pixel Clock: %u\n", pixelClock);
         }
     }
 
