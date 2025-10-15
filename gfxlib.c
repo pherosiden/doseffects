@@ -1646,9 +1646,6 @@ void calcCrtcTimingGTF(VBE_CRTC_INFO_BLOCK *crtc, int32_t hpixels, int32_t vline
         h_period_est = h_total / pixel_clock_mhz;
     }
 
-    // Round pixel clock to next step (e.g. 0.25 MHz)
-    pixel_clock_mhz = ceil(pixel_clock_mhz / CLOCK_STEP) * CLOCK_STEP;
-
     // Final horizontal period
     final_h_period = h_total / pixel_clock_mhz;
 
