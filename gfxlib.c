@@ -55,7 +55,7 @@
 #define VBE_MM_YUV              7
 
 // VBE linear and user refresh rate bit
-#define VBE_CRCT_BIT            0x0800      // bit 11: use CRTC override for refresh rate
+#define VBE_CRTC_BIT            0x0800      // bit 11: use CRTC override for refresh rate
 #define VBE_LFB_BIT             0x4000      // bit 14: linear frame buffer
 
 // VBE protected mode constant
