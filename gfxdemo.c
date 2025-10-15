@@ -736,7 +736,7 @@ int main()
     memset(&drv, 0, sizeof(VBE_DRIVER_INFO));
     getVesaDriverInfo(&drv);
 
-    if (!setVesaMode(800, 600, 32, 0)) fatalError("Cannot init graphic mode.\n");
+    if (!setVesaMode(800, 600, 32, 120)) fatalError("Cannot init graphic mode.\n");
 
     runIntro();
     putImage(0, 0, &bg);
@@ -761,36 +761,38 @@ int main()
     writeString(xc + tx, 100, "GFXLIB does provide. Note that", gray127, 2);
     writeString(xc + tx, 110, "this is only a small amount of", gray127, 2);
     writeString(xc + tx, 120, "all available features.", gray127, 2);
-    sprintf(sbuff, "Card    : %c%c%c%c %x.%x", drv.VBESignature[0], drv.VBESignature[1], drv.VBESignature[2], drv.VBESignature[3], drv.VBEVersion >> 8, drv.VBEVersion & 0xFF);
+    sprintf(sbuff, "   Card type: %c%c%c%c %x.%x", drv.VBESignature[0], drv.VBESignature[1], drv.VBESignature[2], drv.VBESignature[3], drv.VBEVersion >> 8, drv.VBEVersion & 0xFF);
     writeString(xc + tx, 140, sbuff, gray127, 2);
-    sprintf(sbuff, "Memory  : %u KB", drv.TotalMemory << 6);
+    sprintf(sbuff, "Total Memory: %u KB", drv.TotalMemory << 6);
     writeString(xc + tx, 150, sbuff, gray127, 2);
-    sprintf(sbuff, "Provider: %s", drv.OEMStringPtr);
+    sprintf(sbuff, "    Provider: %s", drv.OEMStringPtr);
     writeString(xc + tx, 160, sbuff, gray127, 2);
-    sprintf(sbuff, "Version : %0.4X", drv.OemSoftwareRev);
+    sprintf(sbuff, "     Version: %0.4X", drv.OemSoftwareRev);
     writeString(xc + tx, 170, sbuff, gray127, 2);
-    sprintf(sbuff, "Vendor  : %s", drv.OemVendorNamePtr);
+    sprintf(sbuff, "      Vendor: %s", drv.OemVendorNamePtr);
     writeString(xc + tx, 180, sbuff, gray127, 2);
-    sprintf(sbuff, "Revision: %s", drv.OemProductRevPtr);
+    sprintf(sbuff, "    Revision: %s", drv.OemProductRevPtr);
     writeString(xc + tx, 190, sbuff, gray127, 2);
-    sprintf(sbuff, "Mode    : %dx%dx%db", lfbWidth, lfbHeight, bitsPerPixel);
+    sprintf(sbuff, "  Resolution: %dx%dx%db", lfbWidth, lfbHeight, bitsPerPixel);
     writeString(xc + tx, 200, sbuff, gray127, 2);
+    sprintf(sbuff, "Refresh Rate: %d Hz", refreshRate);
+    writeString(xc + tx, 210, sbuff, gray127, 2);
     sprintf(sbuff, "CPU manufacturer: %s", cpuVendor);
-    writeString(xc + tx, 220, sbuff, gray127, 2);
-    sprintf(sbuff, "CPU features    : %s", cpuFeatures);
     writeString(xc + tx, 230, sbuff, gray127, 2);
-    sprintf(sbuff, "CPU clock rate  : %u MHz", cpuSpeed);
+    sprintf(sbuff, "    CPU features: %s", cpuFeatures);
     writeString(xc + tx, 240, sbuff, gray127, 2);
-    sprintf(sbuff, "Total memory    : %u KB", meminfo.LargestBlockAvail >> 10);
+    sprintf(sbuff, "  CPU clock rate: %u MHz", cpuSpeed);
     writeString(xc + tx, 250, sbuff, gray127, 2);
-    sprintf(sbuff, "Available memory: %u KB", meminfo.NumPhysicalPagesFree << 2);
+    sprintf(sbuff, "    Total memory: %u KB", meminfo.LargestBlockAvail >> 10);
     writeString(xc + tx, 260, sbuff, gray127, 2);
-    if (cpuSpeed < 100 || (!haveMMX && !have3DNow))
+    sprintf(sbuff, "Available memory: %u KB", meminfo.NumPhysicalPagesFree << 2);
+    writeString(xc + tx, 270, sbuff, gray127, 2);
+    if (cpuSpeed < 99 || (!haveMMX && !have3DNow))
     {
-        writeString(xc + tx, 290, "WARNING: Your machine is very slow! this", redcol, 2);
-        writeString(xc + tx, 300, "mean some features of GFXLIB maybe not", redcol, 2);
-        writeString(xc + tx, 310, "works as espectation. I hope you run this", redcol, 2);
-        writeString(xc + tx, 320, "demo on the faster machine!", redcol, 2);
+        writeString(xc + tx, 300, "WARNING: Your machine is very slow! this", redcol, 2);
+        writeString(xc + tx, 310, "mean some features of GFXLIB maybe not", redcol, 2);
+        writeString(xc + tx, 320, "works as espectation. I hope you run this", redcol, 2);
+        writeString(xc + tx, 330, "demo on the faster machine (CPU >= 100 Mhz).", redcol, 2);
     }
     fullSpeed = 1;
     showText(tx, yc, &txt, "Please wait while loading images...");
