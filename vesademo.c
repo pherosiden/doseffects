@@ -1640,11 +1640,13 @@ int main(int argc, const char* argv[])
     char strBanner[] = "Light Banner (c) 1998 - 2002 Nguye64n Ngo5c Va6n";
     char strLoading[] = "D9ang ta3i du74 lie65u a3nh PNG & BMP 32bit ma2u, vui lo2ng d9o75i mo65t la1t....";
     const int32_t numTitle = sizeof(strTitle) / sizeof(strTitle[0]);
+    
     displayVesaInfo();
+
     // init clock time and random number generation
     setQuitCallback(quitMessage);
     if (!loadFont("assets/fontvn.xfn", 0)) fatalError("Cannot load font!\n");
-    if (!setVesaMode(800, 600, 32, 120)) fatalError("Cannot init video mode.\n");
+    if (!setVesaMode(800, 600, 32, 85)) fatalError("Cannot init video mode.\n");
 
     makeFont(strLoading);
     writeString(centerX - (getFontWidth(strLoading) >> 1), centerY - getFontHeight(strLoading), strLoading, fromRGB(255, 255, 64), 0);
@@ -1666,7 +1668,7 @@ int main(int argc, const char* argv[])
     closeFont(0);
     closeVesaMode();
 
-    if (!setVesaMode(800, 600, 8, 120)) fatalError("Cannot init video mode.\n");
+    if (!setVesaMode(800, 600, 8, 85)) fatalError("Cannot init video mode.\n");
     introy = centerY - ((numTitle * CHR_HEIGHT + 20 + b * 2) >> 1);
     
     switch (lfbWidth)
