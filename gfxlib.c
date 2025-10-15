@@ -1832,18 +1832,18 @@ int32_t setDisplayStart(uint32_t xpos, uint32_t ypos)
 }
 
 // Set drawable page
-void setActivePage(uint32_t page)
+void setActivePage(uint32_t pageIndex)
 {
-    if (page > numOfPages - 1) fatalError("setActivePage: out of visual screen page: %u\n", numOfPages);
-    activePage = page;
-    pageOffset = page * lfbHeight;
+    if (pageIndex >= numOfPages - 1) fatalError("setActivePage: out of visual screen page: %u\n", numOfPages);
+    activePage = pageIndex;
+    pageOffset = pageIndex * lfbHeight;
 }
 
 // Set visible page
-void setVisualPage(uint32_t page)
+void setVisualPage(uint32_t pageIndex)
 {
-    if (page > numOfPages - 1) fatalError("setVisualPage: out of visual screen page: %u\n", numOfPages);
-    setDisplayStart(0, page * lfbHeight);
+    if (pageIndex >= numOfPages - 1) fatalError("setVisualPage: out of visual screen page: %u\n", numOfPages);
+    setDisplayStart(0, pageIndex * lfbHeight);
 }
 
 // Display all VBE info and mode info
@@ -1907,7 +1907,7 @@ void displayVesaInfo()
                 default: printf("%.2X\n", modeInfo.MemoryModel);
             }
             
-            if ((modeInfo.MemoryModel == VBE_MM_DCOLOR) || (modeInfo.MemoryModel == VBE_MM_YUV))
+            if ((modeInfo.MemoryModel == VBE_MM_DCOLOR) || (modeInfo.MemoryModel == VBE_MM_PACKED))
             {
                 if (drvInfo.VBEVersion >= 0x0300)
                 {
@@ -10766,14 +10766,15 @@ void fadeOutImage15(GFX_IMAGE *img, uint8_t step)
 // Initialize VESA mode by resolution and bits per pixel
 int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t refreshRate)
 {
-    RM_REGS             regs;
-    VBE_DRIVER_INFO     drvInfo;
-    VBE_MODE_INFO       modeInfo;
-    VBE_CRTC_INFO_BLOCK *CRTCPtr;
+    RM_REGS             regs = { 0 };
+    VBE_DRIVER_INFO     drvInfo = { 0 };
+    VBE_MODE_INFO       modeInfo = { 0 };
+    VBE_CRTC_INFO_BLOCK *CRTCPtr = NULL;
 
-    uint16_t    *modePtr;
-    uint32_t    pixelClock;
-    uint32_t    lineWidth;
+    uint16_t    mode = 0;
+    uint16_t    *modePtr = NULL;
+    uint32_t    pixelClock = 0;
+    uint32_t    lineWidth = 0;
     
     // Check VBE driver info
     memset(&drvInfo, 0, sizeof(drvInfo));
@@ -10787,18 +10788,19 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t refreshRate)
     while (modePtr != NULL && *modePtr != 0xFFFF)
     {
         // Get current mode info
+        mode = *modePtr;
         memset(&modeInfo, 0, sizeof(VBE_MODE_INFO));
-        if (getVesaModeInfo(*modePtr, &modeInfo) && (px == modeInfo.XResolution) && (py == modeInfo.YResolution) && (bits == modeInfo.BitsPerPixel)) break;
+        if (getVesaModeInfo(mode, &modeInfo) && (px == modeInfo.XResolution) && (py == modeInfo.YResolution) && (bits == modeInfo.BitsPerPixel)) break;
         modePtr++;
     }
 
     // Is valid mode number?
-    if (*modePtr == 0xFFFF) return 0;
+    if (mode == 0xFFFF) return 0;
 
     // setup init VESA function
     memset(&regs, 0, sizeof(regs));
     regs.eax = 0x4F02;
-    regs.ebx = *modePtr | 0x4000; // Add linear frame buffer param D14
+    regs.ebx = mode | 0x4000; // Add linear frame buffer param D14
 
     // Check if request refresh rate and must be VBE 3.0
     if (refreshRate >= 50 && drvInfo.VBEVersion >= 0x0300)
@@ -10813,7 +10815,7 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t refreshRate)
         calcCrtcTimingGTF(CRTCPtr, px, py, refreshRate << 10, 0, 0);
 
         // Calculate actual pixel clock
-        pixelClock = getClosestPixelClock(*modePtr, CRTCPtr->PixelClock);
+        pixelClock = getClosestPixelClock(mode, CRTCPtr->PixelClock);
         if (pixelClock > 0)
         {
             // Re-calculate pixel clock and refresh rate
@@ -11080,7 +11082,7 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t refreshRate)
         getCpuInfo();
         getMemoryInfo();
 
-        return *modePtr;
+        return mode;
     }
 
     return 0;
