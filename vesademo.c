@@ -1,13 +1,13 @@
-/*------------------------------------------------*/
-/*    GFXLIB demo (c) 2000 by Nguyen Ngoc Van     */
-/*     Full support 8/15/16/24/32 bits color      */
-/*        Support load/save BMP & PNG files       */
-/* Using Linear Frame Buffer for best performance */
-/*        Optimize code by using assembly         */
-/*           Code by: Nguyen Ngoc Van             */
-/*           Website: www.codedemo.net            */
-/*             Email: pherosiden@gmail.com        */
-/*------------------------------------------------*/
+/*---------------------------------------------------*/
+/*    GFXLIB demo (c) 2000 - 2025 by Nguyen Ngoc Van */
+/*     Full support 8/15/16/24/32 bits color         */
+/*        Support load/save BMP & PNG files          */
+/* Using Linear Frame Buffer for best performance    */
+/*        Optimize code by using assembly            */
+/*           Code by: Nguyen Ngoc Van                */
+/*           Website: www.codedemo.net               */
+/*             Email: pherosiden@gmail.com           */
+/*---------------------------------------------------*/
 
 #include "gfxlib.c"
 
@@ -1593,7 +1593,7 @@ void quitMessage()
 {
     closeVesaMode();
     printf("+-----------------------------------------------------+\n");
-    printf("|    GFXLIB demo (c) 1998 - 2002 by Nguyen Ngoc Van   |\n");
+    printf("|    GFXLIB demo (c) 1998 - 2025 by Nguyen Ngoc Van   |\n");
     printf("|        Full support 8/15/16/24/32 bits color        |\n");
     printf("|          Support load/save BMP & PNG files          |\n");
     printf("|    Using Linear Frame Buffer for best performance   |\n");
@@ -1624,7 +1624,7 @@ int main(int argc, const char* argv[])
         "GFXLIB Demo (VESA 2.0)",
         "Full supports 8/15/16/24/32 bits color",
         "Load/Save BMP & PNG 32 bits image",
-        "Copyright (c) 1998 - 2002 by Nguyen Ngoc Van",
+        "Copyright (c) 1998 - 2025 by Nguyen Ngoc Van",
         "Please wait to continue..."
     };
     
@@ -1632,12 +1632,12 @@ int main(int argc, const char* argv[])
         "Khoa Co6ng Nghe65 Tho6ng Tin - Kho1a 2000",
         "Tru7o72ng D9a5i Ho5c Ky4 Thua65t TP.HCM - HUTECH",
         "Thu7 Vie65n D9o62 Ho5a VESA 8/15/16/24/32 bits Ma2u",
-        "Copyright (c) 1998 - 2002 by Nguye64n Ngo5c Va6n",
+        "Copyright (c) 1998 - 2025 by Nguye64n Ngo5c Va6n",
         "Trang chu3: http://codedemo.net"
     };
 
     char strScroll[] = "*** Ca1m o7n ca1c ba5n d9a4 su73 du5ng chu7o7ng tri2nh na2y. Ba5n co1 the63 ta3i toa2n bo65 ma4 nguo62n cu3a chu7o7ng tri2nh ta5i d9i5a chi3 http://codedemo.net. Chu1c Ca1c Ba5n Tha2nh Co6ng       ";
-    char strBanner[] = "Light Banner (c) 1998 - 2002 Nguye64n Ngo5c Va6n";
+    char strBanner[] = "Light Banner (c) 1998 - 2025 Nguye64n Ngo5c Va6n";
     char strLoading[] = "D9ang ta3i du74 lie65u a3nh PNG & BMP 32bit ma2u, vui lo2ng d9o75i mo65t la1t....";
     const int32_t numTitle = sizeof(strTitle) / sizeof(strTitle[0]);
     
