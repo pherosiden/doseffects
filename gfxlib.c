@@ -1856,11 +1856,11 @@ void displayVesaInfo()
     memset(&drvInfo, 0, sizeof(VBE_DRIVER_INFO));
     getVesaDriverInfo(&drvInfo);
 
-    printf("VESA DRIVER INFO\n");
-    printf("================\n");
+    printf("\nVESA DRIVER INFO\n");
+    printf("==================\n");
 
     printf("     Signature: '%c%c%c%c'\n", drvInfo.VBESignature[0], drvInfo.VBESignature[1], drvInfo.VBESignature[2], drvInfo.VBESignature[3]);
-    printf("       Version: %x.%x\n", (drvInfo.VBEVersion >> 8), (drvInfo.VBEVersion & 0xFF));
+    printf("       Version: 0x%x (%x.%x)\n", drvInfo.VBEVersion, (drvInfo.VBEVersion >> 8), (drvInfo.VBEVersion & 0xFF));
     printf("    OEM String: '%s'\n", (char*)drvInfo.OEMStringPtr);
     printf("  Capabilities: %0.8X\n", drvInfo.Capabilities);
     printf(" DAC Registers: %s\n", (drvInfo.Capabilities & VBE_CAPS_DAC8) ? "Switchable to 8-bits" : "Fixed at 6-bits");
@@ -1878,7 +1878,6 @@ void displayVesaInfo()
     }
 
     getch();
-    printf("\nVESA MODE INFO\n");
 
     // Print all VBE modes support
     modePtr = (uint16_t*)drvInfo.VideoModePtr;
@@ -1887,17 +1886,17 @@ void displayVesaInfo()
         memset(&modeInfo, 0, sizeof(VBE_MODE_INFO));
         if (getVesaModeInfo(*modePtr, &modeInfo) != 0)
         {
-            printf("=========================================================\n");
-            printf("              Mode Number: %0.4X\n", *modePtr);
-            printf("               Attributes: %.4X\n", modeInfo.ModeAttributes);
-            printf("       Hardware Supported: %s\n", (modeInfo.ModeAttributes & VBE_MASK_MODEHW) ? "Yes" : "No");
-            printf("      Linear Frame Buffer: %s\n", (modeInfo.ModeAttributes & VBE_MASK_HASLFB) ? "Yes" : "No");
-            printf("Hardware Triple Buffering: %s\n", (modeInfo.ModeAttributes & VBE_MASK_HW3BUF) ? "Yes" : "No");
-            printf("              XResolution: %u\n", modeInfo.XResolution);
-            printf("              YResolution: %u\n", modeInfo.YResolution);
-            printf("           Bits per Pixel: %u\n", modeInfo.BitsPerPixel);
-            printf("    Physical Frame Buffer: %.8X\n", modeInfo.PhysBasePtr);
-            printf("             Memory Model: ");
+            printf("\n\n================== VESA MODE INFO ======================\n");
+            printf("               Mode Number: %0.4X\n", *modePtr);
+            printf("                Attributes: %.4X\n", modeInfo.ModeAttributes);
+            printf("        Hardware Supported: %s\n", (modeInfo.ModeAttributes & VBE_MASK_MODEHW) ? "Yes" : "No");
+            printf("       Linear Frame Buffer: %s\n", (modeInfo.ModeAttributes & VBE_MASK_HASLFB) ? "Yes" : "No");
+            printf(" Hardware Triple Buffering: %s\n", (modeInfo.ModeAttributes & VBE_MASK_HW3BUF) ? "Yes" : "No");
+            printf("               XResolution: %u\n", modeInfo.XResolution);
+            printf("               YResolution: %u\n", modeInfo.YResolution);
+            printf("            Bits per Pixel: %u\n", modeInfo.BitsPerPixel);
+            printf("     Physical Frame Buffer: %.8X\n", modeInfo.PhysBasePtr);
+            printf("              Memory Model: ");
 
             switch (modeInfo.MemoryModel)
             {
@@ -1911,29 +1910,30 @@ void displayVesaInfo()
             {
                 if (drvInfo.VBEVersion >= 0x0300)
                 {
-                    printf("    Number of Image Pages: %u\n", modeInfo.LinNumberOfImagePages);
-                    printf("       Bytes per Scanline: %u\n", modeInfo.LinBytesPerScanline);
-                    printf("            Red Mask Size: %u\n", modeInfo.LinRedMaskSize);
-                    printf("            Red Field pos: %u\n", modeInfo.LinRedFieldPosition);
-                    printf("          Green Mask Size: %u\n", modeInfo.LinGreenMaskSize);
-                    printf("          Green Field pos: %u\n", modeInfo.LinGreenFieldPosition);
-                    printf("           Blue Mask Size: %u\n", modeInfo.LinBlueMaskSize);
-                    printf("           Blue Field pos: %u\n", modeInfo.LinBlueFieldPosition);
-                    printf("          Max Pixel Clock: %u\n", modeInfo.MaxPixelClock);
+                    printf("     Number of Image Pages: %u\n", modeInfo.LinNumberOfImagePages);
+                    printf("        Bytes per Scanline: %u\n", modeInfo.LinBytesPerScanline);
+                    printf("             Red Mask Size: %u\n", modeInfo.LinRedMaskSize);
+                    printf("             Red Field pos: %u\n", modeInfo.LinRedFieldPosition);
+                    printf("           Green Mask Size: %u\n", modeInfo.LinGreenMaskSize);
+                    printf("           Green Field pos: %u\n", modeInfo.LinGreenFieldPosition);
+                    printf("            Blue Mask Size: %u\n", modeInfo.LinBlueMaskSize);
+                    printf("            Blue Field pos: %u\n", modeInfo.LinBlueFieldPosition);
+                    printf("           Max Pixel Clock: %u\n", modeInfo.MaxPixelClock);
                 }
                 else
                 {
-                    printf("    Number of Image Pages: %u\n", modeInfo.NumberOfImagePages);
-                    printf("       Bytes per Scanline: %u\n", modeInfo.BytesPerScanline);
-                    printf("            Red Mask Size: %u\n", modeInfo.RedMaskSize);
-                    printf("            Red Field pos: %u\n", modeInfo.RedFieldPosition);
-                    printf("          Green Mask Size: %u\n", modeInfo.GreenMaskSize);
-                    printf("          Green Field pos: %u\n", modeInfo.GreenFieldPosition);
-                    printf("           Blue Mask Size: %u\n", modeInfo.BlueMaskSize);
-                    printf("           Blue Field pos: %u\n", modeInfo.BlueFieldPosition);
+                    printf("     Number of Image Pages: %u\n", modeInfo.NumberOfImagePages);
+                    printf("        Bytes per Scanline: %u\n", modeInfo.BytesPerScanline);
+                    printf("             Red Mask Size: %u\n", modeInfo.RedMaskSize);
+                    printf("             Red Field pos: %u\n", modeInfo.RedFieldPosition);
+                    printf("           Green Mask Size: %u\n", modeInfo.GreenMaskSize);
+                    printf("           Green Field pos: %u\n", modeInfo.GreenFieldPosition);
+                    printf("            Blue Mask Size: %u\n", modeInfo.BlueMaskSize);
+                    printf("            Blue Field pos: %u\n", modeInfo.BlueFieldPosition);
                 }
             }
-
+            
+            printf("=========================================================\n\n");
             getch();
         }
 
