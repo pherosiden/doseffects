@@ -1621,7 +1621,7 @@ int main(int argc, const char* argv[])
     const char *logoGFX = "GFXLIB";
 
     const char *strWelcome[] = {
-        "GFXLIB Library Demo",
+        "GFXLIB Demo (VESA 2.0)",
         "Full supports 8/15/16/24/32 bits color",
         "Load/Save BMP & PNG 32 bits image",
         "Copyright (c) 1998 - 2002 by Nguyen Ngoc Van",
