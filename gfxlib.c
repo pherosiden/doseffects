@@ -10856,6 +10856,7 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t freq)
         {
             // Re-calculate pixel clock and refresh rate with actual value
             calcCrtcTimingGTF(crtcPtr, px, py, freq, 0, 0, pixelClock);
+            refreshRate = crtcPtr->PixelClock;
 
             // D15=don't clear screen, D14=linear/flat buffer, D11=Use user specified CRTC values for refresh rate
             regs.ebx |= VBE_CRTC_BIT;
