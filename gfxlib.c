@@ -1834,7 +1834,7 @@ int32_t setDisplayStart(uint32_t xpos, uint32_t ypos)
 // Set drawable page
 void setActivePage(uint32_t pageIndex)
 {
-    if (pageIndex >= numOfPages - 1) fatalError("setActivePage: out of visual screen page: %u\n", numOfPages);
+    if (pageIndex >= numOfPages) fatalError("setActivePage: out of visual screen page: %u\n", numOfPages);
     activePage = pageIndex;
     pageOffset = pageIndex * lfbHeight;
 }
@@ -1842,7 +1842,7 @@ void setActivePage(uint32_t pageIndex)
 // Set visible page
 void setVisualPage(uint32_t pageIndex)
 {
-    if (pageIndex >= numOfPages - 1) fatalError("setVisualPage: out of visual screen page: %u\n", numOfPages);
+    if (pageIndex >= numOfPages) fatalError("setVisualPage: out of visual screen page: %u\n", numOfPages);
     setDisplayStart(0, pageIndex * lfbHeight);
 }
 
@@ -10784,14 +10784,17 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t refreshRate)
     modePtr = (uint16_t*)drvInfo.VideoModePtr;
     if (modePtr == NULL) return 0;
 
-    // Find VESA mode match with request
-    while (modePtr != NULL && *modePtr != 0xFFFF)
+    // Find request mode
+    while (mode != 0xFFFF)
     {
         // Get current mode info
-        mode = *modePtr;
         memset(&modeInfo, 0, sizeof(VBE_MODE_INFO));
-        if (getVesaModeInfo(mode, &modeInfo) && (px == modeInfo.XResolution) && (py == modeInfo.YResolution) && (bits == modeInfo.BitsPerPixel)) break;
-        modePtr++;
+        if (getVesaModeInfo(mode, &modeInfo))
+        {
+            // Check if mode is supported with request resolution and bits per pixel
+            if ((px == modeInfo.XResolution) && (py == modeInfo.YResolution) && (bits == modeInfo.BitsPerPixel)) break;
+        }
+        mode = *modePtr++;
     }
 
     // Is valid mode number?
