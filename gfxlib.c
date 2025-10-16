@@ -163,8 +163,10 @@
 #define PROCESSOR_AMD           1           // AMD processor
 #define PROCESSOR_UNKNOWN       2           // unknown processor
 
-// Math macros
+// Math round macros
 #define roundf(x) ((x) >= 0.0 ? floor((x) + 0.5) : ceil((x) - 0.5))
+#define roundi(x) ((x) >= 0.0 ? (int32_t)((x) + 0.5) : (int32_t)((x) - 0.5))
+#define roundu(x) ((x) >= 0.0 ? (uint32_t)((x) + 0.5) : (uint32_t)((x) - 0.5))
 
 // Simulation real mode registers interfaces
 #pragma pack(push, 1)
@@ -782,13 +784,6 @@ uint8_t     ptnHatchX[]         = {0x18, 0x24, 0x42, 0x81, 0x81, 0x42, 0x24, 0x1
 uint8_t     ptnInterLeave[]     = {0xCC, 0x33, 0xCC, 0x33, 0xCC, 0x33, 0xCC, 0x33};
 uint8_t     ptnWideDot[]        = {0x80, 0x00, 0x08, 0x00, 0x80, 0x00, 0x08, 0x00};
 uint8_t     ptnCloseDot[]       = {0x88, 0x00, 0x22, 0x00, 0x88, 0x00, 0x22, 0x00};
-
-// Round up integer
-inline int32_t fround(double x)
-{
-    if (x > 0.0) return x + 0.5;
-    return x - 0.5;
-}
 
 // Generate random value from number
 inline int32_t random(int32_t a)
@@ -1598,8 +1593,7 @@ void calcCrtcTimingGTF(VBE_CRTC_INFO_BLOCK *crtc, int32_t hpixels, int32_t vline
 
     // 4. Estimate horizontal period (µs)
     total_v_lines = vlines_eff + top_margin + bottom_margin + MIN_V_PORCH + interlace_adj;
-    h_period_est = ((1.0 / (double)freq) - (MIN_VSYNC_BP / 1e6)) / total_v_lines;
-    h_period_est *= 1e6; // convert seconds to microseconds
+    h_period_est = (((1.0 / (double)freq) - (MIN_VSYNC_BP / 1e6)) / total_v_lines) * 1e6;
 
     // 5. Vertical sync + back porch (lines)
     vsync_bp = ceil(MIN_VSYNC_BP / h_period_est);
@@ -1655,14 +1649,14 @@ void calcCrtcTimingGTF(VBE_CRTC_INFO_BLOCK *crtc, int32_t hpixels, int32_t vline
     refresh_rate = (pixel_clock_mhz * 1e6) / (h_total * final_v_total);
 
     // 15. Fill CRTC structure (rounded to integers)
-    crtc->HorizontalTotal       = (uint16_t)(h_total + 0.5);
-    crtc->HorizontalSyncStart   = (uint16_t)(h_sync_start + 0.5);
-    crtc->HorizontalSyncEnd     = (uint16_t)(h_sync_end + 0.5);
-    crtc->VerticalTotal         = (uint16_t)(final_v_total + 0.5);
-    crtc->VerticalSyncStart     = (uint16_t)(v_sync_start + 0.5);
-    crtc->VerticalSyncEnd       = (uint16_t)(v_sync_end + 0.5);
-    crtc->PixelClock            = (uint32_t)(pixel_clock_mhz * 1e6 + 0.5);
-    crtc->RefreshRate           = (uint16_t)(refresh_rate * 100.0 + 0.5); // store as Hz * 100
+    crtc->HorizontalTotal       = roundu(h_total + 0.5);
+    crtc->HorizontalSyncStart   = roundu(h_sync_start + 0.5);
+    crtc->HorizontalSyncEnd     = roundu(h_sync_end + 0.5);
+    crtc->VerticalTotal         = roundu(final_v_total + 0.5);
+    crtc->VerticalSyncStart     = roundu(v_sync_start + 0.5);
+    crtc->VerticalSyncEnd       = roundu(v_sync_end + 0.5);
+    crtc->PixelClock            = roundu(pixel_clock_mhz * 1e6 + 0.5);
+    crtc->RefreshRate           = roundu(refresh_rate * 100.0 + 0.5); // store as Hz * 100
     crtc->Flags                 = CRTC_HSYNC_NEGATIVE | CRTC_VSYNC_NEGATIVE;
     if (interlaced) crtc->Flags |= CRTC_INTERLACED;
     if (doubleScan) crtc->Flags |= CRTC_DOUBLE_SCANLINE;
