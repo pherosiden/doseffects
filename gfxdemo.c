@@ -733,9 +733,9 @@ int main()
         sprintf(sbuff, "assets/flare%dx.png", i + 1);
         if (!loadImage(sbuff, &flares[i])) fatalError("Cannot load image: %s!\n", sbuff);
     }
+
     memset(&drv, 0, sizeof(VBE_DRIVER_INFO));
     getVesaDriverInfo(&drv);
-
     if (!setVesaMode(800, 600, 32, 120)) fatalError("Cannot init graphic mode.\n");
 
     runIntro();
