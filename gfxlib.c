@@ -1456,7 +1456,7 @@ int32_t getVesaModeInfo(uint16_t mode, VBE_MODE_INFO *info)
     if (!(mode && vbeSegment)) return 0;
     if (mode == 0xFFFF) return 0;
 
-    // Setup memory pointer
+    // Setup pointer first 512 bytes for driver and last 512 bytes for mode info
     modeInfo = (VBE_MODE_INFO*)(((vbeSegment & 0x0000FFFF) << 4) + 512);
     memset(modeInfo, 0, sizeof(VBE_MODE_INFO));
 
