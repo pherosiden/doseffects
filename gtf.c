@@ -334,7 +334,6 @@ void calcCrtcTimingGTF(VBE_CRTC_INFO_BLOCK *crtc, int horizPixels, int vertLines
     crtc->Flags = CRTC_HSYNC_NEGATIVE | CRTC_VSYNC_NEGATIVE;
     if (interlaced) crtc->Flags |= CRTC_INTERLACED;
     if (vertLines < 400) crtc->Flags |= CRTC_DOUBLE_SCANLINE;
-
 }
 
 int main(int argc, char *argv[])

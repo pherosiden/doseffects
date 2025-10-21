@@ -76,24 +76,26 @@
 #define PIT_RATE                0x1234DD
 #define WAIT_TIME               50000
 
-// Rountine functions
+// Rountine math functions
 #define GetTicks()              *((uint32_t*)0x046C)
 #define swap(a, b)              {a ^= b; b ^= a; a ^= b;}
 #define clamp(x, lo, hi)        (min(max(x, lo), hi))
+#define roundf(x)               ((x) >= 0.0 ? floor((x) + 0.5) : ceil((x) - 0.5))
+#define round(x)                ((x) >= 0.0 ? (int32_t)((x) + 0.5) : (int32_t)((x) - 0.5))
 
 // Standard timing default parameters
-#define CELL_GRAN               8.0     // Pixels per character cell
-#define MIN_VSYNC_BP            550.0   // Minimum vertical sync + back porch in μs
-#define V_SYNC_LINES            3.0     // Width of vertical sync in lines
-#define H_SYNC_PERCENT          8.0     // Horizontal sync width as % of hblank
-#define MARGIN_PERCENT          1.8     // % of active vertical image
-#define MIN_V_BP                6.0     // Min vertical back porch in lines
-#define MIN_V_PORCH             1.0     // Min vertical front porch in lines
-#define CLOCK_STEP              0.25    // Pixel clock step in MHz
+#define CELL_GRAN               8.0         // Pixels per character cell
+#define MIN_VSYNC_BP            550.0       // Minimum vertical sync + back porch in μs
+#define V_SYNC_LINES            3.0         // Width of vertical sync in lines
+#define H_SYNC_PERCENT          8.0         // Horizontal sync width as % of hblank
+#define MARGIN_PERCENT          1.8         // % of active vertical image
+#define MIN_V_BP                6.0         // Min vertical back porch in lines
+#define MIN_V_PORCH             1           // Min vertical front porch in lines
+#define CLOCK_STEP              0.25        // Pixel clock step in MHz
 
-// C and M prime values for GTF
-#define C_PRIME                 30.0
-#define M_PRIME                 40.0
+// C' and M' are part of the Blanking Duty Cycle computation
+#define C_PRIME                 30
+#define M_PRIME                 300
 
 // CRTC info flags
 #define CRTC_HSYNC_NEGATIVE     0x02
@@ -162,11 +164,6 @@
 #define PROCESSOR_INTEL         0           // INTEL processor
 #define PROCESSOR_AMD           1           // AMD processor
 #define PROCESSOR_UNKNOWN       2           // unknown processor
-
-// Math round macros
-#define roundf(x) ((x) >= 0.0 ? floor((x) + 0.5) : ceil((x) - 0.5))
-#define roundi(x) ((x) >= 0.0 ? (int32_t)((x) + 0.5) : (int32_t)((x) - 0.5))
-#define roundu(x) ((x) >= 0.0 ? (uint32_t)((x) + 0.5) : (uint32_t)((x) - 0.5))
 
 // Simulation real mode registers interfaces
 #pragma pack(push, 1)
@@ -1542,7 +1539,6 @@ int32_t keyPressed(int32_t keyQuit)
     int32_t key = 0;
 
     // Check for pressed key
-    fflush(stdin);
     while (kbhit())
     {
         // Read pressed key input
@@ -1553,7 +1549,6 @@ int32_t keyPressed(int32_t keyQuit)
             if (quitCallback) quitCallback();
             exit(1);
         }
-        fflush(stdin);
     }
 
     return key;
@@ -1569,94 +1564,96 @@ void setQuitCallback(void (*fnQuit)())
 void calcCrtcTimingGTF(VBE_CRTC_INFO_BLOCK *crtc, int32_t hpixels, int32_t vlines, int32_t freq, int32_t interlaced, int32_t margins, uint32_t fixedPixelClockHz)
 {
     int32_t doubleScan = (vlines < 400) ? 1 : 0;
-    double hpixels_rnd, vlines_eff;
-    double top_margin = 0.0, bottom_margin = 0.0, left_margin = 0.0, right_margin = 0.0;
-    double interlace_adj = interlaced ? 0.5 : 0.0;
-    double total_v_lines, h_period_est;
-    double vsync_bp, ideal_duty_cycle, h_blank, h_total;
-    double pixel_clock_mhz, final_v_total, refresh_rate;
-    double h_sync, h_sync_start, h_sync_end;
-    double v_sync_start, v_sync_end, active_pixels, tmp;
+    double hpixelsRnd, vlinesEff;
+    double topMargin = 0.0, botMargin = 0.0, leftMargin = 0.0, rightMargin = 0.0;
+    double interlaceAdj = interlaced ? 0.5 : 0.0;
+    double totalvLines, hperiodEst;
+    double vsyncBP, idealDutyCycle, hblank, htotal;
+    double pixelClockMHZ, finalvTotal, refreshRate;
+    double hsync, hsyncStart, hsyncEnd;
+    double vsyncStart, vsyncEnd, activePixels, tmp;
 
     // 1. Align horizontal pixels to cell granularity
-    hpixels_rnd = floor((double)hpixels / CELL_GRAN) * CELL_GRAN;
+    hpixelsRnd = floor((double)hpixels / CELL_GRAN) * CELL_GRAN;
 
     // 2. Handle double-scan
-    vlines_eff = doubleScan ? vlines * 2.0 : (double)vlines;
+    vlinesEff = doubleScan ? vlines * 2.0 : (double)vlines;
 
     // 3. Margins (optional)
     if (margins)
     {
-        top_margin = bottom_margin = floor(vlines_eff * (MARGIN_PERCENT / 100.0) + 0.5);
-        left_margin = right_margin = floor(hpixels_rnd * (MARGIN_PERCENT / 100.0) / CELL_GRAN) * CELL_GRAN;
+        topMargin = botMargin = floor(vlinesEff * (MARGIN_PERCENT / 100.0) + 0.5);
+        leftMargin = rightMargin = floor(hpixelsRnd * (MARGIN_PERCENT / 100.0) / CELL_GRAN) * CELL_GRAN;
     }
 
     // 4. Estimate horizontal period (µs)
-    total_v_lines = vlines_eff + top_margin + bottom_margin + MIN_V_PORCH + interlace_adj;
-    h_period_est = (((1.0 / (double)freq) - (MIN_VSYNC_BP / 1e6)) / total_v_lines) * 1e6;
+    totalvLines = vlinesEff + topMargin + botMargin + MIN_V_PORCH + interlaceAdj;
+    hperiodEst = (((1.0 / (double)freq) - (MIN_VSYNC_BP / 1e6)) / totalvLines) * 1e6;
 
     // 5. Vertical sync + back porch (lines)
-    vsync_bp = ceil(MIN_VSYNC_BP / h_period_est);
-    if (vsync_bp < (V_SYNC_LINES + MIN_V_BP)) vsync_bp = V_SYNC_LINES + MIN_V_BP;
+    vsyncBP = ceil(MIN_VSYNC_BP / hperiodEst);
+    if (vsyncBP < (V_SYNC_LINES + MIN_V_BP)) vsyncBP = V_SYNC_LINES + MIN_V_BP;
 
     // 6. Total vertical lines (field)
-    final_v_total = vlines_eff + top_margin + bottom_margin + vsync_bp;
-    if (interlaced) final_v_total *= 2.0;
+    finalvTotal = vlinesEff + topMargin + botMargin + vsyncBP;
+    if (interlaced) finalvTotal *= 2.0;
 
     // 7. Ideal duty cycle (percent)
-    ideal_duty_cycle = C_PRIME - (M_PRIME * h_period_est / 1000.0);
+    idealDutyCycle = C_PRIME - (M_PRIME * hperiodEst / 1000.0);
 
     // 8. Horizontal blanking (pixels) - ensure multiple of 2*CELL_GRAN
-    active_pixels = hpixels_rnd + left_margin + right_margin;
-    tmp = active_pixels * ideal_duty_cycle / (100.0 - ideal_duty_cycle);
+    activePixels = hpixelsRnd + leftMargin + rightMargin;
+    tmp = activePixels * idealDutyCycle / (100.0 - idealDutyCycle);
 
     // make blanking even and multiple of CELL_GRAN
-    h_blank = floor(tmp / (2.0 * CELL_GRAN)) * (2.0 * CELL_GRAN);
-    if (h_blank < 2.0 * CELL_GRAN) h_blank = 2.0 * CELL_GRAN; // minimum sensible blank
+    hblank = floor(tmp / (2.0 * CELL_GRAN)) * (2.0 * CELL_GRAN);
+    if (hblank < 2.0 * CELL_GRAN) hblank = 2.0 * CELL_GRAN; // minimum sensible blank
 
     // 9. Total horizontal pixels
-    h_total = hpixels_rnd + left_margin + right_margin + h_blank;
+    htotal = hpixelsRnd + leftMargin + rightMargin + hblank;
 
-    // 10. Horizontal sync width in pixels (percent of h_blank)
-    h_sync = floor((H_SYNC_PERCENT / 100.0) * h_blank / CELL_GRAN) * CELL_GRAN;
-    if (h_sync < CELL_GRAN) h_sync = CELL_GRAN;
+    // 10. Horizontal sync width in pixels (percent of hblank)
+    hsync = floor((H_SYNC_PERCENT / 100.0) * hblank / CELL_GRAN) * CELL_GRAN;
+    if (hsync < CELL_GRAN) hsync = CELL_GRAN;
 
     // 11. Centered horizontal sync (sync centered in blanking)
-    h_sync_start = hpixels_rnd + left_margin + ((h_blank - h_sync) / 2.0);
-    h_sync_end   = h_sync_start + h_sync;
+    hsyncStart = hpixelsRnd + leftMargin + ((hblank - hsync) / 2.0);
+    hsyncEnd   = hsyncStart + hsync;
 
     // 12. Vertical sync positions
-    v_sync_start = vlines_eff + top_margin + MIN_V_PORCH;
-    v_sync_end   = v_sync_start + V_SYNC_LINES;
+    vsyncStart = vlinesEff + topMargin + MIN_V_PORCH;
+    vsyncEnd   = vsyncStart + V_SYNC_LINES;
 
     // 13. Pixel clock (MHz)
     if (fixedPixelClockHz == 0)
     {
-        // h_period_est in µs -> MHz
-        pixel_clock_mhz = h_total / h_period_est;
+        // hperiodEst in µs -> MHz
+        pixelClockMHZ = htotal / hperiodEst;
+        
         // round to nearest supported clock step
-        pixel_clock_mhz = roundf(pixel_clock_mhz / CLOCK_STEP) * CLOCK_STEP;
-        if (pixel_clock_mhz < CLOCK_STEP) pixel_clock_mhz = CLOCK_STEP;
+        pixelClockMHZ = roundf(pixelClockMHZ / CLOCK_STEP) * CLOCK_STEP;
+        if (pixelClockMHZ < CLOCK_STEP) pixelClockMHZ = CLOCK_STEP;
     }
     else
     {
-        pixel_clock_mhz = (double)fixedPixelClockHz / 1e6;
+        pixelClockMHZ = (double)fixedPixelClockHz / 1e6;
+
         // recompute horizontal period using the fixed clock
-        h_period_est = h_total / pixel_clock_mhz;
+        hperiodEst = htotal / pixelClockMHZ;
     }
 
     // 14. Final refresh rate (Hz)
-    refresh_rate = (pixel_clock_mhz * 1e6) / (h_total * final_v_total);
+    refreshRate = (pixelClockMHZ * 1e6) / (htotal * finalvTotal);
 
     // 15. Fill CRTC structure (rounded to integers)
-    crtc->HorizontalTotal       = roundu(h_total + 0.5);
-    crtc->HorizontalSyncStart   = roundu(h_sync_start + 0.5);
-    crtc->HorizontalSyncEnd     = roundu(h_sync_end + 0.5);
-    crtc->VerticalTotal         = roundu(final_v_total + 0.5);
-    crtc->VerticalSyncStart     = roundu(v_sync_start + 0.5);
-    crtc->VerticalSyncEnd       = roundu(v_sync_end + 0.5);
-    crtc->PixelClock            = roundu(pixel_clock_mhz * 1e6 + 0.5);
-    crtc->RefreshRate           = roundu(refresh_rate * 100.0 + 0.5); // store as Hz * 100
+    crtc->HorizontalTotal       = round(htotal);
+    crtc->HorizontalSyncStart   = round(hsyncStart);
+    crtc->HorizontalSyncEnd     = round(hsyncEnd);
+    crtc->VerticalTotal         = round(finalvTotal);
+    crtc->VerticalSyncStart     = round(vsyncStart);
+    crtc->VerticalSyncEnd       = round(vsyncEnd);
+    crtc->PixelClock            = round(pixelClockMHZ * 1e6);
+    crtc->RefreshRate           = round(refreshRate * 100.0); // store as Hz * 100
     crtc->Flags                 = CRTC_HSYNC_NEGATIVE | CRTC_VSYNC_NEGATIVE;
     if (interlaced) crtc->Flags |= CRTC_INTERLACED;
     if (doubleScan) crtc->Flags |= CRTC_DOUBLE_SCANLINE;
@@ -10774,7 +10771,6 @@ void fadeOutImage15(GFX_IMAGE *img, uint8_t step)
 // Initialize VESA mode by resolution and bits per pixel
 int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t freq)
 {
-    FILE *fp = NULL;
     RM_REGS             regs = { 0 };
     VBE_DRIVER_INFO     drvInfo = { 0 };
     VBE_MODE_INFO       modeInfo = { 0 };
@@ -10785,8 +10781,6 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t freq)
     uint32_t    pixelClock = 0;
     uint32_t    lineWidth = 0;
     uint32_t    crtcSegment = 0;
-
-    fp = fopen("vesa.log", "wt");
 
     // Check VBE driver info
     memset(&drvInfo, 0, sizeof(drvInfo));
@@ -10806,6 +10800,8 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t freq)
             // Check if mode is supported with request resolution and bits per pixel
             if ((px == modeInfo.XResolution) && (py == modeInfo.YResolution) && (bits == modeInfo.BitsPerPixel)) break;
         }
+
+        // Next mode
         mode = *modePtr++;
     }
 
@@ -10822,21 +10818,10 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t freq)
     {
         // Calculate CRTC timing using GTF formular
         crtcSegment = allocDosSegment(512);
-        if (crtcSegment == 0|| crtcSegment == 0xFFFF) return 0;
-
+        if (crtcSegment == 0 || crtcSegment == 0xFFFF) return 0;
         crtcPtr = (VBE_CRTC_INFO_BLOCK*)((crtcSegment & 0x0000FFFF) << 4);
         memset(crtcPtr, 0, sizeof(VBE_CRTC_INFO_BLOCK));
         calcCrtcTimingGTF(crtcPtr, px, py, freq, 0, 0, 0);
-
-        fprintf(fp, "HorizontalSyncStart (GTF): %d\n", crtcPtr->HorizontalSyncStart);
-        fprintf(fp, "  HorizontalSyncEnd (GTF):%d\n", crtcPtr->HorizontalSyncEnd);
-        fprintf(fp, "    HorizontalTotal (GTF):%d\n", crtcPtr->HorizontalTotal);
-        fprintf(fp, "  VerticalSyncStart (GTF):%d\n", crtcPtr->VerticalSyncStart);
-        fprintf(fp, "    VerticalSyncEnd (GTF):%d\n", crtcPtr->VerticalSyncEnd);
-        fprintf(fp, "      VerticalTotal (GTF):%d\n", crtcPtr->VerticalTotal);
-        fprintf(fp, "         PixelClock (GTF):%d\n", crtcPtr->PixelClock);
-        fprintf(fp, "        RefreshRate (GTF):%d\n", crtcPtr->RefreshRate);
-        fprintf(fp, "              Flags (GTF):%04X\n", crtcPtr->Flags);
 
         // Calculate actual pixel clock 
         pixelClock = getClosestPixelClock(mode, crtcPtr->PixelClock);
@@ -10844,17 +10829,7 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t freq)
         {
             // Re-calculate pixel clock and refresh rate with actual value
             calcCrtcTimingGTF(crtcPtr, px, py, freq, 0, 0, pixelClock);
-            refreshRate = crtcPtr->RefreshRate / 100.0;
-            
-            fprintf(fp, "HorizontalSyncStart (4F0B): %d\n", crtcPtr->HorizontalSyncStart);
-            fprintf(fp, "  HorizontalSyncEnd (4F0B):%d\n", crtcPtr->HorizontalSyncEnd);
-            fprintf(fp, "    HorizontalTotal (4F0B):%d\n", crtcPtr->HorizontalTotal);
-            fprintf(fp, "  VerticalSyncStart (4F0B):%d\n", crtcPtr->VerticalSyncStart);
-            fprintf(fp, "    VerticalSyncEnd (4F0B):%d\n", crtcPtr->VerticalSyncEnd);
-            fprintf(fp, "      VerticalTotal (4F0B):%d\n", crtcPtr->VerticalTotal);
-            fprintf(fp, "         PixelClock (4F0B):%d\n", crtcPtr->PixelClock);
-            fprintf(fp, "        RefreshRate (4F0B):%d\n", crtcPtr->RefreshRate);
-            fprintf(fp, "              Flags (4F0B):%04X\n", crtcPtr->Flags);
+            refreshRate = round(crtcPtr->RefreshRate / 100.0);
 
             // D15=don't clear screen, D14=linear/flat buffer, D11=Use user specified CRTC values for refresh rate
             regs.ebx |= VBE_CRTC_BIT;
@@ -10862,7 +10837,7 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t freq)
             regs.edi = 0;
         }
     }
-    fclose(fp);
+
     // Start init VESA mode
     simRealModeInt(0x10, &regs);
     if (regs.eax != 0x004F) return 0;
@@ -14086,8 +14061,8 @@ void prepareTunnel(GFX_IMAGE *dimg, uint8_t *buff1, uint8_t *buff2)
     double ang = maxAng - 1.0;
 
     do {
-        x = fround(z * sin(ang * preCalc)) + dcx;
-        y = fround(z * cos(ang * preCalc)) + dcy;
+        x = round(z * sin(ang * preCalc)) + dcx;
+        y = round(z * cos(ang * preCalc)) + dcy;
 
         ang -= angDec;
         if (ang < 0)
@@ -14100,8 +14075,8 @@ void prepareTunnel(GFX_IMAGE *dimg, uint8_t *buff1, uint8_t *buff2)
         if (x >= 0 && x < dimg->mWidth && y >= 0 && y < dimg->mHeight)
         {
             ofs = y * dimg->mWidth + x;
-            buff1[ofs] = fround(dst);
-            buff2[ofs] = fround(dst - ang / 4);
+            buff1[ofs] = round(dst);
+            buff2[ofs] = round(dst - ang / 4);
         }
     } while (z >= 0);
 }
@@ -14508,12 +14483,12 @@ void scaleUpImage(GFX_IMAGE *dst, GFX_IMAGE *src, int32_t *tables, int32_t xfact
     if (bytesPerPixel != 4) fatalError("scaleUpImage: only 32 bits supported.\n");
 
     // init lookup table
-    for (i = 0; i < src->mWidth; i++) tables[i] = fround(1.0 * i / (src->mWidth - 1) * ((src->mWidth - 1) - (xfact << 1))) + xfact;
+    for (i = 0; i < src->mWidth; i++) tables[i] = round(1.0 * i / (src->mWidth - 1) * ((src->mWidth - 1) - (xfact << 1))) + xfact;
 
     // scaleup line by line
     for (i = 0; i < src->mHeight; i++)
     {
-        y = fround(1.0 * i / (src->mHeight - 1) * ((src->mHeight - 1) - (yfact << 1))) + yfact;
+        y = round(1.0 * i / (src->mHeight - 1) * ((src->mHeight - 1) - (yfact << 1))) + yfact;
         scaleUpLine(pdst, src->mData, tables, src->mWidth, y * src->mRowBytes);
         pdst += dst->mWidth;
     }
