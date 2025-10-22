@@ -71,13 +71,10 @@
 #define M_2PI                   6.28318530  // redefine 2PI constant
 
 // Time defination
-#define MIN_TRIES               10
-#define MAX_RUN                 5
-#define PIT_RATE                0x1234DD
-#define WAIT_TIME               50000
+#define WAIT_TIME               10
 
 // Rountine math functions
-#define GetTicks()              *((uint32_t*)0x046C)
+#define getTicks()              *((uint32_t*)0x046C)
 #define swap(a, b)              {a ^= b; b ^= a; a ^= b;}
 #define clamp(x, lo, hi)        (min(max(x, lo), hi))
 #define roundf(x)               ((x) >= 0.0 ? floor((x) + 0.5) : ceil((x) - 0.5))
@@ -871,82 +868,32 @@ uint64_t getRDTSC()
     return val;
 }
 
-// Get current CPU ticks (64 bits)
-uint64_t getPIT()
-{
-    uint64_t val = 0;
-
-    __asm {
-        xor     eax, eax
-        cli
-        out     43h, al
-        mov     edi, 046Ch
-        mov     edx, [edi]
-        in      al, 40h
-        db      0xEB, 0x00, 0xEB, 0x00, 0xEB, 0x00
-        mov     ah, al
-        in      al, 40h
-        db      0xEB, 0x00, 0xEB, 0x00, 0xEB, 0x00
-        xchg    ah, al
-        neg     ax
-        mov     edi, eax
-        sti
-        mov     ebx, 10000h
-        mov     eax, edx
-        xor     edx, edx
-        mul     ebx
-        add     eax, edi
-        adc     edx, 0
-        lea     edi, val
-        mov     [edi    ], eax
-        mov     [edi + 4], edx
-    }
-
-    return val;
-}
-
-// Get current CPU clock rate in Mhz
-double getCpuClockRate()
-{
-    uint32_t i = 0;
-    uint64_t time0 = 0, time1 = 0;
-    uint64_t stamp0 = 0, stamp1 = 0;
-    uint64_t ticks = 0, cycles = 0;
-
-    double total = 0;
-    double freq[MIN_TRIES] = {0};
-
-    // try to calculate CPU clock rate
-    for (i = 0; i < MIN_TRIES; i++)
-    {
-        // start record clock cycles
-        stamp0 = getRDTSC();
-
-        // wait for ticks count
-        time0 = getPIT();
-        while ((time1 = getPIT()) < (time0 + WAIT_TIME));
-
-        // stop record clock cycles
-        stamp1 = getRDTSC();
-
-        // calculate CPU frequences
-        cycles = stamp1 - stamp0;
-        ticks = (time1 - time0) * timeRes / PIT_RATE;
-        freq[i] = 1.0 * cycles / ticks;
-    }
-
-    // calculate agverage
-    for (i = 0; i < MIN_TRIES; i++) total += freq[i];
-    return total / MIN_TRIES;
-}
-
 // Get current CPU speed in MHz
 uint32_t getCpuSpeed()
 {
-    double speed = 0.0;
-    uint32_t i = 0;
-    for (i = 0; i < MAX_RUN; i++) speed += getCpuClockRate();
-    return speed / MAX_RUN;
+    uint32_t tick0 = 0, tick1 = 0;
+    uint64_t stamp0 = 0, stamp1 = 0;
+    double speedMhz = 0, elapsedSec = 0, cycles = 0;
+
+    // start record clock cycles
+    stamp0 = getRDTSC();
+
+    // wait for ticks count
+    tick0 = getTicks();
+    do {
+        tick1 = getTicks();
+    } while (tick1 - tick0 < WAIT_TIME);
+
+    // stop record clock cycles
+    stamp1 = getRDTSC();
+
+    // calculate elapsed time and cycles
+    elapsedSec = (tick1 - tick0) / 18.2065;
+    cycles = stamp1 - stamp0;
+    
+    // calculate CPU speed in MHz
+    speedMhz = cycles / (elapsedSec * 1.0e6);
+    return round(speedMhz);
 }
 
 // Get CPU details feartures info
@@ -24209,7 +24156,7 @@ void handleMouse(const char *fname)
     // update last mouse pos
     lastx = mcd.mcx = centerX;
     lasty = mcd.mdx = centerY;
-    lastTime = GetTicks();
+    lastTime = getTicks();
 
     // remove keyboard buffer
     while (kbhit()) getch();
@@ -24240,13 +24187,13 @@ void handleMouse(const char *fname)
             drawMouseCursor(&mi);
 
             // update last ticks count and turn off drawable
-            lastTime = GetTicks();
+            lastTime = getTicks();
             needDraw = 0;
             msNew = NULL;
         }
 
         // check for draw new state button
-        if (GetTicks() != lastTime)
+        if (getTicks() != lastTime)
         {
             if (mi.msBitmap != mi.msBitmap->mbNext)
             {
@@ -24255,7 +24202,7 @@ void handleMouse(const char *fname)
             }
             else
             {
-                lastTime = GetTicks();
+                lastTime = getTicks();
             }
         }
 
