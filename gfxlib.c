@@ -74,7 +74,7 @@
 #define WAIT_TIME               10
 
 // Rountine math functions
-#define getTicks()              *((uint32_t*)0x046C)
+#define getTicks()              *((uint32_t*)0x0000046C)
 #define swap(a, b)              {a ^= b; b ^= a; a ^= b;}
 #define clamp(x, lo, hi)        (min(max(x, lo), hi))
 #define roundf(x)               ((x) >= 0.0 ? floor((x) + 0.5) : ceil((x) - 0.5))
@@ -883,13 +883,13 @@ uint32_t getCpuSpeed()
     do {
         tick1 = getTicks();
     } while (tick1 - tick0 < WAIT_TIME);
-
+    
     // stop record clock cycles
     stamp1 = getRDTSC();
 
     // calculate elapsed time and cycles
-    elapsedSec = (tick1 - tick0) / 18.2065;
     cycles = stamp1 - stamp0;
+    elapsedSec = (tick1 - tick0) / 18.2065;
     
     // calculate CPU speed in MHz
     speedMhz = cycles / (elapsedSec * 1.0e6);
@@ -1107,8 +1107,6 @@ void getMemoryInfo()
 // Initialize the timer to use system time or cpu clock time
 void setTimerType(uint8_t type)
 {
-    printf("GFXLIB initializing....\n");
-
     timeType = type;
 
     if (timeType)
