@@ -71,7 +71,7 @@
 #define M_2PI                   6.28318530  // redefine 2PI constant
 
 // Time defination
-#define WAIT_TIME               10
+#define WAIT_TIME               36
 
 // Rountine math functions
 #define getTicks()              *((uint32_t*)0x0000046C)
