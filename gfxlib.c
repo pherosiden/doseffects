@@ -438,10 +438,10 @@ typedef struct
 
 // mouse callback data
 typedef struct {
-    uint16_t    max;                    // mouse code event
-    uint16_t    mbx;                    // callback param bx
-    uint16_t    mcx;                    // callback param cx
-    uint16_t    mdx;                    // callback param dx
+    uint16_t    me;                    // mouse mask event
+    uint16_t    mb;                    // mouse button
+    uint16_t    mx;                    // mouse x position
+    uint16_t    my;                    // mouse y position
 } MOUSE_CALLBACK_DATA;
 
 // the structure for animated mouse pointers
@@ -887,12 +887,11 @@ uint32_t getCpuSpeed()
     // stop record clock cycles
     stamp1 = getRDTSC();
 
-    // calculate elapsed time and cycles
-    cycles = stamp1 - stamp0;
-    elapsedSec = (tick1 - tick0) / 18.2065;
+    // calculate elapsed time
+    elapsedSec = (double)(tick1 - tick0) / 18.2065;
     
     // calculate CPU speed in MHz
-    speedMhz = cycles / (elapsedSec * 1.0e6);
+    speedMhz = (double)(stamp1 - stamp0) / (elapsedSec * 1e6);
     return round(speedMhz);
 }
 
@@ -23172,10 +23171,10 @@ int32_t initMouseButton(GFX_MOUSE_IMAGE *mi)
 #pragma aux mouseHandler parm [eax] [ebx] [ecx] [edx]
 void __loadds __far mouseHandler(int32_t max, int32_t mbx, int32_t mcx, int32_t mdx)
 {
-    mcd.max = max;
-    mcd.mbx = mbx;
-    mcd.mcx = mcx;
-    mcd.mdx = mdx;
+    mcd.me = max;
+    mcd.mb = mbx;
+    mcd.mx = mcx;
+    mcd.my = mdx;
 }
 
 // install hardware interrupt handler
@@ -24152,8 +24151,8 @@ void handleMouse(const char *fname)
     drawMouseCursor(&mi);
 
     // update last mouse pos
-    lastx = mcd.mcx = centerX;
-    lasty = mcd.mdx = centerY;
+    lastx = mcd.mx = centerX;
+    lasty = mcd.my = centerY;
     lastTime = getTicks();
 
     // remove keyboard buffer
@@ -24180,8 +24179,8 @@ void handleMouse(const char *fname)
             if (msNew) mi.msBitmap = msNew;
 
             // update mouse position and draw new mouse position
-            mi.msPosX = mcd.mcx;
-            mi.msPosY = mcd.mdx;
+            mi.msPosX = mcd.mx;
+            mi.msPosY = mcd.my;
             drawMouseCursor(&mi);
 
             // update last ticks count and turn off drawable
@@ -24205,10 +24204,10 @@ void handleMouse(const char *fname)
         }
 
         // update drawable when position changing
-        if (lastx != mcd.mcx || lasty != mcd.mdx)
+        if (lastx != mcd.mx || lasty != mcd.my)
         {
-            lastx = mcd.mcx;
-            lasty = mcd.mdx;
+            lastx = mcd.mx;
+            lasty = mcd.my;
             needDraw = 1;
         }
 
@@ -24216,9 +24215,9 @@ void handleMouse(const char *fname)
         for (i = 0; i != NUM_BUTTONS; i++)
         {
             // check if mouse inside the button region
-            if (mcd.mcx >= btn[i].btPosX && mcd.mcx <= btn[i].btPosX + BUTTON_WIDTH && mcd.mdx >= btn[i].btPosY && mcd.mdx <= btn[i].btPosY + BUTTON_HEIGHT)
+            if (mcd.mx >= btn[i].btPosX && mcd.mx <= btn[i].btPosX + BUTTON_WIDTH && mcd.my >= btn[i].btPosY && mcd.my <= btn[i].btPosY + BUTTON_HEIGHT)
             {
-                if (mcd.mbx == 0 && btn[i].btState == STATE_PRESSED)
+                if (mcd.mb == 0 && btn[i].btState == STATE_PRESSED)
                 {
                     btn[i].btState = STATE_ACTIVE;
                     needDraw |= (2 << i);
@@ -24229,19 +24228,19 @@ void handleMouse(const char *fname)
                     }
                     else if (i == 1) done = 1;
                 }
-                else if (mcd.mbx == 1)
+                else if (mcd.mb == 1)
                 {
                     btn[i].btState = STATE_PRESSED;
                     needDraw |= (2 << i);
                 }
-                else if (btn[i].btState == STATE_NORM && mcd.mbx == 0)
+                else if (btn[i].btState == STATE_NORM && mcd.mb == 0)
                 {
                     btn[i].btState = STATE_ACTIVE;
                     needDraw |= (2 << i);
                 }
                 else if (btn[i].btState == STATE_WAITING)
                 {
-                    if (mcd.mbx == 1)
+                    if (mcd.mb == 1)
                     {
                         btn[i].btState = STATE_PRESSED;
                     }
@@ -24257,12 +24256,12 @@ void handleMouse(const char *fname)
                 btn[i].btState = STATE_NORM;
                 needDraw |= (2 << i);
             }
-            else if (btn[i].btState == STATE_PRESSED && mcd.mbx == 1)
+            else if (btn[i].btState == STATE_PRESSED && mcd.mb == 1)
             {
                 btn[i].btState = STATE_WAITING;
                 needDraw |= (2 << i);
             }
-            else if (btn[i].btState == STATE_WAITING && mcd.mbx == 0)
+            else if (btn[i].btState == STATE_WAITING && mcd.mb == 0)
             {
                 btn[i].btState = STATE_NORM;
                 needDraw |= (2 << i);

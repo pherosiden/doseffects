@@ -521,11 +521,11 @@ void runLensFlare()
 
     // install new mouse interrupt
     installMouseHandler();
-    mcd.mcx = centerX + 70;
-    mcd.mdx = centerY - 80;
+    mcd.mx = centerX + 70;
+    mcd.my = centerY - 80;
 
     // set limitation
-    setMousePos(mcd.mcx, mcd.mdx);
+    setMousePos(mcd.mx, mcd.my);
     setMouseRange(0, 0, cmaxX, cmaxY);
     setMouseSensitivity(100, 100, 100);
 
@@ -541,7 +541,7 @@ void runLensFlare()
         // redirect render to image buffer
         changeDrawBuffer(scr.mData, scr.mWidth, scr.mHeight);
         putImage(0, 0, &sky);
-        fillRectSub(0, 0, lfbWidth, lfbHeight, fromRGB(0, (1.0 * mcd.mdx / cmaxY) * 64.0, (1.0 * mcd.mdx / cmaxY) * 64.0));
+        fillRectSub(0, 0, lfbWidth, lfbHeight, fromRGB(0, (1.0 * mcd.my / cmaxY) * 64.0, (1.0 * mcd.my / cmaxY) * 64.0));
 
         // put all flare image to render buffer
         for (i = 0; i < 16; i++)
@@ -550,8 +550,8 @@ void runLensFlare()
             if (flareput[i])
             {
                 // merge current image buffer to background
-                x = (centerX + ((centerX - mcd.mcx) * (flarepos[i] - 2280) / 2280)) - (flares[i].mWidth >> 1);
-                y = (centerY + ((centerY - mcd.mdx) * (flarepos[i] - 2280) / 2280)) - (flares[i].mHeight >> 1);
+                x = (centerX + ((centerX - mcd.mx) * (flarepos[i] - 2280) / 2280)) - (flares[i].mWidth >> 1);
+                y = (centerY + ((centerY - mcd.my) * (flarepos[i] - 2280) / 2280)) - (flares[i].mHeight >> 1);
                 putImageAdd(x, y, &flares[i]);
             }
         }
@@ -566,7 +566,7 @@ void runLensFlare()
         restoreDrawBuffer();
         waitRetrace();
         putImage(0, 0, &scr);
-    } while (!keyPressed(27) && !mcd.mbx);
+    } while (!keyPressed(27) && !mcd.mb);
 
     // cleanup...
     freeImage(&scr);
