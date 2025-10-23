@@ -873,7 +873,7 @@ uint32_t getCpuSpeed()
 {
     uint32_t tick0 = 0, tick1 = 0;
     uint64_t stamp0 = 0, stamp1 = 0;
-    double speedMhz = 0, elapsedSec = 0, cycles = 0;
+    double speedMhz = 0, elapsedSec = 0;
 
     // start record clock cycles
     stamp0 = getRDTSC();
