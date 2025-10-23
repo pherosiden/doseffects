@@ -1360,9 +1360,17 @@ int32_t getVesaDriverInfo(VBE_DRIVER_INFO *info)
     RM_REGS         regs;
     VBE_DRIVER_INFO *drvInfo;
 
+    // VBE info already allocated, just copy it
+    if (vbeSegment != 0 && vbeSegment != 0xFFFFFFFF)
+    {
+        drvInfo = (VBE_DRIVER_INFO*)((vbeSegment & 0x0000FFFF) << 4);
+        memcpy(info, drvInfo, sizeof(VBE_DRIVER_INFO));
+        return 1;
+    }
+
     // Alloc 1K memory to store VESA driver and mode info
     if (vbeSegment == 0) vbeSegment = allocDosSegment(1024);
-    if (vbeSegment == 0 || vbeSegment == 0xFFFF) return 0;
+    if (vbeSegment == 0 || vbeSegment == 0xFFFFFFFF) return 0;
 
     // Setup pointer memory
     drvInfo = (VBE_DRIVER_INFO*)((vbeSegment & 0x0000FFFF) << 4);
@@ -1580,9 +1588,8 @@ void calcCrtcTimingGTF(VBE_CRTC_INFO_BLOCK *crtc, int32_t hpixels, int32_t vline
     }
     else
     {
-        pixelClockMHZ = (double)fixedPixelClockHz / 1e6;
-
         // recompute horizontal period using the fixed clock
+        pixelClockMHZ = (double)fixedPixelClockHz / 1e6;
         hperiodEst = htotal / pixelClockMHZ;
     }
 
@@ -1597,7 +1604,7 @@ void calcCrtcTimingGTF(VBE_CRTC_INFO_BLOCK *crtc, int32_t hpixels, int32_t vline
     crtc->VerticalSyncStart     = round(vsyncStart);
     crtc->VerticalSyncEnd       = round(vsyncEnd);
     crtc->PixelClock            = round(pixelClockMHZ * 1e6);
-    crtc->RefreshRate           = round(refreshRate * 100.0); // store as Hz * 100
+    crtc->RefreshRate           = round(refreshRate * 100); // store as Hz * 100
     crtc->Flags                 = CRTC_HSYNC_NEGATIVE | CRTC_VSYNC_NEGATIVE;
     if (interlaced) crtc->Flags |= CRTC_INTERLACED;
     if (doubleScan) crtc->Flags |= CRTC_DOUBLE_SCANLINE;
