@@ -792,7 +792,7 @@ int main()
         writeString(xc + tx, 300, "WARNING: Your machine is very slow! this", redcol, 2);
         writeString(xc + tx, 310, "mean some features of GFXLIB maybe not", redcol, 2);
         writeString(xc + tx, 320, "works as espectation. I hope you run this", redcol, 2);
-        writeString(xc + tx, 330, "demo on the faster machine (CPU >= 100 Mhz).", redcol, 2);
+        writeString(xc + tx, 330, "demo on the faster machine (100 Mhz).", redcol, 2);
     }
     fullSpeed = 1;
     showText(tx, yc, &txt, "Please wait while loading images...");
