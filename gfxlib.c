@@ -787,7 +787,7 @@ inline int32_t random(int32_t a)
 }
 
 // Generate random value in [a,b] range
-inline int32_t random(int32_t a, int32_t b)
+inline int32_t randomRange(int32_t a, int32_t b)
 {
     return (a < b) ? (a + (rand() % (b - a + 1))) : (b + (rand() % (a - b + 1)));
 }
