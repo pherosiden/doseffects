@@ -285,6 +285,7 @@ typedef struct
     uint16_t    CodeSegSel;             // selector to access code segment as data
     uint8_t     InProtectMode;          // true if in protected mode
     uint8_t     Checksum;               // sum of all bytes in this struct must match 0
+    uint8_t     Reserved[6];            // reserved - must be zero
 } VBE_PM_INFO_BLOCK;
 
 // VESA 3.0 CRTC timings structure
@@ -785,8 +786,8 @@ inline int32_t random(int32_t a)
     return (a == 0) ? 0 : rand() % a;
 }
 
-// Generate random value in range
-inline int32_t randomRange(int32_t a, int32_t b)
+// Generate random value in [a,b] range
+inline int32_t random(int32_t a, int32_t b)
 {
     return (a < b) ? (a + (rand() % (b - a + 1))) : (b + (rand() % (a - b + 1)));
 }
@@ -845,8 +846,8 @@ void CPUID(uint32_t *cpuinfo, uint32_t type)
         mov     edi, cpuinfo
         cpuid
         mov     [edi     ], eax
-        mov     [edi + 4 ], ebx
-        mov     [edi + 8 ], ecx
+        mov     [edi +  4], ebx
+        mov     [edi +  8], ecx
         mov     [edi + 12], edx
     }
 }
