@@ -535,9 +535,8 @@ int32_t vbe_set_mode(int32_t xres, int32_t yres, int32_t bpp) {
 
 /* simple draw pixel for 32bpp (assumes linear mapped and 32bpp) */
 void draw_pixel(int32_t x, int32_t y, uint32_t color) {
-    uint32_t *base = g_lfb_ptr;
     uint32_t ofs = y * g_bytes_per_scanline + x;
-    *(base + ofs) = color;
+    *(g_lfb_ptr + ofs) = color;
 }
 
 int main() {
