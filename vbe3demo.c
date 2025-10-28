@@ -1,8 +1,8 @@
+#include <dos.h>
 #include <stdio.h>
 #include <conio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dos.h>
 #include <stdint.h>
 
 #define VBE_CODE_SIZE   0x8000      /* 32KB BIOS area copy */
@@ -35,8 +35,8 @@ typedef struct {
 /* Driver info (reduced) returned by VBE GetInfo (4F00h) */
 typedef struct {
     uint8_t     VBESignature[4];    /* "VESA" */
-    uint16_t    VBEVersion;
-    uint32_t    OemStringPtr;
+    uint16_t    VBEVersion;         /* VBE version */
+    uint32_t    OemStringPtr;       /* pointer to OEM string (seg:off) */
     uint32_t    VideoModePtr;       /* pointer to mode list (seg:off) */
     uint16_t    TotalMemory;        /* 64K blocks */
 
@@ -104,7 +104,7 @@ typedef struct {
 } VBE_MODE_INFO;
 #pragma pack(pop)
 
-/* Global state filled by initVBE3 */
+/* Global state filled by init vbe3 driver */
 VBE_DRIVER_INFO g_vbe_drv_info;
 VBE_PM_INFO_BLOCK *g_vbe_pmi_info = NULL;
 
@@ -120,9 +120,11 @@ uint8_t *g_bios_stack_ptr = NULL;
 uint16_t g_vbe_info_sel = 0, g_a0000_sel = 0, g_b0000_sel = 0, g_b8000_sel = 0;
 uint16_t g_bios_code_sel = 0, g_bios_data_sel = 0, g_bios_stack_sel = 0;
 
-/* -------------------- DPMI wrappers (basic) -------------------- */
-/* These use int 0x31 DPMI services. Adjust if your host differs. */
+/*------------------------------------------------------------------*/
+/*-------------------- DPMI wrappers functions -------------------- */
+/*------------------------------------------------------------------*/
 
+/* allocate dos selector */
 uint16_t dpmi_alloc_selector() {
     __asm {
         xor     eax, eax
@@ -134,6 +136,7 @@ uint16_t dpmi_alloc_selector() {
     }
 }
 
+/* free dos selector */
 int32_t dpmi_free_selector(uint16_t sel) {
     __asm {
         mov     bx, sel
@@ -142,7 +145,7 @@ int32_t dpmi_free_selector(uint16_t sel) {
     }
 }
 
-/* set selector rights (access) - not all hosts implement this; routine left for completeness */
+/* set selector rights (access) - not all hosts implement this */
 int32_t dpmi_set_selector_rights(uint16_t sel, uint16_t access) {
     __asm {
         mov     bx, sel
@@ -475,6 +478,11 @@ int32_t vbe_set_mode_info(int32_t xres, int32_t yres, int32_t bpp) {
     
     /* convert real pointer (seg:ofs) to linear pointer */
     mode_list = (uint16_t*)map_real_pointer(g_vbe_drv_info.VideoModePtr);
+    if (!mode_list) {
+        dpmi_free_selector(mode_sel);
+        fprintf(stderr, "map_real_pointer failed for mode list\n");
+        return 0;
+    }
     
     /* find request mode with resolution and bits plan */
     while (*mode_list != 0xFFFF) {
