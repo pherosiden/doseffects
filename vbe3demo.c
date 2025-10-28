@@ -11,9 +11,9 @@
 
 #pragma pack(push, 1)
 
-/* VESA 3.0 PMI block layout */
+/* VESA 3.0 PMI block */
 typedef struct {
-    uint8_t     Signature[4];       /* PM Info Block signature ('PMID') */
+    uint8_t     Signature[4];       /* PM Info signature ('PMID') */
     uint16_t    EntryPoint;         /* offset of PM entry points within BIOS */
     uint16_t    PMInitialize;       /* offset of PM initialization entry points */
     uint16_t    BIOSDataSel;        /* selector to BIOS data area emulation block */
@@ -22,21 +22,22 @@ typedef struct {
     uint16_t    B8000Sel;           /* selector to 0xb8000 */
     uint16_t    CodeSegSel;         /* selector to access code segment as data */
     uint8_t     InProtectMode;      /* true if in protected mode */
-    uint8_t     vbe_bios_checksum;  /* sum of all bytes in this struct must match 0 */
+    uint8_t     Checksum;           /* sum of all bytes in this struct must match 0 */
     uint8_t     Reserved[6];        /* reserved - must be zero */
-} VBE_PM_INFO_BLOCK;
+} VBE_PM_INFO;
 
-/* VESA 3.0 far call wrapper structure (48 bits address) */
+/* VBE3 (48 bits pointer address) far call functions */
 typedef struct {
     uint32_t offset;                /* 32 bits offset */
     uint16_t segment;               /* 16 bits selector */
-} VBE_FAR_CALL;
+} VBE_FAR_PTR;
 
 /* Driver info (reduced) returned by VBE GetInfo (4F00h) */
 typedef struct {
     uint8_t     VBESignature[4];    /* "VESA" */
     uint16_t    VBEVersion;         /* VBE version */
     uint32_t    OemStringPtr;       /* pointer to OEM string (seg:off) */
+    uint32_t    Capabilities;       /* capabilities of graphics controller */
     uint32_t    VideoModePtr;       /* pointer to mode list (seg:off) */
     uint16_t    TotalMemory;        /* 64K blocks */
 
@@ -105,9 +106,6 @@ typedef struct {
 #pragma pack(pop)
 
 /* Global state filled by init vbe3 driver */
-VBE_DRIVER_INFO g_vbe_drv_info;
-VBE_PM_INFO_BLOCK *g_vbe_pmi_info = NULL;
-
 uint32_t g_lfb_size = 0;
 uint32_t *g_lfb_ptr = NULL;
 
@@ -198,9 +196,9 @@ int32_t dpmi_set_selector_limit(uint16_t sel, uint32_t limit) {
 }
 
 /* Map physical memory to linear address using DPMI Map Physical Address (0x0800). */
-uint32_t dpmi_map_physical_address(uint32_t physBase, uint32_t size) {
+uint32_t dpmi_map_physical_address(uint32_t phys_base, uint32_t size) {
     __asm {
-        mov     ebx, physBase
+        mov     ebx, phys_base
         mov     esi, size
         mov     ecx, ebx
         mov     edi, esi
@@ -222,9 +220,9 @@ uint32_t dpmi_map_physical_address(uint32_t physBase, uint32_t size) {
     }
 }
 
-void dpmi_unmap_physical_address(uint32_t* linearAddr) {
+void dpmi_unmap_physical_address(uint32_t* linear_base) {
     __asm {
-        mov     edi, linearAddr
+        mov     edi, linear_base
         mov     bx, [edi + 2]
         mov     cx, [edi]
         mov     dword ptr [edi], 0
@@ -234,10 +232,10 @@ void dpmi_unmap_physical_address(uint32_t* linearAddr) {
 }
 
 // convert real pointer to linear pointer
-uint32_t map_real_pointer(uint32_t rmSegOfs)
+uint32_t map_real_pointer(uint32_t rm_seg_ofs)
 {
     __asm {
-        mov     eax, rmSegOfs
+        mov     eax, rm_seg_ofs
         mov     edx, eax
         and     eax, 0FFFF0000h
         and     edx, 0000FFFFh
@@ -254,14 +252,14 @@ int32_t vbe_bios_checksum(uint8_t *bios, uint32_t len) {
 }
 
 /* find PMID block in BIOS copy buffer */
-VBE_PM_INFO_BLOCK *vbe_find_pmi_block(uint8_t *bios, uint32_t size) {
+VBE_PM_INFO *vbe_find_pm_block(uint8_t *bios, uint32_t size) {
     uint32_t i = 0;
-    uint32_t limit = size - sizeof(VBE_PM_INFO_BLOCK);
+    uint32_t limit = size - sizeof(VBE_PM_INFO);
 
     for (i = 0; i < limit; i++) {
         if (!memcmp(&bios[i], "PMID", 4)) {
             fprintf(stderr, "Found PMID block at offset 0x%lX\n", &bios[i]);
-            if (vbe_bios_checksum(&bios[i], sizeof(VBE_PM_INFO_BLOCK))) return (VBE_PM_INFO_BLOCK*)&bios[i];
+            if (vbe_bios_checksum(&bios[i], sizeof(VBE_PM_INFO))) return (VBE_PM_INFO*)&bios[i];
         }
     }
 
@@ -269,11 +267,11 @@ VBE_PM_INFO_BLOCK *vbe_find_pmi_block(uint8_t *bios, uint32_t size) {
 }
 
 /* create selector and set base/limit/access rights */
-uint16_t create_selector_linear(void *linearBase, uint32_t len) {
+uint16_t create_selector_linear(void *linear_base, uint32_t len) {
     uint16_t sel = dpmi_alloc_selector();
     if (!sel) return 0;
     
-    if (!dpmi_set_selector_base(sel, (uint32_t)linearBase)) {
+    if (!dpmi_set_selector_base(sel, (uint32_t)linear_base)) {
         dpmi_free_selector(sel);
         return 0;
     }
@@ -292,11 +290,11 @@ uint16_t create_selector_linear(void *linearBase, uint32_t len) {
 }
 
 /* create selector for physical address */
-uint16_t create_selector_physical(uint32_t physBase, uint32_t len) {
+uint16_t create_selector_physical(uint32_t phys_base, uint32_t len) {
     uint16_t sel = dpmi_alloc_selector();
     if (!sel) return 0;
     
-    if (!dpmi_set_selector_base(sel, physBase)) {
+    if (!dpmi_set_selector_base(sel, phys_base)) {
         dpmi_free_selector(sel);
         return 0;
     }
@@ -315,14 +313,14 @@ uint16_t create_selector_physical(uint32_t physBase, uint32_t len) {
 }
 
 /* build 48 bits farptr (offset32 + sel16) in memory and call it */
-void vbe_call_farptr(uint32_t offs, uint16_t sel, uint16_t stackSel) {
-    VBE_FAR_CALL farptr;
+void vbe_call_farptr(uint32_t offs, uint16_t sel, uint16_t stack_sel) {
+    VBE_FAR_PTR farptr;
     farptr.offset = offs;
     farptr.segment = sel;
 
     __asm {
         pusha
-        mov     ax, stackSel
+        mov     ax, stack_sel
         mov     ss, ax
         xor     sp, sp
         lea     esi, farptr
@@ -334,7 +332,7 @@ void vbe_call_farptr(uint32_t offs, uint16_t sel, uint16_t stackSel) {
 /* call VBE entry functions AX=0x4F0xx */
 uint32_t vbe_call_entry(uint32_t offset, uint16_t sel, uint16_t inax, uint16_t inbx, uint16_t ines) {
     uint32_t val = 0;
-    VBE_FAR_CALL farptr;
+    VBE_FAR_PTR farptr;
     farptr.offset = offset;
     farptr.segment = sel;
 
@@ -366,7 +364,6 @@ void cleanup() {
     if (g_bios_stack_sel) dpmi_free_selector(g_bios_stack_sel);
     if (g_lfb_ptr) dpmi_unmap_physical_address((uint32_t*)&g_lfb_ptr);
 
-    g_vbe_pmi_info = NULL;
     g_lfb_size = 0;
     g_lfb_ptr = NULL;
 }
@@ -377,15 +374,17 @@ void cleanup() {
  * 3. allocate selectors
  * 4. call PMInitialize + EntryPoint
  */
-int32_t vbe_init_driver() {
+int32_t vbe_init_driver(VBE_DRIVER_INFO *drv_info_ptr, VBE_PM_INFO *pm_info_ptr) {
+    VBE_PM_INFO *pm_ptr = NULL;
+
     /* 1. copy BIOS data from C0000..C7FFF (physical) to real-mode. */
     g_bios_code_ptr = (uint8_t*)malloc(VBE_CODE_SIZE);
     if (!g_bios_code_ptr) return 0;
     memcpy(g_bios_code_ptr, (uint8_t*)0xC0000000UL, VBE_CODE_SIZE);
     
     /* 2. find PMID block */
-    g_vbe_pmi_info = vbe_find_pmi_block(g_bios_code_ptr, VBE_CODE_SIZE);
-    if (!g_vbe_pmi_info) {
+    pm_ptr = vbe_find_pm_block(g_bios_code_ptr, VBE_CODE_SIZE);
+    if (!pm_ptr) {
         free(g_bios_code_ptr);
         fprintf(stderr, "PMID block not found! Card not support VESA 3.0\n");
         return 0;
@@ -420,17 +419,17 @@ int32_t vbe_init_driver() {
     if (!g_bios_stack_sel) goto error;
 
     /* 4. patch PMI fields inside bios copy */
-    g_vbe_pmi_info->CodeSegSel = g_bios_code_sel;
-    g_vbe_pmi_info->BIOSDataSel = g_bios_data_sel;
-    g_vbe_pmi_info->A0000Sel = g_a0000_sel;
-    g_vbe_pmi_info->B0000Sel = g_b0000_sel;
-    g_vbe_pmi_info->B8000Sel = g_b8000_sel;
-    g_vbe_pmi_info->InProtectMode = 1;
+    pm_ptr->CodeSegSel = g_bios_code_sel;
+    pm_ptr->BIOSDataSel = g_bios_data_sel;
+    pm_ptr->A0000Sel = g_a0000_sel;
+    pm_ptr->B0000Sel = g_b0000_sel;
+    pm_ptr->B8000Sel = g_b8000_sel;
+    pm_ptr->InProtectMode = 1;
     
     /* 5. call PMInitialize (if present) */
-    if (g_vbe_pmi_info->PMInitialize) {
-        fprintf(stderr, "Calling PMInitialize at offset 0x%04X using selector 0x%04X\n", g_vbe_pmi_info->PMInitialize, g_bios_code_sel);
-        vbe_call_farptr(g_vbe_pmi_info->PMInitialize, g_bios_code_sel, g_bios_stack_sel);
+    if (pm_ptr->PMInitialize) {
+        fprintf(stderr, "Calling PMInitialize at offset 0x%04X using selector 0x%04X\n", pm_ptr->PMInitialize, g_bios_code_sel);
+        vbe_call_farptr(pm_ptr->PMInitialize, g_bios_code_sel, g_bios_stack_sel);
     }
     else {
         /* some BIOS do not have PMInitialize - try to call EntryPoint directly */
@@ -438,20 +437,23 @@ int32_t vbe_init_driver() {
     }
 
     /* 6. allocate selector for VBE driver info buffer and call EntryPoint AX=4F00 to get driver info */
-    g_vbe_info_sel = create_selector_linear(&g_vbe_drv_info, sizeof(VBE_DRIVER_INFO));
+    g_vbe_info_sel = create_selector_linear(drv_info_ptr, sizeof(VBE_DRIVER_INFO));
     if (!g_vbe_info_sel) goto error;
 
     fprintf(stderr, "Calling VBE3 EntryPoint (4F00) via PM entry...\n");
-    if (!vbe_call_entry(g_vbe_pmi_info->EntryPoint, g_vbe_pmi_info->CodeSegSel, 0x4F00, 0, g_vbe_info_sel)) {
+    if (!vbe_call_entry(pm_ptr->EntryPoint, pm_ptr->CodeSegSel, 0x4F00, 0, g_vbe_info_sel)) {
         fprintf(stderr, "VBE3 call entry point function failed!\n");
         goto error;
     }
     else {
-        if (memcmp(g_vbe_drv_info.VBESignature, "VESA", 4)) {
+        if (memcmp(drv_info_ptr->VBESignature, "VESA", 4)) {
             fprintf(stderr, "VBE3 call entry point did not return valid driver info signature\n");
             goto error;
         }
-        fprintf(stderr, "Initialize VBE3 success (signature: %c%c%c%c, version=%04X)\n", g_vbe_drv_info.VBESignature[0], g_vbe_drv_info.VBESignature[1], g_vbe_drv_info.VBESignature[2], g_vbe_drv_info.VBESignature[3], g_vbe_drv_info.VBESignature[4], g_vbe_drv_info.VBEVersion);
+
+        /* copy PMI block info */
+        memcpy(pm_info_ptr, pm_ptr, sizeof(VBE_PM_INFO));
+        fprintf(stderr, "Initialize VBE3 success (signature: %c%c%c%c, version=%04X)\n", drv_info_ptr->VBESignature[0], drv_info_ptr->VBESignature[1], drv_info_ptr->VBESignature[2], drv_info_ptr->VBESignature[3], drv_info_ptr->VBESignature[4], drv_info_ptr->VBEVersion);
         return 1;
     }
 
@@ -461,13 +463,21 @@ error:
 }
 
 /* set VBE3 mode with given resolution and bpp */
-int32_t vbe_set_mode_info(int32_t xres, int32_t yres, int32_t bpp) {
+int32_t vbe_set_mode(int32_t xres, int32_t yres, int32_t bpp) {
+    VBE_PM_INFO pm_info;
     VBE_MODE_INFO mode_info;
+    VBE_DRIVER_INFO drv_info;
+
     uint16_t mode = 0;
     uint16_t mode_sel = 0;
     uint16_t *mode_list = NULL;
 
-    if (!g_vbe_pmi_info) return 0;
+    /* initialize VBE3 driver */
+    if (!vbe_init_driver(&drv_info, &pm_info)) {
+        cleanup();
+        fprintf(stderr, "initialize VBE3 failed.\n");
+        return 0;
+    }
 
     /* alloc selector for mode info */
     mode_sel = create_selector_linear(&mode_info, sizeof(mode_info));
@@ -477,7 +487,7 @@ int32_t vbe_set_mode_info(int32_t xres, int32_t yres, int32_t bpp) {
     }
     
     /* convert real pointer (seg:ofs) to linear pointer */
-    mode_list = (uint16_t*)map_real_pointer(g_vbe_drv_info.VideoModePtr);
+    mode_list = (uint16_t*)map_real_pointer(drv_info.VideoModePtr);
     if (!mode_list) {
         dpmi_free_selector(mode_sel);
         fprintf(stderr, "map_real_pointer failed for mode list\n");
@@ -488,7 +498,7 @@ int32_t vbe_set_mode_info(int32_t xres, int32_t yres, int32_t bpp) {
     while (*mode_list != 0xFFFF) {
         /* call vbe 0x4F01 function to get mode info */
         mode = *mode_list;
-        if (vbe_call_entry(g_vbe_pmi_info->EntryPoint, g_vbe_pmi_info->CodeSegSel, 0x4F01, mode, mode_sel)) {
+        if (vbe_call_entry(pm_info.EntryPoint, pm_info.CodeSegSel, 0x4F01, mode, mode_sel)) {
             if (mode_info.XResolution == xres && mode_info.YResolution == yres && mode_info.BitsPerPixel == bpp) break;
         }
 
@@ -506,8 +516,8 @@ int32_t vbe_set_mode_info(int32_t xres, int32_t yres, int32_t bpp) {
 
     /* request LFB by setting bit 14 of mode */
     mode |= 0x4000;
-    if (!vbe_call_entry(g_vbe_pmi_info->EntryPoint, g_vbe_pmi_info->CodeSegSel, 0x4F02, mode, 0)) {
-        fprintf(stderr, "Set VBE3 mode failed\n");
+    if (!vbe_call_entry(pm_info.EntryPoint, pm_info.CodeSegSel, 0x4F02, mode, 0)) {
+        fprintf(stderr, "VBE3 call entry 0x4F02 failed!\n");
         return 0;
     }
 
@@ -516,7 +526,7 @@ int32_t vbe_set_mode_info(int32_t xres, int32_t yres, int32_t bpp) {
     g_lfb_size = mode_info.BytesPerScanline * mode_info.YResolution;
     g_lfb_ptr = (uint32_t*)dpmi_map_physical_address(mode_info.PhysBasePtr, g_lfb_size);
     if (!g_lfb_ptr) {
-        fprintf(stderr, "dpmi_map_physical_address failed\n");
+        fprintf(stderr, "dpmi_map_physical_address failed!\n");
         return 0;
     }
 
@@ -533,15 +543,8 @@ void draw_pixel(int32_t x, int32_t y, uint32_t color) {
 int main() {
     int32_t i = 0;
 
-    /* initialize VBE3 driver */
-    if (!vbe_init_driver()) {
-        cleanup();
-        fprintf(stderr, "initialize VBE3 failed.\n");
-        return 0;
-    }
-
     /* try to set vbe3 mode */
-    if (!vbe_set_mode_info(800, 600, 32)) {
+    if (!vbe_set_mode(800, 600, 32)) {
         cleanup();
         fprintf(stderr, "VBE3 set mode 800x600x32 failed!\n");
         return 0;
