@@ -20,7 +20,7 @@ void main()
     uint16_t pos[] = {3, 2, 2, 1, 1, 0};
 
     /*=========== C VERSION ==========*/
-    /*uint16_t i, j, col;
+    /*uint16_t i, j, k, col;
     while (!kbhit())
     {
         for (i = 390; i > 0; i--)
@@ -39,19 +39,19 @@ void main()
             outp(0x03C8, 0);
             for (j = 0; j < 3; j++)
             {
+                k = j << 1;
                 if (i == 1)
                 {
-                    pos[2 * j + 1] -= pos[2 * j];
-                    if (pos[2 * j + 1] <= -263) pos[2 * j] = -pos[2 * j];
+                    pos[k + 1] -= pos[k];
+                    if (pos[k + 1] <= -263) pos[k] = -pos[k];
                 }
-                col = pos[2 * j + 1] + i;
+                col = i + pos[k + 1];
                 if (col > 127) col = 0;
                 if (col > 63) col = 255 - col;
                 outp(0x03C9, col);
             }
         }
     }*/
-
     /*============ ASM VERSION ============*/
     while (!kbhit())
     {
@@ -68,34 +68,34 @@ void main()
             in      al, dx
             and     al, ah
             jz      st2
-            mov     dx, 0x03C8
-            xor     al, al
+            mov     dl, 0xC8
+            xchg    ax, bx
             out     dx, al
             inc     dx
             lea     si, pos
-            mov     bx, 3
+            mov     bl, 3
         st3:
             lodsw
-            cmp     cx, 1
-            jne     st4
+            loop    st4
             sub     [si], ax
             cmp     word ptr [si], -263
             ja      st4
             neg     word ptr [si - 2]
         st4:
+            inc     cx
             lodsw
             add     ax, cx
             cmp     ax, 127
             jbe     st5
-            xor     ax, ax
+            xor     al, al
         st5:
-            cmp     ax, 63
-            jbe     st6
-            not     ax
+            cmp     al, 64
+            jb      st6
+            not     al
         st6:
             out     dx, al
             dec     bx
-            jnz     st3
+            jpo     st3
             mov     ah, 1
             loop    st0
         }
