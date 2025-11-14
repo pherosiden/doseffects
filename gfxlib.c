@@ -1157,8 +1157,8 @@ void waitFor(uint64_t tmstart, uint64_t ms)
     while (getElapsedTime(tmstart) < tmwait);
 }
 
-// delay CPU execution
-void delay(uint32_t ms)
+// delay CPU execution for miliseconds
+void sleepFor(uint32_t ms)
 {
     uint64_t tmwait = (ms * timeRes) / 1000;
     uint64_t tmstart = getCurrentTime();
@@ -4846,7 +4846,11 @@ int32_t newImage(int32_t width, int32_t height, GFX_IMAGE *img)
     if (!size) return 0;
 
     img->mData = (uint8_t*)calloc(size, 1);
-    if (!img->mData) return 0;
+    if (!img->mData)
+    {
+        fatalError("calloc error: %u\n", size);
+        return 0;
+    }
 
     // store image width and height
     memset(img->mData, 0, size);
@@ -10795,259 +10799,256 @@ int32_t setVesaMode(int32_t px, int32_t py, uint8_t bits, uint32_t freq)
     if (regs.eax != 0x004F) return 0;
     if (crtcSegment) freeDosSegment(&crtcSegment);
 
+    // Only DIRECT COLOR and PACKED PIXEL mode are allowed
+    if (modeInfo.MemoryModel != VBE_MM_DCOLOR && modeInfo.MemoryModel != VBE_MM_PACKED) return 0;
+
     // Calculate linear address size and map physical address to linear address
     lfbSize = modeInfo.YResolution * modeInfo.BytesPerScanline;
     lfbPtr = (uint8_t*)mapPhysicalAddress(modeInfo.PhysBasePtr, lfbSize);
     if (!lfbPtr) return 0;
 
-    // Only DIRECT COLOR and PACKED PIXEL mode are allowed
-    if (modeInfo.MemoryModel == VBE_MM_DCOLOR || modeInfo.MemoryModel == VBE_MM_PACKED)
+    // Only for VBE 3.0
+    if (drvInfo.VBEVersion >= 0x0300)
+    {
+        // Calculate mask for RGB
+        rmask = ((1UL << modeInfo.LinRedMaskSize) - 1) << modeInfo.LinRedFieldPosition;
+        gmask = ((1UL << modeInfo.LinGreenMaskSize) - 1) << modeInfo.LinGreenFieldPosition;
+        bmask = ((1UL << modeInfo.LinBlueMaskSize) - 1) << modeInfo.LinBlueFieldPosition;
+
+        // Calculate RGB shifter
+        rshift = 8 - modeInfo.LinRedMaskSize;
+        gshift = 8 - modeInfo.LinGreenMaskSize;
+        bshift = 8 - modeInfo.LinBlueMaskSize;
+
+        // Save RGB position
+        rpos = modeInfo.LinRedFieldPosition;
+        gpos = modeInfo.LinGreenFieldPosition;
+        bpos = modeInfo.LinBlueFieldPosition;
+
+        // Save line size (in bytes)
+        bytesPerScanline = modeInfo.LinBytesPerScanline;
+
+        // Number of visual screen pages
+        numOfPages = modeInfo.LinNumberOfImagePages;
+    }
+    else
     {
         // Setup protect mode interface to use setDisplayStart function
         getProtectModeFunctions();
 
-        // Only for VBE 3.0
-        if (drvInfo.VBEVersion >= 0x0300)
-        {
-            // Calculate mask for RGB
-            rmask = ((1UL << modeInfo.LinRedMaskSize) - 1) << modeInfo.LinRedFieldPosition;
-            gmask = ((1UL << modeInfo.LinGreenMaskSize) - 1) << modeInfo.LinGreenFieldPosition;
-            bmask = ((1UL << modeInfo.LinBlueMaskSize) - 1) << modeInfo.LinBlueFieldPosition;
+        // Calculate mask for RGB
+        rmask = ((1UL << modeInfo.RedMaskSize) - 1) << modeInfo.RedFieldPosition;
+        gmask = ((1UL << modeInfo.GreenMaskSize) - 1) << modeInfo.GreenFieldPosition;
+        bmask = ((1UL << modeInfo.BlueMaskSize) - 1) << modeInfo.BlueFieldPosition;
 
-            // Calculate RGB shifter
-            rshift = 8 - modeInfo.LinRedMaskSize;
-            gshift = 8 - modeInfo.LinGreenMaskSize;
-            bshift = 8 - modeInfo.LinBlueMaskSize;
+        // Calculate RGB shifter
+        rshift = 8 - modeInfo.RedMaskSize;
+        gshift = 8 - modeInfo.GreenMaskSize;
+        bshift = 8 - modeInfo.BlueMaskSize;
 
-            // Save RGB position
-            rpos = modeInfo.LinRedFieldPosition;
-            gpos = modeInfo.LinGreenFieldPosition;
-            bpos = modeInfo.LinBlueFieldPosition;
+        // Save RGB position
+        rpos = modeInfo.RedFieldPosition;
+        gpos = modeInfo.GreenFieldPosition;
+        bpos = modeInfo.BlueFieldPosition;
 
-            // Save line size (in bytes)
-            bytesPerScanline = modeInfo.LinBytesPerScanline;
+        // Save line size (in bytes)
+        bytesPerScanline = modeInfo.BytesPerScanline;
 
-            // Number of visual screen pages
-            numOfPages = modeInfo.LinNumberOfImagePages;
-        }
-        else
-        {
-            // Calculate mask for RGB
-            rmask = ((1UL << modeInfo.RedMaskSize) - 1) << modeInfo.RedFieldPosition;
-            gmask = ((1UL << modeInfo.GreenMaskSize) - 1) << modeInfo.GreenFieldPosition;
-            bmask = ((1UL << modeInfo.BlueMaskSize) - 1) << modeInfo.BlueFieldPosition;
-
-            // Calculate RGB shifter
-            rshift = 8 - modeInfo.RedMaskSize;
-            gshift = 8 - modeInfo.GreenMaskSize;
-            bshift = 8 - modeInfo.BlueMaskSize;
-
-            // Save RGB position
-            rpos = modeInfo.RedFieldPosition;
-            gpos = modeInfo.GreenFieldPosition;
-            bpos = modeInfo.BlueFieldPosition;
-
-            // Save line size (in bytes)
-            bytesPerScanline = modeInfo.BytesPerScanline;
-
-            // Number of visual screen pages
-            numOfPages = modeInfo.NumberOfImagePages;
-        }
-
-        // Save bits per pixels
-        bitsPerPixel = modeInfo.BitsPerPixel;
-        bytesPerPixel = (bitsPerPixel + 7) >> 3;
-
-        // Save x, y resolution
-        lfbWidth = modeInfo.XResolution;
-        lfbHeight = modeInfo.YResolution;
-
-        // Check for logical width to increasing
-        lineWidth = max(bytesPerScanline, lfbWidth * bytesPerPixel);
-        if (lineWidth > bytesPerScanline)
-        {
-            memset(&regs, 0, sizeof(regs));
-            regs.eax = 0x4F06;
-            regs.ebx = 0;
-            regs.ecx = lineWidth / bytesPerPixel;
-            simRealModeInt(0x10, &regs);
-            if (regs.eax != 0x004F || lineWidth > regs.ebx) return 0;
-        }
-
-        // Mapping functions pointer
-        switch (bitsPerPixel)
-        {
-        case 8:
-            toRGB               = toRGB8;
-            fromRGB             = fromRGB8;
-            putPixel            = putPixel8;
-            getPixel            = getPixel8;
-            fillRect            = fillRect8;
-            horizLine           = horizLine8;
-            vertLine            = vertLine8;
-            getImage            = getImage8;
-            putImage            = putImage8;
-            putSprite           = putSprite8;
-            clearScreen         = clearScreen8;
-            scaleImage          = scaleImage8;
-            fillRectPattern     = fillRectPattern8;
-            break;
-
-        case 15:
-            toRGB               = toRGB15;
-            fromRGB             = fromRGB15;
-            putPixel            = putPixel1516;
-            putPixelAdd         = putPixelAdd15;
-            putPixelSub         = putPixelSub15;
-            getPixel            = getPixel1516;
-            fillRect            = fillRect1516;
-            fillRectAdd         = fillRectAdd15;
-            fillRectSub         = fillRectSub15;
-            horizLine           = horizLine1516;
-            horizLineAdd        = horizLineAdd15;
-            horizLineSub        = horizLineSub15;
-            vertLine            = vertLine1516;
-            vertLineAdd         = vertLineAdd15;
-            vertLineSub         = vertLineSub15;
-            getImage            = getImage1516;
-            putImage            = putImage1516;
-            putImageAdd         = putImageAdd15;
-            putImageSub         = putImageSub15;
-            putSprite           = putSprite1516;
-            putSpriteAdd        = putSpriteAdd15;
-            putSpriteSub        = putSpriteSub15;
-            clearScreen         = clearScreen1516;
-            scaleImage          = scaleImage1516;
-            fadeOutImage        = fadeOutImage15;
-            fillRectPattern     = fillRectPattern1516;
-            fillRectPatternAdd  = fillRectPatternAdd15;
-            fillRectPatternSub  = fillRectPatternSub15;
-            break;
-
-        case 16:
-            toRGB               = toRGB16;
-            fromRGB             = fromRGB16;
-            putPixel            = putPixel1516;
-            putPixelAdd         = putPixelAdd16;
-            putPixelSub         = putPixelSub16;
-            getPixel            = getPixel1516;
-            fillRect            = fillRect1516;
-            fillRectAdd         = fillRectAdd16;
-            fillRectSub         = fillRectSub16;
-            horizLine           = horizLine1516;
-            horizLineAdd        = horizLineAdd16;
-            horizLineSub        = horizLineSub16;
-            vertLine            = vertLine1516;
-            vertLineAdd         = vertLineAdd16;
-            vertLineSub         = vertLineSub16;
-            getImage            = getImage1516;
-            putImage            = putImage1516;
-            putImageAdd         = putImageAdd16;
-            putImageSub         = putImageSub16;
-            putSprite           = putSprite1516;
-            putSpriteAdd        = putSpriteAdd16;
-            putSpriteSub        = putSpriteSub16;
-            clearScreen         = clearScreen1516;
-            scaleImage          = scaleImage1516;
-            fadeOutImage        = fadeOutImage16;
-            fillRectPattern     = fillRectPattern1516;
-            fillRectPatternAdd  = fillRectPatternAdd16;
-            fillRectPatternSub  = fillRectPatternSub16;
-            break;
-
-        case 24:
-            toRGB               = toRGB2432;
-            fromRGB             = fromRGB2432;
-            putPixel            = putPixel24;
-            putPixelAdd         = putPixelAdd24;
-            putPixelSub         = putPixelSub24;
-            getPixel            = getPixel24;
-            fillRect            = fillRect24;
-            fillRectAdd         = fillRectAdd24;
-            fillRectSub         = fillRectSub24;
-            horizLine           = horizLine24;
-            horizLineAdd        = horizLineAdd24;
-            horizLineSub        = horizLineSub24;
-            vertLine            = vertLine24;
-            vertLineAdd         = vertLineAdd24;
-            vertLineSub         = vertLineSub24;
-            getImage            = getImage24;
-            putImage            = putImage24;
-            putImageAdd         = putImageAdd24;
-            putImageSub         = putImageSub24;
-            putSprite           = putSprite24;
-            putSpriteAdd        = putSpriteAdd24;
-            putSpriteSub        = putSpriteSub24;
-            clearScreen         = clearScreen24;
-            scaleImage          = scaleImage24;
-            fadeOutImage        = fadeOutImage24;
-            fillRectPattern     = fillRectPattern24;
-            fillRectPatternAdd  = fillRectPatternAdd24;
-            fillRectPatternSub  = fillRectPatternSub24;
-            break;
-
-        case 32:
-            toRGB               = toRGB2432;
-            fromRGB             = fromRGB2432;
-            putPixel            = putPixel32;
-            putPixelAdd         = putPixelAdd32;
-            putPixelSub         = putPixelSub32;
-            getPixel            = getPixel32;
-            fillRect            = fillRect32;
-            fillRectAdd         = fillRectAdd32;
-            fillRectSub         = fillRectSub32;
-            horizLine           = horizLine32;
-            horizLineAdd        = horizLineAdd32;
-            horizLineSub        = horizLineSub32;
-            vertLine            = vertLine32;
-            vertLineAdd         = vertLineAdd32;
-            vertLineSub         = vertLineSub32;
-            getImage            = getImage32;
-            putImage            = putImage32;
-            putImageAdd         = putImageAdd32;
-            putImageSub         = putImageSub32;
-            putSprite           = putSprite32;
-            putSpriteAdd        = putSpriteAdd32;
-            putSpriteSub        = putSpriteSub32;
-            clearScreen         = clearScreen32;
-            scaleImage          = scaleImage32;
-            fadeOutImage        = fadeOutImage32;
-            fillRectPattern     = fillRectPattern32;
-            fillRectPatternAdd  = fillRectPatternAdd32;
-            fillRectPatternSub  = fillRectPatternSub32;
-            break;
-        }
-
-        // Initialize center x, y
-        centerX = (lfbWidth >> 1) - 1;
-        centerY = (lfbHeight >> 1) - 1;
-
-        // Initialize view port size
-        cminX   = 0;
-        cminY   = 0;
-        cmaxX   = lfbWidth - 1;
-        cmaxY   = lfbHeight - 1;
-
-        // Initialize random number generation
-        randSeed = time(NULL);
-        srand(randSeed);
-
-        // Initialize GFXLIB buffer
-        gfxBuff = (uint8_t*)calloc(GFX_BUFF_SIZE, 1);
-        if (!gfxBuff)
-        {
-            printf("Cannot initialize GFXLIB buffer!\n");
-            exit(1);
-        }
-
-        // Filled cpu and memory info structure
-        getCpuInfo();
-        getMemoryInfo();
-
-        return mode;
+        // Number of visual screen pages
+        numOfPages = modeInfo.NumberOfImagePages;
     }
 
-    return 0;
+    // Save bits per pixels
+    bitsPerPixel = modeInfo.BitsPerPixel;
+    bytesPerPixel = (bitsPerPixel + 7) >> 3;
+
+    // Save x, y resolution
+    lfbWidth = modeInfo.XResolution;
+    lfbHeight = modeInfo.YResolution;
+
+    // Check for logical width to increasing
+    lineWidth = max(bytesPerScanline, lfbWidth * bytesPerPixel);
+    if (lineWidth > bytesPerScanline)
+    {
+        memset(&regs, 0, sizeof(regs));
+        regs.eax = 0x4F06;
+        regs.ebx = 0;
+        regs.ecx = lineWidth / bytesPerPixel;
+        simRealModeInt(0x10, &regs);
+        if (regs.eax != 0x004F || lineWidth > regs.ebx) return 0;
+    }
+
+    // Mapping functions pointer
+    switch (bitsPerPixel)
+    {
+    case 8:
+        toRGB               = toRGB8;
+        fromRGB             = fromRGB8;
+        putPixel            = putPixel8;
+        getPixel            = getPixel8;
+        fillRect            = fillRect8;
+        horizLine           = horizLine8;
+        vertLine            = vertLine8;
+        getImage            = getImage8;
+        putImage            = putImage8;
+        putSprite           = putSprite8;
+        clearScreen         = clearScreen8;
+        scaleImage          = scaleImage8;
+        fillRectPattern     = fillRectPattern8;
+        break;
+
+    case 15:
+        toRGB               = toRGB15;
+        fromRGB             = fromRGB15;
+        putPixel            = putPixel1516;
+        putPixelAdd         = putPixelAdd15;
+        putPixelSub         = putPixelSub15;
+        getPixel            = getPixel1516;
+        fillRect            = fillRect1516;
+        fillRectAdd         = fillRectAdd15;
+        fillRectSub         = fillRectSub15;
+        horizLine           = horizLine1516;
+        horizLineAdd        = horizLineAdd15;
+        horizLineSub        = horizLineSub15;
+        vertLine            = vertLine1516;
+        vertLineAdd         = vertLineAdd15;
+        vertLineSub         = vertLineSub15;
+        getImage            = getImage1516;
+        putImage            = putImage1516;
+        putImageAdd         = putImageAdd15;
+        putImageSub         = putImageSub15;
+        putSprite           = putSprite1516;
+        putSpriteAdd        = putSpriteAdd15;
+        putSpriteSub        = putSpriteSub15;
+        clearScreen         = clearScreen1516;
+        scaleImage          = scaleImage1516;
+        fadeOutImage        = fadeOutImage15;
+        fillRectPattern     = fillRectPattern1516;
+        fillRectPatternAdd  = fillRectPatternAdd15;
+        fillRectPatternSub  = fillRectPatternSub15;
+        break;
+
+    case 16:
+        toRGB               = toRGB16;
+        fromRGB             = fromRGB16;
+        putPixel            = putPixel1516;
+        putPixelAdd         = putPixelAdd16;
+        putPixelSub         = putPixelSub16;
+        getPixel            = getPixel1516;
+        fillRect            = fillRect1516;
+        fillRectAdd         = fillRectAdd16;
+        fillRectSub         = fillRectSub16;
+        horizLine           = horizLine1516;
+        horizLineAdd        = horizLineAdd16;
+        horizLineSub        = horizLineSub16;
+        vertLine            = vertLine1516;
+        vertLineAdd         = vertLineAdd16;
+        vertLineSub         = vertLineSub16;
+        getImage            = getImage1516;
+        putImage            = putImage1516;
+        putImageAdd         = putImageAdd16;
+        putImageSub         = putImageSub16;
+        putSprite           = putSprite1516;
+        putSpriteAdd        = putSpriteAdd16;
+        putSpriteSub        = putSpriteSub16;
+        clearScreen         = clearScreen1516;
+        scaleImage          = scaleImage1516;
+        fadeOutImage        = fadeOutImage16;
+        fillRectPattern     = fillRectPattern1516;
+        fillRectPatternAdd  = fillRectPatternAdd16;
+        fillRectPatternSub  = fillRectPatternSub16;
+        break;
+
+    case 24:
+        toRGB               = toRGB2432;
+        fromRGB             = fromRGB2432;
+        putPixel            = putPixel24;
+        putPixelAdd         = putPixelAdd24;
+        putPixelSub         = putPixelSub24;
+        getPixel            = getPixel24;
+        fillRect            = fillRect24;
+        fillRectAdd         = fillRectAdd24;
+        fillRectSub         = fillRectSub24;
+        horizLine           = horizLine24;
+        horizLineAdd        = horizLineAdd24;
+        horizLineSub        = horizLineSub24;
+        vertLine            = vertLine24;
+        vertLineAdd         = vertLineAdd24;
+        vertLineSub         = vertLineSub24;
+        getImage            = getImage24;
+        putImage            = putImage24;
+        putImageAdd         = putImageAdd24;
+        putImageSub         = putImageSub24;
+        putSprite           = putSprite24;
+        putSpriteAdd        = putSpriteAdd24;
+        putSpriteSub        = putSpriteSub24;
+        clearScreen         = clearScreen24;
+        scaleImage          = scaleImage24;
+        fadeOutImage        = fadeOutImage24;
+        fillRectPattern     = fillRectPattern24;
+        fillRectPatternAdd  = fillRectPatternAdd24;
+        fillRectPatternSub  = fillRectPatternSub24;
+        break;
+
+    case 32:
+        toRGB               = toRGB2432;
+        fromRGB             = fromRGB2432;
+        putPixel            = putPixel32;
+        putPixelAdd         = putPixelAdd32;
+        putPixelSub         = putPixelSub32;
+        getPixel            = getPixel32;
+        fillRect            = fillRect32;
+        fillRectAdd         = fillRectAdd32;
+        fillRectSub         = fillRectSub32;
+        horizLine           = horizLine32;
+        horizLineAdd        = horizLineAdd32;
+        horizLineSub        = horizLineSub32;
+        vertLine            = vertLine32;
+        vertLineAdd         = vertLineAdd32;
+        vertLineSub         = vertLineSub32;
+        getImage            = getImage32;
+        putImage            = putImage32;
+        putImageAdd         = putImageAdd32;
+        putImageSub         = putImageSub32;
+        putSprite           = putSprite32;
+        putSpriteAdd        = putSpriteAdd32;
+        putSpriteSub        = putSpriteSub32;
+        clearScreen         = clearScreen32;
+        scaleImage          = scaleImage32;
+        fadeOutImage        = fadeOutImage32;
+        fillRectPattern     = fillRectPattern32;
+        fillRectPatternAdd  = fillRectPatternAdd32;
+        fillRectPatternSub  = fillRectPatternSub32;
+        break;
+    }
+
+    // Initialize center x, y
+    centerX = (lfbWidth >> 1) - 1;
+    centerY = (lfbHeight >> 1) - 1;
+
+    // Initialize view port size
+    cminX   = 0;
+    cminY   = 0;
+    cmaxX   = lfbWidth - 1;
+    cmaxY   = lfbHeight - 1;
+
+    // Initialize random number generation
+    randSeed = time(NULL);
+    srand(randSeed);
+
+    // Initialize GFXLIB buffer
+    gfxBuff = (uint8_t*)calloc(GFX_BUFF_SIZE, 1);
+    if (!gfxBuff)
+    {
+        printf("Cannot initialize GFXLIB buffer!\n");
+        exit(1);
+    }
+
+    // Filled cpu and memory info structure
+    getCpuInfo();
+    getMemoryInfo();
+
+    return mode;
 }
 
 // Get/Set current hardware palette entries
