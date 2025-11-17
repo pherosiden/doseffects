@@ -51,7 +51,7 @@ void main()
                 outp(0x03C9, col);
             }
         }
-    }*/
+    }
     /*============ ASM VERSION ============*/
     while (!kbhit())
     {

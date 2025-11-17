@@ -2226,11 +2226,9 @@ void putPixelBob(int32_t x, int32_t y)
         add     eax, ebx
         mov     esi, lfbPtr
         add     esi, eax
-        mov     ebx, eax
-        lodsb
-        mov     edi, lfbPtr
-        add     edi, ebx
+        mov     al, [esi]
         inc     al
+        xchg    edi, esi
         stosb
     quit:
     }

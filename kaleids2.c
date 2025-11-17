@@ -18,62 +18,61 @@
 
 void main(int argc, const char* argv[])
 {
-    int32_t X1, Y1, X2, Y2;
-    int32_t XV1, YV1, XV2, YV2;
-    int32_t XA, YA, XB, YB;
-    int32_t CX, CY, MD;
-
+    int32_t cx, cy;
+    int32_t x1, y1, x2, y2;
+    int32_t vx1, vy1, vx2, vy2;
+    int32_t xa, ya, xb, yb;
+    
     uint8_t mode = 0;
     uint32_t step1, step2;
 
-    if (!setVesaMode(800, 600, 8, 0)) return;
+    if (!setVesaMode(1024, 768, 8, 0)) return;
     srand(time(NULL));
     
     if (argc > 1 && !strcmp(argv[1], "1")) mode = 1;
     if (mode) makeRainbowPalette();
 
-    CX = centerX;
-    CY = centerY;
-    MD = CY;
+    cx = centerX;
+    cy = centerY;
 
     while (!kbhit())
     {
         if (!mode) makeFunkyPalette();
 
         step1 = 0;
-        X1 = random(MD) + 1;
-        X2 = random(MD) + 1;
-        Y1 = random(X1);
-        Y2 = random(X2);
+        x1 = random(cy) + 1;
+        x2 = random(cy) + 1;
+        y1 = random(x1) + 1;
+        y2 = random(x2) + 1;
 
         while (step1 < MAX_STEP1 && inp(0x60) != 1)
         {
             step2 = 0;
-            XV1 = random(5) - 2;
-            XV2 = random(5) - 2;
-            YV1 = random(5) - 2;
-            YV2 = random(5) - 2;
+            vx1 = random(5) - 2;
+            vx2 = random(5) - 2;
+            vy1 = random(5) - 2;
+            vy2 = random(5) - 2;
 
             while (step2 < MAX_STEP2 && inp(0x60) != 1)
             {
-                XA = (X1 << 2) / 3;
-                XB = (X2 << 2) / 3;
-                YA = (Y1 << 2) / 3;
-                YB = (Y2 << 2) / 3;
+                xa = (x1 << 2) / 3;
+                xb = (x2 << 2) / 3;
+                ya = (y1 << 2) / 3;
+                yb = (y2 << 2) / 3;
 
-                drawLineBob(CX + XA, CY - Y1, CX + XB, CY - Y2);
-                drawLineBob(CX - YA, CY + X1, CX - YB, CY + X2);
-                drawLineBob(CX - XA, CY - Y1, CX - XB, CY - Y2);
-                drawLineBob(CX - YA, CY - X1, CX - YB, CY - X2);
-                drawLineBob(CX - XA, CY + Y1, CX - XB, CY + Y2);
-                drawLineBob(CX + YA, CY - X1, CX + YB, CY - X2);
-                drawLineBob(CX + XA, CY + Y1, CX + XB, CY + Y2);
-                drawLineBob(CX + YA, CY + X1, CX + YB, CY + X2);
+                drawLineBob(cx + xa, cy - y1, cx + xb, cy - y2);
+                drawLineBob(cx - ya, cy + x1, cx - yb, cy + x2);
+                drawLineBob(cx - xa, cy - y1, cx - xb, cy - y2);
+                drawLineBob(cx - ya, cy - x1, cx - yb, cy - x2);
+                drawLineBob(cx - xa, cy + y1, cx - xb, cy + y2);
+                drawLineBob(cx + ya, cy - x1, cx + yb, cy - x2);
+                drawLineBob(cx + xa, cy + y1, cx + xb, cy + y2);
+                drawLineBob(cx + ya, cy + x1, cx + yb, cy + x2);
 
-                X1 = (X1 + XV1) % MD;
-                Y1 = (Y1 + YV1) % MD;
-                X2 = (X2 + XV2) % MD;
-                Y2 = (Y2 + YV2) % MD;
+                x1 = (x1 + vx1) % cy;
+                y1 = (y1 + vy1) % cy;
+                x2 = (x2 + vx2) % cy;
+                y2 = (y2 + vy2) % cy;
 
                 waitRetrace();
                 step2++;
