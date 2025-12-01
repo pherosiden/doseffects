@@ -15,25 +15,25 @@
 // this is used for 256-color mode
 void makePalette()
 {
-    int16_t a, b;
+    int16_t i, j;
     RGB pal[256] = {0};
 
     pal[0].r = 0;
     pal[0].g = 0;
     pal[0].b = 0;
 
-    for (a = 1; a <= 85; a++)
+    for (i = 1; i <= 85; i++)
     {
-        b = a * 255 / 85;
-        pal[a      ].r = b;
-        pal[85 + a ].g = b;
-        pal[170 + a].b = b;
-        pal[170 + a].r = 0;
-        pal[a      ].g = 0;
-        pal[85 + a ].b = 0;
-        pal[171 - a].r = b;
-        pal[256 - a].g = b;
-        pal[86 - a ].b = b;
+        j = i * 255 / 85;
+        pal[i      ].r = j;
+        pal[ 85 + i].g = j;
+        pal[170 + i].b = j;
+        pal[170 + i].r = 0;
+        pal[i      ].g = 0;
+        pal[ 85 + i].b = 0;
+        pal[171 - i].r = j;
+        pal[256 - i].g = j;
+        pal[ 86 - i].b = j;
     }
 
     setPalette(pal);
@@ -91,7 +91,7 @@ uint32_t HSV2RGB(uint8_t h, uint8_t s, uint8_t v)
 //
 void juliaSet(int32_t width, int32_t height, int32_t iters, double cre, double cim, double zoom, double mx, double my)
 {
-    int32_t i, x, y;	// loop
+    int32_t iter, x, y;
     double newre, newim;
     double oldre, oldim;   //real and imaginary parts of new and old
     
@@ -106,20 +106,14 @@ void juliaSet(int32_t width, int32_t height, int32_t iters, double cre, double c
         
         for (x = 0; x < width; x++)
         {
-            //check for exit
-            if (kbhit()) return;
-
             //calculate the initial real and imaginary part of z, based on the pixel location and zoom and position values
             newre = 1.5 * (x - width / 2) / (0.5 * zoom * width) + mx;
             newim = 1.0 * (y - height / 2) / (0.5 * zoom * height) + my;
             
-            //i will represent the number of iterations
+            //iter will represent the number of iterations
             //start the iteration process
-            for (i = 1; i <= iters; i++)
+            for (iter = 1; iter <= iters; iter++)
             {
-                //check for exit
-                if (kbhit()) return;
-
                 //remember value of previous iteration
                 oldre = newre;
                 oldim = newim;
@@ -133,8 +127,8 @@ void juliaSet(int32_t width, int32_t height, int32_t iters, double cre, double c
             }
 
             // for 256 colors
-            if (bitsPerPixel == 8) putPixel(x, y, i);
-            else putPixel(x, y, HSV2RGB(i & 0xFF, 255, 255 * (i < iters)));
+            if (bitsPerPixel == 8) putPixel(x, y, iter);
+            else putPixel(x, y, HSV2RGB(iter & 0xFF, 255, 255 * (iter < iters)));
         }
     }
 }
@@ -146,7 +140,7 @@ void juliaSet(int32_t width, int32_t height, int32_t iters, double cre, double c
 //
 void mandelbrotSet(int32_t width, int32_t height, int32_t iters, double zoom, double mx, double my)
 {
-    int32_t i, x, y;	// loop
+    int32_t iter, x, y;
     double pr, pi; 			//real and imaginary part of the pixel p
     double newre, newim;
     double oldre, oldim;   //real and imaginary parts of new and old z
@@ -163,20 +157,14 @@ void mandelbrotSet(int32_t width, int32_t height, int32_t iters, double zoom, do
         pi = 1.0 * (y - height / 2) / (0.5 * zoom * height) + my;
         for (x = 0; x < width; x++)
         {
-            //check for exit
-            if (kbhit()) return;
-
             //calculate the initial real and imaginary part of z, based on the pixel location and zoom and position values
             pr = 1.5 * (x - width / 2) / (0.5 * zoom * width) + mx;
             newre = newim = oldre = oldim = 0; //these should start at 0,0
 
-            //i will represent the number of iterations
+            //iter will represent the number of iterations
             //start the iteration process
-            for (i = 1; i <= iters; i++)
+            for (iter = 1; iter <= iters; iter++)
             {
-                //check for exit
-                if (kbhit()) return;
-
                 //remember value of previous iteration
                 oldre = newre;
                 oldim = newim;
@@ -190,8 +178,8 @@ void mandelbrotSet(int32_t width, int32_t height, int32_t iters, double zoom, do
             }
 
             // for 256 colors
-            if (bitsPerPixel == 8) putPixel(x, y, i);
-            else putPixel(x, y, HSV2RGB(i & 0xFF, 255, 255 * (i < iters)));
+            if (bitsPerPixel == 8) putPixel(x, y, iter);
+            else putPixel(x, y, HSV2RGB(iter & 0xFF, 255, 255 * (iter < iters)));
         }
     }
 }
