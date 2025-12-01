@@ -94,7 +94,7 @@ void juliaSet(int32_t width, int32_t height, int32_t iters, double cre, double c
     int32_t iter, x, y;
     double newre, newim;
     double oldre, oldim;   //real and imaginary parts of new and old
-    
+
     //remove key buffer
     while(kbhit()) getch();
 
