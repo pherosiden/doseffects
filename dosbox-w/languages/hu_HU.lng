@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:Hungarian (Hungary)
 :DOSBOX-X:CODEPAGE:852
-:DOSBOX-X:VERSION:2025.10.07
+:DOSBOX-X:VERSION:2026.01.02
 :DOSBOX-X:REMARK:
 :AUTOEXEC_CONFIGFILE_HELP
 Ebben a szekcióban lévő sorok indításkor lefutnak.
@@ -2413,6 +2413,9 @@ Gyors program indítás...
 .
 :MENU:mapper_shutdown
 Kilépés a DOSBox-X-ből
+.
+:MENU:mapper_capkeyboard
+Capture keyboard
 .
 :MENU:mapper_capmouse
 Az egér DOSBOX-X-hez rendelése (ALT+Tab a feloldáshoz)

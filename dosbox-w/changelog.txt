@@ -1,3 +1,116 @@
+2026.01.02
+  - VESA BIOS will remove 8-bit bank switching limit if the video memory
+    is large enough to need more than 256 banks. Memory size will always
+    be limited to no more than 64 banks (128 if smaller than 64KB
+    granularity) only if S3 emulation is active. DOSBox Integrated Graphics
+    machine type is exempt from bank switching limit, so, if you are running
+    legacy code or Demoscene stuff against it that never clears the upper
+    8 bits properly, it's not going to work unless you use smaller memsize
+    settings. (joncampbell123).
+  - Update BOOT command to support multiple disk images with swapping (maron2000).
+  - Render scaler system has been modified so that render and frame caches
+    are now dynamically allocated, instead of fixed buffers. Not only does
+    this reduce memory wasted by over-large buffers, it also removes
+    limitations on guest video mode resolution that previously capped the
+    video mode to 1920x1440 or lower, and the advanced scalers (HQ2X,
+    Advanced MAME, etc) to 800x600 or lower. (joncampbell123).
+  - VGA output will now automatically disable doublescan mode whenever an
+    advanced scaler, such as the "XBRZ" or the Advanced MAME scalers, are
+    selected, so that the scalers can do their job properly on the low
+    resolution graphics mode automatically. The user no longer has to
+    manaully turn off doublescan mode for those scalers to work. (joncampbell123).
+  - Added TV, Scanline, and RGB scaler variants appropriate for VGA
+    200-line modes with doublescan enabled (renders to 400 lines). In fact
+    supporting those scalers with 400-line VGA is arguably more visually
+    accurate than applying them to 200 lines of graphics, because it
+    better reflects the actual 400-line raster as it would be displayed
+    on a VGA monitor. (joncampbell123).
+  - Apparently at random, VGA render will call RENDER_DrawLine too much,
+    causing buffer overruns at random, so, instead of directly assigning
+    the scaler line handler, assign a function that checks the rendered
+    line count and ensures that rendering stops at the correct line
+    count. This should fix some random crashes or corruptions, especially
+    on Linux with the OpenGL output which likes to allocate EXACTLY the
+    amount of memory required for the frame. (joncampbell123).
+  - A patch was submitted to DOSLIB DSXMENU to incorporate non-selectable
+    informational lines of text. Incorporate the updated DSXMENU binaries
+    into DOSBox-X (joncampbell123).
+  - Wrote IPS patching tools IPSMAKE and IPSPATCH in DOSLIB, then incorporated
+    them as builtin executables on drive Z: under Z:\PATCHING. You can
+    now use IPS patch files to "ROM hack" your MS-DOS games. (joncampbell123)
+  - Add map13/map14 CGA/HGC like interleaved rendering support for VGA
+    256-color mode. There is a game engine in development that is willing to
+    use such oddball modes. (joncampbell123)
+  - Added SDL2_net to source tree (maron2000)
+  - Fixed regression of FIFA96 CD label detection (maron2000)
+  - Log OpenGL context version (rebb)
+  - Force SDL window regeneration when exiting fullscreen (rebb)
+  - Fixed file handle leak prevents save state file removal (srcdabada)
+
+
+2025.12.01
+  - Video debug overlay: For Tandy and PCjr emulation, add information on
+    the screen that shows the line mask, display and cpu memory banks and
+    the corresponding segment values, which may aid in debugging issues
+    with games and reveal any remapping or page flipping (joncampbell123).
+  - Tandy emulation: Add the string "Tandy" somewhere in the DOS kernel
+    at startup if machine=tandy. The game "The Train: Escape to Normandy"
+    scans from FFFF:0000 for the string "Tandy" which of course wraps
+    around to the first 64KB of memory where the DOS kernel resides. If
+    it does not see this string, it does not think it is running on a Tandy.
+    Such a detection routine will obviously break if you're on a 286 based
+    Tandy with HMA enabled, or you're running normal MS-DOS on a Tandy
+    system. This change allows the game to run (joncampbell123).
+  - Tseng ET4000 emulation: Mode 0x24 is unusual in that it is a 130x28
+    text mode with a 13-pixel high character cell. The ET4000 VGA BIOS
+    apparently has a specific font for that mode, so, incorporate that
+    font into DOSBox-X and use it for mode 0x24 (joncampbell123).
+  - Tseng ET4000 emulation: Fix modes 0x22/0x23/0x24 to match how the
+    actual VGA BIOS programs them. This fixes problems where the 132x25
+    mode was rendered only on the upper half of the screen (joncampbell123).
+  - Fix Tseng ET3000/ET4000 emulation bug where CGA graphics modes
+    were garbled. The main VGA emulation no longer uses M_CGA2/M_CGA4
+    and the ET4000 emulation needs to behave the same to fix the
+    graphics modes. Apply fix to ET3000 emulation as well. (joncampbell123).
+  - Some extra code in shell processing was preventing drive change commands
+    if the last character was a backslash i.e. "a:\" instead of "a:".
+    Fixed. (joncampbell123).
+  - INT 21h AH=4Bh EXEC: Real MS-DOS returns a nonzero value like 0x3E01.
+    A buggy version of Magic Pockets fails to call INT 21 AH=4Dh to read
+    the INTRO.EXE exit code and expects AL to just be nonzero to continue
+    to the game. So to make it work properly (kind of), return a nonzero
+    value. (joncampbell123).
+  - Tandy machine type: Many registers are WRITE ONLY according to SX
+    documentation, yet "Troubadours" likes to read/modify/write those
+    registers in what appears to be hand-rolled manual modesetting code
+    to set up 320x200 16-color mode, so, add code to respond to reads
+    from those ports with zeros and print a debug message to the log
+    about how DOS games are not supposed to read those registers. Make
+    the hand-rolled modesetting work by returning 0x00, rather than 0xFF.
+    The code will not set up the mode correctly if 0xFF is returned, but
+    will if 0x00 is returned. A side effect of this is that, since one
+    of the registers controls the RAM address used as video memory, this
+    moves it down to 512KB from base memory as well, which of course
+    easily corrupts the very end of the MCB chain unless you enable more
+    than 640KB of RAM and ask DOSBox-X to emulate the full Tandy 768KB
+    of conventional memory. Though the game still crashes very easily,
+    and in the exact same manner in both DOSBox-X and DOSBox SVN, this
+    fix does solve the problem where the game was only able to draw
+    2 out of 4 scanlines on the screen. (joncampbell123).
+  - Fix: Load GetDiskFreeSpaceExA at runtime to restore compatibility with
+    Win95RTM (emxd)
+  - Support for musl libc under Linux (repzilon)
+  - Utilize SDL2's keyboard capture logic to inhibit window manager shortcuts
+    (BenAckerley)
+  - Fix OpenGL resize / crash issue related to SDL and the internal GUI (rebb)
+  - Fix: missing floppy drive after harddisk boot (merubird)
+  - Fix crash on launch in MinGW and UCRT 64-bit builds (maron2000)
+  - Fix file open dialog encoding (maron2000)
+  - Allow controlling K-CG via BIOS interrupt (OPNA2608)
+  - Add debug feature memory find (Enmet)
+  - Fix turbo to allow burst mode and toggle mode (jez9999)
+  - Linters - fixup freedesktop metainfo and flatpak (rderooy)
+
 2025.10.07
   - INT 21h AH=4Ah resize memory: Compact free blocks only at or after the
     segment being resized, as MS-DOS is documented to do (joncampbell123).

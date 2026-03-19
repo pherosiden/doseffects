@@ -1,6 +1,6 @@
 :DOSBOX-X:LANGUAGE:Portuguese (Brazil)
 :DOSBOX-X:CODEPAGE:860
-:DOSBOX-X:VERSION:2025.10.07
+:DOSBOX-X:VERSION:2026.01.02
 :DOSBOX-X:REMARK:
 :AUTOEXEC_CONFIGFILE_HELP
 As linhas nesta seção serão sempre executadas ao se iniciar o DOSBox-X.
@@ -2445,6 +2445,9 @@ Início rápido de programa...
 .
 :MENU:mapper_shutdown
 Sair do DOSBox-X
+.
+:MENU:mapper_capkeyboard
+Capture keyboard
 .
 :MENU:mapper_capmouse
 Capturar mouse
